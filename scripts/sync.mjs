@@ -32,7 +32,9 @@ const FEED_FILE = resolve(CATALOG_DIR, 'feed.xml');
 const TOKEN = process.env.GITHUB_TOKEN || '';
 const API_BASE = 'https://api.github.com';
 const TOPIC = 'topic:dsh-plugin';
-const REQUEST_DELAY = 120; // ms，避免触发次级限速
+const REQUEST_DELAY = 120; // ms，普通资源请求间隔
+// 搜索 API 速率：认证 30 req/min、匿名 10 req/min。主动限速避免 403 导致全量中途失败。
+const SEARCH_DELAY = TOKEN ? 2200 : 6000; // ms
 const README_EXCERPT_LEN = 500;
 
 const CATEGORIES = {
@@ -275,16 +277,29 @@ async function main() {
 
   if (mode === 'full') {
     log('全量模式：搜索全部 topic:dsh-plugin 仓库');
-    for (let page = 1; page <= 10; page++) {
-      const { items, total } = await searchRepos(TOPIC, page);
-      scanned += items.length;
-      repos.push(...items);
-      if (repos.length >= total || items.length === 0) break;
-      await sleep(REQUEST_DELAY);
+    // 全量需覆盖全部候选（10944 个 → 约 110 页），页数由 total 动态决定，不硬编码 10
+    const first = await searchRepos(TOPIC, 1);
+    const { items, total } = first;
+    scanned += items.length;
+    repos.push(...items);
+    const pages = Math.min(200, Math.max(1, Math.ceil((total || 0) / 100)));
+    for (let page = 2; page <= pages; page++) {
+      await sleep(SEARCH_DELAY);
+      const { items: it, total: tt } = await searchRepos(TOPIC, page);
+      scanned += it.length;
+      repos.push(...it);
+      if (repos.length >= tt || it.length === 0) break;
     }
+    log(`全量搜索完成，共 ${total} 个候选`);
   } else {
-    // 增量模式：只抓上次同步以来 pushed 变更的仓库
-    const since = lastSyncAt ? lastSyncAt.slice(0, 10) : '2020-01-01';
+    // 增量模式：只抓上次同步以来 pushed 变更的仓库。
+    // 窗口取「上次同步时间点」，但用当日零点避免 pushed:>xx:xx 语法歧义；
+    // ⚠️ 若窗口=当日零点（即上次同步就在今天），`pushed:>今天`会返回0，
+    //    一旦某次同步空结果被写入就会自锁。因此这里保证最早回退到"昨天"，
+    //    并叠加下方【空结果保护】禁止把全域数据覆盖成空。
+    const rawSince = lastSyncAt ? new Date(lastSyncAt).getTime() : Date.now() - 7 * 864e5;
+    // 回退窗口：最早取 24h 前，避免当天凌晨同步后窗口过窄
+    const since = new Date(Math.min(rawSince, Date.now() - 24 * 3600e3)).toISOString().slice(0, 10);
     log(`增量模式：pushed:>${since}`);
     for (let page = 1; page <= 10; page++) {
       const { items, total } = await searchRepos(`${TOPIC} pushed:>${since}`, page);
@@ -295,33 +310,66 @@ async function main() {
     }
   }
 
+  // 【空结果保护】搜索结果为空但旧数据非空时：极可能是搜索 API 被限速/临时故障。
+  // 此时若继续用空结果覆盖，会让线上 catalog 变成 0 插件（且增量窗口随之下移，造成自锁）。
+  // 因此：增量模式遇到空结果 → 保留旧 plugins 继续跑（复用旧数据），并记录告警。
+  const hadOldData = (oldPlugins || []).length > 0;
+  if (repos.length === 0 && hadOldData && mode === 'incremental') {
+    log(`⚠️ 搜索返回 0 个候选（已存在 ${oldPlugins.length} 个旧插件），疑似 API 限速；保留旧数据，本轮仅更新元数据`, 'warn');
+    // 触发一次真实全量搜索兜底，确认是否真的全网无仓库
+    for (let page = 1; page <= 3; page++) {
+      const { items, total } = await searchRepos(TOPIC, page);
+      scanned += items.length;
+      repos.push(...items);
+      if (items.length === 0) break;
+      await sleep(REQUEST_DELAY);
+    }
+    if (repos.length === 0) {
+      log(`⚠️ 兜底全量搜索仍为 0，极可能是网络/配额问题；本轮写回旧数据，不置空`, 'warn');
+      const errors = oldData.meta?.stats ? oldData.errors || [] : []; // 保留史
+      // 用旧 plugins 重新写盘并结束（保留旧数据不被清空）
+      const etag = await sha256Hex(JSON.stringify(oldPlugins));
+      await writeFile(PLUGINS_FILE, JSON.stringify({ ...oldData, meta: { ...(oldData.meta||{}), count: oldPlugins.length, etag } }, null, 2) + '\n');
+      const entry = { at: new Date().toISOString(), mode: 'incremental', duration_ms: Date.now() - startedAt, scanned: 0, included: 0, skipped: 0, data_changed: false, errors: ['搜索返回0，保留旧数据'] };
+      const history = [...((oldMeta.history||[]).filter(x=>x.at!==entry.at)), entry].slice(-30);
+      await writeFile(META_FILE, JSON.stringify({ last_sync: entry, history }, null, 2) + '\n');
+      log(`完成（非空保护）：保留 ${oldPlugins.length} 个旧插件`);
+      return;
+    }
+  }
+
   // 去重
   const seen = new Set();
   repos = repos.filter((r) => (seen.has(r.full_name) ? false : (seen.add(r.full_name), true)));
   log(`搜索到 ${repos.length} 个候选仓库`);
 
-  // 全量时补充抓取单仓详情（搜索 API 返回已含大部分字段，这里补 detail 以获取 topics/homepage）
-  const detailNeeded = mode === 'full';
-  let plugins = [];
-  for (const repo of repos) {
-    try {
-      let r = repo;
-      if (detailNeeded) {
-        const detail = await fetchRepoDetail(repo.full_name);
-        if (!detail) { skipped++; log(`跳过（仓库不可访问）: ${repo.full_name}`, 'warn'); continue; }
-        r = detail;
+  // 搜索 API（/search/repositories）返回的 item 已含 buildPlugin 全部所需字段
+  // （full_name/stars/topics/description/default_branch/language/create/update 等）。
+  // 因此全量不再逐仓调用 /repos/{full_name} 详情——那会翻倍请求导致核心 API 配额超限。
+  // manifest/readme 走 raw.githubusercontent.com，不占 API 配额，安全。
+  // 为控制全量时长，用有限并发（默认 16）并行抓取，raw 域名不限速故安全。
+  const CONCURRENCY = Number(process.env.SYNC_CONCURRENCY || 16);
+  const results = new Array(repos.length);
+  let cursor = 0;
+  async function worker() {
+    while (cursor < repos.length) {
+      const idx = cursor++;
+      const repo = repos[idx];
+      try {
+        const p = await buildPlugin(repo, oldPlugins);
+        results[idx] = p;
+        included++;
+        if (included % 50 === 0) log(`已处理 ${included}...`);
+      } catch (e) {
+        errors.push(`${repo.full_name}: ${e.message}`);
+        skipped++;
+        results[idx] = null;
+        log(`处理失败: ${repo.full_name} - ${e.message}`, 'warn');
       }
-      const p = await buildPlugin(r, oldPlugins);
-      plugins.push(p);
-      included++;
-      if (included % 20 === 0) log(`已处理 ${included}...`);
-      await sleep(REQUEST_DELAY);
-    } catch (e) {
-      errors.push(`${repo.full_name}: ${e.message}`);
-      skipped++;
-      log(`处理失败: ${repo.full_name} - ${e.message}`, 'warn');
     }
   }
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+  const plugins = results.filter(Boolean);
 
   // 全量时保留旧数据中本次未出现的仓库（GitHub 搜索偶发漏项保护）
   if (mode === 'full') {

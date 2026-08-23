@@ -28,7 +28,8 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 全量 1 万+ 仓库需搜索(30req/min)+并发抓取；放宽以避免中途超时
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -60,6 +61,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SYNC_MODE: ${{ steps.mode.outputs.mode }}
+          SYNC_CONCURRENCY: "16"
         run: node scripts/sync.mjs
 
       - name: Validate catalog (gate)
