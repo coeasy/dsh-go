@@ -16,7 +16,10 @@ try {
 }
 
 const { meta, plugins } = data;
-const topStars = [...plugins].sort((a: any, b: any) => b.stars - a.stars).slice(0, 3);
+// 首屏按 stars 降序展示（高星在前、可进详情页；低星在后、卡片跳 GitHub），
+// 与客户端默认 sort=stars 保持一致
+const sorted = [...(plugins as any[])].sort((a: any, b: any) => (b.stars || 0) - (a.stars || 0));
+const topStars = sorted.slice(0, 3);
 ---
 
 <Layout title="DSH Plugins Nav · DeepSeek Harness 插件市场">
@@ -36,12 +39,12 @@ const topStars = [...plugins].sort((a: any, b: any) => b.stars - a.stars).slice(
   </section>
 
   <section id="grid" class="grid">
-    {plugins.map((p: any) => (
+    {sorted.map((p: any) => (
       <PluginCard
         slug={p.slug} name={p.name} description={p.description} stars={p.stars}
         category={p.category} verified={p.verified} trend={p.trend_score}
         tags={p.topics} isNew={p.first_seen && (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5}
-        created={p.created_at} updated={p.updated_at}
+        created={p.created_at} updated={p.updated_at} full_name={p.full_name}
       />
     ))}
   </section>

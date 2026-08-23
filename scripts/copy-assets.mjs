@@ -36,6 +36,8 @@ const TARGET_DIR = resolve(ROOT, 'site/public/catalog');
 const SCRIPTS_SRC = resolve(ROOT, 'site/src/scripts');
 const SCRIPTS_DST = resolve(ROOT, 'site/public/scripts');
 const INSTALL_DIR = resolve(ROOT, 'site/public/install');
+// 详情页门槛：与 site 侧一致，仅 stars >= 500 的插件生成一键安装脚本（控制文件数量）
+const DETAIL_THRESHOLD = 500;
 
 async function exists(p) {
   try { await access(p); return true; } catch { return false; }
@@ -77,10 +79,12 @@ async function genInstallScripts() {
   }
   const data = JSON.parse(await readFile(src, 'utf-8'));
   await mkdir(INSTALL_DIR, { recursive: true });
-  // 清理已移除插件的旧脚本，避免残留
+  // 清理已移除插件的旧脚本，避免残留（清理全部，wanted 只含门槛内）
   try {
     const wanted = new Set(
-      (data.plugins || []).flatMap((p) => [`${p.slug}.sh`, `${p.slug}.ps1`])
+      (data.plugins || [])
+        .filter((p) => (p.stars || 0) >= DETAIL_THRESHOLD)
+        .flatMap((p) => [`${p.slug}.sh`, `${p.slug}.ps1`])
     );
     const old = await readdir(INSTALL_DIR);
     for (const f of old) {
@@ -89,15 +93,20 @@ async function genInstallScripts() {
       }
     }
   } catch { /* 忽略 */ }
+  // 门槛统计：仅 count ≥ threshold 的插件生成脚本
+  let generated = 0;
   for (const p of data.plugins || []) {
+    // 仅门槛内插件生成安装脚本（低星插件不做一键安装，卡片跳 GitHub）
+    if ((p.stars || 0) < DETAIL_THRESHOLD) continue;
     const full = p.full_name || p.slug.replace('-', '/');
     if (!full) continue;
     // 与 API /catalog 中 install_cmd 保持一致（分类 profile 由 sync 已算好）
     const installCmd = p.install_cmd || `dsh plugin add github:${full}`;
     await writeFile(resolve(INSTALL_DIR, `${p.slug}.sh`), shTemplate(installCmd), 'utf-8');
     await writeFile(resolve(INSTALL_DIR, `${p.slug}.ps1`), psTemplate(installCmd), 'utf-8');
+    generated++;
   }
-  console.log(`✅ 生成 ${((data.plugins || []).length) * 2} 个一键安装脚本 -> site/public/install/`);
+  console.log(`✅ 生成 ${generated * 2} 个一键安装脚本（门槛 stars>=${DETAIL_THRESHOLD}）-> site/public/install/`);
 }
 
 async function main() {

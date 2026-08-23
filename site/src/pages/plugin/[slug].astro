@@ -12,8 +12,12 @@ export async function getStaticPaths() {
     plugins = data.plugins || [];
   } catch { /* 无数据时仅首页可访问 */ }
 
-  return plugins.map((p) => {
-    const related = plugins
+  // 详情页门槛：仅生成 stars >= 500 的静态详情页（低星插件只做列表介绍，卡片直接跳 GitHub）
+  const DETAIL_THRESHOLD = 500;
+  const detailed = plugins.filter((p) => p.stars >= DETAIL_THRESHOLD);
+
+  return detailed.map((p) => {
+    const related = detailed
       .filter((x) => x.category === p.category && x.slug !== p.slug)
       .sort((a, b) => b.stars - a.stars)
       .slice(0, 6);
@@ -102,7 +106,7 @@ const updatedAt = plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateSt
             slug={p.slug} name={p.name} description={p.description} stars={p.stars}
             category={p.category} verified={p.verified} trend={p.trend_score}
             tags={p.topics} isNew={p.first_seen && (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5}
-            created={p.created_at} updated={p.updated_at}
+            created={p.created_at} updated={p.updated_at} full_name={p.full_name}
           />
         ))}
       </div>

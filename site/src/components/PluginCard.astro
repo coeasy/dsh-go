@@ -13,8 +13,17 @@ interface Props {
   isNew: boolean;
   created?: string;
   updated?: string;
+  full_name?: string;
 }
-const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated } = Astro.props;
+const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated, full_name } = Astro.props;
+
+// 详情页门槛：stars >= 500 才生成静态详情页；低于门槛的卡片直接跳 GitHub 仓库，避免死链
+export const DETAIL_THRESHOLD = 500;
+
+// 是否生成了静态详情页（与 plugin/[slug].astro 的 getStaticPaths 门槛保持一致）
+const hasDetail = stars >= DETAIL_THRESHOLD;
+const cardHref = hasDetail ? u(`/plugin/${slug}`) : `https://github.com/${full_name || slug}`;
+
 const CATEGORY_ZH: Record<string, string> = {
   'web-ui': 'Web UI', desktop: '桌面端', mcp: 'MCP', skills: '技能', theme: '主题',
   terminal: '终端', coding: '编码', agent: 'Agent', vision: '视觉', memory: '记忆',
@@ -24,7 +33,8 @@ const CATEGORY_ZH: Record<string, string> = {
 
 <a
   class="plugin-card"
-  href={u(`/plugin/${slug}`)}
+  href={cardHref}
+  data-href={cardHref}
   data-category={category}
   data-verified={verified ? 'true' : 'false'}
   data-is-new={isNew ? 'true' : 'false'}
