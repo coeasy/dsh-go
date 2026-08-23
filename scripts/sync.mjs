@@ -228,6 +228,25 @@ async function fetchRepoDetail(fullName) {
   return res.json();
 }
 
+// 分桶抓取一个 star 区间查询：单查询够（total<=1000）则取尽全部页；
+// 超幅（total>1000，如 stars:0..0 有 5k+）受 GitHub 搜索 API 硬限制只能取 top-1000。
+async function fetchRange(query, opts = {}) {
+  const sort = opts.sort || 'stars';
+  const first = await searchRepos(query, 1, { sort, order: 'desc' });
+  const out = [...first.items];
+  const total = first.total;
+  const cap = total <= 1000;
+  const pages = cap ? Math.min(10, Math.ceil(total / 100)) : Math.min(opts.maxPages || 10, 10);
+  for (let p = 2; p <= pages; p++) {
+    await sleep(SEARCH_DELAY);
+    const r = await searchRepos(query, p, { sort, order: 'desc' });
+    out.push(...r.items);
+    if (r.items.length === 0) break;
+  }
+  log(`  桶[${query}] total=${total} → 取 ${out.length}（${cap ? '全部' : `top-${out.length}`}）`);
+  return out;
+}
+
 // ---------- 构建插件对象 ----------
 async function buildPlugin(repo, oldPlugins) {
   const fullName = repo.full_name;
@@ -289,18 +308,22 @@ async function main() {
   const errors = [];
 
   if (mode === 'full') {
-    // GitHub 搜索 API 最多返回 1000 条（page≤10）。因此全量按星星降序取 top-1000，
-    // 这批已涵盖几乎所有高星插件（含全部 >=200 星插件）；低星长尾不在首页详情范围。
-    log('全量模式：搜索 topic:dsh-plugin 按 stars 排序取 top-1000（搜索 API 硬上限）');
-    for (let page = 1; page <= 10; page++) {
-      await sleep(page > 1 ? SEARCH_DELAY : 0);
-      const { items, total } = await searchRepos(TOPIC, page, { sort: 'stars', order: 'desc' });
-      scanned += items.length;
-      repos.push(...items);
-      if (items.length === 0) break;
-      log(`第 ${page} 页抓取 ${items.length} 个（总分 ${total}）`);
+    // GitHub 搜索 API 单查询最多返回 1000 条（page≤10）。要突破 1000 覆盖长尾，
+    // 用「star 区间分桶」：各区间独立查询、互不重叠，跨区间并集去重后即可超过 1000。
+    // 唯一例外：超大桶（stars:0..0=5.3k、1..5=4.4k）受 GitHub 硬限制只能取各桶 top-1000；
+    // 其余 ≥6 星区间 total 均 <1000 可一次取尽，相当于收录了「所有 ≥6 星仓库 + 低星 top-1000」。
+    const BUCKETS = [
+      'stars:0..0', 'stars:1..5', 'stars:6..10', 'stars:11..50',
+      'stars:51..100', 'stars:101..200', 'stars:201..500',
+      'stars:501..1000', 'stars:1001..5000', 'stars:5001..999999999',
+    ];
+    log(`全量模式：按 star 分桶搜索 ${TOPIC}（${BUCKETS.length} 桶，突破单查询 1000 上限）`);
+    for (const buck of BUCKETS) {
+      repos.push(...(await fetchRange(`${TOPIC} ${buck}`, { sort: 'stars', maxPages: 10 })));
+      await sleep(500); // 桶间呼吸，避免瞬时并发顶到限速
     }
-    log(`全量搜索完成，共获取 ${repos.length} 个（top-1000 高分仓库）`);
+    log(`全量搜索完成，共获取 ${repos.length} 个候选（分桶并集；超幅桶取 top-1000）`);
+    scanned = repos.length;
   } else {
     // 增量模式：只抓上次同步以来 pushed 变更的仓库。
     // 窗口取「上次同步时间点」，但用当日零点避免 pushed:>xx:xx 语法歧义；

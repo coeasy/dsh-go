@@ -5,7 +5,7 @@
     <link>https://dsh-hub.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 23 Aug 2026 14:59:21 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 23 Aug 2026 15:12:49 GMT</lastBuildDate>
     <item>
       <title>🆕 @deepseek-ai/dsh-root</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
@@ -128,8 +128,8 @@
     <item>
       <title>🆕 dsh-better-sidebar</title>
       <link>https://github.com/omdsh-dev/DSH-better-sidebar</link>
-      <guid isPermaLink="false">omdsh-dev/DSH-better-sidebar@2026-08-23T11:52:16Z</guid>
-      <pubDate>Sun, 23 Aug 2026 11:52:16 GMT</pubDate>
+      <guid isPermaLink="false">omdsh-dev/DSH-better-sidebar@2026-08-23T14:59:39Z</guid>
+      <pubDate>Sun, 23 Aug 2026 14:59:39 GMT</pubDate>
       <description>dsh better sidebar &lt;! Hero &lt;div align=&quot;center&quot; &lt;b style=&quot;font size: 1.15em;&quot; 一个服务化的侧边栏框架，一套开箱即用的完整工作台&lt;/b &lt;br / &lt;br / &lt;a href=&quot;https://www.npmjs.com/packag</description>
     </item>
     <item>
