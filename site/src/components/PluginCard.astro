@@ -17,8 +17,8 @@ interface Props {
 }
 const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated, full_name } = Astro.props;
 
-// 详情页门槛：stars >= 500 才生成静态详情页；低于门槛的卡片直接跳 GitHub 仓库，避免死链
-export const DETAIL_THRESHOLD = 500;
+// 详情页门槛：stars >= 200 才生成静态详情页；低于门槛的卡片直接跳 GitHub 仓库，避免死链
+export const DETAIL_THRESHOLD = 200;
 
 // 是否生成了静态详情页（与 plugin/[slug].astro 的 getStaticPaths 门槛保持一致）
 const hasDetail = stars >= DETAIL_THRESHOLD;

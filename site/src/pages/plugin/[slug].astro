@@ -12,8 +12,8 @@ export async function getStaticPaths() {
     plugins = data.plugins || [];
   } catch { /* 无数据时仅首页可访问 */ }
 
-  // 详情页门槛：仅生成 stars >= 500 的静态详情页（低星插件只做列表介绍，卡片直接跳 GitHub）
-  const DETAIL_THRESHOLD = 500;
+  // 详情页门槛：仅生成 stars >= 200 的静态详情页（低星插件只做列表介绍，卡片直接跳 GitHub）
+  const DETAIL_THRESHOLD = 200;
   const detailed = plugins.filter((p) => p.stars >= DETAIL_THRESHOLD);
 
   return detailed.map((p) => {

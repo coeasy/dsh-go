@@ -36,8 +36,8 @@ const TARGET_DIR = resolve(ROOT, 'site/public/catalog');
 const SCRIPTS_SRC = resolve(ROOT, 'site/src/scripts');
 const SCRIPTS_DST = resolve(ROOT, 'site/public/scripts');
 const INSTALL_DIR = resolve(ROOT, 'site/public/install');
-// 详情页门槛：与 site 侧一致，仅 stars >= 500 的插件生成一键安装脚本（控制文件数量）
-const DETAIL_THRESHOLD = 500;
+// 详情页门槛：与 site 侧一致，仅 stars >= 200 的插件生成一键安装脚本（控制文件数量）
+const DETAIL_THRESHOLD = 200;
 
 async function exists(p) {
   try { await access(p); return true; } catch { return false; }
