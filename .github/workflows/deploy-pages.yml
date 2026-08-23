@@ -32,9 +32,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          static_site_generator: astro
+        uses: actions/configure-pages@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
