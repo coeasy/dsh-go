@@ -39,16 +39,22 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: site/package-lock.json
+          # 根 + site 两份 lockfile 都缓存
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
 
-      - name: Install root dependencies & run checks
+      - name: Install dependencies (root + site)
+        # 必须先装 site 依赖：tests/i18n.test.ts 导入 site/src/i18n/dict.ts，
+        # vitest(esbuild) 会就近解析 site/tsconfig.json 的 extends "astro/tsconfigs/base"
         run: |
           npm ci
+          cd site && npm ci
+
+      - name: Run checks
+        run: |
           npm run typecheck
           npm test
-
-      - name: Install site dependencies
-        run: cd site && npm ci
 
       - name: Copy catalog into site (API 数据源 + 静态下载)
         run: node scripts/copy-assets.mjs
