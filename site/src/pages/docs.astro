@@ -1,0 +1,113 @@
+---
+import Layout from '../layouts/Layout.astro';
+const BASE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
+
+const endpoints = [
+  { method: 'GET', path: '/api/v1/plugins', desc: '插件列表（过滤/搜索/排序/分页）' },
+  { method: 'GET', path: '/api/v1/plugins/:slug', desc: '单个插件详情 + 相关推荐' },
+  { method: 'GET', path: '/api/v1/categories', desc: '分类注册表（含计数）' },
+  { method: 'GET', path: '/api/v1/stats', desc: '聚合统计 + Top 榜单' },
+  { method: 'GET', path: '/api/v1/search?q=关键词', desc: '快速搜索（q 必填）' },
+  { method: 'GET', path: '/api/v1/meta', desc: '同步元信息（供监控）' },
+  { method: 'GET', path: '/api/v1/health', desc: '健康检查' },
+  { method: 'POST', path: '/api/v1/mcp', desc: 'MCP 端点（JSON-RPC 2.0，AI Agent 查询）' },
+];
+
+const params = [
+  ['category', '分类 id，如 web-ui、mcp、skills'],
+  ['verified', 'true 仅含已验证插件'],
+  ['search', '关键词（匹配名称/描述/标签）'],
+  ['sort', 'stars | trend | updated | created | name'],
+  ['order', 'asc | desc，默认 desc'],
+  ['page', '页码，默认 1'],
+  ['per_page', '每页数量，默认 50，最大 200'],
+  ['created_after / updated_after', '按时间过滤（ISO 时间字符串）'],
+];
+
+// 使用 set:html 渲染代码块，避免 Astro 解析模板字面量
+const curlExample = `<span>curl "https://dsh-hub.pages.dev/api/v1/plugins?category=web-ui&verified=true&sort=stars"</span>
+<span>curl "https://dsh-hub.pages.dev/api/v1/search?q=vision&limit=10"</span>
+<span>curl -H "If-None-Match: a1b2c3d4e5f60718" https://dsh-hub.pages.dev/api/v1/plugins</span>
+<span>curl -X POST https://dsh-hub.pages.dev/api/v1/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_plugins","arguments":{"q":"agent"}}}'</span>`;
+
+const mcpConfigHtml = `<span>// ~/.config/Claude/claude_desktop_config.json</span>
+<span>{</span>
+<span>  "mcpServers": {</span>
+<span>    "dsh-hub": {</span>
+<span>      "url": "${BASE}/api/v1/mcp",</span>
+<span>      "transport": "streamable-http"</span>
+<span>    }</span>
+<span>  }</span>
+<span>}</span>`;
+
+const etagHtml = `<span>// 浏览器 / Node.js</span>
+<span>let etag = null, cache = null;</span>
+<span>async function getPlugins(params) {</span>
+<span>  const headers = {};</span>
+<span>  if (etag) headers['If-None-Match'] = etag;</span>
+<span>  const res = await fetch('/api/v1/plugins?' + params, { headers });</span>
+<span>  if (res.status === 304) return cache;</span>
+<span>  etag = res.headers.get('ETag');</span>
+<span>  cache = await res.json();</span>
+<span>  return cache;</span>
+<span>}</span>`;
+---
+
+<Layout title="API 文档 · DSH Plugins Nav" description="DSH Plugins Nav 开放 API 参考">
+  <h1 data-i18n="doc_title">API 文档</h1>
+  <p data-i18n="doc_intro">公开、免费、CORS 全开、无需认证，支持 <code>If-None-Match</code> ETag 协商缓存。数据每日 08:18 自动同步。</p>
+
+  <h2 data-i18n="doc_basics">基础信息</h2>
+  <ul>
+    <li data-i18n="doc_baseurl" data-base={BASE}>Base URL: <code>{BASE}</code></li>
+    <li data-i18n="doc_openapi">规范文件：<a href="/openapi.json" target="_blank">/openapi.json</a>（可导入 Postman / Apifox）</li>
+    <li data-i18n="doc_fresh">数据新鲜度：<a href="/api/v1/meta" target="_blank">/api/v1/meta</a></li>
+    <li data-i18n="doc_ratelimit">速率限制：每 IP 每 10 秒 20 次（Cloudflare WAF 免费规则）</li>
+  </ul>
+
+  <h2 data-i18n="doc_endpoints">端点一览</h2>
+  <table class="table">
+    <thead><tr><th data-i18n="th_method">方法</th><th data-i18n="th_path">路径</th><th data-i18n="th_desc">说明</th></tr></thead>
+    <tbody>
+      {endpoints.map((e) => (
+        <tr><td class="m">{e.method}</td><td><code>{e.path}</code></td><td>{e.desc}</td></tr>
+      ))}
+    </tbody>
+  </table>
+
+  <h2 data-i18n="doc_params">常用参数（/api/v1/plugins）</h2>
+  <table class="table">
+    <thead><tr><th data-i18n="th_param">参数</th><th data-i18n="th_desc2">说明</th></tr></thead>
+    <tbody>{params.map(([k, v]) => <tr><td><code>{k}</code></td><td>{v}</td></tr>)}</tbody>
+  </table>
+
+  <h2 data-i18n="doc_examples">调用示例</h2>
+  <pre><code set:html={curlExample}></code></pre>
+
+  <h2 data-i18n="doc_resp">响应格式</h2>
+  <p data-i18n="doc_resp_text">列表端点返回 <code>&#123; meta, pagination, plugins &#125;</code>；详情返回 <code>&#123; plugin, related, meta &#125;</code>；错误统一为 <code>&#123; error: &#123; code, message &#125; &#125;</code>。</p>
+
+  <h2 data-i18n="doc_data">数据下载与订阅</h2>
+  <ul>
+    <li data-i18n="doc_raw">原始全量数据：<a href="/catalog/plugins.json" target="_blank">/catalog/plugins.json</a></li>
+    <li data-i18n="doc_rss">RSS 订阅：<a href="/feed.xml" target="_blank">/feed.xml</a></li>
+  </ul>
+
+  <h2 data-i18n="doc_mcp">MCP 接入（Claude Desktop）</h2>
+  <p data-i18n="doc_mcp_text">在 Claude Desktop 配置文件中添加以下 MCP Server，即可让 Claude 直接查询 DSH 插件目录：</p>
+  <pre><code set:html={mcpConfigHtml}></code></pre>
+
+  <h2 data-i18n="doc_etag">带 ETag 的增量轮询（节省流量）</h2>
+  <p data-i18n="doc_etag_text">客户端缓存 <code>ETag</code>，下次请求带 <code>If-None-Match</code>，数据未变时服务器返回 <code>304</code> 而不传输任何内容。</p>
+  <pre><code set:html={etagHtml}></code></pre>
+</Layout>
+
+<style>
+  .table { border-collapse: collapse; width: 100%; }
+  .table th, .table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .table th { color: var(--muted); font-weight: 500; }
+  .table .m { font-weight: 700; color: var(--accent); width: 70px; }
+  pre { background: var(--accent-soft); border: 1px solid var(--border); border-radius: 10px; padding: 14px; overflow-x: auto; font-size: 13px; }
+  pre code { display: block; white-space: pre-wrap; }
+  code { font-size: 13px; }
+</style>

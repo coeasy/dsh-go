@@ -1,0 +1,10 @@
+# Cloudflare Pages 部署配置
+name = "dsh-hub"
+pages_build_output_dir = "site/dist"
+compatibility_date = "2026-08-01"
+
+# 当前方案不使用任何付费资源（无 KV / D1 / R2）
+# KV 升级路径见 DEPLOYMENT_V2.md §13，届时取消注释并填入 namespace id：
+# [[kv_namespaces]]
+# binding = "PLUGIN_DATA"
+# id = "<kv-namespace-id>"

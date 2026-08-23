@@ -1,0 +1,62 @@
+---
+// 构建时读取 catalog 数据（静态生成首页快照）
+import Layout from '../layouts/Layout.astro';
+import PluginCard from '../components/PluginCard.astro';
+import SearchBar from '../components/SearchBar.astro';
+import CategoryFilter from '../components/CategoryFilter.astro';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+let data: any = { meta: { count: 0, stats: {} }, plugins: [] };
+try {
+  data = JSON.parse(readFileSync(resolve('..', 'catalog', 'plugins.json'), 'utf-8'));
+} catch (e) {
+  // 本地未运行 sync 时降级为空数据（不影响构建）
+}
+
+const { meta, plugins } = data;
+const topStars = [...plugins].sort((a: any, b: any) => b.stars - a.stars).slice(0, 3);
+---
+
+<Layout title="DSH Plugins Nav · DeepSeek Harness 插件市场">
+  <section class="hero">
+    <h1 data-i18n="hero_title">DeepSeek Harness 插件市场</h1>
+    <p class="sub" data-i18n="hero_sub" data-count={meta.count || 0}>收录 {meta.count || 0} 个 dsh-plugin 插件，每日自动更新 · 全开源 · 开放 API</p>
+    <div class="top3">
+      {topStars.map((p: any) => (
+        <a href={`/plugin/${p.slug}`} class="top-item"><span class="top-name">{p.name}</span><span class="top-star">★{p.stars}</span></a>
+      ))}
+    </div>
+  </section>
+
+  <section class="controls">
+    <SearchBar />
+    <CategoryFilter />
+  </section>
+
+  <section id="grid" class="grid">
+    {plugins.map((p: any) => (
+      <PluginCard
+        slug={p.slug} name={p.name} description={p.description} stars={p.stars}
+        category={p.category} verified={p.verified} trend={p.trend_score}
+        tags={p.topics} isNew={p.first_seen && (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5}
+        created={p.created_at} updated={p.updated_at}
+      />
+    ))}
+  </section>
+  <div id="empty" class="empty" hidden data-i18n="empty_msg">没有匹配的插件，换个关键词试试？</div>
+
+  <script src="/scripts/app.js" is:inline></script>
+</Layout>
+
+<style>
+  .hero { text-align: center; padding: 24px 0 20px; }
+  .hero h1 { font-size: 30px; margin: 0 0 8px; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0 0 18px; }
+  .top3 { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .top-item { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; font-size: 13px; }
+  .top-star { color: var(--amber); font-weight: 600; }
+  .controls { margin: 10px 0 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+</style>

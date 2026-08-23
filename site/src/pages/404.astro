@@ -1,0 +1,17 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="页面不存在 · DSH Plugins Nav" description="404 Not Found">
+  <div class="wrap">
+    <div class="code">404</div>
+    <p>你访问的页面不存在，或插件已被移除。</p>
+    <p><a href="/">返回首页</a></p>
+  </div>
+</Layout>
+
+<style>
+  .wrap { text-align: center; padding: 80px 0; }
+  .code { font-size: 72px; font-weight: 800; color: var(--accent); line-height: 1; }
+  p { color: var(--muted); }
+</style>

@@ -1,0 +1,20 @@
+---
+// 搜索输入框 + URL 状态同步（由 app.js 驱动，is:inline 独立脚本）
+---
+
+<input
+  id="search"
+  type="search"
+  placeholder="搜索插件名称 / 描述 / 标签…"
+  data-i18n="search_ph"
+  autocomplete="off"
+/>
+
+<style>
+  #search {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+    border-radius: 10px; background: var(--bg); color: var(--fg);
+    font-size: 15px; margin-bottom: 12px;
+  }
+  #search:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+</style>

@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+
+# build output
+site/dist/
+site/.astro/
+.astro/
+
+# 构建时由 copy-assets.mjs 拷入（catalog 以 git 为准，避免双份提交）
+site/public/catalog/
+
+# copy-assets.mjs 生成的副本产物（一律不入库，构建时重新生成）
+site/public/feed.xml
+site/public/scripts/
+site/public/install/
+
+# 环境与本地运行
+.env
+.env.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# wrangler 本地状态
+.wrangler/
+
+# Agent 本地记忆 / 工作缓冲（不入库）
+.workbuddy/
+
+# 开发临时脚本（生成测试数据用，非产品）
+.rundata/

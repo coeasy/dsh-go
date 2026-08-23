@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dsh-hub.pages.dev/sitemap-index.xml

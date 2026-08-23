@@ -1,0 +1,60 @@
+---
+interface Props {
+  slug: string;
+  name: string;
+  description: string;
+  stars: number;
+  category: string;
+  verified: boolean;
+  trend: number;
+  tags: string[];
+  isNew: boolean;
+  created?: string;
+  updated?: string;
+}
+const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated } = Astro.props;
+const CATEGORY_ZH: Record<string, string> = {
+  'web-ui': 'Web UI', desktop: '桌面端', mcp: 'MCP', skills: '技能', theme: '主题',
+  terminal: '终端', coding: '编码', agent: 'Agent', vision: '视觉', memory: '记忆',
+  security: '安全', integration: '集成', tool: '工具', other: '其他',
+};
+---
+
+<a
+  class="plugin-card"
+  href={`/plugin/${slug}`}
+  data-category={category}
+  data-verified={verified ? 'true' : 'false'}
+  data-is-new={isNew ? 'true' : 'false'}
+  data-trend={trend}
+  data-stars={stars}
+  data-name={name}
+  data-desc={description}
+  data-tags={(tags || []).join(' ')}
+  data-created={created}
+  data-updated={updated}
+>
+  <div class="head">
+    <span class="name">{name}</span>
+    <span class="stars">★ {stars}</span>
+  </div>
+  <div class="desc">{description}</div>
+  <div class="meta">
+    <span class="badge gray" data-i18n-cat={category}>{CATEGORY_ZH[category] || category}</span>
+    {verified && <span class="badge green">✓ verified</span>}
+    {isNew && <span class="badge amber">新</span>}
+  </div>
+</a>
+
+<style>
+  .plugin-card {
+    display: block; border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    color: var(--fg); transition: transform .12s, box-shadow .12s, border-color .12s;
+  }
+  .plugin-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgb(0 0 0 / .08); border-color: var(--accent); text-decoration: none; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .name { font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stars { font-size: 13px; color: var(--amber); white-space: nowrap; }
+  .desc { margin: 6px 0 10px; font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 38px; }
+  .meta { display: flex; gap: 6px; flex-wrap: wrap; }
+</style>

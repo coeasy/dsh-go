@@ -1,0 +1,3 @@
+# 向后兼容 V1 的路径（动态路由 /api/v1/plugins/:slug 由 Functions 原生处理，无需重写）
+/api/plugins.json        /api/v1/plugins          302
+/api/plugins.json/*      /api/v1/plugins/:splat   302

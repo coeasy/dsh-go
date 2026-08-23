@@ -1,0 +1,11 @@
+{
+  "$README": "人工覆盖层。键为 owner/repo 全名，优先级高于清单与 GitHub 元数据。示例：",
+  "example-org/example-plugin": {
+    "name": "更友好的显示名",
+    "description": "修正后的描述",
+    "category": "web-ui",
+    "tags": ["custom-tag"],
+    "homepage": "https://example.com",
+    "hidden": false
+  }
+}

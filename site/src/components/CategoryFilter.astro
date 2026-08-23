@@ -1,0 +1,55 @@
+---
+// 分类筛选 + 排序 + 状态筛选（app.js 通过 data-* 属性驱动，URL 同步）
+const CATS: Array<{ id: string; zh: string; key: string }> = [
+  { id: 'all', zh: '全部', key: 'f_all' },
+  { id: 'web-ui', zh: 'Web UI', key: 'cat_webui' },
+  { id: 'desktop', zh: '桌面端', key: 'cat_desktop' },
+  { id: 'mcp', zh: 'MCP', key: 'cat_mcp' },
+  { id: 'skills', zh: '技能', key: 'cat_skills' },
+  { id: 'theme', zh: '主题', key: 'cat_theme' },
+  { id: 'terminal', zh: '终端', key: 'cat_terminal' },
+  { id: 'coding', zh: '编码', key: 'cat_coding' },
+  { id: 'agent', zh: 'Agent', key: 'cat_agent' },
+  { id: 'vision', zh: '视觉', key: 'cat_vision' },
+  { id: 'memory', zh: '记忆', key: 'cat_memory' },
+  { id: 'security', zh: '安全', key: 'cat_security' },
+  { id: 'integration', zh: '集成', key: 'cat_integration' },
+  { id: 'tool', zh: '工具', key: 'cat_tool' },
+  { id: 'other', zh: '其他', key: 'cat_other' },
+];
+const SORTS: Array<{ id: string; zh: string; key: string }> = [
+  { id: 'stars', zh: '最多 Star', key: 's_stars' },
+  { id: 'trend', zh: '热度', key: 's_trend' },
+  { id: 'updated', zh: '最近更新', key: 's_updated' },
+  { id: 'created', zh: '最新发布', key: 's_created' },
+];
+const FILTERS: Array<{ f: string; zh: string; key: string }> = [
+  { f: 'all', zh: '全部', key: 'f_all' },
+  { f: 'verified', zh: '已验证', key: 'f_verified' },
+  { f: 'new', zh: '新上架', key: 'f_new' },
+];
+---
+
+<div id="filters">
+  <div class="cat-chips">
+    {CATS.map((c) => <button class="chip" data-cat={c.id} data-i18n={c.key}>{c.zh}</button>)}
+  </div>
+  <div class="sort-line">
+    {SORTS.map((c) => <button class="chip s" data-sort={c.id} data-i18n={c.key}>{c.zh}</button>)}
+    <span class="spacer"></span>
+    {FILTERS.map((c) => <button class="chip f" data-filter={c.f} data-i18n={c.key}>{c.zh}</button>)}
+  </div>
+</div>
+
+<style>
+  .cat-chips, .sort-line { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer;
+    transition: color .12s, border-color .12s;
+  }
+  .chip:hover { color: var(--fg); border-color: var(--muted); }
+  .chip.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .sort-line { margin-top: 10px; align-items: center; }
+  .spacer { flex: 1; }
+</style>

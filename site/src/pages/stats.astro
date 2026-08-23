@@ -1,0 +1,70 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+let data: any = { meta: { count: 0, stats: {} }, plugins: [] };
+try {
+  data = JSON.parse(readFileSync(resolve('..', 'catalog', 'plugins.json'), 'utf-8'));
+} catch { /* 降级 */ }
+
+const { meta } = data;
+const stats = meta.stats || {};
+const byCategory = Object.entries(stats.by_category || {}).sort((a: any, b: any) => Number(b[1]) - Number(a[1]));
+const byLanguage = Object.entries(stats.by_language || {}).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 10);
+const byLicense = Object.entries(stats.by_license || {}).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 8);
+const maxCat = Number(byCategory[0]?.[1]) || 1;
+const maxLang = Number(byLanguage[0]?.[1]) || 1;
+const maxLic = Number(byLicense[0]?.[1]) || 1;
+const verifiedRate = stats.total ? ((Number(stats.verified) / Number(stats.total)) * 100).toFixed(1) : '0';
+---
+
+<Layout title="统计 · DSH Plugins Nav" description="DSH 插件市场统计数据">
+  <h1 data-i18n="stats_title">统计</h1>
+  <div class="cards">
+    <div class="card"><div class="num">{stats.total || 0}</div><div class="label" data-i18n="stat_total">插件总数</div></div>
+    <div class="card"><div class="num">{stats.verified || 0}</div><div class="label" data-i18n="stat_verified">已验证</div></div>
+    <div class="card"><div class="num">{verifiedRate}%</div><div class="label" data-i18n="stat_rate">验证率</div></div>
+    <div class="card"><div class="num">{byLanguage.length}</div><div class="label" data-i18n="stat_langs">使用语言数</div></div>
+  </div>
+
+  <h2 data-i18n="stats_cat">分类分布</h2>
+  <div class="bars">
+    {byCategory.map(([k, v]) => (
+      <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill" style={`width:${(Number(v) / maxCat) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
+    ))}
+  </div>
+
+  <h2 data-i18n="stats_lang">语言分布 Top 10</h2>
+  <div class="bars">
+    {byLanguage.map(([k, v]) => (
+      <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill alt" style={`width:${(Number(v) / maxLang) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
+    ))}
+  </div>
+
+  <h2 data-i18n="stats_lic">许可证分布</h2>
+  <div class="bars">
+    {byLicense.map(([k, v]) => (
+      <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill alt2" style={`width:${(Number(v) / maxLic) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
+    ))}
+  </div>
+
+  <p class="updated" data-i18n="stats_updated" data-time={meta.updated_at ? new Date(meta.updated_at).toLocaleString('zh-CN') : '—'}>数据更新于 {meta.updated_at ? new Date(meta.updated_at).toLocaleString('zh-CN') : '—'}</p>
+</Layout>
+
+<style>
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0 24px; }
+  .card { border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; }
+  .num { font-size: 28px; font-weight: 700; color: var(--accent); }
+  .label { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  h2 { font-size: 18px; margin: 28px 0 12px; }
+  .bars { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .bar-label { width: 120px; color: var(--muted); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { flex: 1; background: var(--border); border-radius: 6px; height: 18px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: 6px; }
+  .bar-fill.alt { background: var(--green); }
+  .bar-fill.alt2 { background: var(--amber); }
+  .bar-val { width: 40px; color: var(--muted); }
+  .updated { color: var(--muted); font-size: 13px; margin-top: 24px; }
+</style>

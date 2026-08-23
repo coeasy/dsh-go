@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>DSH Plugins Nav</title>
+    <link>https://dsh-hub.pages.dev</link>
+    <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
+    <language>zh-cn</language>
+    <lastBuildDate>Sun, 23 Aug 2026 16:00:00 GMT</lastBuildDate>
+    <item>
+      <title>🆕 MCP Helper</title>
+      <link>https://github.com/example-org/mcp-helper</link>
+      <guid isPermaLink="false">example-org/mcp-helper@2026-08-23T03:09:13.876Z</guid>
+      <pubDate>Sun, 23 Aug 2026 03:09:13 GMT</pubDate>
+      <description>MCP Helper 提供常用工具的 MCP 封装，包含定时任务、Webhook、HTTP 请求与数据读取，配置即用。</description>
+    </item>
+    <item>
+      <title>🆕 Awesome Web UI</title>
+      <link>https://github.com/example-org/webui-awesome</link>
+      <guid isPermaLink="false">example-org/webui-awesome@2026-08-23T03:09:13.876Z</guid>
+      <pubDate>Sun, 23 Aug 2026 03:09:13 GMT</pubDate>
+      <description>Awesome Web UI 提供响应式组件库，覆盖布局、表单与图表，兼容亮暗主题，直接嵌入 DSH 界面。</description>
+    </item>
+    <item>
+      <title>🆕 Vision Cam</title>
+      <link>https://github.com/example-org/vision-cam</link>
+      <guid isPermaLink="false">example-org/vision-cam@2026-08-23T03:09:13.876Z</guid>
+      <pubDate>Sun, 23 Aug 2026 03:09:13 GMT</pubDate>
+      <description>Vision Cam 为 Agent 带来图像理解与 OCR 能力，截图分析、表格识别与多模态问答开箱即用。</description>
+    </item>
+    <item>
+      <title>🆕 Agent Flow</title>
+      <link>https://github.com/example-org/agent-flow</link>
+      <guid isPermaLink="false">example-org/agent-flow@2026-08-23T03:09:13.876Z</guid>
+      <pubDate>Sun, 23 Aug 2026 03:09:13 GMT</pubDate>
+      <description>Agent Flow 通过可视化 DAG 编排多步骤工作流，支持分支、等待与条件审批，拖拽即可上线。</description>
+    </item>
+    <item>
+      <title>🆕 Dark Theme</title>
+      <link>https://github.com/example-org/theme-dark</link>
+      <guid isPermaLink="false">example-org/theme-dark@2026-08-23T03:09:13.876Z</guid>
+      <pubDate>Sun, 23 Aug 2026 03:09:13 GMT</pubDate>
+      <description>Dark Theme 提供统一的深色配色方案，针对长时间使用优化对比度与视觉疲劳。</description>
+    </item>
+  </channel>
+</rss>

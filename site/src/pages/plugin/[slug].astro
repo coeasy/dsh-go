@@ -1,0 +1,163 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PluginCard from '../../components/PluginCard.astro';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+export async function getStaticPaths() {
+  let plugins = [];
+  try {
+    const data = JSON.parse(readFileSync(resolve('..', 'catalog', 'plugins.json'), 'utf-8'));
+    plugins = data.plugins || [];
+  } catch { /* 无数据时仅首页可访问 */ }
+
+  return plugins.map((p) => {
+    const related = plugins
+      .filter((x) => x.category === p.category && x.slug !== p.slug)
+      .sort((a, b) => b.stars - a.stars)
+      .slice(0, 6);
+    return { params: { slug: p.slug }, props: { plugin: p, related } };
+  });
+}
+
+const { plugin, related } = Astro.props;
+const CATEGORY_ZH: Record<string, string> = {
+  'web-ui': 'Web UI 组件', desktop: '桌面端', mcp: 'MCP 工具', skills: '技能 (Skills)',
+  theme: '主题', terminal: '终端工具', coding: '编码辅助', agent: 'Agent 工作流',
+  vision: '视觉 / 多模态', memory: '记忆 / 存储', security: '安全', integration: '集成',
+  tool: '通用工具', other: '其他',
+};
+const isNew = plugin.first_seen && (Date.now() - new Date(plugin.first_seen).getTime()) < 7 * 864e5;
+const listedAt = plugin.first_seen ? new Date(plugin.first_seen).toLocaleDateString('zh-CN') : '—';
+const updatedAt = plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateString('zh-CN') : '—';
+---
+
+<Layout title={`${plugin.name} · DSH Plugins Nav`} description={plugin.description}>
+  <nav class="crumbs"><a href="/" data-i18n="pl_back">← 返回首页</a></nav>
+
+  <article class="detail">
+    <header>
+      <h1>{plugin.name}</h1>
+      <div class="meta-line">
+        <span class="badge gray" data-i18n-cat={plugin.category}>{CATEGORY_ZH[plugin.category] || plugin.category}</span>
+        {plugin.verified && <span class="badge green" data-i18n="pl_verified">✓ verified</span>}
+        {isNew && <span class="badge amber" data-i18n="pl_new">新上架</span>}
+        <span class="stars">★ {plugin.stars}</span>
+        <span class="muted">fork {plugin.forks} · issue {plugin.open_issues}</span>
+      </div>
+    </header>
+
+    <p class="desc">{plugin.description}</p>
+
+    <section class="install">
+      <h2 data-i18n="pl_install">安装</h2>
+      <div class="code">
+        <code id="cmd">{plugin.install_cmd}</code>
+        <button id="copy" data-cmd={plugin.install_cmd} data-i18n="pl_copy">复制</button>
+      </div>
+    </section>
+
+    <section class="quick">
+      <h2 data-i18n="pl_quick">一键安装</h2>
+      <div class="quick-btns">
+        <a class="qbtn" href={`/install/${plugin.slug}.sh`} download data-i18n="pl_linux">Linux / macOS 脚本</a>
+        <a class="qbtn" href={`/install/${plugin.slug}.ps1`} download data-i18n="pl_win">Windows 脚本</a>
+        <button class="qbtn dsh" id="open-dsh" data-full={plugin.full_name} data-slug={plugin.slug} data-i18n="pl_open_dsh">用 DSH 打开</button>
+      </div>
+    </section>
+
+    <section class="info">
+      <h2 data-i18n="pl_info">信息</h2>
+      <table>
+        <tr><th data-i18n="pl_repo">仓库</th><td><a href={plugin.repo_url} target="_blank" rel="noopener noreferrer">{plugin.full_name}</a></td></tr>
+        <tr><th data-i18n="pl_language">语言</th><td>{plugin.language || '—'}</td></tr>
+        <tr><th data-i18n="pl_license">许可证</th><td>{plugin.license || '—'}</td></tr>
+        <tr><th data-i18n="pl_listed">收录时间</th><td>{listedAt}</td></tr>
+        <tr><th data-i18n="pl_updated">最近更新</th><td>{updatedAt}</td></tr>
+        {plugin.homepage && <tr><th data-i18n="pl_homepage">主页</th><td><a href={plugin.homepage} target="_blank" rel="noopener">{plugin.homepage}</a></td></tr>}
+      </table>
+    </section>
+
+    {plugin.readme_excerpt && (
+      <section class="readme">
+        <h2 data-i18n="pl_about">简介</h2>
+        <p>{plugin.readme_excerpt}…</p>
+      </section>
+    )}
+
+    {plugin.topics && plugin.topics.length > 0 && (
+      <section class="topics">
+        {plugin.topics.map((t: string) => <span class="tag">#{t}</span>)}
+      </section>
+    )}
+  </article>
+
+  {related && related.length > 0 && (
+    <section class="related">
+      <h2 data-i18n="pl_related">相关推荐</h2>
+      <div class="related-grid">
+        {related.map((p) => (
+          <PluginCard
+            slug={p.slug} name={p.name} description={p.description} stars={p.stars}
+            category={p.category} verified={p.verified} trend={p.trend_score}
+            tags={p.topics} isNew={p.first_seen && (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5}
+            created={p.created_at} updated={p.updated_at}
+          />
+        ))}
+      </div>
+    </section>
+  )}
+
+  <script>
+    const btn = document.getElementById('copy');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(btn.dataset.cmd);
+        const g = window as unknown as { __dshI18n?: { getLang: () => string } };
+        const lang = (g.__dshI18n && g.__dshI18n.getLang()) || 'zh';
+        btn.textContent = lang === 'en' ? 'Copied ✓' : '已复制 ✓';
+        setTimeout(() => { btn.textContent = lang === 'en' ? 'Copy' : '复制'; }, 1500);
+      });
+    }
+    const dsh = document.getElementById('open-dsh');
+    if (dsh) {
+      dsh.addEventListener('click', () => {
+        const full = dsh.dataset.full || '';
+        const url = 'dsh://install?plugin=' + encodeURIComponent(full);
+        const ifr = document.createElement('iframe');
+        ifr.style.display = 'none';
+        ifr.src = url;
+        document.body.appendChild(ifr);
+        setTimeout(() => { if (ifr.parentNode) ifr.parentNode.removeChild(ifr); }, 1500);
+        // 降级：复制 dsh 安装命令到剪贴板
+        const cmd = `dsh plugin add github:${full}`;
+        if (navigator.clipboard) navigator.clipboard.writeText(cmd).catch(() => {});
+      });
+    }
+  </script>
+</Layout>
+
+<style>
+  .crumbs { margin-bottom: 12px; font-size: 14px; }
+  .detail h1 { margin: 0 0 10px; font-size: 26px; }
+  .meta-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+  .stars { color: var(--amber); font-weight: 600; }
+  .muted { color: var(--muted); }
+  .desc { color: var(--muted); font-size: 15px; }
+  .install .code, .quick-btns { display: flex; align-items: center; gap: 10px; }
+  .install .code { background: var(--accent-soft); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+  .code code { flex: 1; font-size: 13px; word-break: break-all; }
+  .code button { border: 1px solid var(--border); background: var(--bg); color: var(--fg); border-radius: 8px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
+  .quick-btns { flex-wrap: wrap; }
+  .qbtn { border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; text-decoration: none; }
+  .qbtn:hover { background: var(--accent-soft); text-decoration: none; }
+  .qbtn.dsh { border-style: dashed; }
+  .info table { border-collapse: collapse; width: 100%; max-width: 560px; }
+  .info th, .info td { text-align: left; padding: 6px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .info th { color: var(--muted); width: 100px; font-weight: 500; }
+  .tag { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 3px 10px; font-size: 12px; margin: 0 6px 6px 0; }
+  section { margin-top: 24px; }
+  section h2 { font-size: 17px; margin: 0 0 10px; }
+  .related { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 24px; }
+  .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+</style>

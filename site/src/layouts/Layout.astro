@@ -1,0 +1,105 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+const { title = 'DSH Plugins Nav', description = 'DeepSeek Harness 插件市场导航站' } = Astro.props;
+const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={`${SITE}${Astro.url.pathname}`} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DSH Plugins Nav" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={`${SITE}${Astro.url.pathname}`} />
+    <meta name="twitter:card" content="summary" />
+
+    <style>
+      :root {
+        --bg: #f8fafc; --fg: #0f172a; --muted: #64748b; --border: #e2e8f0;
+        --accent: #2563eb; --accent-soft: #eff6ff; --green: #16a34a; --amber: #f59e0b;
+      }
+      html.dark {
+        --bg: #0f172a; --fg: #f1f5f9; --muted: #94a3b8; --border: #1e293b;
+        --accent: #60a5fa; --accent-soft: #1e293b; --green: #4ade80; --amber: #fbbf24;
+      }
+      html.light {
+        --bg: #f8fafc; --fg: #0f172a; --muted: #64748b; --border: #e2e8f0;
+        --accent: #2563eb; --accent-soft: #eff6ff; --green: #16a34a; --amber: #f59e0b;
+      }
+      @media (prefers-color-scheme: dark) {
+        html:not(.light):not(.dark) {
+          --bg: #0f172a; --fg: #f1f5f9; --muted: #94a3b8; --border: #1e293b;
+          --accent: #60a5fa; --accent-soft: #1e293b; --green: #4ade80; --amber: #fbbf24;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+        background: var(--bg); color: var(--fg); line-height: 1.6;
+      }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      header.nav {
+        position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent);
+        backdrop-filter: blur(8px); border-bottom: 1px solid var(--border);
+      }
+      .nav-inner { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
+      .brand { font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+      .brand img { width: 22px; height: 22px; }
+      .nav-links { display: flex; gap: 14px; margin-left: auto; font-size: 14px; color: var(--muted); align-items: center; }
+      .nav-links a { color: var(--muted); }
+      .nav-links a:hover { color: var(--fg); }
+      .nav-btn {
+        border: 1px solid var(--border); background: transparent; color: var(--muted);
+        border-radius: 999px; padding: 4px 10px; font-size: 13px; cursor: pointer; min-width: 38px;
+        transition: color .12s, border-color .12s;
+      }
+      .nav-btn:hover { color: var(--fg); border-color: var(--muted); }
+      main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 64px; }
+      footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 20px; text-align: center; color: var(--muted); font-size: 13px; }
+      .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+      .badge.green { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+      .badge.amber { background: color-mix(in srgb, var(--amber) 15%, transparent); color: var(--amber); }
+      .badge.gray { background: color-mix(in srgb, var(--muted) 15%, transparent); color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="/"><img src="/favicon.svg" alt="logo" />DSH Plugins Nav</a>
+        <nav class="nav-links">
+          <a href="/" data-i18n="nav_home">首页</a>
+          <a href="/docs" data-i18n="nav_docs">API 文档</a>
+          <a href="/stats" data-i18n="nav_stats">统计</a>
+          <a href="/feed.xml" target="_blank" data-i18n="nav_rss">RSS</a>
+          <button id="lang-toggle" class="nav-btn" type="button" title="Switch language">EN</button>
+          <button id="theme-toggle" class="nav-btn" type="button" aria-label="theme" title="Toggle theme">🌙</button>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <span data-i18n="footer">DSH Plugins Nav · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="/api/v1/health">API 状态</a></span>
+    </footer>
+
+    <script>
+      import { initI18n } from '../scripts/i18n';
+      initI18n();
+    </script>
+  </body>
+</html>

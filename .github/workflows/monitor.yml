@@ -1,0 +1,43 @@
+name: Monitor
+
+on:
+  schedule:
+    - cron: "5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check SITE_URL configured
+        run: |
+          [ -n "$SITE_URL" ] || { echo "未配置 SITE_URL（请在仓库 Variables 中添加）"; exit 1; }
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+
+      - name: Check site homepage
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${SITE_URL}/")
+          [ "$STATUS" = "200" ] || { echo "首页异常: $STATUS"; exit 1; }
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+
+      - name: Check API
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${SITE_URL}/api/v1/health")
+          [ "$STATUS" = "200" ] || { echo "API 异常: $STATUS"; exit 1; }
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+
+      - name: Check data freshness
+        run: |
+          UPDATED=$(curl -s --max-time 20 "${SITE_URL}/api/v1/meta" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).last_sync.at))")
+          AGE_H=$(( ( $(date +%s) - $(date -d "$UPDATED" +%s) ) / 3600 ))
+          [ "$AGE_H" -lt 36 ] || { echo "数据已 ${AGE_H} 小时未更新"; exit 1; }
+          echo "数据新鲜度正常 (${AGE_H}h)"
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}

@@ -1,0 +1,35 @@
+# API：CORS 全开 + 短缓存（Functions 会自行设置，此处兜底）
+/api/*
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, POST, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, If-None-Match
+  Access-Control-Max-Age: 86400
+  X-Content-Type-Options: nosniff
+
+# OpenAPI 规范与原始数据：允许跨域
+/openapi.json
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600
+/catalog/*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=300, s-maxage=3600
+
+# RSS
+/feed.xml
+  Content-Type: application/rss+xml; charset=utf-8
+
+# 静态资源：一年不可变
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 全局安全头
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+
+# 免费 pages.dev 子域名不索引（绑自定义域名后防重复收录）
+https://dsh-hub.pages.dev/*
+  X-Robots-Tag: noindex, nofollow
