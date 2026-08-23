@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import PluginCard from '../../components/PluginCard.astro';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { u } from '../../lib/urls';
 
 export async function getStaticPaths() {
   let plugins = [];
@@ -33,7 +34,7 @@ const updatedAt = plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateSt
 ---
 
 <Layout title={`${plugin.name} · DSH Plugins Nav`} description={plugin.description}>
-  <nav class="crumbs"><a href="/" data-i18n="pl_back">← 返回首页</a></nav>
+  <nav class="crumbs"><a href={u('/')} data-i18n="pl_back">← 返回首页</a></nav>
 
   <article class="detail">
     <header>
@@ -60,8 +61,8 @@ const updatedAt = plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateSt
     <section class="quick">
       <h2 data-i18n="pl_quick">一键安装</h2>
       <div class="quick-btns">
-        <a class="qbtn" href={`/install/${plugin.slug}.sh`} download data-i18n="pl_linux">Linux / macOS 脚本</a>
-        <a class="qbtn" href={`/install/${plugin.slug}.ps1`} download data-i18n="pl_win">Windows 脚本</a>
+        <a class="qbtn" href={u(`/install/${plugin.slug}.sh`)} download data-i18n="pl_linux">Linux / macOS 脚本</a>
+        <a class="qbtn" href={u(`/install/${plugin.slug}.ps1`)} download data-i18n="pl_win">Windows 脚本</a>
         <button class="qbtn dsh" id="open-dsh" data-full={plugin.full_name} data-slug={plugin.slug} data-i18n="pl_open_dsh">用 DSH 打开</button>
       </div>
     </section>

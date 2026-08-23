@@ -6,6 +6,7 @@ import SearchBar from '../components/SearchBar.astro';
 import CategoryFilter from '../components/CategoryFilter.astro';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { u } from '../lib/urls';
 
 let data: any = { meta: { count: 0, stats: {} }, plugins: [] };
 try {
@@ -24,7 +25,7 @@ const topStars = [...plugins].sort((a: any, b: any) => b.stars - a.stars).slice(
     <p class="sub" data-i18n="hero_sub" data-count={meta.count || 0}>收录 {meta.count || 0} 个 dsh-plugin 插件，每日自动更新 · 全开源 · 开放 API</p>
     <div class="top3">
       {topStars.map((p: any) => (
-        <a href={`/plugin/${p.slug}`} class="top-item"><span class="top-name">{p.name}</span><span class="top-star">★{p.stars}</span></a>
+        <a href={u(`/plugin/${p.slug}`)} class="top-item"><span class="top-name">{p.name}</span><span class="top-star">★{p.stars}</span></a>
       ))}
     </div>
   </section>
@@ -46,7 +47,7 @@ const topStars = [...plugins].sort((a: any, b: any) => b.stars - a.stars).slice(
   </section>
   <div id="empty" class="empty" hidden data-i18n="empty_msg">没有匹配的插件，换个关键词试试？</div>
 
-  <script src="/scripts/app.js" is:inline></script>
+  <script src={u('/scripts/app.js')} is:inline></script>
 </Layout>
 
 <style>

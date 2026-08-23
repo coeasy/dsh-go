@@ -1,0 +1,76 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 连续推送只跑最新一次，避免并行部署互相覆盖
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # 心跳提交（sync 打 [no deploy]）跳过部署；手动/dispatch 不受影响
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install root dependencies & run checks
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+
+      - name: Install site dependencies
+        run: cd site && npm ci
+
+      - name: Copy catalog into site (API 数据源 + 静态下载)
+        run: node scripts/copy-assets.mjs
+
+      - name: Build site (GitHub Pages 子路径)
+        # 项目站部署在 https://<owner>.github.io/<repo>/ 子路径，注入仓库名作为 base，
+        # 前端所有绝对链接由 urls.ts 的 u() 统一加上该前缀。
+        run: cd site && npm run build
+        env:
+          PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+
+      - name: Verify build output
+        run: |
+          test -f site/dist/index.html
+          test -f site/dist/catalog/plugins.json
+          echo "构建产物校验通过"
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

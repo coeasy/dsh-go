@@ -1,4 +1,6 @@
 ---
+import { u } from '../lib/urls';
+
 interface Props {
   title?: string;
   description?: string;
@@ -15,7 +17,7 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={u('/favicon.svg')} />
     <link rel="canonical" href={`${SITE}${Astro.url.pathname}`} />
 
     <!-- Open Graph -->
@@ -79,12 +81,12 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
   <body>
     <header class="nav">
       <div class="nav-inner">
-        <a class="brand" href="/"><img src="/favicon.svg" alt="logo" />DSH Plugins Nav</a>
+        <a class="brand" href={u('/')}><img src={u('/favicon.svg')} alt="logo" />DSH Plugins Nav</a>
         <nav class="nav-links">
-          <a href="/" data-i18n="nav_home">首页</a>
-          <a href="/docs" data-i18n="nav_docs">API 文档</a>
-          <a href="/stats" data-i18n="nav_stats">统计</a>
-          <a href="/feed.xml" target="_blank" data-i18n="nav_rss">RSS</a>
+          <a href={u('/')} data-i18n="nav_home">首页</a>
+          <a href={u('/docs')} data-i18n="nav_docs">API 文档</a>
+          <a href={u('/stats')} data-i18n="nav_stats">统计</a>
+          <a href={u('/feed.xml')} target="_blank" data-i18n="nav_rss">RSS</a>
           <button id="lang-toggle" class="nav-btn" type="button" title="Switch language">EN</button>
           <button id="theme-toggle" class="nav-btn" type="button" aria-label="theme" title="Toggle theme">🌙</button>
         </nav>

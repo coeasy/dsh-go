@@ -1,4 +1,6 @@
 ---
+import { u } from '../lib/urls';
+
 interface Props {
   slug: string;
   name: string;
@@ -22,7 +24,7 @@ const CATEGORY_ZH: Record<string, string> = {
 
 <a
   class="plugin-card"
-  href={`/plugin/${slug}`}
+  href={u(`/plugin/${slug}`)}
   data-category={category}
   data-verified={verified ? 'true' : 'false'}
   data-is-new={isNew ? 'true' : 'false'}

@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { u } from '../lib/urls';
 const BASE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
 
 const endpoints = [
@@ -60,7 +61,7 @@ const etagHtml = `<span>// 浏览器 / Node.js</span>
   <h2 data-i18n="doc_basics">基础信息</h2>
   <ul>
     <li data-i18n="doc_baseurl" data-base={BASE}>Base URL: <code>{BASE}</code></li>
-    <li data-i18n="doc_openapi">规范文件：<a href="/openapi.json" target="_blank">/openapi.json</a>（可导入 Postman / Apifox）</li>
+    <li data-i18n="doc_openapi">规范文件：<a href={u('/openapi.json')} target="_blank">/openapi.json</a>（可导入 Postman / Apifox）</li>
     <li data-i18n="doc_fresh">数据新鲜度：<a href="/api/v1/meta" target="_blank">/api/v1/meta</a></li>
     <li data-i18n="doc_ratelimit">速率限制：每 IP 每 10 秒 20 次（Cloudflare WAF 免费规则）</li>
   </ul>
@@ -89,8 +90,8 @@ const etagHtml = `<span>// 浏览器 / Node.js</span>
 
   <h2 data-i18n="doc_data">数据下载与订阅</h2>
   <ul>
-    <li data-i18n="doc_raw">原始全量数据：<a href="/catalog/plugins.json" target="_blank">/catalog/plugins.json</a></li>
-    <li data-i18n="doc_rss">RSS 订阅：<a href="/feed.xml" target="_blank">/feed.xml</a></li>
+    <li data-i18n="doc_raw">原始全量数据：<a href={u('/catalog/plugins.json')} target="_blank">/catalog/plugins.json</a></li>
+    <li data-i18n="doc_rss">RSS 订阅：<a href={u('/feed.xml')} target="_blank">/feed.xml</a></li>
   </ul>
 
   <h2 data-i18n="doc_mcp">MCP 接入（Claude Desktop）</h2>
