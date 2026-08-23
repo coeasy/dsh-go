@@ -62,14 +62,23 @@ function log(msg, type = 'info') {
   console.log(`[${t}] ${type.toUpperCase().padEnd(8)} ${msg}`);
 }
 
-async function ghFetch(path, { retries = 3 } = {}) {
+async function ghFetch(path, { retries = 4 } = {}) {
   const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
-  const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'dsh-hub' };
+  const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': `dsh-hub/${Math.random().toString(36).slice(2, 6)}` };
   if (TOKEN) headers['Authorization'] = `Bearer ${TOKEN}`;
   for (let i = 0; i < retries; i++) {
-    const res = await fetch(url, { headers });
+    let res;
+    try {
+      res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
+    } catch (e) {
+      // 网络级异常（连接超时 / DNS / 限速断开）——无 HTTP 状态码，退避重试
+      log(`网络异常（${e.name || 'fetch失败'}），${3 + i * 2}s 后重试 (${i + 1}/${retries})`, 'warn');
+      await sleep((3 + i * 2) * 1000);
+      continue;
+    }
     if (res.status === 429 || res.status === 403 || res.status >= 500) {
-      const retryAfter = Number(res.headers.get('Retry-After') || '5');
+      // GitHub 搜索限速 403 未带 Retry-After 时给长退避；普通 5xx 用短退避
+      const retryAfter = Number(res.headers.get('Retry-After') || (res.status === 403 ? 60 : 5));
       log(`限速/错误 ${res.status}，${retryAfter}s 后重试 (${i + 1}/${retries})`, 'warn');
       await sleep(retryAfter * 1000);
       continue;
@@ -202,8 +211,12 @@ async function fetchReadme(fullName, branch) {
 }
 
 // ---------- 仓库抓取 ----------
-async function searchRepos(query, page = 1) {
-  const res = await ghFetch(`/search/repositories?q=${encodeURIComponent(query)}&per_page=100&page=${page}`);
+async function searchRepos(query, page = 1, opts = {}) {
+  // GitHub 搜索 API 硬限制：最多返回 1000 条（page × per_page ≤ 1000），page 超 10 会 422。
+  // 因此必须按相关性/星星排序取 top-1000（高星仓库优先），并限制 page ≤ 10。
+  const sort = opts.sort ? `&sort=${opts.sort}&order=${opts.order || 'desc'}` : '';
+  const url = `/search/repositories?q=${encodeURIComponent(query)}&per_page=100&page=${Math.min(10, Math.max(1, page))}${sort}`;
+  const res = await ghFetch(url);
   if (!res) return { items: [], total: 0 };
   const data = await res.json();
   return { items: data.items || [], total: data.total_count || 0 };
@@ -276,21 +289,18 @@ async function main() {
   const errors = [];
 
   if (mode === 'full') {
-    log('全量模式：搜索全部 topic:dsh-plugin 仓库');
-    // 全量需覆盖全部候选（10944 个 → 约 110 页），页数由 total 动态决定，不硬编码 10
-    const first = await searchRepos(TOPIC, 1);
-    const { items, total } = first;
-    scanned += items.length;
-    repos.push(...items);
-    const pages = Math.min(200, Math.max(1, Math.ceil((total || 0) / 100)));
-    for (let page = 2; page <= pages; page++) {
-      await sleep(SEARCH_DELAY);
-      const { items: it, total: tt } = await searchRepos(TOPIC, page);
-      scanned += it.length;
-      repos.push(...it);
-      if (repos.length >= tt || it.length === 0) break;
+    // GitHub 搜索 API 最多返回 1000 条（page≤10）。因此全量按星星降序取 top-1000，
+    // 这批已涵盖几乎所有高星插件（含全部 >=200 星插件）；低星长尾不在首页详情范围。
+    log('全量模式：搜索 topic:dsh-plugin 按 stars 排序取 top-1000（搜索 API 硬上限）');
+    for (let page = 1; page <= 10; page++) {
+      await sleep(page > 1 ? SEARCH_DELAY : 0);
+      const { items, total } = await searchRepos(TOPIC, page, { sort: 'stars', order: 'desc' });
+      scanned += items.length;
+      repos.push(...items);
+      if (items.length === 0) break;
+      log(`第 ${page} 页抓取 ${items.length} 个（总分 ${total}）`);
     }
-    log(`全量搜索完成，共 ${total} 个候选`);
+    log(`全量搜索完成，共获取 ${repos.length} 个（top-1000 高分仓库）`);
   } else {
     // 增量模式：只抓上次同步以来 pushed 变更的仓库。
     // 窗口取「上次同步时间点」，但用当日零点避免 pushed:>xx:xx 语法歧义；
@@ -369,7 +379,7 @@ async function main() {
     }
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
-  const plugins = results.filter(Boolean);
+  let plugins = results.filter(Boolean);
 
   // 全量时保留旧数据中本次未出现的仓库（GitHub 搜索偶发漏项保护）
   if (mode === 'full') {

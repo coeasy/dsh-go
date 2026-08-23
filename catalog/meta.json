@@ -1,10 +1,10 @@
 {
   "last_sync": {
-    "at": "2026-08-23T13:05:56.274Z",
-    "mode": "incremental",
-    "duration_ms": 287,
-    "scanned": 0,
-    "included": 0,
+    "at": "2026-08-23T14:53:13.892Z",
+    "mode": "full",
+    "duration_ms": 141654,
+    "scanned": 1000,
+    "included": 1000,
     "skipped": 0,
     "data_changed": true,
     "errors": []
@@ -16,6 +16,16 @@
       "duration_ms": 287,
       "scanned": 0,
       "included": 0,
+      "skipped": 0,
+      "data_changed": true,
+      "errors": []
+    },
+    {
+      "at": "2026-08-23T14:53:13.892Z",
+      "mode": "full",
+      "duration_ms": 141654,
+      "scanned": 1000,
+      "included": 1000,
       "skipped": 0,
       "data_changed": true,
       "errors": []
