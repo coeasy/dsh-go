@@ -33,6 +33,9 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          # 站点从未发布过时，Get Pages site 会返回 404；enablement 使 action 自动创建 Pages 站点
+          enablement: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
