@@ -4,7 +4,7 @@ export type Lang = 'zh' | 'en';
 export const I18N: Record<Lang, Record<string, string>> = {
   zh: {
     nav_home: '首页', nav_docs: 'API 文档', nav_stats: '统计', nav_rss: 'RSS',
-    footer: 'DSH Plugins Nav · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="/api/v1/health">API 状态</a>',
+    footer: 'DSH Plugins Nav · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="{api}">API 状态</a>',
     hero_title: 'DeepSeek Harness 插件市场',
     hero_sub: '收录 {n} 个 dsh-plugin 插件，每日自动更新 · 全开源 · 开放 API',
     empty_msg: '没有匹配的插件，换个关键词试试？',
@@ -17,7 +17,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     cat_tool: '工具', cat_other: '其他',
     doc_title: 'API 文档', doc_intro: '公开、免费、CORS 全开、无需认证，支持 If-None-Match ETag 协商缓存。数据每日 08:18 自动同步。',
     doc_basics: '基础信息', doc_baseurl: 'Base URL: {b}', doc_openapi: '规范文件：/openapi.json（可导入 Postman / Apifox）',
-    doc_fresh: '数据新鲜度：/api/v1/meta', doc_ratelimit: '速率限制：每 IP 每 10 秒 20 次（Cloudflare WAF 免费规则）',
+    doc_fresh: '数据新鲜度：<a href="{api_url}/api/v1/meta">{api_url}/api/v1/meta</a>', doc_ratelimit: '速率限制：每 IP 每 10 秒 20 次（Cloudflare WAF 免费规则）',
     doc_endpoints: '端点一览', th_method: '方法', th_path: '路径', th_desc: '说明', th_param: '参数', th_desc2: '说明',
     doc_params: '常用参数（/api/v1/plugins）', doc_examples: '调用示例', doc_resp: '响应格式',
     doc_resp_text: '列表端点返回 { meta, pagination, plugins }；详情返回 { plugin, related, meta }；错误统一为 { error: { code, message } }。',
@@ -35,7 +35,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
   },
   en: {
     nav_home: 'Home', nav_docs: 'API Docs', nav_stats: 'Stats', nav_rss: 'RSS',
-    footer: 'DSH Plugins Nav · Synced daily from GitHub topic:dsh-plugin · <a href="/api/v1/health">API Status</a>',
+    footer: 'DSH Plugins Nav · Synced daily from GitHub topic:dsh-plugin · <a href="{api}">API Status</a>',
     hero_title: 'DeepSeek Harness Plugin Hub',
     hero_sub: 'Browse {n} dsh-plugin plugins, synced daily · open source · open API',
     empty_msg: 'No matching plugins, try another keyword.',
@@ -48,7 +48,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     cat_tool: 'Tools', cat_other: 'Other',
     doc_title: 'API Docs', doc_intro: 'Public, free, CORS-enabled, no auth. Supports If-None-Match ETag negotiation. Synced daily at 08:18.',
     doc_basics: 'Basics', doc_baseurl: 'Base URL: {b}', doc_openapi: 'Spec: /openapi.json (import to Postman / Apifox)',
-    doc_fresh: 'Freshness: /api/v1/meta', doc_ratelimit: 'Rate limit: 20 req / 10s / IP (Cloudflare WAF free rule)',
+    doc_fresh: 'Freshness: <a href="{api_url}/api/v1/meta">{api_url}/api/v1/meta</a>', doc_ratelimit: 'Rate limit: 20 req / 10s / IP (Cloudflare WAF free rule)',
     doc_endpoints: 'Endpoints', th_method: 'Method', th_path: 'Path', th_desc: 'Description', th_param: 'Param', th_desc2: 'Description',
     doc_params: 'Common params (/api/v1/plugins)', doc_examples: 'Examples', doc_resp: 'Response Format',
     doc_resp_text: 'List returns { meta, pagination, plugins }; detail returns { plugin, related, meta }; errors are { error: { code, message } }.',

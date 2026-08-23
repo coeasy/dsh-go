@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.1] - 2026-08-23
+
+### 双端部署
+- 新增 GitHub Pages 静态镜像部署（`deploy-pages.yml`）：Cloudflare Pages（全功能含 API）+ GitHub Pages（纯静态展示）
+- 新增 `PUBLIC_API_URL` 环境变量分离 API 域名：GitHub Pages 上所有 `/api/*` 链接自动跳转 Cloudflare 主站
+- `urls.ts` 新增 `apiUrl()` / `apiBase()`；`u()` 支持子路径 base 前缀
+- README / DEPLOYMENT_V2 / DEPLOY_GUIDE 补充双部署架构与 coeasy 配置步骤
+
 ## [2.1.0] - 2026-08-23
 
 ### 更名

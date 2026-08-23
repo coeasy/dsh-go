@@ -26,6 +26,8 @@ function apply(lang: Lang) {
     if (el.dataset.count != null) ctx.n = el.dataset.count;
     if (el.dataset.base != null) ctx.b = el.dataset.base;
     if (el.dataset.time != null) ctx.t = el.dataset.time;
+    if (el.dataset.api != null) ctx.api = el.dataset.api;
+    if (el.dataset.apiUrl != null) ctx.api_url = el.dataset.apiUrl;
     const txt = tr(key, lang, ctx);
     // 输入类元素：设置 placeholder 而非 innerHTML（innerHTML 对 void 元素无效）
     if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {

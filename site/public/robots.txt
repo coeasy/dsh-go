@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dsh-hub.pages.dev/sitemap-index.xml
+# sitemap 自动生成在当前部署域名下（GitHub Pages / Cloudflare 各自生成各自的）
+Sitemap: /sitemap-index.xml

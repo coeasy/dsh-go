@@ -1,5 +1,5 @@
 ---
-import { u } from '../lib/urls';
+import { u, apiUrl } from '../lib/urls';
 
 interface Props {
   title?: string;
@@ -96,7 +96,7 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
       <slot />
     </main>
     <footer>
-      <span data-i18n="footer">DSH Plugins Nav · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="/api/v1/health">API 状态</a></span>
+      <span data-i18n="footer" data-api={apiUrl('/api/v1/health')}>DSH Plugins Nav · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="/api/v1/health">API 状态</a></span>
     </footer>
 
     <script>

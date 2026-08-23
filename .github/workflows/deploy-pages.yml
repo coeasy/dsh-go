@@ -54,11 +54,15 @@ jobs:
         run: node scripts/copy-assets.mjs
 
       - name: Build site (GitHub Pages 子路径)
-        # 项目站部署在 https://<owner>.github.io/<repo>/ 子路径，注入仓库名作为 base，
-        # 前端所有绝对链接由 urls.ts 的 u() 统一加上该前缀。
+        # 项目站部署在 https://<owner>.github.io/<repo>/ 子路径：
+        #  - PUBLIC_BASE_PATH  前端绝对链接前缀（urls.ts 的 u()）
+        #  - PUBLIC_SITE_URL   canonical/og/sitemap 指向本站域名，避免被指向 pages.dev 造成重复内容
+        #  - PUBLIC_API_URL    保持 Cloudflare 主站，因 GitHub Pages 无 functions（/api/* 不存在）
         run: cd site && npm run build
         env:
           PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+          PUBLIC_SITE_URL: https://${{ github.event.repository.owner.login }}.github.io/${{ github.event.repository.name }}
+          PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-hub' }}.pages.dev
 
       - name: Verify build output
         run: |

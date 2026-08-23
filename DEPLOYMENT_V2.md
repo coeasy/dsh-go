@@ -86,7 +86,31 @@
               浏览器访问（全球 CDN）        第三方 JS/后端调 API      AI Agent 走 MCP
 ```
 
-**数据更新链路**：同步脚本产出新 JSON → 校验通过 → 内容有变化才 commit → 自动触发部署工作流 → 构建（1~2 分钟）→ 全球 CDN 生效。全程无人干预。
+### 1.1 双部署：Cloudflare Pages + GitHub Pages 静态镜像
+
+> 本项目支持同时部署到 **Cloudflare Pages（主站，全功能含 API）** 与 **GitHub Pages（静态镜像，无 API）**。
+> 两站前端内容完全一致，均自动更新；GitHub Pages 仅供纯静态访问，`/api/*` 不可用但不受影响。
+
+```
+GitHub Pages 镜像站 https://<owner>.github.io/<repo>/   Cloudflare 主站 https://dsh-hub.pages.dev
+        │  静态页面/插件卡片/搜索（前端过滤）                 │  静态页面 + /api/v1/* 动态 API
+        └─ 指向 API 的链接自动跳转 ───────────────────────→  │
+```
+
+| 对比项 | Cloudflare Pages（主站） | GitHub Pages（静态镜像） |
+|---|---|---|
+| 部署域名 | `https://dsh-hub.pages.dev` | `https://coeasy.github.io/dsh_hub/` |
+| 部署方式 | `deploy.yml`（assets） | `deploy-pages.yml`（官方 actions） |
+| `/api/v1/*` | ✅ Pages Functions 真 API | ❌ 无 functions，自动跳转主站 API |
+| 前端功能 | ✅ 完整 | ✅ 完整（纯静态渲染，不依赖 API） |
+| 管理级别 | 全自动一条链路 | 全自动，仅依赖 GitHub |
+
+**关键机制（已实现）**：
+- `PUBLIC_API_URL` 环境变量分离 API 域名 → GitHub Pages 上所有 API 链接指向 Cloudflare 主站；
+- `u()` 工具函数给绝对链接加 `base` 前缀 → 正确适配 `<repo>/` 子路径部署；
+- 常规合并提交（不带 `[no deploy]`）同时触发两个工作流，一次性更新两站。
+
+**数据更新链路**：同步脚本产出新 JSON → 校验通过 → 内容有变化才 commit → 自动触发双部署工作流 → 构建（1~2 分钟）→ 两站全球生效。全程无人干预。
 
 **为什么这就是"绝对 0 元"**：
 - 页面与数据走**静态资源**，Cloudflare Pages 静态请求无限量、无计费概念；
@@ -103,7 +127,8 @@ dsh-hub/
 ├── .github/
 │   ├── workflows/
 │   │   ├── sync.yml                 # 同步（全量+增量+手动+dispatch）
-│   │   ├── deploy.yml               # 构建并部署到 Cloudflare Pages
+│   │   ├── deploy.yml               # 构建并部署到 Cloudflare Pages（主站）
+│   │   ├── deploy-pages.yml         # 构建为纯静态并部署到 GitHub Pages（镜像）
 │   │   └── monitor.yml              # 每小时健康检查（失败→邮件告警）
 │   └── dependabot.yml               # 依赖安全更新
 ├── scripts/
@@ -437,6 +462,67 @@ curl -X POST \
 ```
 
 触发后 2~4 分钟内（同步 + 构建 + 部署）新数据全球生效。**仍然是免费的**（走的是同一个 Actions 额度，公开仓库无上限）。
+
+### 4.5 GitHub Pages 静态镜像工作流（`.github/workflows/deploy-pages.yml`）
+
+> 与 §4.2 的 `deploy.yml` 并行工作：同为 push main 触发，但把站点构建为**纯静态产物**，通过官方队列部署到 `https://<owner>.github.io/<repo>/`。GitHub Pages **不提供 functions**，因此镜像站 `/api/v1/*` 不可用；前端为纯静态渲染、不调用 API，功能不受影响，指向 API 的链接经 `PUBLIC_API_URL` 自动跳回 Cloudflare 主站。
+
+```yaml
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**.md", "LICENSE"]   # 纯文档改动不触发
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: site/package-lock.json }
+      - run: npm ci && npm run typecheck && npm test
+      - run: cd site && npm ci
+      - run: node scripts/copy-assets.mjs
+      - run: cd site && npm run build
+        env:
+          PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+          PUBLIC_SITE_URL: https://${{ github.event.repository.owner.login }}.github.io/${{ github.event.repository.name }}
+          PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-hub' }}.pages.dev
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site/dist }
+      - uses: actions/deploy-pages@v4
+        id: deployment
+```
+
+**三个环境变量的作用**（GitHub Pages 镜像站必配）：
+- `PUBLIC_BASE_PATH`：`/<repo>/` 子路径前缀，`urls.ts` 的 `u()` 据此给所有绝对链接加前缀；
+- `PUBLIC_SITE_URL`：canonical/OG/sitemap 指向本站域名，避免两站重复收录；
+- `PUBLIC_API_URL`：保持 Cloudflare 主站，因 GitHub Pages 无 functions，`/api/*` 链接自动跳回 `https://<owner>.pages.dev`。
+
+> **启用步骤（一次性）**：
+> 1. 仓库 Settings → Pages → **Source** 选 **GitHub Actions**；
+> 2. repo Settings → Actions → Workflow permissions → **Read and write**；
+> 3. （可选）仓库 Variables 添加 `CF_PAGES_PROJECT = dsh-hub` 覆盖默认主站 API 域名。
+>
+> 详见 [DEPLOY_GUIDE.md §8 双部署](./DEPLOY_GUIDE.md)。
 
 ---
 
@@ -971,6 +1057,7 @@ compatibility_date = "2026-01-01"
 | Variable（仓库 Variables，非机密） | 用途 |
 |---|---|
 | `SITE_URL` | 监控工作流用，如 `https://dsh-hub.pages.dev` |
+| `CF_PAGES_PROJECT` | （GitHub Pages 镜像专用）覆盖主站 API 域名，默认 `https://dsh-hub.pages.dev` |
 
 > `GITHUB_TOKEN` 无需配置，Actions 自动注入。公开仓库上它拥有写权限（需在 Settings → Actions → Workflow permissions 选 "Read and write"）。
 
@@ -1145,6 +1232,7 @@ updates:
 |---|---|---|
 | V1.0 | 2026-08-21 | 初版：静态站 + 静态 JSON"API" + 每日同步 |
 | V2.0 | 2026-08-23 | 全面升级：真·动态 API（Functions）、增量同步、内容级 diff、监控+邮件告警、MCP、OpenAPI、RSS、文档页、修复 [skip ci] 致命问题 |
+| V2.1 | 2026-08-23 | 双部署：新增 GitHub Pages 静态镜像（`deploy-pages.yml`）、`PUBLIC_API_URL` 分离 API 域名、`u()` 子路径前缀适配 |
 
 ---
 

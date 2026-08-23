@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { u } from '../lib/urls';
-const BASE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
+import { u, apiBase } from '../lib/urls';
+const BASE = apiBase();
 
 const endpoints = [
   { method: 'GET', path: '/api/v1/plugins', desc: '插件列表（过滤/搜索/排序/分页）' },
@@ -41,12 +41,12 @@ const mcpConfigHtml = `<span>// ~/.config/Claude/claude_desktop_config.json</spa
 <span>  }</span>
 <span>}</span>`;
 
-const etagHtml = `<span>// 浏览器 / Node.js</span>
+const etagHtml = `<span>// 浏览器 / Node.js（把 API_BASE 换成实际的 Base URL）</span>
 <span>let etag = null, cache = null;</span>
 <span>async function getPlugins(params) {</span>
 <span>  const headers = {};</span>
 <span>  if (etag) headers['If-None-Match'] = etag;</span>
-<span>  const res = await fetch('/api/v1/plugins?' + params, { headers });</span>
+<span>  const res = await fetch('${BASE}/api/v1/plugins?' + params, { headers });</span>
 <span>  if (res.status === 304) return cache;</span>
 <span>  etag = res.headers.get('ETag');</span>
 <span>  cache = await res.json();</span>
@@ -62,7 +62,7 @@ const etagHtml = `<span>// 浏览器 / Node.js</span>
   <ul>
     <li data-i18n="doc_baseurl" data-base={BASE}>Base URL: <code>{BASE}</code></li>
     <li data-i18n="doc_openapi">规范文件：<a href={u('/openapi.json')} target="_blank">/openapi.json</a>（可导入 Postman / Apifox）</li>
-    <li data-i18n="doc_fresh">数据新鲜度：<a href="/api/v1/meta" target="_blank">/api/v1/meta</a></li>
+    <li data-i18n="doc_fresh" data-api-url={BASE}>数据新鲜度：<a href="/api/v1/meta" target="_blank">/api/v1/meta</a></li>
     <li data-i18n="doc_ratelimit">速率限制：每 IP 每 10 秒 20 次（Cloudflare WAF 免费规则）</li>
   </ul>
 

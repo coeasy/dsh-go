@@ -212,6 +212,42 @@ curl -s https://dsh-hub.pages.dev/api/v1/meta
 
 ---
 
+## 阶段 8（可选）：GitHub Pages 静态镜像（coeasy 账号约 5 分钟）
+
+> 在已跑通的 Cloudflare 主站（阶段 1–7）基础上，再加一个**纯静态镜像站**：`https://coeasy.github.io/dsh_hub/`。
+> 本仓库 `deploy-pages.yml` 已自动构建并部署，你只需在 GitHub 侧做一次设置。
+
+### 8.1 一次性设置（3 处）
+
+1. **仓库 Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**；
+2. **仓库 Settings → Actions → Workflow permissions** 选择 **Read and write**（`GITHUB_TOKEN` 自动获得 Pages 写入权限）；
+3. （可选）仓库 Settings → **Secrets and variables → Actions → Variables** 添加 `CF_PAGES_PROJECT = dsh-hub`：
+   - 作用：让镜像站的 API 链接指回 Cloudflare 主站；
+   - 不设置也行：默认已指向 `https://dsh-hub.pages.dev`。
+
+### 8.2 触发与访问
+
+```bash
+# 手动触发一次（或直接 push main）
+# 仓库 → Actions → Deploy GitHub Pages → Run workflow
+```
+
+- 部署 URL：`https://coeasy.github.io/dsh_hub/`
+- 首次成功后，**Settings → Pages** 会显示该地址；此后每次常规 push 自动双站更新。
+- 迁移到组织账号时：仓库移入组织后，地址自动变为 `<组织>.github.io/dsh_hub/`，API 域名不变。
+
+### 8.3 与主站的差异（务必知悉）
+
+| | Cloudflare（主站） | GitHub Pages（镜像） |
+|---|---|---|
+| 前端页面 | ✅ | ✅ 相同 |
+| `/api/v1/*` | ✅ 真 API | ❌ 不可用（0 页面前端不使用 API，无影响） |
+| 指向 API 的链接 | 站内 | 自动跳回 `https://dsh-hub.pages.dev/api/*` |
+
+> 一句话：镜像站只做展示，不提供 API；页面里的 "API 状态 / `数据新鲜度`" 等链接都会自动跳到 Cloudflare 主站。
+
+---
+
 ## 附：一句话速查
 
 ```bash
