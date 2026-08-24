@@ -20,32 +20,32 @@ DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API
 - **自助监控**：每小时健康检查 + GitHub 原生邮件告警
 
 <!-- HOT-PLUGINS:START -->
-## 🔥 最近热门推荐（1000-3000★）
+## 🔥 最近热门推荐（500-3000★）
 
-> 自动生成 · 按最近更新排序 · Top20（每次同步后刷新）
+> 自动生成 · 仅收录**命名含 dsh / deepseek-harness 的 DSH 原生插件** · 按最近更新排序 · Top20（每次同步后刷新）
 
 | # | 插件 | ★ Stars | 语言 | 最近更新 | 简介 |
 |---|------|---------|------|----------|------|
-| 1 | [cloudbase-ai-toolkit](https://github.com/TencentCloudBase/CloudBase-AI-Toolkit) | 1.1k | TypeScript | 2026-08-24 | Backend for AI coding agents on CloudBase … |
-| 2 | [browser-skill](https://github.com/Tencent/BrowserSkill) | 1.3k | TypeScript | 2026-08-24 | Let AI agents use your real, logged-in bro… |
-| 3 | [@deepseek-harness-tui/dsh-tui](https://github.com/ccch1mneyyy/dsh-TUI) | 2.4k | TypeScript | 2026-08-24 | Claude Code style interactive TUI front do… |
-| 4 | [codex-taskboard](https://github.com/chuspeeism/dashi-taskboard) | 2.5k | JavaScript | 2026-08-24 | — |
-| 5 | [deepseek-harness-desktop](https://github.com/dsh-tauri-desk/deepseek-harness-desktop) | 1.1k | Rust | 2026-08-24 | Desktop application for DeepSeek Harness (… |
-| 6 | [agentrq](https://github.com/agentrq/agentrq) | 1.1k | Go | 2026-08-24 | AgentRQ: Human-in-loop realtime conversati… |
-| 7 | [dsh-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 2.8k | TypeScript | 2026-08-24 | DSH web plugin: a VSCode-like right sideba… |
-| 8 | [BitFun](https://github.com/GCWing/BitFun) | 1.8k | Rust | 2026-08-24 | BitFun combines a high-performance agent r… |
-| 9 | [brooks-lint](https://github.com/hyhmrright/brooks-lint) | 1.4k | JavaScript | 2026-08-24 | AI code reviews grounded in 12 classic eng… |
-| 10 | [dshmarket](https://github.com/dsh-market/dsh-market) | 2.1k | TypeScript | 2026-08-24 | Visual plugin market inside DeepSeek Harne… |
-| 11 | [awesome-dsh-plugins](https://github.com/AdamPlatin123/awesome-dsh-plugins) | 1.4k | Python | 2026-08-24 | DSH 插件雷达与精选榜：多路自动发现 9000+ 候选，容器真实安装路径运行级实测… |
-| 12 | [aegis](https://github.com/GanyuanRan/Aegis) | 1.1k | Python | 2026-08-24 | Make AI coding agents architecture-aware: … |
-| 13 | [DeepSeek-V4-J-Space-Capability-Realization-Report](https://github.com/Tiger3807861189/DeepSeek-V4-J-Space-Capability-Realization-Report) | 1k | — | 2026-08-23 | DeepSeek V4 × J-Space capability realizati… |
-| 14 | [dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale) | 1.6k | TypeScript | 2026-08-23 | Whale Girl skin series for DeepSeek Harnes… |
-| 15 | [openpets-v2-workspace](https://github.com/alvinunreal/openpets) | 1.1k | TypeScript | 2026-08-23 | OpenPets 2.0 workspace |
-| 16 | [deeptide](https://github.com/paean-ai/deeptide) | 1.1k | Rust | 2026-08-22 | DeepTide CLI — cross-platform terminal AI … |
-| 17 | [mem9](https://github.com/mem9-ai/mem9) | 1.2k | TypeScript | 2026-08-22 | Unlimited memory for OpenClaw |
-| 18 | [agent-vision-toolkit](https://github.com/Anionex/agent-vision-toolkit) | 1.1k | Python | 2026-08-21 | 为纯文本模型"看图“设计更好的视觉工具箱和技能，支持多图理解，图片问答，前端UI还原… |
-| 19 | [zhuzhiliao](https://github.com/imsai-sh/zhuzhiliao) | 2.9k | HTML | 2026-08-14 | 竹知了 —— 一转就哇哇叫的传统玩具，Web 模拟版。零依赖单文件，真实录音采样，移… |
-| 20 | [Vibe-Skills](https://github.com/foryourhealth111-pixel/Vibe-Skills) | 3k | Python | 2026-08-11 | VibeSkills is a general-purpose Skill that… |
+| 1 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 952 | JavaScript | 2026-08-24 | Eyes for text-only DeepSeek Harness agents… |
+| 2 | [@deepseek-harness-tui/dsh-tui](https://github.com/ccch1mneyyy/dsh-TUI) | 2.4k | TypeScript | 2026-08-24 | Claude Code style interactive TUI front do… |
+| 3 | [deepseek-harness-desktop](https://github.com/dsh-tauri-desk/deepseek-harness-desktop) | 1.1k | Rust | 2026-08-24 | Desktop application for DeepSeek Harness (… |
+| 4 | [dsh-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 2.8k | TypeScript | 2026-08-24 | DSH web plugin: a VSCode-like right sideba… |
+| 5 | [treg-dsh](https://github.com/superdesigndev/treg) | 574 | Python | 2026-08-24 | OpenRouter for tools - 2,600 agent-friendl… |
+| 6 | [awesome-deepseek-harness](https://github.com/0xsline/awesome-deepseek-harness) | 869 | Python | 2026-08-24 | DeepSeek Harness (DSH) ecosystem: curated … |
+| 7 | [dsh-whale-widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget) | 774 | JavaScript | 2026-08-24 | DSH Web 界面右下角的 DeepSeek 余额小鲸鱼挂件（含今日已用、峰谷定价… |
+| 8 | [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | 625 | JavaScript | 2026-08-24 | DeepSeek Harness Desktop App: a local AI d… |
+| 9 | [dshmarket](https://github.com/dsh-market/dsh-market) | 2.1k | TypeScript | 2026-08-24 | Visual plugin market inside DeepSeek Harne… |
+| 10 | [@xmanrui/dsh-im](https://github.com/xmanrui/dsh-im) | 726 | JavaScript | 2026-08-24 | 把九种 IM 机器人和公网 AI Office 接入本机 DeepSeek Harn… |
+| 11 | [@anionex/dsh-vision-toolkit](https://github.com/Anionex/dsh-vision-toolkit) | 819 | TypeScript | 2026-08-24 | DeepSeek Harness-native integration for ag… |
+| 12 | [awesome-dsh-plugins](https://github.com/AdamPlatin123/awesome-dsh-plugins) | 1.4k | Python | 2026-08-24 | DSH 插件雷达与精选榜：多路自动发现 9000+ 候选，容器真实安装路径运行级实测… |
+| 13 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 975 | TypeScript | 2026-08-24 | A DeepSeek Harness plugin for context insi… |
+| 14 | [dsh-pocket](https://github.com/shaobeichen/dsh-pocket) | 538 | JavaScript | 2026-08-23 | 把 DeepSeek Harness 装进你的口袋：一个包、一个设置页，手机扫码即同… |
+| 15 | [@mnemon-dev/dsh-mnemon](https://github.com/mnemon-dev/mnemon) | 513 | Go | 2026-08-23 | Install the full dsh-mnemon integration fr… |
+| 16 | [dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale) | 1.6k | TypeScript | 2026-08-23 | Whale Girl skin series for DeepSeek Harnes… |
+| 17 | [@dsh-external/dsh-ads](https://github.com/Nagi-ovo/dsh-ads) | 553 | TypeScript | 2026-08-23 | DSH ad-infestation plugin: localized Chine… |
+| 18 | [@nanmicoder/dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) | 904 | TypeScript | 2026-08-23 | AgentTeams for DeepSeek Harness: multi-age… |
+| 19 | [dsh-handbook](https://github.com/Electricitysheep/dsh-handbook) | 642 | HTML | 2026-08-22 | DeepSeek Harness (dsh) 从 0 到 1 深度手册：安装/插件开… |
+| 20 | [awesome-dsh-plugin](https://github.com/Anil-matcha/awesome-dsh-plugin) | 979 | — | 2026-08-20 | A curated list of plugins for DeepSeek Har… |
 
 更新时间：2026-08-24
 <!-- HOT-PLUGINS:END -->

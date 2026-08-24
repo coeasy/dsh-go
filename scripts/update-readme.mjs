@@ -40,16 +40,29 @@ function clamp(text, max) {
   return t.length > max ? `${t.slice(0, max)}…` : t;
 }
 
-function pickHot(plugins, { min = 1000, max = 3000, top = 20 } = {}) {
+// 是否 DSH 原生相关：仓库名 / 插件名含 “dsh”，或以 “deepseek-harness” 命名。
+// 命中即认为与 DSH 生态强相关；以此剔除那些“只是打了 dsh-plugin 标签、
+// 但与 DSH 无实质关联的老开源项目”。
+function isDshRelated(p) {
+  const full = `${p.full_name || ''} ${p.name || ''}`;
+  return /dsh/i.test(full) || /deepseek-harness/i.test(full);
+}
+
+// 区间说明：1000-3000★ 内 DSH 原生插件仅约 7 个，凑不满 20；
+// 因此把 star 下限放宽到 500（默认 min），既保证“推荐 20 个”，又维持全是 DSH 强相关。
+function pickHot(plugins, { min = 500, max = 3000, top = 20 } = {}) {
   return plugins
-    .filter((p) => Number(p.stars || 0) >= min && Number(p.stars || 0) <= max)
+    .filter((p) => {
+      const stars = Number(p.stars || 0);
+      return stars >= min && stars <= max && isDshRelated(p);
+    })
     .sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0))
     .slice(0, top);
 }
 
 function buildTable(hot) {
   if (!hot.length) {
-    return `<p>暂无 1000-3000★ 的插件收录，敬请期待。</p>\n`;
+    return `<p>暂未收录 500-3000★ 的 DSH 原生插件，敬请期待。</p>\n`;
   }
   const rows = hot.map((p, i) => {
     const name = p.name || p.full_name;
@@ -63,7 +76,7 @@ function buildTable(hot) {
 
 function buildSection(hot) {
   const stamp = new Date().toISOString().slice(0, 10);
-  return `${START}\n## 🔥 最近热门推荐（1000-3000★）\n\n> 自动生成 · 按最近更新排序 · Top${hot.length || 0}（每次同步后刷新）\n\n${buildTable(hot)}\n更新时间：${stamp}\n${END}`;
+  return `${START}\n## 🔥 最近热门推荐（500-3000★）\n\n> 自动生成 · 仅收录**命名含 dsh / deepseek-harness 的 DSH 原生插件** · 按最近更新排序 · Top${hot.length || 0}（每次同步后刷新）\n\n${buildTable(hot)}\n更新时间：${stamp}\n${END}`;
 }
 
 function main() {
