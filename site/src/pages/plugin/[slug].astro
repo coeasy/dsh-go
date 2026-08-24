@@ -130,13 +130,15 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
       <h2 data-i18n="pl_related">相关推荐</h2>
       <div class="related-grid">
         {related.map((p) => (
-          <PluginCard
-            slug={p.slug} name={p.name} description={p.description} stars={p.stars}
-            category={p.category} verified={p.verified} trend={p.trend_score}
-            tags={p.topics} isNew={p.first_seen && (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5}
-            created={p.created_at} updated={p.updated_at} full_name={p.full_name}
-            install_cmd={p.install_cmd}
-          />
+          <div class="rel-item">
+            <PluginCard
+              slug={p.slug} name={p.name} description={p.description} stars={p.stars}
+              category={p.category} verified={p.verified} trend={p.trend_score}
+              tags={p.topics} isNew={p.first_seen && (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5}
+              created={p.created_at} updated={p.updated_at} full_name={p.full_name}
+              install_cmd={p.install_cmd}
+            />
+          </div>
         ))}
       </div>
     </section>
@@ -318,7 +320,8 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
   .related-grid::-webkit-scrollbar { height: 8px; }
   .related-grid::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
   .related-grid::-webkit-scrollbar-track { background: transparent; }
-  .related-grid > * { flex: 0 0 300px; scroll-snap-align: start; }
+  .rel-item { flex: 0 0 300px; display: flex; scroll-snap-align: start; }
+  .rel-item > a { width: 100%; }
 
   @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; }
