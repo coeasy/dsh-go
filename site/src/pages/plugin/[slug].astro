@@ -97,14 +97,8 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
           <section class="card">
             <h2 data-i18n="pl_about">简介</h2>
             <p class="readme-text">{plugin.readme_excerpt}…</p>
-            <a class="readme-more" href={`${plugin.repo_url}#readme`} target="_blank" rel="noopener noreferrer" data-i18n="pl_readme_more">在 GitHub 查看完整 README ↗</a>
           </section>
         )}
-
-        <section class="card">
-          <h2 data-i18n="readme_title">README</h2>
-          <div id="readme" class="md" data-readme-owner={plugin.full_name?.split('/')[0]} data-readme-repo={plugin.full_name?.split('/')[1]}><p data-i18n="readme_loading">加载 README…</p></div>
-        </section>
       </div>
 
       <aside class="side-col">
@@ -185,89 +179,8 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
   </script>
 
   <script>
-    // ……README 完整渲染 + Markdown 徽章复制……
-    const langOf = () => (window as unknown as { __dshI18n?: { getLang: () => string } }).__dshI18n?.getLang?.() || 'zh';
-
-    // 轻量安全 Markdown → HTML：先整体转义，再做格式标记替换（不支持原始 HTML，防注入）
-    function escapeHtml(s: string): string {
-      return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
-    }
-    function autolink(m: string): string {
-      const url = m.slice(1, -1);
-      if (/^(https?:|mailto:)/i.test(url)) return `<a href="${url}" rel="noopener noreferrer">${url}</a>`;
-      return m;
-    }
-    function renderMarkdown(raw: string): string {
-      const src = raw.replace(/\r\n/g, '\n');
-      const lines = src.split('\n');
-      const out: string[] = [];
-      let code: string[] | null = null;
-      const push = (s = '') => out.push(s);
-      const inline = (t: string) =>
-        escapeHtml(t)
-          .replace(/`([^`]+)`/g, '<code>$1</code>')
-          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-          .replace(/~~([^~]+)~~/g, '<del>$1</del>')
-          .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" rel="noopener noreferrer">$1</a>');
-      for (const line of lines) {
-        // 代码块
-        if (/^````?/.test(line)) {
-          if (code) { push(`</code></pre>`); code = null; }
-          else { code = []; push(`<pre><code>`); }
-          continue;
-        }
-        if (code) { code.push(escapeHtml(line)); continue; }
-        const m = line.trim();
-        if (!m) { push(); continue; }
-        if (/^(#{1,6})\s+/.test(m)) {
-          const lvl = m.match(/^(#{1,6})\s+/)![1].length;
-          push(`<h${lvl}>${inline(m.replace(/^#{1,6}\s*/, ''))}</h${lvl}>`);
-        } else if (/^&gt;\s?/.test(escapeHtml(m)) || (/^>\s?/).test(m)) {
-          push(`<blockquote>${inline(m.replace(/^>\s?/, ''))}</blockquote>`);
-        } else if (/^[-*_]{3,}\s*$/.test(m)) {
-          push('<hr>');
-        } else if (/^-?\s+/.test(m) && !/^\d+\.\s/.test(m)) {
-          push(`<li>${inline(m.replace(/^[-*+]\s+/, ''))}</li>`);
-        } else if (/^\d+\.\s+/.test(m)) {
-          push(`<li>${inline(m.replace(/^\d+\.\s+/, ''))}</li>`);
-        } else if (!out.length && /^<https?:[^>]+>$/.test(m)) {
-          push(autolink(m));
-        } else {
-          push(`<p>${inline(m)}</p>`);
-        }
-      }
-      if (code) push(`</code></pre>`);
-      return out.join('\n');
-    }
-
-    const readmeEl = document.getElementById('readme');
-    if (readmeEl) {
-      const owner = readmeEl.getAttribute('data-readme-owner') || '';
-      const repo = readmeEl.getAttribute('data-readme-repo') || '';
-      const candidates = ['README.md', 'readme.md', 'README.MD', 'Readme.md', 'README', 'readme', 'README.mdx'];
-      let done = false;
-      (async () => {
-        for (const file of candidates) {
-          if (done) break;
-          try {
-            const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${file}`);
-            if (!res.ok) continue;
-            const text = await res.text();
-            if (!text.trim() || text.startsWith('404: Not Found')) continue;
-            const html = renderMarkdown(text);
-            readmeEl.innerHTML = html || '<p></p>';
-            done = true;
-          } catch { /* 继续尝试下一个候选文件名 */ }
-        }
-        if (!done) {
-          const lang = langOf();
-          readmeEl.innerHTML = `<p data-i18n="readme_fail">${lang === 'en' ? 'Failed to load README, view on GitHub instead' : 'README 加载失败，请到 GitHub 查看'}</p>`;
-        }
-      })();
-    }
-
     // Markdown 徽章复制
+    const langOf = () => (window as unknown as { __dshI18n?: { getLang: () => string } }).__dshI18n?.getLang?.() || 'zh';
     const bc = document.getElementById('badge-copy') as HTMLButtonElement | null;
     const bcode = document.getElementById('badge') as HTMLElement | null;
     if (bc && bcode) {
@@ -374,26 +287,6 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
 
   /* ---------- 简介 ---------- */
   .readme-text { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
-  .readme-more { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; }
-
-  /* ---------- 完整 README 渲染 ---------- */
-  .md { color: var(--fg); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
-  .md h1, .md h2, .md h3, .md h4 { margin: 1.2em 0 .5em; line-height: 1.3; }
-  .md h1 { font-size: 21px; }
-  .md h2 { font-size: 18px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
-  .md h3 { font-size: 16px; }
-  .md p { margin: .55em 0; }
-  .md ul, .md ol { margin: .5em 0; padding-left: 1.5em; }
-  .md li { margin: .2em 0; }
-  .md code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; }
-  .md pre { background: #0d1526; border: 1px solid #1e2d47; border-radius: 10px; padding: 12px 14px; overflow-x: auto; }
-  .md pre code { background: none; border: none; padding: 0; color: #7dd3fc; display: block; line-height: 1.6; }
-  .md blockquote { margin: .6em 0; padding: 2px 14px; border-left: 3px solid var(--accent); color: var(--muted); background: var(--bg-soft); border-radius: 0 6px 6px 0; }
-  .md hr { border: none; border-top: 1px solid var(--border); margin: 1.2em 0; }
-  .md a { color: var(--accent); }
-  .md img { max-width: 100%; border-radius: 8px; }
-  .md table { border-collapse: collapse; margin: .6em 0; }
-  .md th, .md td { border: 1px solid var(--border); padding: 6px 10px; font-size: 13px; }
 
   /* ---------- 徽章 ---------- */
   .hint { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; }

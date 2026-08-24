@@ -70,7 +70,12 @@ export function pickHot(plugins, { min = DEFAULT_MIN, max = DEFAULT_MAX, top = T
   const rest = plugins
     .filter((p) => {
       const stars = Number(p.stars || 0);
-      return stars >= min && stars <= max && isDshRelated(p) && !pinnedSet.has(p.full_name);
+      const full = `${p.full_name || ''} ${p.name || ''}`;
+      return (
+        stars >= min && stars <= max && isDshRelated(p) &&
+        !/awesome/i.test(full) &&           // 排除 awesome 盘点型仓库，不作为推荐对象
+        !pinnedSet.has(p.full_name)
+      );
     })
     .sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0))
     .slice(0, top);
@@ -93,7 +98,7 @@ export function buildTable(hot, { min = DEFAULT_MIN, max = DEFAULT_MAX } = {}) {
 
 function buildSection(hot, { min = DEFAULT_MIN, max = DEFAULT_MAX } = {}) {
   const stamp = new Date().toISOString().slice(0, 10);
-  return `${START}\n## 🔥 最近热门推荐（${min}-${max}★）\n\n> 自动生成 · 仅收录**命名含 dsh / deepseek-harness 的 DSH 原生插件**，并固定推荐 modlens · 按最近更新排序 · Top${hot.length || 0}（每次同步后刷新）\n\n${buildTable(hot, { min, max })}\n更新时间：${stamp}\n${END}`;
+  return `${START}\n## 🔥 最近热门推荐（${min}-${max}★）\n\n> 自动生成 · 仅收录**命名含 dsh / deepseek-harness 的 DSH 原生插件**（排除 awesome 盘点型仓库），并固定推荐 modlens / dsh-better-sidebar · 按最近更新排序 · Top${hot.length || 0}（每次同步后刷新）\n\n${buildTable(hot, { min, max })}\n更新时间：${stamp}\n${END}`;
 }
 
 function main() {
