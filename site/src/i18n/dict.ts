@@ -13,6 +13,9 @@ export const I18N: Record<Lang, Record<string, string>> = {
     s_stars: '最多 Star', s_trend: '热度', s_updated: '最近更新', s_created: '最新发布',
     results: '找到 {n} 个插件', results_one: '找到 1 个插件',
     hero_open: '全开源', hero_api: '开放 API', hero_daily: '每日同步',
+    guide_s1_t: '查找', guide_s1: '搜索名称或分类筛选',
+    guide_s2_t: '复制命令', guide_s2: '点卡片上的 ⬇ 一键复制',
+    guide_s3_t: '终端运行', guide_s3: '粘贴 `dsh plugin add` 命令安装',
     cat_webui: 'Web UI', cat_desktop: '桌面端', cat_mcp: 'MCP', cat_skills: '技能',
     cat_theme: '主题', cat_terminal: '终端', cat_coding: '编码', cat_agent: 'Agent',
     cat_vision: '视觉', cat_memory: '记忆', cat_security: '安全', cat_integration: '集成',
@@ -35,6 +38,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     pl_topics: '标签', pl_readme_more: '在 GitHub 查看完整 README ↗',
     pl_new: '新上架', pl_verified: '✓ verified', pl_quick: '一键安装', pl_linux: 'Linux / macOS 脚本',
     pl_win: 'Windows 脚本', pl_open_dsh: '用 DSH 打开',
+    pl_copy_cmd: '复制安装命令', pl_copy_cmd_ok: '已复制安装命令',
   },
   en: {
     nav_home: 'Home', nav_docs: 'API Docs', nav_stats: 'Stats', nav_rss: 'RSS',
@@ -47,6 +51,9 @@ export const I18N: Record<Lang, Record<string, string>> = {
     s_stars: 'Most Stars', s_trend: 'Trending', s_updated: 'Recently Updated', s_created: 'Newest',
     results: '{n} plugins found', results_one: '1 plugin found',
     hero_open: 'Open Source', hero_api: 'Open API', hero_daily: 'Daily Sync',
+    guide_s1_t: 'Find', guide_s1: 'Search by name or filter by category',
+    guide_s2_t: 'Copy', guide_s2: 'Click the ⬇ icon on a card to copy',
+    guide_s3_t: 'Install', guide_s3: 'Paste the `dsh plugin add` command in your terminal',
     cat_webui: 'Web UI', cat_desktop: 'Desktop', cat_mcp: 'MCP', cat_skills: 'Skills',
     cat_theme: 'Theme', cat_terminal: 'Terminal', cat_coding: 'Coding', cat_agent: 'Agent',
     cat_vision: 'Vision', cat_memory: 'Memory', cat_security: 'Security', cat_integration: 'Integration',
@@ -69,6 +76,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     pl_topics: 'Topics', pl_readme_more: 'View full README on GitHub ↗',
     pl_new: 'New', pl_verified: '✓ verified', pl_quick: 'Quick Install', pl_linux: 'Linux / macOS script',
     pl_win: 'Windows script', pl_open_dsh: 'Open with DSH',
+    pl_copy_cmd: 'Copy install command', pl_copy_cmd_ok: 'Install command copied',
   },
 };
 

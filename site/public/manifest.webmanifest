@@ -1,0 +1,19 @@
+{
+  "name": "DSH Go",
+  "short_name": "DSH Go",
+  "description": "DeepSeek Harness 插件市场导航站 —— 收录 dsh-plugin 插件，每日自动同步，支持一键复制安装命令。",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f6f8fb",
+  "theme_color": "#2563eb",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -12,7 +12,7 @@ DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API
 - **全自动更新**：每日 08:18 全量同步 + 每 6 小时增量同步（GitHub topic:`dsh-plugin`）
 - **真·动态 API**：`/api/v1/*`（Cloudflare Pages Functions），过滤/搜索/排序/分页/ETag 304
 - **MCP 端点**：`/api/v1/mcp`，AI Agent 直接查询插件目录
-- **双端部署**：Cloudflare Pages（全功能，含 API）+ GitHub Pages（静态镜像，无 API）
+- **多位置部署**：Cloudflare Pages（全功能，含 API）+ GitHub Pages（静态镜像）+ Gitee / GitCode（国内静态镜像，多个位置可同时运行）
 - **零成本**：静态无限量 + Functions 免费 10 万次/天（超量只停服不扣费）+ 公开仓库 Actions 无限
 - **自助监控**：每小时健康检查 + GitHub 原生邮件告警
 
@@ -44,6 +44,17 @@ DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API
 
 > 首次启用 GitHub Pages 后，需在 GitHub 账号层面确认该仓库已执行一次 Pages 部署（触发 `actions/upload-pages-artifact` + `deploy-pages`）。
 > 若你希望迁移到组织账号，把仓库移动到组织后，上述 `coeasy` 域名自动变为 `<组织>.github.io`，API 域名保持不变。
+
+### 1.6 同时部署到国内镜像（Gitee / GitCode，网络优化，可选）
+
+> 针对国内访问，`deploy-mirror.yml` 会把同一套纯静态产物分别推送到 Gitee 与 GitCode 的 `gh-pages` 分支，站点自动按子路径 `/dsh_go` 构建：
+> 国内镜像站均为纯静态（无 functions），页面内指向 `/api/*` 的链接会自动回指 Cloudflare 主站。
+
+1. 仓库 Settings → Secrets 添加 `GITEE_TOKEN` / `GITCODE_TOKEN`（含 **Push pages** 权限的 Access Token），未添加的平台自动跳过；
+2. 在仓库 Variables 配置 `GITCODE_REPO = <你的命名空间>/dsh_go`（Gitee 缺省用 `easy5277/dsh_go`）；
+3. 推送 `main` 分支后，镜像产物会被推送到：
+   - Gitee → `https://gitee.com/<namespace>/dsh_go` 的 `gh-pages` 分支（需到仓库「服务 → Gitee Pages」手动点「更新」+ 过审核）；
+   - GitCode → `https://gitcode.com/<namespace>/dsh_go` 的 `gh-pages` 分支（配置该分支为发布源后 push 即自动构建）。
 
 ### 2. 本地开发
 

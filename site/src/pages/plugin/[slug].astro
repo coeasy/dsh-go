@@ -130,6 +130,7 @@ const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
             category={p.category} verified={p.verified} trend={p.trend_score}
             tags={p.topics} isNew={p.first_seen && (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5}
             created={p.created_at} updated={p.updated_at} full_name={p.full_name}
+            install_cmd={p.install_cmd}
           />
         ))}
       </div>

@@ -20,7 +20,7 @@ concurrency:
 
 env:
   # 每个平台独立的仓库标识，由 GitHub Repository Variables 注入；缺省用平台默认用户名
-  GITEE_REPO: easy5277/dsh_go
+  GITEE_REPO: ${{ vars.GITEE_REPO || 'easy5277/dsh_go' }}
   GITCODE_REPO: ${{ vars.GITCODE_REPO || 'easy5277/dsh_go' }}
 
 jobs:

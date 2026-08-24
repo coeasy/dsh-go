@@ -16,9 +16,10 @@ interface Props {
   created?: string;
   updated?: string;
   full_name?: string;
+  install_cmd?: string;
 }
 
-const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated, full_name } = Astro.props;
+const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated, full_name, install_cmd } = Astro.props;
 
 // 是否生成了静态详情页（与 plugin/[slug].astro 的 getStaticPaths 门槛保持一致）
 const hasDetail = stars >= DETAIL_THRESHOLD;
@@ -62,12 +63,13 @@ const CATEGORY_ZH: Record<string, string> = {
   data-tags={(tags || []).join(' ')}
   data-created={created}
   data-updated={updated}
+  data-cmd={install_cmd}
 >
   <div class="row1">
     <span class="avatar" style={`--h:${hue}`}>{initial}</span>
     <span class="name" title={name}>{name}</span>
     {verified && <span class="v-ico" title="verified">✓</span>}
-    <span class="stars" title={stars}>★ {fmtK(stars)}</span>
+    <span class="stars" title={String(stars)}>★ {fmtK(stars)}</span>
   </div>
   <div class="desc">{description}</div>
   <div class="meta">
@@ -75,6 +77,9 @@ const CATEGORY_ZH: Record<string, string> = {
     {verified && <span class="badge green" data-i18n="pl_verified">✓ verified</span>}
     {isNew && <span class="badge amber" data-i18n="pl_new">新</span>}
     <span class="spacer"></span>
+    {install_cmd && (
+      <button class="copy-cmd" type="button" data-copy-cmd={install_cmd} title={install_cmd} data-i18n="pl_copy_cmd" aria-label="copy install command">⬇</button>
+    )}
     {age && <span class="age">{age}</span>}
   </div>
 </a>
@@ -124,4 +129,13 @@ const CATEGORY_ZH: Record<string, string> = {
   .meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: auto; }
   .spacer { flex: 1; }
   .age { font-size: 11.5px; color: var(--muted, #64748b); opacity: .8; }
+  .copy-cmd {
+    flex: none; border: 1px solid var(--border); background: var(--bg-soft); color: var(--muted);
+    border-radius: 8px; width: 26px; height: 26px; cursor: pointer; font-size: 13px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: color .15s, border-color .15s, background .15s, transform .15s;
+  }
+  .copy-cmd:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); transform: translateY(-1px); }
+  .copy-cmd.copied { color: var(--green); border-color: color-mix(in srgb, var(--green) 55%, var(--border)); background: color-mix(in srgb, var(--green) 10%, var(--bg-soft)); }
+  .copy-cmd .tick { font-weight: 800; }
 </style>

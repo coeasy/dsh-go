@@ -51,6 +51,14 @@ const catCount = Object.keys(meta.stats?.by_category || {}).length;
     <CategoryFilter />
   </section>
 
+  <section class="guide" data-i18n="guide" aria-label="how to install">
+    <div class="guide-step"><span class="g-num">1</span><b data-i18n="guide_s1_t">查找</b><i data-i18n="guide_s1">搜索名称或分类筛选</i></div>
+    <div class="g-arrow" aria-hidden="true">→</div>
+    <div class="guide-step"><span class="g-num">2</span><b data-i18n="guide_s2_t">复制命令</b><i data-i18n="guide_s2">点卡片上的 ⬇ 一键复制</i></div>
+    <div class="g-arrow" aria-hidden="true">→</div>
+    <div class="guide-step"><span class="g-num">3</span><b data-i18n="guide_s3_t">终端运行</b><i data-i18n="guide_s3">粘贴 `dsh plugin add` 安装</i></div>
+  </section>
+
   <div class="result-line">
     <span id="result-count" data-results={sorted.length}>找到 {sorted.length} 个插件</span>
   </div>
@@ -62,6 +70,7 @@ const catCount = Object.keys(meta.stats?.by_category || {}).length;
         category={p.category} verified={p.verified} trend={p.trend_score}
         tags={p.topics} isNew={p.first_seen && (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5}
         created={p.created_at} updated={p.updated_at} full_name={p.full_name}
+        install_cmd={p.install_cmd}
       />
     ))}
   </section>
@@ -105,6 +114,23 @@ const catCount = Object.keys(meta.stats?.by_category || {}).length;
   .top-star { color: var(--amber); font-weight: 700; }
 
   .controls { margin: 10px 0 20px; }
+
+  /* 三步安装引导 */
+  .guide {
+    display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+    border: 1px solid var(--border); border-radius: 14px; background: var(--card);
+    padding: 14px 22px; margin: 0 0 18px; box-shadow: var(--shadow-sm);
+  }
+  .guide-step { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .guide-step b { color: var(--fg); font-weight: 700; font-size: 13.5px; }
+  .g-num {
+    width: 22px; height: 22px; border-radius: 999px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--accent-soft); color: var(--accent); font-weight: 800; font-size: 12.5px;
+  }
+  .g-arrow { color: var(--border-strong); font-weight: 600; }
+  @media (max-width: 640px) { .g-arrow { display: none; } }
+
   .result-line {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     margin: 0 0 12px; font-size: 13px; color: var(--muted);

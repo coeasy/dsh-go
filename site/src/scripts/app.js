@@ -108,4 +108,32 @@
   readStateFromURL();
   syncUI();
   applyAll();
+
+  // 卡片内一键复制安装命令：阻止卡片跳转，复制 dsh add 命令并给出短暂反馈
+  const copyBtns = Array.from(document.querySelectorAll('.plugin-card [data-copy-cmd]'));
+  copyBtns.forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const cmd = btn.getAttribute('data-copy-cmd') || '';
+      if (!cmd) return;
+      try {
+        await navigator.clipboard.writeText(cmd);
+      } catch {
+        // 剪贴板不可用时降级为复制到隐藏输入框
+        const ta = document.createElement('textarea');
+        ta.value = cmd;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (_) {}
+        document.body.removeChild(ta);
+      }
+      btn.classList.add('copied');
+      btn.innerHTML = '<span class="tick">✓</span>';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '⬇';
+      }, 1400);
+    });
+  });
 })();

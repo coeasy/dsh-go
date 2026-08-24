@@ -18,7 +18,13 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href={u('/favicon.svg')} />
+    <link rel="manifest" href={u('/manifest.webmanifest')} />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="DSH Go" />
+    <link rel="apple-touch-icon" href={u('/favicon.svg')} />
     <link rel="canonical" href={`${SITE}${Astro.url.pathname}`} />
+    <meta name="robots" content="index, follow" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
