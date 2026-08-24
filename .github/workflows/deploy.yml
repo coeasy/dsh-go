@@ -66,6 +66,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: dsh-hub
+          projectName: dsh-go
           directory: site/dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
