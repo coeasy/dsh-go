@@ -5,7 +5,7 @@
     <link>https://dsh-hub.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 23 Aug 2026 15:12:49 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 24 Aug 2026 02:03:25 GMT</lastBuildDate>
     <item>
       <title>🆕 @deepseek-ai/dsh-root</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
@@ -16,8 +16,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-08-23T14:38:45Z</guid>
-      <pubDate>Sun, 23 Aug 2026 14:38:45 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-08-24T01:49:55Z</guid>
+      <pubDate>Mon, 24 Aug 2026 01:49:55 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -44,8 +44,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-08-23T06:49:44Z</guid>
-      <pubDate>Sun, 23 Aug 2026 06:49:44 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-08-23T17:45:04Z</guid>
+      <pubDate>Sun, 23 Aug 2026 17:45:04 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -79,15 +79,15 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-08-23T14:45:19Z</guid>
-      <pubDate>Sun, 23 Aug 2026 14:45:19 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-08-23T17:27:19Z</guid>
+      <pubDate>Sun, 23 Aug 2026 17:27:19 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
       <title>🆕 dsh-web-ui</title>
       <link>https://github.com/zhu1090093659/dsh-web-ui</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web-ui@2026-08-23T14:11:27Z</guid>
-      <pubDate>Sun, 23 Aug 2026 14:11:27 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web-ui@2026-08-24T01:50:15Z</guid>
+      <pubDate>Mon, 24 Aug 2026 01:50:15 GMT</pubDate>
       <description>dsh web ui · DSH Web UI 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/dsh web ui banner.png&quot; alt=&quot;dsh web ui&quot; width=&quot;100%&quot; &lt;/p &lt;p align=&quot;center&q</description>
     </item>
     <item>
@@ -107,50 +107,50 @@
     <item>
       <title>🆕 dsh-anchored-standard</title>
       <link>https://github.com/xiaobright/dsh-anchored-standard</link>
-      <guid isPermaLink="false">xiaobright/dsh-anchored-standard@2026-08-17T06:19:58Z</guid>
-      <pubDate>Mon, 17 Aug 2026 06:19:58 GMT</pubDate>
+      <guid isPermaLink="false">xiaobright/dsh-anchored-standard@2026-08-23T17:23:42Z</guid>
+      <pubDate>Sun, 23 Aug 2026 17:23:42 GMT</pubDate>
       <description>dsh anchored standard 中文说明 Experimental DeepSeek Harness agent presets — a base mode, two live anchor variants, and one seeded prefab mode — that anchor a session&apos;s model trajectory on the Minima</description>
     </item>
     <item>
       <title>🆕 @liustack/modlens</title>
       <link>https://github.com/liustack/modlens</link>
-      <guid isPermaLink="false">liustack/modlens@2026-08-22T08:13:27Z</guid>
-      <pubDate>Sat, 22 Aug 2026 08:13:27 GMT</pubDate>
+      <guid isPermaLink="false">liustack/modlens@2026-08-23T18:50:13Z</guid>
+      <pubDate>Sun, 23 Aug 2026 18:50:13 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;https://raw.githubusercontent.com/liustack/modlens/main/assets/banner.jpg&quot; width=&quot;100%&quot; alt=&quot;ModLens&quot; / &lt;/p &lt;h1 align=&q</description>
     </item>
     <item>
       <title>🆕 echobird</title>
       <link>https://github.com/edison7009/EchoBird</link>
-      <guid isPermaLink="false">edison7009/EchoBird@2026-08-23T14:38:47Z</guid>
-      <pubDate>Sun, 23 Aug 2026 14:38:47 GMT</pubDate>
+      <guid isPermaLink="false">edison7009/EchoBird@2026-08-24T01:57:15Z</guid>
+      <pubDate>Mon, 24 Aug 2026 01:57:15 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/icon.png&quot; alt=&quot;EchoBird&quot; width=&quot;140&quot; / &lt;/p &lt;h1 align=&quot;center&quot; EchoBird&lt;/h1 &lt;p align=&quot;center&qu</description>
     </item>
     <item>
       <title>🆕 dsh-better-sidebar</title>
       <link>https://github.com/omdsh-dev/DSH-better-sidebar</link>
-      <guid isPermaLink="false">omdsh-dev/DSH-better-sidebar@2026-08-23T14:59:39Z</guid>
-      <pubDate>Sun, 23 Aug 2026 14:59:39 GMT</pubDate>
+      <guid isPermaLink="false">omdsh-dev/DSH-better-sidebar@2026-08-23T17:22:44Z</guid>
+      <pubDate>Sun, 23 Aug 2026 17:22:44 GMT</pubDate>
       <description>dsh better sidebar &lt;! Hero &lt;div align=&quot;center&quot; &lt;b style=&quot;font size: 1.15em;&quot; 一个服务化的侧边栏框架，一套开箱即用的完整工作台&lt;/b &lt;br / &lt;br / &lt;a href=&quot;https://www.npmjs.com/packag</description>
     </item>
     <item>
       <title>🆕 codex-taskboard</title>
       <link>https://github.com/chuspeeism/dashi-taskboard</link>
-      <guid isPermaLink="false">chuspeeism/dashi-taskboard@2026-08-23T14:20:57Z</guid>
-      <pubDate>Sun, 23 Aug 2026 14:20:57 GMT</pubDate>
+      <guid isPermaLink="false">chuspeeism/dashi-taskboard@2026-08-23T20:09:01Z</guid>
+      <pubDate>Sun, 23 Aug 2026 20:09:01 GMT</pubDate>
       <description>English 简体中文 Codex Taskboard A local first issue board that runs in a browser and can be embedded in Codex through the standalone CDP launcher or its injection script. The same HTTP API powers the Rea</description>
     </item>
     <item>
       <title>🆕 @deepseek-harness-tui/dsh-tui</title>
       <link>https://github.com/ccch1mneyyy/dsh-TUI</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-TUI@2026-08-23T14:53:11Z</guid>
-      <pubDate>Sun, 23 Aug 2026 14:53:11 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-TUI@2026-08-24T02:01:48Z</guid>
+      <pubDate>Mon, 24 Aug 2026 02:01:48 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/logo.svg&quot; alt=&quot;dsh TUI DeepSeek Harness terminal interface&quot; width=&quot;560&quot; &lt;/p &lt;p align=&quot;center&quot; &lt;</description>
     </item>
     <item>
       <title>🆕 dshmarket</title>
       <link>https://github.com/dsh-market/dsh-market</link>
-      <guid isPermaLink="false">dsh-market/dsh-market@2026-08-23T14:34:49Z</guid>
-      <pubDate>Sun, 23 Aug 2026 14:34:49 GMT</pubDate>
+      <guid isPermaLink="false">dsh-market/dsh-market@2026-08-23T17:26:06Z</guid>
+      <pubDate>Sun, 23 Aug 2026 17:26:06 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;assets/logo.svg&quot; width=&quot;96&quot; alt=&quot;dsh market logo&quot; &lt;/p dsh market English 中文 dsh market is independent of any particular cli</description>
     </item>
     <item>
@@ -184,8 +184,8 @@
     <item>
       <title>🆕 aegis</title>
       <link>https://github.com/GanyuanRan/Aegis</link>
-      <guid isPermaLink="false">GanyuanRan/Aegis@2026-08-23T06:12:39Z</guid>
-      <pubDate>Sun, 23 Aug 2026 06:12:39 GMT</pubDate>
+      <guid isPermaLink="false">GanyuanRan/Aegis@2026-08-24T00:31:04Z</guid>
+      <pubDate>Mon, 24 Aug 2026 00:31:04 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://linux.do/t/topic/2108966/20&quot; alt=&quot;LINUX DO&quot; &lt;img src=&quot;https://img.shields.io/badge/LINUX DO FFB003.svg?logo=data:image/sv</description>
     </item>
     <item>
@@ -212,8 +212,8 @@
     <item>
       <title>🆕 deepseek-harness-desktop</title>
       <link>https://github.com/dsh-tauri-desk/deepseek-harness-desktop</link>
-      <guid isPermaLink="false">dsh-tauri-desk/deepseek-harness-desktop@2026-08-23T14:24:35Z</guid>
-      <pubDate>Sun, 23 Aug 2026 14:24:35 GMT</pubDate>
+      <guid isPermaLink="false">dsh-tauri-desk/deepseek-harness-desktop@2026-08-23T16:07:25Z</guid>
+      <pubDate>Sun, 23 Aug 2026 16:07:25 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://github.com/hairyf/deepseek harness desktop&quot; &lt;img src=&quot;public/favicon.svg&quot; width=&quot;96&quot; alt=&quot;DeepSeek Harness Desk</description>
     </item>
   </channel>
