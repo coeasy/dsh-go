@@ -112,22 +112,21 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
             <tr><th data-i18n="pl_updated">最近更新</th><td>{updatedAt}</td></tr>
             {plugin.homepage && <tr><th data-i18n="pl_homepage">主页</th><td class="hp"><a href={plugin.homepage} target="_blank" rel="noopener">{plugin.homepage}</a></td></tr>}
           </table>
-        </section>
-
-        {plugin.topics && plugin.topics.length > 0 && (
-          <section class="card">
-            <h2 data-i18n="pl_topics">标签</h2>
-            <div class="topics">
-              {plugin.topics.map((t: string) => <span class="tag">#{t}</span>)}
+          {plugin.topics && plugin.topics.length > 0 && (
+            <div class="info-topics">
+              <div class="topics-label" data-i18n="pl_topics">标签</div>
+              <div class="topics">{plugin.topics.map((t: string) => <span class="tag">#{t}</span>)}</div>
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
         <section class="card">
           <h2 data-i18n="badge_copy_md">复制 Markdown 徽章</h2>
           <p class="hint" data-i18n="badge_hint">在 README / 博客中引用插件的徽章链接</p>
-          <div class="code sm"><code id="badge" data-badge={badgeMd}>{badgeMd}</code></div>
-          <button id="badge-copy" class="qbtn" data-i18n="badge_copy_md">复制 Markdown 徽章</button>
+          <div class="badge-row">
+            <input id="badge" class="badge-input" type="text" data-badge={badgeMd} value={badgeMd} readonly />
+            <button id="badge-copy" class="qbtn" data-i18n="badge_copy_md">复制 Markdown 徽章</button>
+          </div>
         </section>
       </aside>
     </div>
@@ -182,15 +181,15 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
     // Markdown 徽章复制
     const langOf = () => (window as unknown as { __dshI18n?: { getLang: () => string } }).__dshI18n?.getLang?.() || 'zh';
     const bc = document.getElementById('badge-copy') as HTMLButtonElement | null;
-    const bcode = document.getElementById('badge') as HTMLElement | null;
-    if (bc && bcode) {
+    const bi = document.getElementById('badge') as HTMLInputElement | null;
+    if (bc && bi) {
       bc.addEventListener('click', async () => {
-        const md = bcode.getAttribute('data-badge') || bcode.textContent || '';
+        const md = bi.value || bi.getAttribute('data-badge') || '';
         try { await navigator.clipboard.writeText(md); } catch { /* 忽略 */ }
         const lang = langOf();
-        bcode.textContent = lang === 'en' ? 'Badge copied ✓' : '已复制徽章 ✓';
+        bi.value = lang === 'en' ? 'Badge copied ✓' : '已复制徽章 ✓';
         bc.textContent = lang === 'en' ? 'Badge copied ✓' : '已复制徽章 ✓';
-        setTimeout(() => { bcode.textContent = md; bc.textContent = lang === 'en' ? 'Copy Markdown badge' : '复制 Markdown 徽章'; }, 1600);
+        setTimeout(() => { bi.value = md; bc.textContent = lang === 'en' ? 'Copy Markdown badge' : '复制 Markdown 徽章'; }, 1600);
       });
     }
   </script>
@@ -290,17 +289,28 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
 
   /* ---------- 徽章 ---------- */
   .hint { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; }
-  .code.sm { padding: 10px 12px; margin-bottom: 10px; }
-  .code.sm code { font-size: 11px; color: #bae6fd; word-break: break-all; }
+  .badge-row { display: flex; align-items: stretch; gap: 8px; }
+  .badge-input {
+    flex: 1; min-width: 0; padding: 9px 12px;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--bg-soft); color: var(--muted);
+    font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: border-color .15s, background .15s;
+  }
+  .badge-input:focus { outline: none; border-color: var(--accent); background: var(--card); }
+  .badge-row .qbtn { flex: none; }
 
   /* ---------- 信息表 ---------- */
   .card table { border-collapse: collapse; width: 100%; }
-  .card th, .card td { text-align: left; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: top; }
+  .card th, .card td { text-align: left; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
   .card tr:last-child th, .card tr:last-child td { border-bottom: none; }
-  .card th { color: var(--muted); width: 76px; font-weight: 500; padding-right: 10px; }
+  .card th { color: var(--muted); width: 62px; font-weight: 500; padding-right: 10px; }
   .card td { overflow-wrap: anywhere; }
 
-  /* ---------- 标签 ---------- */
+  /* ---------- 标签（并入信息卡） ---------- */
+  .info-topics { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 13px; }
+  .topics-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
   .topics { display: flex; flex-wrap: wrap; gap: 6px; }
   .tag {
     display: inline-block; background: var(--accent-soft); color: var(--accent);
