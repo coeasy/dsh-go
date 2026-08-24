@@ -20,18 +20,18 @@ const verifiedRate = stats.total ? ((Number(stats.verified) / Number(stats.total
 ---
 
 <Layout title="统计 · DSH Plugins Nav" description="DSH 插件市场统计数据">
-  <h1 data-i18n="stats_title">统计</h1>
+  <h1 data-i18n="stats_title" class="grad-text page-title">统计</h1>
   <div class="cards">
-    <div class="card"><div class="num">{stats.total || 0}</div><div class="label" data-i18n="stat_total">插件总数</div></div>
-    <div class="card"><div class="num">{stats.verified || 0}</div><div class="label" data-i18n="stat_verified">已验证</div></div>
-    <div class="card"><div class="num">{verifiedRate}%</div><div class="label" data-i18n="stat_rate">验证率</div></div>
-    <div class="card"><div class="num">{byLanguage.length}</div><div class="label" data-i18n="stat_langs">使用语言数</div></div>
+    <div class="card"><div class="num grad-text">{stats.total || 0}</div><div class="label" data-i18n="stat_total">插件总数</div></div>
+    <div class="card"><div class="num grad-text">{stats.verified || 0}</div><div class="label" data-i18n="stat_verified">已验证</div></div>
+    <div class="card"><div class="num grad-text">{verifiedRate}%</div><div class="label" data-i18n="stat_rate">验证率</div></div>
+    <div class="card"><div class="num grad-text">{byLanguage.length}</div><div class="label" data-i18n="stat_langs">使用语言数</div></div>
   </div>
 
   <h2 data-i18n="stats_cat">分类分布</h2>
   <div class="bars">
     {byCategory.map(([k, v]) => (
-      <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill" style={`width:${(Number(v) / maxCat) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
+      <div class="bar-row"><span class="bar-label" data-i18n-cat={k}>{k}</span><div class="bar-track"><div class="bar-fill" style={`width:${(Number(v) / maxCat) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
     ))}
   </div>
 
@@ -53,18 +53,24 @@ const verifiedRate = stats.total ? ((Number(stats.verified) / Number(stats.total
 </Layout>
 
 <style>
+  .page-title { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0 24px; }
-  .card { border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; }
-  .num { font-size: 28px; font-weight: 700; color: var(--accent); }
+  .card {
+    border: 1px solid var(--border); border-radius: var(--radius, 14px); padding: 20px 16px;
+    text-align: center; background: var(--card); box-shadow: var(--shadow-sm);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .num { font-size: 30px; font-weight: 800; }
   .label { color: var(--muted); font-size: 13px; margin-top: 4px; }
   h2 { font-size: 18px; margin: 28px 0 12px; }
   .bars { display: flex; flex-direction: column; gap: 8px; }
   .bar-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
   .bar-label { width: 120px; color: var(--muted); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bar-track { flex: 1; background: var(--border); border-radius: 6px; height: 18px; overflow: hidden; }
-  .bar-fill { height: 100%; background: var(--accent); border-radius: 6px; }
-  .bar-fill.alt { background: var(--green); }
-  .bar-fill.alt2 { background: var(--amber); }
-  .bar-val { width: 40px; color: var(--muted); }
+  .bar-track { flex: 1; background: var(--bg-soft); border-radius: 6px; height: 18px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--grad-accent); border-radius: 6px; transition: width .6s cubic-bezier(.2,.7,.3,1); }
+  .bar-fill.alt { background: linear-gradient(90deg, #16a34a, #4ade80); }
+  .bar-fill.alt2 { background: linear-gradient(90deg, #d97706, #fbbf24); }
+  .bar-val { width: 44px; color: var(--muted); font-weight: 600; }
   .updated { color: var(--muted); font-size: 13px; margin-top: 24px; }
 </style>

@@ -4,6 +4,7 @@ import PluginCard from '../../components/PluginCard.astro';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { u } from '../../lib/urls';
+import { DETAIL_THRESHOLD } from '../../lib/threshold';
 
 export async function getStaticPaths() {
   let plugins = [];
@@ -12,8 +13,7 @@ export async function getStaticPaths() {
     plugins = data.plugins || [];
   } catch { /* 无数据时仅首页可访问 */ }
 
-  // 详情页门槛：仅生成 stars >= 200 的静态详情页（低星插件只做列表介绍，卡片直接跳 GitHub）
-  const DETAIL_THRESHOLD = 200;
+  // 详情页门槛：仅生成 stars >= DETAIL_THRESHOLD 的静态详情页（低星插件只做列表介绍，卡片直接跳 GitHub）
   const detailed = plugins.filter((p) => p.stars >= DETAIL_THRESHOLD);
 
   return detailed.map((p) => {
@@ -35,6 +35,10 @@ const CATEGORY_ZH: Record<string, string> = {
 const isNew = plugin.first_seen && (Date.now() - new Date(plugin.first_seen).getTime()) < 7 * 864e5;
 const listedAt = plugin.first_seen ? new Date(plugin.first_seen).toLocaleDateString('zh-CN') : '—';
 const updatedAt = plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateString('zh-CN') : '—';
+// 头像渐变色相（与列表卡片同一算法）
+const hash = [...plugin.name].reduce((a: number, c: string) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+const hue = hash % 360;
+const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
 ---
 
 <Layout title={`${plugin.name} · DSH Plugins Nav`} description={plugin.description}>
@@ -42,7 +46,10 @@ const updatedAt = plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateSt
 
   <article class="detail">
     <header>
-      <h1>{plugin.name}</h1>
+      <div class="title-row">
+        <span class="avatar" style={`--h:${hue}`}>{initial}</span>
+        <h1>{plugin.name}</h1>
+      </div>
       <div class="meta-line">
         <span class="badge gray" data-i18n-cat={plugin.category}>{CATEGORY_ZH[plugin.category] || plugin.category}</span>
         {plugin.verified && <span class="badge green" data-i18n="pl_verified">✓ verified</span>}
@@ -144,25 +151,49 @@ const updatedAt = plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateSt
 
 <style>
   .crumbs { margin-bottom: 12px; font-size: 14px; }
-  .detail h1 { margin: 0 0 10px; font-size: 26px; }
+  .title-row { display: flex; align-items: center; gap: 14px; }
+  .avatar {
+    flex: none; width: 46px; height: 46px; border-radius: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, hsl(var(--h, 210) 70% 55%), hsl(calc(var(--h, 210) + 40) 70% 45%));
+    text-shadow: 0 1px 3px rgb(0 0 0 / .25);
+  }
+  .detail h1 { margin: 0 0 10px; font-size: 26px; letter-spacing: -.01em; }
   .meta-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
-  .stars { color: var(--amber); font-weight: 600; }
+  .stars { color: var(--amber); font-weight: 700; }
   .muted { color: var(--muted); }
   .desc { color: var(--muted); font-size: 15px; }
   .install .code, .quick-btns { display: flex; align-items: center; gap: 10px; }
-  .install .code { background: var(--accent-soft); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
-  .code code { flex: 1; font-size: 13px; word-break: break-all; }
-  .code button { border: 1px solid var(--border); background: var(--bg); color: var(--fg); border-radius: 8px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
+  .install .code {
+    background: #0d1526; border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .code code { flex: 1; font-size: 13px; word-break: break-all; color: #7dd3fc; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .code button {
+    border: 1px solid #263650; background: #16233d; color: #cbd5e1; border-radius: 8px;
+    padding: 5px 14px; cursor: pointer; font-size: 13px; font-weight: 600;
+    transition: color .15s, border-color .15s;
+  }
+  .code button:hover { color: #fff; border-color: #3b4f6e; }
   .quick-btns { flex-wrap: wrap; }
-  .qbtn { border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; text-decoration: none; }
-  .qbtn:hover { background: var(--accent-soft); text-decoration: none; }
-  .qbtn.dsh { border-style: dashed; }
+  .qbtn {
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent);
+    background: transparent; border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: background .15s, transform .15s, box-shadow .15s;
+  }
+  .qbtn:hover { background: var(--accent-soft); text-decoration: none; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .qbtn.dsh {
+    background: var(--grad-accent); border: none; color: #fff;
+  }
+  .qbtn.dsh:hover { color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent); }
   .info table { border-collapse: collapse; width: 100%; max-width: 560px; }
-  .info th, .info td { text-align: left; padding: 6px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .info th, .info td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
   .info th { color: var(--muted); width: 100px; font-weight: 500; }
-  .tag { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 3px 10px; font-size: 12px; margin: 0 6px 6px 0; }
+  .tag { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 3px 11px; font-size: 12px; margin: 0 6px 6px 0; }
   section { margin-top: 24px; }
   section h2 { font-size: 17px; margin: 0 0 10px; }
   .related { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 24px; }
-  .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 </style>

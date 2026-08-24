@@ -1,5 +1,6 @@
 ---
 import { u } from '../lib/urls';
+import { DETAIL_THRESHOLD } from '../lib/threshold';
 
 interface Props {
   slug: string;
@@ -15,14 +16,36 @@ interface Props {
   updated?: string;
   full_name?: string;
 }
-const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated, full_name } = Astro.props;
 
-// 详情页门槛：stars >= 200 才生成静态详情页；低于门槛的卡片直接跳 GitHub 仓库，避免死链
-export const DETAIL_THRESHOLD = 200;
+const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated, full_name } = Astro.props;
 
 // 是否生成了静态详情页（与 plugin/[slug].astro 的 getStaticPaths 门槛保持一致）
 const hasDetail = stars >= DETAIL_THRESHOLD;
 const cardHref = hasDetail ? u(`/plugin/${slug}`) : `https://github.com/${full_name || slug}`;
+
+// 星数紧凑格式：12345 → 12.3k
+function fmtStars(n: number): string {
+  if (n >= 10000) return (n / 1000).toFixed(0) + 'k';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
+// 按名称 hash 生成头像渐变色相（稳定、无外部依赖）
+const hash = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+const hue = hash % 360;
+const initial = (name || '?').trim().charAt(0).toUpperCase();
+
+// 相对时间（静态生成时刻计算，构建后固定）
+function relTime(iso?: string): string {
+  if (!iso) return '';
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 864e5);
+  if (days <= 0) return 'today';
+  if (days === 1) return '1d';
+  if (days < 30) return `${days}d`;
+  if (days < 365) return `${Math.floor(days / 30)}mo`;
+  return `${Math.floor(days / 365)}y`;
+}
+const age = relTime(updated);
 
 const CATEGORY_ZH: Record<string, string> = {
   'web-ui': 'Web UI', desktop: '桌面端', mcp: 'MCP', skills: '技能', theme: '主题',
@@ -46,27 +69,65 @@ const CATEGORY_ZH: Record<string, string> = {
   data-created={created}
   data-updated={updated}
 >
-  <div class="head">
-    <span class="name">{name}</span>
-    <span class="stars">★ {stars}</span>
+  <div class="row1">
+    <span class="avatar" style={`--h:${hue}`}>{initial}</span>
+    <span class="name" title={name}>{name}</span>
+    {verified && <span class="v-ico" title="verified">✓</span>}
+    <span class="stars" title={stars}>★ {fmtStars(stars)}</span>
   </div>
   <div class="desc">{description}</div>
   <div class="meta">
     <span class="badge gray" data-i18n-cat={category}>{CATEGORY_ZH[category] || category}</span>
-    {verified && <span class="badge green">✓ verified</span>}
-    {isNew && <span class="badge amber">新</span>}
+    {verified && <span class="badge green" data-i18n="pl_verified">✓ verified</span>}
+    {isNew && <span class="badge amber" data-i18n="pl_new">新</span>}
+    <span class="spacer"></span>
+    {age && <span class="age">{age}</span>}
   </div>
 </a>
 
 <style>
   .plugin-card {
-    display: block; border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
-    color: var(--fg); transition: transform .12s, box-shadow .12s, border-color .12s;
+    display: flex; flex-direction: column;
+    border: 1px solid var(--border); border-radius: var(--radius, 14px);
+    padding: 15px 16px 13px; background: var(--card, #fff);
+    color: var(--fg); box-shadow: var(--shadow-sm, 0 1px 2px rgb(15 23 42 / .05));
+    transition: transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s, border-color .18s;
+    position: relative; overflow: hidden;
   }
-  .plugin-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgb(0 0 0 / .08); border-color: var(--accent); text-decoration: none; }
-  .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .name { font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .stars { font-size: 13px; color: var(--amber); white-space: nowrap; }
-  .desc { margin: 6px 0 10px; font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 38px; }
-  .meta { display: flex; gap: 6px; flex-wrap: wrap; }
+  /* 顶部渐变描边（hover 亮起） */
+  .plugin-card::before {
+    content: ''; position: absolute; inset: 0 0 auto 0; height: 2px;
+    background: var(--grad-accent, linear-gradient(135deg,#2563eb,#7c3aed));
+    opacity: 0; transition: opacity .18s;
+  }
+  .plugin-card:hover {
+    transform: translateY(-3px); box-shadow: var(--shadow-lg, 0 12px 32px rgb(15 23 42 / .12));
+    border-color: color-mix(in srgb, var(--accent, #2563eb) 45%, var(--border));
+    text-decoration: none;
+  }
+  .plugin-card:hover::before { opacity: 1; }
+
+  .row1 { display: flex; align-items: center; gap: 9px; }
+  .avatar {
+    flex: none; width: 30px; height: 30px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, hsl(var(--h, 210) 70% 55%), hsl(calc(var(--h, 210) + 40) 70% 45%));
+    text-shadow: 0 1px 2px rgb(0 0 0 / .2);
+  }
+  .name { font-weight: 700; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .v-ico {
+    flex: none; font-size: 11px; font-weight: 800; color: var(--green, #16a34a);
+    background: color-mix(in srgb, var(--green, #16a34a) 14%, transparent);
+    border-radius: 999px; width: 17px; height: 17px; line-height: 17px; text-align: center;
+  }
+  .stars { margin-left: auto; flex: none; font-size: 13px; font-weight: 700; color: var(--amber, #f59e0b); white-space: nowrap; }
+  .desc {
+    margin: 8px 0 10px; font-size: 12.5px; color: var(--muted, #64748b); line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    min-height: 38px;
+  }
+  .meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: auto; }
+  .spacer { flex: 1; }
+  .age { font-size: 11.5px; color: var(--muted, #64748b); opacity: .8; }
 </style>

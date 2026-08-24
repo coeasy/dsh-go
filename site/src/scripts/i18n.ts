@@ -28,6 +28,7 @@ function apply(lang: Lang) {
     if (el.dataset.time != null) ctx.t = el.dataset.time;
     if (el.dataset.api != null) ctx.api = el.dataset.api;
     if (el.dataset.apiUrl != null) ctx.api_url = el.dataset.apiUrl;
+    if (el.dataset.n != null) ctx.n = el.dataset.n;
     const txt = tr(key, lang, ctx);
     // 输入类元素：设置 placeholder 而非 innerHTML（innerHTML 对 void 元素无效）
     if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
@@ -42,6 +43,21 @@ function apply(lang: Lang) {
     const key = CAT[id] || 'cat_' + id;
     el.textContent = tr(key, lang);
   });
+  // 结果计数：单复数选择（data-n=1 时用 *_one 词条）
+  document.querySelectorAll<HTMLElement>('[data-results]').forEach((el) => {
+    const n = Number(el.dataset.results || '0');
+    const key = n === 1 ? 'results_one' : 'results';
+    el.textContent = tr(key, lang, { n });
+  });
+  // 导航当前页高亮
+  const nav = document.querySelector<HTMLElement>('.nav-links');
+  if (nav) {
+    const path = (nav.dataset.path || '').replace(/\/+$/, '') || '/';
+    nav.querySelectorAll<HTMLAnchorElement>('a[data-nav]').forEach((a) => {
+      const target = (a.dataset.nav || '').replace(/\/+$/, '') || '/';
+      a.classList.toggle('active', target === path);
+    });
+  }
 }
 
 function updateToggles(lang: Lang) {

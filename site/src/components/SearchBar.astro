@@ -2,19 +2,42 @@
 // 搜索输入框 + URL 状态同步（由 app.js 驱动，is:inline 独立脚本）
 ---
 
-<input
-  id="search"
-  type="search"
-  placeholder="搜索插件名称 / 描述 / 标签…"
-  data-i18n="search_ph"
-  autocomplete="off"
-/>
+<div class="search-wrap">
+  <span class="search-ico" aria-hidden="true">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+  </span>
+  <input
+    id="search"
+    type="search"
+    placeholder="搜索插件名称 / 描述 / 标签…"
+    data-i18n="search_ph"
+    autocomplete="off"
+  />
+  <kbd class="search-kbd" aria-hidden="true">/</kbd>
+</div>
 
 <style>
-  #search {
-    width: 100%; padding: 10px 14px; border: 1px solid var(--border);
-    border-radius: 10px; background: var(--bg); color: var(--fg);
-    font-size: 15px; margin-bottom: 12px;
+  .search-wrap { position: relative; margin-bottom: 12px; }
+  .search-ico {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); pointer-events: none; display: inline-flex;
   }
-  #search:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+  #search {
+    width: 100%; padding: 11px 44px 11px 40px; border: 1px solid var(--border);
+    border-radius: 12px; background: var(--card); color: var(--fg);
+    font-size: 15px; box-shadow: var(--shadow-sm);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  #search:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .search-kbd {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px;
+    font-size: 11.5px; color: var(--muted); background: var(--bg-soft); font-family: inherit;
+  }
+  /* 聚焦时隐藏 / 快捷键提示 */
+  .search-wrap:focus-within .search-kbd { opacity: 0; }
+  .search-kbd { transition: opacity .15s; }
 </style>

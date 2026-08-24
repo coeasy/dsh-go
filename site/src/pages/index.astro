@@ -20,15 +20,32 @@ const { meta, plugins } = data;
 // 与客户端默认 sort=stars 保持一致
 const sorted = [...(plugins as any[])].sort((a: any, b: any) => (b.stars || 0) - (a.stars || 0));
 const topStars = sorted.slice(0, 3);
+const verifiedRate = meta.stats?.total ? Math.round((Number(meta.stats.verified) / Number(meta.stats.total)) * 100) : 0;
+const catCount = Object.keys(meta.stats?.by_category || {}).length;
+function fmtStars(n: number): string {
+  if (n >= 10000) return (n / 1000).toFixed(0) + 'k';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
 ---
 
 <Layout title="DSH Plugins Nav · DeepSeek Harness 插件市场">
   <section class="hero">
-    <h1 data-i18n="hero_title">DeepSeek Harness 插件市场</h1>
+    <div class="hero-glow" aria-hidden="true"></div>
+    <h1 data-i18n="hero_title" class="grad-text">DeepSeek Harness 插件市场</h1>
     <p class="sub" data-i18n="hero_sub" data-count={meta.count || 0}>收录 {meta.count || 0} 个 dsh-plugin 插件，每日自动更新 · 全开源 · 开放 API</p>
+    <div class="hero-stats">
+      <span class="pill"><b>{fmtStars(meta.count || 0)}</b><i data-i18n="hero_daily">每日同步</i></span>
+      <span class="pill"><b>{verifiedRate}%</b><i data-i18n="f_verified">已验证</i></span>
+      <span class="pill"><b>{catCount}</b><i data-i18n="stats_cat">分类分布</i></span>
+    </div>
     <div class="top3">
-      {topStars.map((p: any) => (
-        <a href={u(`/plugin/${p.slug}`)} class="top-item"><span class="top-name">{p.name}</span><span class="top-star">★{p.stars}</span></a>
+      {topStars.map((p: any, i: number) => (
+        <a href={u(`/plugin/${p.slug}`)} class="top-item">
+          <span class={`top-rank r${i + 1}`}>{i + 1}</span>
+          <span class="top-name">{p.name}</span>
+          <span class="top-star">★{fmtStars(p.stars)}</span>
+        </a>
       ))}
     </div>
   </section>
@@ -37,6 +54,10 @@ const topStars = sorted.slice(0, 3);
     <SearchBar />
     <CategoryFilter />
   </section>
+
+  <div class="result-line">
+    <span id="result-count" data-results={sorted.length}>找到 {sorted.length} 个插件</span>
+  </div>
 
   <section id="grid" class="grid">
     {sorted.map((p: any) => (
@@ -54,13 +75,49 @@ const topStars = sorted.slice(0, 3);
 </Layout>
 
 <style>
-  .hero { text-align: center; padding: 24px 0 20px; }
-  .hero h1 { font-size: 30px; margin: 0 0 8px; }
-  .sub { color: var(--muted); font-size: 15px; margin: 0 0 18px; }
+  .hero { text-align: center; padding: 34px 0 26px; position: relative; }
+  .hero-glow {
+    position: absolute; inset: -40px -10% 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(420px 200px at 50% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 75%);
+  }
+  .hero h1 { font-size: 34px; margin: 0 0 10px; letter-spacing: -.02em; font-weight: 800; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0 0 16px; }
+  .hero-stats { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .pill {
+    display: inline-flex; align-items: baseline; gap: 7px;
+    border: 1px solid var(--border); border-radius: 999px; padding: 6px 16px;
+    background: var(--card); box-shadow: var(--shadow-sm);
+  }
+  .pill b { font-size: 16px; font-weight: 800; color: var(--accent); }
+  .pill i { font-style: normal; font-size: 12.5px; color: var(--muted); }
   .top3 { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-  .top-item { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; font-size: 13px; }
-  .top-star { color: var(--amber); font-weight: 600; }
+  .top-item {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px 5px 6px;
+    font-size: 13px; background: var(--card); box-shadow: var(--shadow-sm);
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+  }
+  .top-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); text-decoration: none; }
+  .top-rank {
+    width: 22px; height: 22px; border-radius: 999px; font-size: 12px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .top-rank.r1 { background: linear-gradient(135deg, #f59e0b, #f97316); }
+  .top-rank.r2 { background: linear-gradient(135deg, #94a3b8, #64748b); }
+  .top-rank.r3 { background: linear-gradient(135deg, #d97706, #b45309); }
+  .top-name { font-weight: 600; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .top-star { color: var(--amber); font-weight: 700; }
+
   .controls { margin: 10px 0 20px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .result-line {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin: 0 0 12px; font-size: 13px; color: var(--muted);
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
   .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 26px; }
+    .hero { padding: 22px 0 18px; }
+  }
 </style>

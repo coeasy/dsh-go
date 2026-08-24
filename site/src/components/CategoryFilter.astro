@@ -42,14 +42,18 @@ const FILTERS: Array<{ f: string; zh: string; key: string }> = [
 </div>
 
 <style>
-  .cat-chips, .sort-line { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cat-chips, .sort-line { display: flex; gap: 7px; flex-wrap: wrap; }
   .chip {
-    border: 1px solid var(--border); background: transparent; color: var(--muted);
-    border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer;
-    transition: color .12s, border-color .12s;
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    border-radius: 999px; padding: 5px 13px; font-size: 13px; cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s, box-shadow .15s, transform .15s;
+    box-shadow: var(--shadow-sm);
   }
-  .chip:hover { color: var(--fg); border-color: var(--muted); }
-  .chip.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .chip:hover { color: var(--fg); border-color: var(--border-strong); transform: translateY(-1px); }
+  .chip.active {
+    background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    font-weight: 600; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+  }
   .sort-line { margin-top: 10px; align-items: center; }
   .spacer { flex: 1; }
 </style>

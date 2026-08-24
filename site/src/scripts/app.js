@@ -10,7 +10,18 @@
   const $chipsFilter = document.querySelectorAll('.sort-line .chip[data-filter]');
   const $grid = document.getElementById('grid');
   const $empty = document.getElementById('empty');
+  const $count = document.getElementById('result-count');
   const cards = Array.from(document.querySelectorAll('.plugin-card'));
+
+  // 结果计数走 i18n 词条（data-results 由 i18n.apply 渲染，切语言自动更新）
+  // 注：本脚本是 inline 同步执行，可能早于 i18n 模块（defer）就绪；
+  // 未就绪时仅更新属性、保留服务端渲染的初始文本，避免闪成裸数字。
+  function updateCount(n) {
+    if (!$count) return;
+    $count.setAttribute('data-results', String(n));
+    const i18n = window.__dshI18n;
+    if (i18n && i18n.apply) i18n.apply(i18n.getLang());
+  }
 
   function readStateFromURL() {
     const p = new URLSearchParams(location.search);
@@ -67,6 +78,7 @@
     cards.filter((c) => !visible.includes(c)).forEach((el) => { el.style.display = 'none'; });
 
     if ($empty) $empty.hidden = visible.length > 0;
+    updateCount(visible.length);
   }
 
   // 事件绑定
@@ -75,6 +87,17 @@
     $search.addEventListener('input', () => {
       clearTimeout(t);
       t = setTimeout(() => { state.q = $search.value.trim(); applyAll(); }, 180);
+    });
+    // 「/」快捷键聚焦搜索（输入框内按 Esc 清空）
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement !== $search) {
+        e.preventDefault();
+        $search.focus();
+      } else if (e.key === 'Escape' && document.activeElement === $search) {
+        $search.value = '';
+        state.q = '';
+        applyAll();
+      }
     });
   }
   $chipsCat.forEach((c) => c.addEventListener('click', () => { state.category = c.dataset.cat; syncUI(); applyAll(); }));
