@@ -92,13 +92,6 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
             <button class="qbtn dsh" id="open-dsh" data-full={plugin.full_name} data-slug={plugin.slug} data-i18n="pl_open_dsh">用 DSH 打开</button>
           </div>
         </section>
-
-        {plugin.readme_excerpt && (
-          <section class="card">
-            <h2 data-i18n="pl_about">简介</h2>
-            <p class="readme-text">{plugin.readme_excerpt}…</p>
-          </section>
-        )}
       </div>
 
       <aside class="side-col">
@@ -246,7 +239,7 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
   .s-watch, .s-watch b { color: var(--accent-2, #7c3aed); }
 
   /* ---------- 双栏 ---------- */
-  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; margin-top: 18px; align-items: start; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; margin-top: 18px; align-items: start; }
   .main-col, .side-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
   .side-col { position: sticky; top: 84px; }
 
@@ -259,33 +252,30 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
 
   /* ---------- 安装 ---------- */
   .code {
-    display: flex; align-items: center; gap: 10px;
-    background: #0d1526; border: 1px solid #1e2d47; border-radius: 12px; padding: 13px 16px;
+    display: flex; align-items: center; gap: 12px;
+    background: #0d1526; border: 1px solid #1e2d47; border-radius: 14px; padding: 16px 20px;
     box-shadow: inset 0 1px 3px rgb(0 0 0 / .25);
   }
   .code code {
-    flex: 1; font-size: 13px; word-break: break-all; color: #7dd3fc;
+    flex: 1; font-size: 14.5px; word-break: break-all; color: #7dd3fc;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   .code button {
     flex: none; border: 1px solid #263650; background: #16233d; color: #cbd5e1;
-    border-radius: 8px; padding: 5px 14px; cursor: pointer; font-size: 13px; font-weight: 600;
+    border-radius: 8px; padding: 6px 16px; cursor: pointer; font-size: 13.5px; font-weight: 600;
     transition: color .15s, border-color .15s, background .15s;
   }
   .code button:hover { color: #fff; border-color: #3b4f6e; background: #1b2c48; }
-  .quick-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .quick-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
   .qbtn {
     border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent);
-    background: transparent; border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+    background: transparent; border-radius: 10px; padding: 10px 20px; font-size: 13.5px; font-weight: 600;
     cursor: pointer; text-decoration: none;
     transition: background .15s, transform .15s, box-shadow .15s;
   }
   .qbtn:hover { background: var(--accent-soft); text-decoration: none; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
   .qbtn.dsh { background: var(--grad-accent); border: none; color: #fff; }
   .qbtn.dsh:hover { color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent); }
-
-  /* ---------- 简介 ---------- */
-  .readme-text { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
 
   /* ---------- 徽章 ---------- */
   .hint { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; }
@@ -317,10 +307,18 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
     border-radius: 999px; padding: 3px 11px; font-size: 12px; font-weight: 500;
   }
 
-  /* ---------- 相关推荐 ---------- */
+  /* ---------- 相关推荐（底部横向一行） ---------- */
   .related { margin-top: 36px; border-top: 1px solid var(--border); padding-top: 24px; }
   .related h2 { font-size: 18px; margin: 0 0 14px; }
-  .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .related-grid {
+    display: flex; gap: 14px; overflow-x: auto;
+    padding: 6px 2px 14px; scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+  .related-grid::-webkit-scrollbar { height: 8px; }
+  .related-grid::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+  .related-grid::-webkit-scrollbar-track { background: transparent; }
+  .related-grid > * { flex: 0 0 300px; scroll-snap-align: start; }
 
   @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; }
