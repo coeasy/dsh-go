@@ -23,6 +23,15 @@ const sorted = [...(plugins as any[])].sort((a: any, b: any) => (b.stars || 0) -
 const topStars = sorted.slice(0, 3);
 const verifiedRate = meta.stats?.total ? Math.round((Number(meta.stats.verified) / Number(meta.stats.total)) * 100) : 0;
 const catCount = Object.keys(meta.stats?.by_category || {}).length;
+// 语言索引（“更多索引”）：从数据里统计分布，取前 9 种语言作筛选标签
+const langCounts: Record<string, number> = {};
+for (const p of plugins as any[]) { const l = p.language || 'Unknown'; langCounts[l] = (langCounts[l] || 0) + 1; }
+const topLangs = Object.entries(langCounts)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 9)
+  .map(([lang]) => lang);
+// 最近数据更新日期（展示信息更丰富）
+const updatedAt = meta.updated_at ? new Date(meta.updated_at).toISOString().slice(0, 10) : '—';
 ---
 
 <Layout title="DSH Go · DeepSeek Harness 插件市场">
@@ -34,6 +43,7 @@ const catCount = Object.keys(meta.stats?.by_category || {}).length;
       <span class="pill"><b>{fmtK(meta.count || 0)}</b><i data-i18n="hero_daily">每日同步</i></span>
       <span class="pill"><b>{verifiedRate}%</b><i data-i18n="f_verified">已验证</i></span>
       <span class="pill"><b>{catCount}</b><i data-i18n="stats_cat">分类分布</i></span>
+      <span class="pill"><b>{updatedAt}</b><i data-i18n="hero_synced">数据更新</i></span>
     </div>
     <div class="top3">
       {topStars.map((p: any, i: number) => (
@@ -50,6 +60,14 @@ const catCount = Object.keys(meta.stats?.by_category || {}).length;
     <SearchBar />
     <CategoryFilter />
   </section>
+
+  {topLangs.length > 1 && (
+    <div class="lang-line">
+      <span class="lang-label" data-i18n="f_language">语言</span>
+      <button class="chip lang-chip" data-lang="all" data-i18n="f_all_langs">全部语言</button>
+      {topLangs.map((lang: string) => <button class="chip lang-chip" data-lang={lang}>{lang}</button>)}
+    </div>
+  )}
 
   <section class="guide" data-i18n="guide" aria-label="how to install">
     <div class="guide-step"><span class="g-num">1</span><b data-i18n="guide_s1_t">查找</b><i data-i18n="guide_s1">搜索名称或分类筛选</i></div>
@@ -70,7 +88,7 @@ const catCount = Object.keys(meta.stats?.by_category || {}).length;
         category={p.category} verified={p.verified} trend={p.trend_score}
         tags={p.topics} isNew={p.first_seen && (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5}
         created={p.created_at} updated={p.updated_at} full_name={p.full_name}
-        install_cmd={p.install_cmd}
+        install_cmd={p.install_cmd} language={p.language}
       />
     ))}
   </section>
@@ -114,6 +132,21 @@ const catCount = Object.keys(meta.stats?.by_category || {}).length;
   .top-star { color: var(--amber); font-weight: 700; }
 
   .controls { margin: 10px 0 20px; }
+
+  /* 语言索引行 */
+  .lang-line { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin: 0 0 14px; }
+  .lang-label { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-right: 2px; }
+  .chip.lang-chip {
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    border-radius: 999px; padding: 3px 11px; font-size: 12px; cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s, box-shadow .15s, transform .15s;
+    box-shadow: var(--shadow-sm);
+  }
+  .chip.lang-chip:hover { color: var(--fg); border-color: var(--border-strong); transform: translateY(-1px); }
+  .chip.lang-chip.active {
+    background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    font-weight: 600; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+  }
 
   /* 三步安装引导 */
   .guide {

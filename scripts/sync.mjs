@@ -240,12 +240,6 @@ async function searchRepos(query, page = 1, opts = {}) {
   return { items: data.items || [], total: data.total_count || 0 };
 }
 
-async function fetchRepoDetail(fullName) {
-  const res = await ghFetch(`/repos/${fullName}`);
-  if (!res) return null;
-  return res.json();
-}
-
 // 分桶抓取一个 star 区间查询：单查询够（total<=1000）则取尽全部页；
 // 超幅（total>1000，如 stars:0..0 有 5k+）受 GitHub 搜索 API 硬限制只能取 top-1000。
 async function fetchRange(query, opts = {}) {
@@ -376,7 +370,7 @@ async function main() {
     // 补充主题增量：pushed 窗口内的候选，标记 extra=true 后续只收带 manifest 的
     for (const topic of EXTRA_TOPICS) {
       for (let page = 1; page <= 3; page++) {
-        const { items, total } = await searchRepos(`${topic} pushed:>${since}`, page);
+        const { items } = await searchRepos(`${topic} pushed:>${since}`, page);
         scanned += items.length;
         items.forEach((r) => repos.push({ ...r, __extra: true, __source: topic }));
         if (items.length === 0) break;
@@ -393,7 +387,7 @@ async function main() {
     log(`⚠️ 搜索返回 0 个候选（已存在 ${oldPlugins.length} 个旧插件），疑似 API 限速；保留旧数据，本轮仅更新元数据`, 'warn');
     // 触发一次真实全量搜索兜底，确认是否真的全网无仓库
     for (let page = 1; page <= 3; page++) {
-      const { items, total } = await searchRepos(TOPIC, page);
+      const { items } = await searchRepos(TOPIC, page);
       scanned += items.length;
       repos.push(...items);
       if (items.length === 0) break;
@@ -401,7 +395,6 @@ async function main() {
     }
     if (repos.length === 0) {
       log(`⚠️ 兜底全量搜索仍为 0，极可能是网络/配额问题；本轮写回旧数据，不置空`, 'warn');
-      const errors = oldData.meta?.stats ? oldData.errors || [] : []; // 保留史
       // 用旧 plugins 重新写盘并结束（保留旧数据不被清空）
       const etag = await sha256Hex(JSON.stringify(oldPlugins));
       await writeFile(PLUGINS_FILE, JSON.stringify({ ...oldData, meta: { ...(oldData.meta||{}), count: oldPlugins.length, etag } }, null, 2) + '\n');

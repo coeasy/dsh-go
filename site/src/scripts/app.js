@@ -3,11 +3,12 @@
 (function () {
   'use strict';
 
-  const state = { q: '', category: 'all', sort: 'stars', filter: 'all' };
+  const state = { q: '', category: 'all', sort: 'stars', filter: 'all', lang: 'all' };
   const $search = document.getElementById('search');
   const $chipsCat = document.querySelectorAll('.cat-chips .chip[data-cat]');
   const $chipsSort = document.querySelectorAll('.sort-line .chip[data-sort]');
   const $chipsFilter = document.querySelectorAll('.sort-line .chip[data-filter]');
+  const $chipsLang = document.querySelectorAll('.lang-chip[data-lang]');
   const $grid = document.getElementById('grid');
   const $empty = document.getElementById('empty');
   const $count = document.getElementById('result-count');
@@ -29,6 +30,7 @@
     state.category = p.get('category') || 'all';
     state.sort = p.get('sort') || 'stars';
     state.filter = p.get('filter') || 'all';
+    state.lang = p.get('lang') || 'all';
   }
 
   function writeStateToURL() {
@@ -37,6 +39,7 @@
     if (state.category !== 'all') p.set('category', state.category);
     if (state.sort !== 'stars') p.set('sort', state.sort);
     if (state.filter !== 'all') p.set('filter', state.filter);
+    if (state.lang !== 'all') p.set('lang', state.lang);
     const qs = p.toString();
     history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
   }
@@ -46,6 +49,7 @@
     $chipsCat.forEach((c) => c.classList.toggle('active', c.dataset.cat === state.category));
     $chipsSort.forEach((c) => c.classList.toggle('active', c.dataset.sort === state.sort));
     $chipsFilter.forEach((c) => c.classList.toggle('active', c.dataset.filter === state.filter));
+    $chipsLang.forEach((c) => c.classList.toggle('active', c.dataset.lang === state.lang));
   }
 
   function applyAll() {
@@ -58,6 +62,7 @@
       if (state.category !== 'all') ok = ok && d.category === state.category;
       if (state.filter === 'verified') ok = ok && d.verified === 'true';
       if (state.filter === 'new') ok = ok && d.isNew === 'true';
+      if (state.lang !== 'all') ok = ok && d.language === state.lang;
       if (state.q) {
         const kw = state.q.toLowerCase();
         const hay = `${d.name} ${d.desc} ${d.tags}`.toLowerCase();
@@ -103,6 +108,7 @@
   $chipsCat.forEach((c) => c.addEventListener('click', () => { state.category = c.dataset.cat; syncUI(); applyAll(); }));
   $chipsSort.forEach((c) => c.addEventListener('click', () => { state.sort = c.dataset.sort; syncUI(); applyAll(); }));
   $chipsFilter.forEach((c) => c.addEventListener('click', () => { state.filter = c.dataset.filter; syncUI(); applyAll(); }));
+  $chipsLang.forEach((c) => c.addEventListener('click', () => { state.lang = c.dataset.lang; syncUI(); applyAll(); }));
 
   // 初始化
   readStateFromURL();
@@ -125,7 +131,7 @@
         ta.value = cmd;
         document.body.appendChild(ta);
         ta.select();
-        try { document.execCommand('copy'); } catch (_) {}
+        try { document.execCommand('copy'); } catch { /* 忽略复制失败 */ }
         document.body.removeChild(ta);
       }
       btn.classList.add('copied');

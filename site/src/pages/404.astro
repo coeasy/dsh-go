@@ -1,15 +1,22 @@
----
+--- 
 import Layout from '../layouts/Layout.astro';
 import { u } from '../lib/urls';
 ---
 
-<Layout title="页面不存在 · DSH Go" description="404 Not Found">
+<Layout title="404 · DSH Go" description="404 Not Found">
   <div class="wrap">
     <div class="code">404</div>
-    <p>你访问的页面不存在，或插件已被移除。</p>
-    <p><a href={u('/')}>返回首页</a></p>
+    <p data-i18n="notfound_text">你访问的页面不存在，或插件已被移除。</p>
+    <p><a class="back" href={u('/')} data-i18n="notfound_back">返回首页</a></p>
   </div>
 </Layout>
+
+<script>
+  // 复用 i18n：页面切换语言后同步刷新 404 文案
+  (window as unknown as { __dshI18n?: { apply: (l: 'zh' | 'en') => void } }).__dshI18n?.apply(
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('dsh-lang') as 'zh' | 'en' : undefined) || 'zh'
+  );
+</script>
 
 <style>
   .wrap { text-align: center; padding: 80px 0; }

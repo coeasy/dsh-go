@@ -17,9 +17,10 @@ interface Props {
   updated?: string;
   full_name?: string;
   install_cmd?: string;
+  language?: string;
 }
 
-const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated, full_name, install_cmd } = Astro.props;
+const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated, full_name, install_cmd, language } = Astro.props;
 
 // 是否生成了静态详情页（与 plugin/[slug].astro 的 getStaticPaths 门槛保持一致）
 const hasDetail = stars >= DETAIL_THRESHOLD;
@@ -61,6 +62,7 @@ const CATEGORY_ZH: Record<string, string> = {
   data-name={name}
   data-desc={description}
   data-tags={(tags || []).join(' ')}
+  data-language={language || ''}
   data-created={created}
   data-updated={updated}
   data-cmd={install_cmd}
@@ -78,7 +80,7 @@ const CATEGORY_ZH: Record<string, string> = {
     {isNew && <span class="badge amber" data-i18n="pl_new">新</span>}
     <span class="spacer"></span>
     {install_cmd && (
-      <button class="copy-cmd" type="button" data-copy-cmd={install_cmd} title={install_cmd} data-i18n="pl_copy_cmd" aria-label="copy install command">⬇</button>
+      <button class="copy-cmd" type="button" data-copy-cmd={install_cmd} title={install_cmd} data-i18n-aria="pl_copy_cmd" aria-label="copy install command">⬇</button>
     )}
     {age && <span class="age">{age}</span>}
   </div>

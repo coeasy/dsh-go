@@ -1,6 +1,6 @@
 {
   "name": "dsh_go",
-  "version": "2.1.0",
+  "version": "2.3.0",
   "description": "DeepSeek Harness 插件市场导航站（全自动同步 + 真·RESTful API + 中英文）",
   "type": "module",
   "private": true,
@@ -10,6 +10,7 @@
     "sync:full": "node scripts/sync.mjs --full",
     "sync:incremental": "node scripts/sync.mjs --incremental",
     "validate": "node scripts/validate.mjs",
+    "readme:update": "node scripts/update-readme.mjs",
     "copy-assets": "node scripts/copy-assets.mjs",
     "site:install": "cd site && npm ci",
     "site:dev": "cd site && npm run dev",

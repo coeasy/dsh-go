@@ -67,6 +67,9 @@ jobs:
       - name: Validate catalog (gate)
         run: node scripts/validate.mjs
 
+      - name: Update README hot recommendations
+        run: node scripts/update-readme.mjs
+
       - name: Detect data changes
         id: diff
         run: |
@@ -81,14 +84,14 @@ jobs:
 
       - name: Commit & push
         run: |
-          # catalog 下有任何变化（含 meta.json 心跳）就提交；无变化则完全跳过
-          if git diff --quiet catalog/; then
-            echo "catalog 无任何变化，跳过提交"
+          # catalog（含 meta 心跳）与 README 有任何变化就提交；无变化则完全跳过
+          if git diff --quiet catalog/ README.md; then
+            echo "catalog / README 均无变化，跳过提交"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add catalog/
+          git add catalog/ README.md
           if [ "${{ steps.diff.outputs.data_changed }}" = "true" ]; then
             COUNT=$(node -p "require('./catalog/plugins.json').meta.count")
             MSG="chore(sync): 更新插件目录 (${COUNT} 个插件, ${{ steps.mode.outputs.mode }})"

@@ -7,6 +7,8 @@ import { u } from '../../lib/urls';
 import { DETAIL_THRESHOLD } from '../../lib/threshold';
 import { fmtK } from '../../lib/format';
 
+const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
+
 export async function getStaticPaths() {
   let plugins = [];
   try {
@@ -40,6 +42,11 @@ const updatedAt = plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateSt
 const hash = [...plugin.name].reduce((a: number, c: string) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
 const hue = hash % 360;
 const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
+
+// 可分享的 Markdown 徽章（shields.io 风格，链接回本插件详情页）
+const detailUrl = `${SITE}${Astro.url.pathname}`;
+const enc = (s: string) => encodeURIComponent(s).replace(/%20/g, '+');
+const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc('DSH Go')}-${enc(`★ ${fmtK(plugin.stars)}`)}-blue?style=flat-square&logo=deepseek&logoColor=ffffff)](${detailUrl})`;
 ---
 
 <Layout title={`${plugin.name} · DSH Go`} description={plugin.description}>
@@ -64,10 +71,10 @@ const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
       </div>
       <p class="desc">{plugin.description}</p>
       <div class="stats">
-        <span class="stat" title="stars"><b class="s-star">★ {fmtK(plugin.stars)}</b><i>stars</i></span>
-        <span class="stat" title="forks"><b class="s-fork">⑂ {fmtK(plugin.forks)}</b><i>forks</i></span>
-        <span class="stat" title="issues"><b class="s-issue">✦ {fmtK(plugin.open_issues)}</b><i>issues</i></span>
-        <span class="stat" title="watchers"><b class="s-watch">◎ {fmtK(plugin.watchers)}</b><i>watchers</i></span>
+        <span class="stat" title="stars"><b class="s-star">★ {fmtK(plugin.stars)}</b><i data-i18n="stat_stars">stars</i></span>
+        <span class="stat" title="forks"><b class="s-fork">⑂ {fmtK(plugin.forks)}</b><i data-i18n="stat_forks">forks</i></span>
+        <span class="stat" title="issues"><b class="s-issue">✦ {fmtK(plugin.open_issues)}</b><i data-i18n="stat_issues">issues</i></span>
+        <span class="stat" title="watchers"><b class="s-watch">◎ {fmtK(plugin.watchers)}</b><i data-i18n="stat_watchers">watchers</i></span>
       </div>
     </header>
 
@@ -93,6 +100,11 @@ const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
             <a class="readme-more" href={`${plugin.repo_url}#readme`} target="_blank" rel="noopener noreferrer" data-i18n="pl_readme_more">在 GitHub 查看完整 README ↗</a>
           </section>
         )}
+
+        <section class="card">
+          <h2 data-i18n="readme_title">README</h2>
+          <div id="readme" class="md" data-readme-owner={plugin.full_name?.split('/')[0]} data-readme-repo={plugin.full_name?.split('/')[1]}><p data-i18n="readme_loading">加载 README…</p></div>
+        </section>
       </div>
 
       <aside class="side-col">
@@ -116,6 +128,13 @@ const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
             </div>
           </section>
         )}
+
+        <section class="card">
+          <h2 data-i18n="badge_copy_md">复制 Markdown 徽章</h2>
+          <p class="hint" data-i18n="badge_hint">在 README / 博客中引用插件的徽章链接</p>
+          <div class="code sm"><code id="badge" data-badge={badgeMd}>{badgeMd}</code></div>
+          <button id="badge-copy" class="qbtn" data-i18n="badge_copy_md">复制 Markdown 徽章</button>
+        </section>
       </aside>
     </div>
   </article>
@@ -161,6 +180,104 @@ const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
         // 降级：复制 dsh 安装命令到剪贴板
         const cmd = `dsh plugin add github:${full}`;
         if (navigator.clipboard) navigator.clipboard.writeText(cmd).catch(() => {});
+      });
+    }
+  </script>
+
+  <script>
+    // ……README 完整渲染 + Markdown 徽章复制……
+    const langOf = () => (window as unknown as { __dshI18n?: { getLang: () => string } }).__dshI18n?.getLang?.() || 'zh';
+
+    // 轻量安全 Markdown → HTML：先整体转义，再做格式标记替换（不支持原始 HTML，防注入）
+    function escapeHtml(s: string): string {
+      return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+    }
+    function autolink(m: string): string {
+      const url = m.slice(1, -1);
+      if (/^(https?:|mailto:)/i.test(url)) return `<a href="${url}" rel="noopener noreferrer">${url}</a>`;
+      return m;
+    }
+    function renderMarkdown(raw: string): string {
+      const src = raw.replace(/\r\n/g, '\n');
+      const lines = src.split('\n');
+      const out: string[] = [];
+      let code: string[] | null = null;
+      const push = (s = '') => out.push(s);
+      const inline = (t: string) =>
+        escapeHtml(t)
+          .replace(/`([^`]+)`/g, '<code>$1</code>')
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+          .replace(/~~([^~]+)~~/g, '<del>$1</del>')
+          .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" rel="noopener noreferrer">$1</a>');
+      for (const line of lines) {
+        // 代码块
+        if (/^````?/.test(line)) {
+          if (code) { push(`</code></pre>`); code = null; }
+          else { code = []; push(`<pre><code>`); }
+          continue;
+        }
+        if (code) { code.push(escapeHtml(line)); continue; }
+        const m = line.trim();
+        if (!m) { push(); continue; }
+        if (/^(#{1,6})\s+/.test(m)) {
+          const lvl = m.match(/^(#{1,6})\s+/)![1].length;
+          push(`<h${lvl}>${inline(m.replace(/^#{1,6}\s*/, ''))}</h${lvl}>`);
+        } else if (/^&gt;\s?/.test(escapeHtml(m)) || (/^>\s?/).test(m)) {
+          push(`<blockquote>${inline(m.replace(/^>\s?/, ''))}</blockquote>`);
+        } else if (/^[-*_]{3,}\s*$/.test(m)) {
+          push('<hr>');
+        } else if (/^-?\s+/.test(m) && !/^\d+\.\s/.test(m)) {
+          push(`<li>${inline(m.replace(/^[-*+]\s+/, ''))}</li>`);
+        } else if (/^\d+\.\s+/.test(m)) {
+          push(`<li>${inline(m.replace(/^\d+\.\s+/, ''))}</li>`);
+        } else if (!out.length && /^<https?:[^>]+>$/.test(m)) {
+          push(autolink(m));
+        } else {
+          push(`<p>${inline(m)}</p>`);
+        }
+      }
+      if (code) push(`</code></pre>`);
+      return out.join('\n');
+    }
+
+    const readmeEl = document.getElementById('readme');
+    if (readmeEl) {
+      const owner = readmeEl.getAttribute('data-readme-owner') || '';
+      const repo = readmeEl.getAttribute('data-readme-repo') || '';
+      const candidates = ['README.md', 'readme.md', 'README.MD', 'Readme.md', 'README', 'readme', 'README.mdx'];
+      let done = false;
+      (async () => {
+        for (const file of candidates) {
+          if (done) break;
+          try {
+            const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${file}`);
+            if (!res.ok) continue;
+            const text = await res.text();
+            if (!text.trim() || text.startsWith('404: Not Found')) continue;
+            const html = renderMarkdown(text);
+            readmeEl.innerHTML = html || '<p></p>';
+            done = true;
+          } catch { /* 继续尝试下一个候选文件名 */ }
+        }
+        if (!done) {
+          const lang = langOf();
+          readmeEl.innerHTML = `<p data-i18n="readme_fail">${lang === 'en' ? 'Failed to load README, view on GitHub instead' : 'README 加载失败，请到 GitHub 查看'}</p>`;
+        }
+      })();
+    }
+
+    // Markdown 徽章复制
+    const bc = document.getElementById('badge-copy') as HTMLButtonElement | null;
+    const bcode = document.getElementById('badge') as HTMLElement | null;
+    if (bc && bcode) {
+      bc.addEventListener('click', async () => {
+        const md = bcode.getAttribute('data-badge') || bcode.textContent || '';
+        try { await navigator.clipboard.writeText(md); } catch { /* 忽略 */ }
+        const lang = langOf();
+        bcode.textContent = lang === 'en' ? 'Badge copied ✓' : '已复制徽章 ✓';
+        bc.textContent = lang === 'en' ? 'Badge copied ✓' : '已复制徽章 ✓';
+        setTimeout(() => { bcode.textContent = md; bc.textContent = lang === 'en' ? 'Copy Markdown badge' : '复制 Markdown 徽章'; }, 1600);
       });
     }
   </script>
@@ -258,6 +375,30 @@ const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
   /* ---------- 简介 ---------- */
   .readme-text { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
   .readme-more { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; }
+
+  /* ---------- 完整 README 渲染 ---------- */
+  .md { color: var(--fg); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+  .md h1, .md h2, .md h3, .md h4 { margin: 1.2em 0 .5em; line-height: 1.3; }
+  .md h1 { font-size: 21px; }
+  .md h2 { font-size: 18px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+  .md h3 { font-size: 16px; }
+  .md p { margin: .55em 0; }
+  .md ul, .md ol { margin: .5em 0; padding-left: 1.5em; }
+  .md li { margin: .2em 0; }
+  .md code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; }
+  .md pre { background: #0d1526; border: 1px solid #1e2d47; border-radius: 10px; padding: 12px 14px; overflow-x: auto; }
+  .md pre code { background: none; border: none; padding: 0; color: #7dd3fc; display: block; line-height: 1.6; }
+  .md blockquote { margin: .6em 0; padding: 2px 14px; border-left: 3px solid var(--accent); color: var(--muted); background: var(--bg-soft); border-radius: 0 6px 6px 0; }
+  .md hr { border: none; border-top: 1px solid var(--border); margin: 1.2em 0; }
+  .md a { color: var(--accent); }
+  .md img { max-width: 100%; border-radius: 8px; }
+  .md table { border-collapse: collapse; margin: .6em 0; }
+  .md th, .md td { border: 1px solid var(--border); padding: 6px 10px; font-size: 13px; }
+
+  /* ---------- 徽章 ---------- */
+  .hint { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; }
+  .code.sm { padding: 10px 12px; margin-bottom: 10px; }
+  .code.sm code { font-size: 11px; color: #bae6fd; word-break: break-all; }
 
   /* ---------- 信息表 ---------- */
   .card table { border-collapse: collapse; width: 100%; }

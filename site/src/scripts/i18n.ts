@@ -49,6 +49,10 @@ function apply(lang: Lang) {
     const key = n === 1 ? 'results_one' : 'results';
     el.textContent = tr(key, lang, { n });
   });
+  document.querySelectorAll<HTMLElement>('[data-i18n-aria]').forEach((el) => {
+    const txt = tr(el.getAttribute('data-i18n-aria')!, lang);
+    if (txt) el.setAttribute('aria-label', txt);
+  });
   // 导航当前页高亮
   const nav = document.querySelector<HTMLElement>('.nav-links');
   if (nav) {
@@ -82,21 +86,29 @@ function toggleTheme() {
   if (dt) dt.textContent = d.contains('dark') ? '☀️' : '🌙';
 }
 
+// 幂等守卫：Layout 的打包 <script> 显式调用 initI18n()，而本模块在“自动执行”块里也会调用一次。
+// 若不守卫，语言/主题切换按钮会被挂载两份 click 监听，导致点一次语言被连续切换两次（看起来像“切换失败/无效”）。
+let _initialized = false;
+
 export function initI18n() {
   initTheme();
   const lang = getLang();
   apply(lang);
   updateToggles(lang);
 
-  const lt = document.getElementById('lang-toggle');
-  if (lt) lt.addEventListener('click', () => {
-    const next: Lang = getLang() === 'en' ? 'zh' : 'en';
-    saveLang(next);
-    apply(next);
-    updateToggles(next);
-  });
-  const dt = document.getElementById('theme-toggle');
-  if (dt) dt.addEventListener('click', toggleTheme);
+  // 仅挂载一次监听
+  if (!_initialized) {
+    _initialized = true;
+    const lt = document.getElementById('lang-toggle');
+    if (lt) lt.addEventListener('click', () => {
+      const next: Lang = getLang() === 'en' ? 'zh' : 'en';
+      saveLang(next);
+      apply(next);
+      updateToggles(next);
+    });
+    const dt = document.getElementById('theme-toggle');
+    if (dt) dt.addEventListener('click', toggleTheme);
+  }
 
   // 暴露给其它脚本（如 app.js / favorites）以重渲染
   (window as unknown as { __dshI18n: unknown }).__dshI18n = { apply, getLang };
