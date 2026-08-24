@@ -65,7 +65,7 @@ export interface CatalogResult {
  * 通过 ASSETS 绑定读取 catalog/plugins.json（静态文件，零成本）
  * 优先使用跨边缘节点共享的 Cache API；不可用时回退到进程级 Map。
  */
-const CATALOG_URL = 'https://dsh-hub.pages.dev/catalog/plugins.json';
+const CATALOG_URL = 'https://dsh-go.pages.dev/catalog/plugins.json';
 
 // Cloudflare 提供跨边缘节点共享的 caches.default；@cloudflare/workers-types 旧版未声明该属性，故放宽类型
 function sharedCache(): Cache | undefined {
@@ -92,7 +92,7 @@ export async function loadCatalog(env: Env): Promise<CatalogResult> {
   if (mem) return mem;
 
   // 3) 真正读取静态资源
-  const res = await env.ASSETS.fetch(new URL('/catalog/plugins.json', 'https://dsh-hub.pages.dev'));
+  const res = await env.ASSETS.fetch(new URL('/catalog/plugins.json', 'https://dsh-go.pages.dev'));
   if (!res.ok) throw new Error('catalog load failed: ' + res.status);
 
   const data: CatalogData = await res.json();
@@ -211,7 +211,7 @@ export function error(status: number, message: string) {
 
 /** 500 错误脱敏：记录完整错误给运维，但不向客户端泄漏内部细节（路径/堆栈等） */
 export function internalError(e: unknown) {
-  console.error('[dsh-hub] internal error:', e);
+  console.error('[dsh-go] internal error:', e);
   return error(500, 'internal server error');
 }
 

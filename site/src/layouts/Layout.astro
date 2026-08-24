@@ -5,8 +5,8 @@ interface Props {
   title?: string;
   description?: string;
 }
-const { title = 'DSH Plugins Nav', description = 'DeepSeek Harness 插件市场导航站' } = Astro.props;
-const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
+const { title = 'DSH Go', description = 'DeepSeek Harness 插件市场导航站' } = Astro.props;
+const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
 ---
 
 <!doctype html>
@@ -22,7 +22,7 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="DSH Plugins Nav" />
+    <meta property="og:site_name" content="DSH Go" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={`${SITE}${Astro.url.pathname}`} />
@@ -139,7 +139,7 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
   <body>
     <header class="nav">
       <div class="nav-inner">
-        <a class="brand" href={u('/')}><img src={u('/favicon.svg')} alt="logo" />DSH <span class="grad-text">Plugins</span> Nav</a>
+        <a class="brand" href={u('/')}><img src={u('/favicon.svg')} alt="logo" />DSH <span class="grad-text">Go</span></a>
         <nav class="nav-links" data-path={Astro.url.pathname.replace(/\/$/, '') || '/'}>
           <a href={u('/')} data-i18n="nav_home" data-nav="/">首页</a>
           <a href={u('/docs')} data-i18n="nav_docs" data-nav={u('/docs')}>API 文档</a>
@@ -154,7 +154,7 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-hub.pages.dev';
       <slot />
     </main>
     <footer>
-      <span data-i18n="footer" data-api={apiUrl('/api/v1/health')}>DSH Plugins Nav · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="/api/v1/health">API 状态</a></span>
+      <span data-i18n="footer" data-api={apiUrl('/api/v1/health')}>DSH Go · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="/api/v1/health">API 状态</a></span>
     </footer>
 
     <script>

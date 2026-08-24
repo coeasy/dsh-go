@@ -9,7 +9,7 @@
 const BASE_URL = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
 // API 只存在于 Cloudflare（functions），与站点部署域名（可能是 GitHub Pages）分离。
 // 必须在部署工作流注入 PUBLIC_API_URL（默认指向主站 pages.dev），避免 GitHub Pages 上 /api/* 相对链接 404。
-const API_BASE = (import.meta.env.PUBLIC_API_URL || 'https://dsh-hub.pages.dev').replace(/\/+$/, '');
+const API_BASE = (import.meta.env.PUBLIC_API_URL || 'https://dsh-go.pages.dev').replace(/\/+$/, '');
 
 export function u(path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`;

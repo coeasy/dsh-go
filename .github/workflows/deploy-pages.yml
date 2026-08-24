@@ -68,7 +68,7 @@ jobs:
         env:
           PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
           PUBLIC_SITE_URL: https://${{ github.event.repository.owner.login }}.github.io/${{ github.event.repository.name }}
-          PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-hub' }}.pages.dev
+          PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
 
       - name: Verify build output
         run: |

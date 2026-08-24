@@ -90,7 +90,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return rpcResult(id, {
         protocolVersion: '2025-03-26',
         capabilities: { tools: {} },
-        serverInfo: { name: 'dsh-hub', version: '2.0.0' },
+        serverInfo: { name: 'dsh-go', version: '2.0.0' },
       });
     }
 
@@ -156,7 +156,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return rpcError(id, -32601, `unsupported method: ${method}`);
   } catch (e) {
     // JSON-RPC 内部错误：完整日志给运维，客户端只收通用信息
-    console.error('[dsh-hub] mcp internal error:', e);
+    console.error('[dsh-go] mcp internal error:', e);
     return rpcError(id, -32603, 'internal error');
   }
 };
@@ -164,7 +164,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 // GET 返回端点说明（供人工/浏览器探查）
 export const onRequestGet: PagesFunction = async () =>
   json({
-    name: 'DSH Plugins Nav MCP',
+    name: 'DSH Go MCP',
     description: 'JSON-RPC 2.0 over HTTP。用 POST + Content-Type: application/json 调用 initialize / tools/list / tools/call',
     tools: TOOLS.map((t) => t.name),
   });

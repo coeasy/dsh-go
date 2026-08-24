@@ -20,8 +20,8 @@ concurrency:
 
 env:
   # 每个平台独立的仓库标识，由 GitHub Repository Variables 注入；缺省用平台默认用户名
-  GITEE_REPO: easy5277/dsh_hub
-  GITCODE_REPO: ${{ vars.GITCODE_REPO || 'easy5277/dsh_hub' }}
+  GITEE_REPO: easy5277/dsh_go
+  GITCODE_REPO: ${{ vars.GITCODE_REPO || 'easy5277/dsh_go' }}
 
 jobs:
   build-and-push:
@@ -49,14 +49,14 @@ jobs:
       - name: Copy catalog into site (API 数据源 + 静态下载)
         run: node scripts/copy-assets.mjs
 
-      # 两平台子路径相同（都是 /dsh_hub），构建一次即可同时复用。
+      # 两平台子路径相同（都是 /dsh_go），构建一次即可同时复用。
       # PUBLIC_SITE_URL 用于 canonical/sitemap：指向各平台自己的域名，避免重复内容。
       - name: Build site (CN mirror sub-path)
         run: cd site && npm run build
         env:
-          PUBLIC_BASE_PATH: /dsh_hub
-          PUBLIC_SITE_URL: https://easy5277.gitee.io/dsh_hub
-          PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-hub' }}.pages.dev
+          PUBLIC_BASE_PATH: /dsh_go
+          PUBLIC_SITE_URL: https://easy5277.gitee.io/dsh_go
+          PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
 
       - name: Verify build output
         run: |
@@ -69,7 +69,7 @@ jobs:
         run: |
           cd site/dist
           git init -q
-          git config user.name "dsh-hub CI"
+          git config user.name "dsh-go CI"
           git config user.email "ci@local"
           git add -A
           git commit -q -m "deploy: ${{ github.sha }}"
@@ -81,7 +81,7 @@ jobs:
         run: |
           cd site/dist
           git init -q
-          git config user.name "dsh-hub CI"
+          git config user.name "dsh-go CI"
           git config user.email "ci@local"
           git add -A
           git commit -q -m "deploy: ${{ github.sha }}"

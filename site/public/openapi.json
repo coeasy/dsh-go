@@ -1,12 +1,12 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "DSH Plugins Nav API",
+    "title": "DSH Go API",
     "version": "1.0.0",
     "description": "DeepSeek Harness 插件目录公共 API。CORS 全开、无需认证、支持 ETag 协商缓存。数据由 GitHub Actions 每日自动同步。",
     "license": { "name": "CC-BY-4.0" }
   },
-  "servers": [{ "url": "https://dsh-hub.pages.dev" }],
+  "servers": [{ "url": "https://dsh-go.pages.dev" }],
   "tags": [
     { "name": "目录", "description": "插件目录数据" },
     { "name": "搜索", "description": "关键词搜索" },

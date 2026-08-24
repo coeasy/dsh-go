@@ -1,5 +1,5 @@
 {
-  "name": "dsh-hub",
+  "name": "dsh_go",
   "version": "2.1.0",
   "description": "DeepSeek Harness 插件市场导航站（全自动同步 + 真·RESTful API + 中英文）",
   "type": "module",
@@ -14,7 +14,7 @@
     "site:install": "cd site && npm ci",
     "site:dev": "cd site && npm run dev",
     "site:build": "node scripts/copy-assets.mjs && cd site && npm run build",
-    "deploy": "npx wrangler pages deploy site/dist --project-name=dsh-hub",
+    "deploy": "npx wrangler pages deploy site/dist --project-name=dsh-go",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",

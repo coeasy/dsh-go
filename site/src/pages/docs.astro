@@ -26,15 +26,15 @@ const params = [
 ];
 
 // 使用 set:html 渲染代码块，避免 Astro 解析模板字面量
-const curlExample = `<span>curl "https://dsh-hub.pages.dev/api/v1/plugins?category=web-ui&verified=true&sort=stars"</span>
-<span>curl "https://dsh-hub.pages.dev/api/v1/search?q=vision&limit=10"</span>
-<span>curl -H "If-None-Match: a1b2c3d4e5f60718" https://dsh-hub.pages.dev/api/v1/plugins</span>
-<span>curl -X POST https://dsh-hub.pages.dev/api/v1/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_plugins","arguments":{"q":"agent"}}}'</span>`;
+const curlExample = `<span>curl "https://dsh-go.pages.dev/api/v1/plugins?category=web-ui&verified=true&sort=stars"</span>
+<span>curl "https://dsh-go.pages.dev/api/v1/search?q=vision&limit=10"</span>
+<span>curl -H "If-None-Match: a1b2c3d4e5f60718" https://dsh-go.pages.dev/api/v1/plugins</span>
+<span>curl -X POST https://dsh-go.pages.dev/api/v1/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_plugins","arguments":{"q":"agent"}}}'</span>`;
 
 const mcpConfigHtml = `<span>// ~/.config/Claude/claude_desktop_config.json</span>
 <span>{</span>
 <span>  "mcpServers": {</span>
-<span>    "dsh-hub": {</span>
+<span>    "dsh-go": {</span>
 <span>      "url": "${BASE}/api/v1/mcp",</span>
 <span>      "transport": "streamable-http"</span>
 <span>    }</span>
@@ -54,7 +54,7 @@ const etagHtml = `<span>// 浏览器 / Node.js（把 API_BASE 换成实际的 Ba
 <span>}</span>`;
 ---
 
-<Layout title="API 文档 · DSH Plugins Nav" description="DSH Plugins Nav 开放 API 参考">
+<Layout title="API 文档 · DSH Go" description="DSH Go 开放 API 参考">
   <h1 data-i18n="doc_title">API 文档</h1>
   <p data-i18n="doc_intro">公开、免费、CORS 全开、无需认证，支持 <code>If-None-Match</code> ETag 协商缓存。数据每日 08:18 自动同步。</p>
 

@@ -7,7 +7,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
     // meta.json 存于静态目录，尽力读取同步历史；读取失败时仅返回 plugins 元信息
     let last_sync = null;
     try {
-      const res = await env.ASSETS.fetch(new URL('/catalog/meta.json', 'https://dsh-hub.pages.dev'));
+      const res = await env.ASSETS.fetch(new URL('/catalog/meta.json', 'https://dsh-go.pages.dev'));
       if (res.ok) {
         const m = (await res.json()) as { last_sync?: unknown };
         last_sync = m.last_sync || null;
@@ -15,7 +15,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
     } catch { /* ignore */ }
 
     return json({
-      name: 'DSH Plugins Nav API',
+      name: 'DSH Go API',
       version: 'v1',
       data_version: data.version,
       updated_at: data.meta.updated_at,

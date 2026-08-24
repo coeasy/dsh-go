@@ -1,5 +1,5 @@
 # Cloudflare Pages 部署配置
-name = "dsh-hub"
+name = "dsh-go"
 pages_build_output_dir = "site/dist"
 compatibility_date = "2026-08-01"
 

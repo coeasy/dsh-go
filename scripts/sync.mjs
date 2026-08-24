@@ -1,5 +1,5 @@
 /**
- * DSH Plugins Nav — 同步引擎 V2
+ * DSH Go — 同步引擎 V2
  * =========================================================
  * 模式：
  *   node scripts/sync.mjs            → 自动（默认 incremental）
@@ -64,7 +64,7 @@ function log(msg, type = 'info') {
 
 async function ghFetch(path, { retries = 4 } = {}) {
   const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
-  const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': `dsh-hub/${Math.random().toString(36).slice(2, 6)}` };
+  const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': `dsh-go/${Math.random().toString(36).slice(2, 6)}` };
   if (TOKEN) headers['Authorization'] = `Bearer ${TOKEN}`;
   for (let i = 0; i < retries; i++) {
     let res;
@@ -190,7 +190,7 @@ async function fetchManifest(fullName, branch) {
   for (const file of ['dsh-plugin.json', 'package.json']) {
     const url = `https://raw.githubusercontent.com/${fullName}/${branch}/${file}`;
     try {
-      const res = await fetch(url, { headers: { 'User-Agent': 'dsh-hub' } });
+      const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' } });
       if (!res.ok) continue;
       const data = await res.json();
       if (!data || typeof data !== 'object') continue;
@@ -203,7 +203,7 @@ async function fetchManifest(fullName, branch) {
 async function fetchReadme(fullName, branch) {
   const url = `https://raw.githubusercontent.com/${fullName}/${branch}/README.md`;
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'dsh-hub' } });
+    const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' } });
     if (!res.ok) return { has: false, excerpt: '' };
     const text = await res.text();
     return { has: true, excerpt: stripMarkdown(text).slice(0, README_EXCERPT_LEN) };
@@ -529,8 +529,8 @@ function buildFeed(plugins) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>DSH Plugins Nav</title>
-    <link>https://dsh-hub.pages.dev</link>
+    <title>DSH Go</title>
+    <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>

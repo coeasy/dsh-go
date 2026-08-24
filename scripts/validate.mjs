@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * DSH Plugins Nav — 数据校验门禁
+ * DSH Go — 数据校验门禁
  * 在部署前检查 catalog 数据合法性，失败则中断流水线（exit 1）
  */
 import { readFile, access } from 'node:fs/promises';

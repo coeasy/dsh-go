@@ -1,11 +1,11 @@
-# DSH Plugins Nav
+# DSH Go
 
 DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。
 
-[![Deploy](https://github.com/coeasy/dsh_hub/actions/workflows/deploy.yml/badge.svg)](https://github.com/coeasy/dsh_hub/actions/workflows/deploy.yml)
-[![Sync](https://github.com/coeasy/dsh_hub/actions/workflows/sync.yml/badge.svg)](https://github.com/coeasy/dsh_hub/actions/workflows/sync.yml)
-[![Monitor](https://github.com/coeasy/dsh_hub/actions/workflows/monitor.yml/badge.svg)](https://github.com/coeasy/dsh_hub/actions/workflows/monitor.yml)
-[![Pages](https://github.com/coeasy/dsh_hub/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/coeasy/dsh_hub/actions/workflows/deploy-pages.yml)
+[![Deploy](https://github.com/coeasy/dsh_go/actions/workflows/deploy.yml/badge.svg)](https://github.com/coeasy/dsh_go/actions/workflows/deploy.yml)
+[![Sync](https://github.com/coeasy/dsh_go/actions/workflows/sync.yml/badge.svg)](https://github.com/coeasy/dsh_go/actions/workflows/sync.yml)
+[![Monitor](https://github.com/coeasy/dsh_go/actions/workflows/monitor.yml/badge.svg)](https://github.com/coeasy/dsh_go/actions/workflows/monitor.yml)
+[![Pages](https://github.com/coeasy/dsh_go/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/coeasy/dsh_go/actions/workflows/deploy-pages.yml)
 
 ## 特性
 
@@ -23,24 +23,24 @@ DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API
 > 本项目采用 **Direct Upload 方式**：构建在 GitHub Actions 完成，`deploy.yml` 通过 `cloudflare/pages-action` 上传 `site/dist`。**不要在 CF 控制台连接 Git 仓库或配置构建命令**，否则会与 Action 双重触发构建。
 
 1. 将本仓库设为公开；
-2. Cloudflare 控制台 → Workers & Pages → Create → Pages → **Upload assets**（Direct Upload），项目名 `dsh-hub`（无需指定框架/构建命令）；
+2. Cloudflare 控制台 → Workers & Pages → Create → Pages → **Upload assets**（Direct Upload），项目名 `dsh-go`（无需指定框架/构建命令）；
 3. 在 GitHub 仓库 Settings → Secrets and variables → Actions 添加：
    - `CLOUDFLARE_API_TOKEN`（CF API Token，权限：Account - Cloudflare Pages - Edit）
    - `CLOUDFLARE_ACCOUNT_ID`
-4. 在 Variables 添加 `SITE_URL = https://dsh-hub.pages.dev`；
-5. 手动触发一次 `Deploy` 工作流，首次部署后访问 `https://dsh-hub.pages.dev`。
+4. 在 Variables 添加 `SITE_URL = https://dsh-go.pages.dev`；
+5. 手动触发一次 `Deploy` 工作流，首次部署后访问 `https://dsh-go.pages.dev`。
 
 从零到线上的完整操作流程见 [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md)；部署后的逐项验收见 [FIRST_DEPLOY_CHECKLIST.md](./FIRST_DEPLOY_CHECKLIST.md)。
 
 ### 1.5 同时部署到 GitHub Pages（静态镜像，可选）
 
-> `deploy-pages.yml` 会把站点构建为纯静态产物，通过 GitHub 官方 Actions 部署到 `https://coeasy.github.io/dsh_hub/`。
+> `deploy-pages.yml` 会把站点构建为纯静态产物，通过 GitHub 官方 Actions 部署到 `https://coeasy.github.io/dsh_go/`。
 > GitHub Pages **不提供 functions**，因此镜像站上 `/api/v1/*` 不可用（前端均为静态渲染，不调用 API，功能不受影响；页面上指向 API 的链接会自动跳转到 Cloudflare 主站）。
 
 1. 仓库 Settings → Pages → **Build and deployment → Source** 选择 **GitHub Actions**；
 2. 仓库 Settings → Actions → Workflow permissions 选择 **Read and write**（`GITHUB_TOKEN` 自动获得 Pages 写入权限）；
-3. 在 Variables 添加 `CF_PAGES_PROJECT = dsh-hub`（用于镜像站把 API 链接指回 Cloudflare 主站）；若不设置，默认 `https://dsh-hub.pages.dev`；
-4. 推送 `main` 分支（或手动触发 `Deploy GitHub Pages`）即可。访问 `https://coeasy.github.io/dsh_hub/`。
+3. 在 Variables 添加 `CF_PAGES_PROJECT = dsh-go`（用于镜像站把 API 链接指回 Cloudflare 主站）；若不设置，默认 `https://dsh-go.pages.dev`；
+4. 推送 `main` 分支（或手动触发 `Deploy GitHub Pages`）即可。访问 `https://coeasy.github.io/dsh_go/`。
 
 > 首次启用 GitHub Pages 后，需在 GitHub 账号层面确认该仓库已执行一次 Pages 部署（触发 `actions/upload-pages-artifact` + `deploy-pages`）。
 > 若你希望迁移到组织账号，把仓库移动到组织后，上述 `coeasy` 域名自动变为 `<组织>.github.io`，API 域名保持不变。

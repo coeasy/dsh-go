@@ -4,7 +4,7 @@ export type Lang = 'zh' | 'en';
 export const I18N: Record<Lang, Record<string, string>> = {
   zh: {
     nav_home: '首页', nav_docs: 'API 文档', nav_stats: '统计', nav_rss: 'RSS',
-    footer: 'DSH Plugins Nav · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="{api}">API 状态</a>',
+    footer: 'DSH Go · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="{api}">API 状态</a>',
     hero_title: 'DeepSeek Harness 插件市场',
     hero_sub: '收录 {n} 个 dsh-plugin 插件，每日自动更新 · 全开源 · 开放 API',
     empty_msg: '没有匹配的插件，换个关键词试试？',
@@ -38,7 +38,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
   },
   en: {
     nav_home: 'Home', nav_docs: 'API Docs', nav_stats: 'Stats', nav_rss: 'RSS',
-    footer: 'DSH Plugins Nav · Synced daily from GitHub topic:dsh-plugin · <a href="{api}">API Status</a>',
+    footer: 'DSH Go · Synced daily from GitHub topic:dsh-plugin · <a href="{api}">API Status</a>',
     hero_title: 'DeepSeek Harness Plugin Hub',
     hero_sub: 'Browse {n} dsh-plugin plugins, synced daily · open source · open API',
     empty_msg: 'No matching plugins, try another keyword.',

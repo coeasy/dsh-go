@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * DSH Plugins Nav — 构建前资源拷贝
+ * DSH Go — 构建前资源拷贝
  * 把 catalog/*.json 与 catalog/feed.xml 拷入 site/public/catalog/
  * （Astro 会把 public/ 原样复制到 dist/，这样 Functions 能通过 ASSETS 读取）
  * 同时把根级 _headers / _redirects 同步到 site/public/
