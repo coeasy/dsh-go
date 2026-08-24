@@ -28,8 +28,8 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    # 全量 1 万+ 仓库需搜索(30req/min)+并发抓取；放宽以避免中途超时
-    timeout-minutes: 60
+    # 全量 1 万+ 仓库需搜索(15 req) + 多主题分桶(约 +15 req) + 并发抓取；放宽以避免中途超时
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4

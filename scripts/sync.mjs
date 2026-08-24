@@ -32,6 +32,9 @@ const FEED_FILE = resolve(CATALOG_DIR, 'feed.xml');
 const TOKEN = process.env.GITHUB_TOKEN || '';
 const API_BASE = 'https://api.github.com';
 const TOPIC = 'topic:dsh-plugin';
+// 补充主题：为扩大收录，额外搜索相关生态标签（如 DeepSeek Harness 生态）。
+// ⚠️ 补充主题必须带 manifest（dsh-plugin.json）才收录，避免把非插件项目混入目录。
+const EXTRA_TOPICS = ['topic:deepseek-harness'];
 const REQUEST_DELAY = 120; // ms，普通资源请求间隔
 // 搜索 API 速率：认证 30 req/min、匿名 10 req/min。主动限速避免 403 导致全量中途失败。
 const SEARCH_DELAY = TOKEN ? 2200 : 6000; // ms
@@ -128,9 +131,24 @@ export function dedupeTags(arr) {
 }
 
 function detectCategory(repo, _manifest) {
-  const topics = repo.topics || [];
+  const topics = (repo.topics || []).map((t) => t.toLowerCase());
   const desc = `${repo.description || ''} ${(repo.name || '').toLowerCase()}`;
   const matches = (kw) => topics.includes(kw) || desc.includes(kw);
+
+  // 用 topics 精确命中优先（注意顺序：先精确标签，再关键词模糊）
+  if (topics.some((t) => ['web-ui', 'ui', 'dashboard', 'webapp', 'frontend', 'ui-library'].includes(t))) return 'web-ui';
+  if (topics.some((t) => ['mcp', 'model-context-protocol'].includes(t))) return 'mcp';
+  if (topics.some((t) => ['skills', 'skill', 'agent-skills', 'dsh-skill'].includes(t))) return 'skills';
+  if (topics.some((t) => ['theme', 'themes', 'skin'].includes(t))) return 'theme';
+  if (topics.some((t) => ['vision', 'image', 'ocr', 'multimodal', 'multi-modal', 'tesseract'].includes(t))) return 'vision';
+  if (topics.some((t) => ['memory', 'vector-db', 'vector-database', 'vectorstore'].includes(t))) return 'memory';
+  if (topics.some((t) => ['security', 'auth', 'authentication', 'privacy'].includes(t))) return 'security';
+  if (topics.some((t) => ['coding', 'copilot', 'code-review', 'linting'].includes(t))) return 'coding';
+  if (topics.some((t) => ['agent', 'multi-agent', 'workflow', 'automation', 'coding-agent', 'agent-tools'].includes(t))) return 'agent';
+  if (topics.some((t) => ['terminal', 'cli', 'shell', 'zsh', 'fish', 'bash'].includes(t))) return 'terminal';
+  if (topics.some((t) => ['desktop', 'gui', 'tauri', 'electron', 'desktop-pet', 'pet'].includes(t))) return 'desktop';
+  if (topics.some((t) => ['cost-tracking', 'token-usage', 'billing', 'usage', 'quota', 'balance'].includes(t))) return 'integration';
+
   const rule = [
     ['mcp', 'mcp'],
     ['skills', 'skill'],
@@ -140,10 +158,10 @@ function detectCategory(repo, _manifest) {
     ['security', 'security'], ['security', 'auth'],
     ['coding', 'coding'], ['coding', 'code'], ['coding', 'copilot'],
     ['agent', 'agent'], ['agent', 'workflow'], ['agent', 'automation'],
-    ['web-ui', 'web'], ['web-ui', 'ui'], ['web-ui', 'react'], ['web-ui', 'vue'],
+    ['web-ui', 'web'], ['web-ui', 'ui'], ['web-ui', 'react'], ['web-ui', 'vue'], ['web-ui', 'dashboard'],
     ['desktop', 'desktop'], ['desktop', 'gui'], ['desktop', 'tauri'], ['desktop', 'electron'],
     ['terminal', 'terminal'], ['terminal', 'cli'], ['terminal', 'shell'],
-    ['integration', 'integration'], ['integration', 'api'],
+    ['integration', 'integration'], ['integration', 'api'], ['integration', 'token'], ['integration', 'cost'], ['integration', 'billing'],
     ['tool', 'tool'], ['tool', 'utility'],
   ];
   for (const [cat, kw] of rule) if (matches(kw)) return cat;
@@ -317,12 +335,26 @@ async function main() {
       'stars:51..100', 'stars:101..200', 'stars:201..500',
       'stars:501..1000', 'stars:1001..5000', 'stars:5001..999999999',
     ];
-    log(`全量模式：按 star 分桶搜索 ${TOPIC}（${BUCKETS.length} 桶，突破单查询 1000 上限）`);
+    log(`全量模式：按 star 分桶搜索 ${TOPIC} + ${EXTRA_TOPICS.join(', ')}（${BUCKETS.length} 桶，突破单查询 1000 上限）`);
+    // 主源：topic:dsh-plugin（默认全量收录）
     for (const buck of BUCKETS) {
       repos.push(...(await fetchRange(`${TOPIC} ${buck}`, { sort: 'stars', maxPages: 10 })));
       await sleep(500); // 桶间呼吸，避免瞬时并发顶到限速
     }
-    log(`全量搜索完成，共获取 ${repos.length} 个候选（分桶并集；超幅桶取 top-1000）`);
+    // 补充主题：分桶并集，但仅标记 extra=true（后面只收带 manifest 的）。
+    // ⚠️ 跳过 0~5 星低星桶：补充主题(deepseek-harness)低星候选多为未完成/非插件项目，
+    //    且低星桶受 GitHub top-1000 硬限制反而不准。从 ≥6 星开始即可覆盖绝大多数真实插件。
+    const extraBuckets = ['stars:6..10', 'stars:11..50', 'stars:51..100', 'stars:101..200',
+      'stars:201..500', 'stars:501..1000', 'stars:1001..5000', 'stars:5001..999999999'];
+    for (const topic of EXTRA_TOPICS) {
+      log(`全量补充主题：${topic}`);
+      for (const buck of extraBuckets) {
+        const hits = await fetchRange(`${topic} ${buck}`, { sort: 'stars', maxPages: 10 });
+        hits.forEach((r) => repos.push({ ...r, __extra: true, __source: topic }));
+        await sleep(500);
+      }
+    }
+    log(`全量搜索完成，共获取 ${repos.length} 个候选（主源 + 补充主题分桶并集）`);
     scanned = repos.length;
   } else {
     // 增量模式：只抓上次同步以来 pushed 变更的仓库。
@@ -340,6 +372,16 @@ async function main() {
       repos.push(...items);
       if (repos.length >= total || items.length === 0) break;
       await sleep(REQUEST_DELAY);
+    }
+    // 补充主题增量：pushed 窗口内的候选，标记 extra=true 后续只收带 manifest 的
+    for (const topic of EXTRA_TOPICS) {
+      for (let page = 1; page <= 3; page++) {
+        const { items, total } = await searchRepos(`${topic} pushed:>${since}`, page);
+        scanned += items.length;
+        items.forEach((r) => repos.push({ ...r, __extra: true, __source: topic }));
+        if (items.length === 0) break;
+        await sleep(REQUEST_DELAY);
+      }
     }
   }
 
@@ -371,10 +413,15 @@ async function main() {
     }
   }
 
-  // 去重
+  // 去重：主源优先——补充主题候选若与主源重复，丢弃补充源条目（保留主源数据）
   const seen = new Set();
-  repos = repos.filter((r) => (seen.has(r.full_name) ? false : (seen.add(r.full_name), true)));
-  log(`搜索到 ${repos.length} 个候选仓库`);
+  repos = repos.filter((r) => {
+    if (seen.has(r.full_name)) return false;
+    seen.add(r.full_name);
+    return true;
+  });
+  const extraCount = repos.filter((r) => r.__extra).length;
+  log(`搜索到 ${repos.length} 个候选仓库（含补充主题 ${extraCount} 个）`);
 
   // 搜索 API（/search/repositories）返回的 item 已含 buildPlugin 全部所需字段
   // （full_name/stars/topics/description/default_branch/language/create/update 等）。
@@ -390,6 +437,13 @@ async function main() {
       const repo = repos[idx];
       try {
         const p = await buildPlugin(repo, oldPlugins);
+        // 补充主题候选：仅收「确切带 dsh-plugin.json」的插件，避免把仅含 package.json
+        // 的非插件项目（如 cherry-studio）混入目录；主源候选不受此限制。
+        if (repo.__extra && p.manifest_file !== 'dsh-plugin.json') {
+          skipped++;
+          results[idx] = null;
+          continue;
+        }
         results[idx] = p;
         included++;
         if (included % 50 === 0) log(`已处理 ${included}...`);
@@ -450,6 +504,7 @@ async function main() {
     meta: {
       updated_at: new Date().toISOString(),
       source: `github:${TOPIC}`,
+      source_topics: [TOPIC, ...EXTRA_TOPICS],
       count: plugins.length,
       etag,
       stats: {

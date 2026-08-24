@@ -9,7 +9,7 @@ DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API
 
 ## 特性
 
-- **全自动更新**：每日 08:18 全量同步 + 每 6 小时增量同步（GitHub topic:`dsh-plugin`）
+- **全自动更新**：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取：`dsh-plugin` + DeepSeek Harness 生态，自动过滤非插件）
 - **真·动态 API**：`/api/v1/*`（Cloudflare Pages Functions），过滤/搜索/排序/分页/ETag 304
 - **MCP 端点**：`/api/v1/mcp`，AI Agent 直接查询插件目录
 - **多位置部署**：Cloudflare Pages（全功能，含 API）+ GitHub Pages（静态镜像）+ Gitee / GitCode（国内静态镜像，多个位置可同时运行）
@@ -20,43 +20,21 @@ DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API
 
 ### 1. 部署到 Cloudflare Pages
 
-> 本项目采用 **Direct Upload 方式**：构建在 GitHub Actions 完成，`deploy.yml` 通过 `cloudflare/pages-action` 上传 `site/dist`。**不要在 CF 控制台连接 Git 仓库或配置构建命令**，否则会与 Action 双重触发构建。
+> 采用 **Direct Upload**：构建在 GitHub Actions 完成，通过 `deploy.yml` 上传 `site/dist`。**不要在 CF 控制台连接 Git 仓库或配置构建命令**，否则会与 Action 双重触发构建。
 
-1. 将本仓库设为公开；
-2. Cloudflare 控制台 → Workers & Pages → Create → Pages → **Upload assets**（Direct Upload），项目名 `dsh-go`（无需指定框架/构建命令）；
-3. 在 GitHub 仓库 Settings → Secrets and variables → Actions 添加：
-   - `CLOUDFLARE_API_TOKEN`（CF API Token，权限：Account - Cloudflare Pages - Edit）
-   - `CLOUDFLARE_ACCOUNT_ID`
-4. 在 Variables 添加 `SITE_URL = https://dsh-go.pages.dev`；
-5. 手动触发一次 `Deploy` 工作流，首次部署后访问 `https://dsh-go.pages.dev`。
+1. 仓库设为公开；
+2. CF 控制台 → Workers & Pages → Create → Pages → **Upload assets**，项目名 `dsh-go`；
+3. 在 GitHub Actions Secrets 添加 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`，Variables 添加 `SITE_URL = https://dsh-go.pages.dev`；
+4. 手动触发一次 `Deploy` 工作流，访问 `https://dsh-go.pages.dev`。
 
-从零到线上的完整操作流程见 [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md)；部署后的逐项验收见 [FIRST_DEPLOY_CHECKLIST.md](./FIRST_DEPLOY_CHECKLIST.md)。
+### 2. 可选：GitHub Pages 静态镜像 / 国内镜像（Gitee、GitCode）
 
-### 1.5 同时部署到 GitHub Pages（静态镜像，可选）
+- **GitHub Pages**：仓库 Settings → Pages → Source 选 **GitHub Actions**，并确保 Actions → Workflow permissions 为 **Read and write**；推送 `main` 即部署到 `https://coeasy.github.io/dsh_go/`（镜像站 `/api/v1/*` 不可用，前端静态渲染不受影响）。
+- **国内镜像**（Gitee / GitCode）：在 Variables 配置 `GITEE_TOKEN` / `GITCODE_TOKEN` 与 `GITCODE_REPO = <命名空间>/dsh_go`，`deploy-mirror.yml` 会把纯静态产物推送到对应 `gh-pages` 分支，加速国内访问。
 
-> `deploy-pages.yml` 会把站点构建为纯静态产物，通过 GitHub 官方 Actions 部署到 `https://coeasy.github.io/dsh_go/`。
-> GitHub Pages **不提供 functions**，因此镜像站上 `/api/v1/*` 不可用（前端均为静态渲染，不调用 API，功能不受影响；页面上指向 API 的链接会自动跳转到 Cloudflare 主站）。
+> 各地始终同步更新；具体配置细节与内部部署方案见仓库内部署文档。
 
-1. 仓库 Settings → Pages → **Build and deployment → Source** 选择 **GitHub Actions**；
-2. 仓库 Settings → Actions → Workflow permissions 选择 **Read and write**（`GITHUB_TOKEN` 自动获得 Pages 写入权限）；
-3. 在 Variables 添加 `CF_PAGES_PROJECT = dsh-go`（用于镜像站把 API 链接指回 Cloudflare 主站）；若不设置，默认 `https://dsh-go.pages.dev`；
-4. 推送 `main` 分支（或手动触发 `Deploy GitHub Pages`）即可。访问 `https://coeasy.github.io/dsh_go/`。
-
-> 首次启用 GitHub Pages 后，需在 GitHub 账号层面确认该仓库已执行一次 Pages 部署（触发 `actions/upload-pages-artifact` + `deploy-pages`）。
-> 若你希望迁移到组织账号，把仓库移动到组织后，上述 `coeasy` 域名自动变为 `<组织>.github.io`，API 域名保持不变。
-
-### 1.6 同时部署到国内镜像（Gitee / GitCode，网络优化，可选）
-
-> 针对国内访问，`deploy-mirror.yml` 会把同一套纯静态产物分别推送到 Gitee 与 GitCode 的 `gh-pages` 分支，站点自动按子路径 `/dsh_go` 构建：
-> 国内镜像站均为纯静态（无 functions），页面内指向 `/api/*` 的链接会自动回指 Cloudflare 主站。
-
-1. 仓库 Settings → Secrets 添加 `GITEE_TOKEN` / `GITCODE_TOKEN`（含 **Push pages** 权限的 Access Token），未添加的平台自动跳过；
-2. 在仓库 Variables 配置 `GITCODE_REPO = <你的命名空间>/dsh_go`（Gitee 缺省用 `easy5277/dsh_go`）；
-3. 推送 `main` 分支后，镜像产物会被推送到：
-   - Gitee → `https://gitee.com/<namespace>/dsh_go` 的 `gh-pages` 分支（需到仓库「服务 → Gitee Pages」手动点「更新」+ 过审核）；
-   - GitCode → `https://gitcode.com/<namespace>/dsh_go` 的 `gh-pages` 分支（配置该分支为发布源后 push 即自动构建）。
-
-### 2. 本地开发
+### 3. 本地开发
 
 ```bash
 npm ci                    # 根依赖（wrangler / sync 脚本）
@@ -65,7 +43,7 @@ cd site && npm ci         # 前端依赖
 npm run site:dev          # 启动本地开发服务器
 ```
 
-### 3. 开放 API 速查
+### 4. 开放 API 速查
 
 | 端点 | 说明 |
 |---|---|
@@ -80,7 +58,7 @@ npm run site:dev          # 启动本地开发服务器
 | `GET /catalog/plugins.json` | 原始全量数据 |
 | `GET /feed.xml` | RSS |
 
-详细文档见 [DEPLOYMENT_V2.md](./DEPLOYMENT_V2.md) 与站内 `/docs`。
+> API 使用示例、参数与 MCP 接入见站内 `/docs`。
 
 ## 如何收录你的插件
 

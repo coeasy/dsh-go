@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.2.0] - 2026-08-24
+
+### 扩充收录 + 质量优化
+- 同步引擎支持**多主题并集抓取**：保留主源 `topic:dsh-plugin`，新增补充主题 `topic:deepseek-harness`（仅收录确切带 `dsh-plugin.json` 的插件，自动过滤非插件项目）
+- 全量与增量模式均遍历补充主题；主源优先去重，补充源重复项不覆盖主源
+- 分类识别增强：新增 `web-ui`（dashboard/webapp/frontend）、`agent`（multi-agent/coding-agent）、`desktop`（desktop-pet）、`integration`（token-usage/cost-tracking/billing）等规则，降低 `other` 占比
+
+### 界面
+- 插件卡片新增一键复制安装命令按钮（⬇），覆盖 4578+ 插件，含剪贴板不可用时降级
+- 首页新增"三步安装引导"区块（查找→复制→终端运行，中英双语）
+
+### PWA 与多位置部署
+- 新增 `manifest.webmanifest`（相对路径 `start_url`/`scope`，兼容根路径与子路径部署）
+- Layout 补充 `manifest` / `theme-color` / `apple-touch-icon` / `robots` 标签
+- `deploy-mirror.yml` 的 `GITEE_REPO` 改为 Repository Variables 可配置
+
+### 文档
+- README 精简对外展示（部署仅保留简洁入口，API 引导指向站内 `/docs`）
+- 部署方案文档（DEPLOYMENT_V2 / DEPLOY_GUIDE / FIRST_DEPLOY_CHECKLIST / DEPLOYMENT）头部统一标注"内部运维文档"，不对外分发
+- 品牌统一对齐为 DSH Go
+
 ## [2.1.1] - 2026-08-23
 
 ### 双端部署
