@@ -26,21 +26,21 @@ DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API
 
 | # | 插件 | ★ Stars | 语言 | 最近更新 | 简介 |
 |---|------|---------|------|----------|------|
-| 1 | [cloudbase-ai-toolkit](https://github.com/TencentCloudBase/CloudBase-AI-Toolkit) | 1.1k | TypeScript | 2026-08-24 | Backend for AI coding agents on CloudBase … |
-| 2 | [browser-skill](https://github.com/Tencent/BrowserSkill) | 1.3k | TypeScript | 2026-08-24 | Let AI agents use your real, logged-in bro… |
-| 3 | [@deepseek-harness-tui/dsh-tui](https://github.com/ccch1mneyyy/dsh-TUI) | 2.4k | TypeScript | 2026-08-24 | Claude Code style interactive TUI front do… |
-| 4 | [codex-taskboard](https://github.com/chuspeeism/dashi-taskboard) | 2.5k | JavaScript | 2026-08-24 | — |
-| 5 | [deepseek-harness-desktop](https://github.com/dsh-tauri-desk/deepseek-harness-desktop) | 1.1k | Rust | 2026-08-24 | Desktop application for DeepSeek Harness (… |
-| 6 | [agentrq](https://github.com/agentrq/agentrq) | 1.1k | Go | 2026-08-24 | AgentRQ: Human-in-loop realtime conversati… |
-| 7 | [dsh-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 2.8k | TypeScript | 2026-08-24 | DSH web plugin: a VSCode-like right sideba… |
-| 8 | [BitFun](https://github.com/GCWing/BitFun) | 1.8k | Rust | 2026-08-24 | BitFun combines a high-performance agent r… |
-| 9 | [brooks-lint](https://github.com/hyhmrright/brooks-lint) | 1.4k | JavaScript | 2026-08-24 | AI code reviews grounded in 12 classic eng… |
-| 10 | [dshmarket](https://github.com/dsh-market/dsh-market) | 2.1k | TypeScript | 2026-08-24 | Visual plugin market inside DeepSeek Harne… |
-| 11 | [awesome-dsh-plugins](https://github.com/AdamPlatin123/awesome-dsh-plugins) | 1.4k | Python | 2026-08-24 | DSH 插件雷达与精选榜：多路自动发现 9000+ 候选，容器真实安装路径运行级实测… |
-| 12 | [aegis](https://github.com/GanyuanRan/Aegis) | 1.1k | Python | 2026-08-24 | Make AI coding agents architecture-aware: … |
-| 13 | [DeepSeek-V4-J-Space-Capability-Realization-Report](https://github.com/Tiger3807861189/DeepSeek-V4-J-Space-Capability-Realization-Report) | 1k | — | 2026-08-23 | DeepSeek V4 × J-Space capability realizati… |
-| 14 | [dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale) | 1.6k | TypeScript | 2026-08-23 | Whale Girl skin series for DeepSeek Harnes… |
-| 15 | [openpets-v2-workspace](https://github.com/alvinunreal/openpets) | 1.1k | TypeScript | 2026-08-23 | OpenPets 2.0 workspace |
+| 1 | [awesome-dsh-plugins](https://github.com/AdamPlatin123/awesome-dsh-plugins) | 1.4k | Python | 2026-08-24 | DSH 插件雷达与精选榜：多路自动发现 9000+ 候选，容器真实安装路径运行级实测… |
+| 2 | [dsh-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 2.8k | TypeScript | 2026-08-24 | DSH web plugin: a VSCode-like right sideba… |
+| 3 | [BitFun](https://github.com/GCWing/BitFun) | 1.8k | Rust | 2026-08-24 | BitFun combines a high-performance agent r… |
+| 4 | [@deepseek-harness-tui/dsh-tui](https://github.com/ccch1mneyyy/dsh-TUI) | 2.4k | TypeScript | 2026-08-24 | Claude Code style interactive TUI front do… |
+| 5 | [cloudbase-ai-toolkit](https://github.com/TencentCloudBase/CloudBase-AI-Toolkit) | 1.1k | TypeScript | 2026-08-24 | Backend for AI coding agents on CloudBase … |
+| 6 | [deepseek-harness-desktop](https://github.com/dsh-tauri-desk/deepseek-harness-desktop) | 1.1k | Rust | 2026-08-24 | Desktop application for DeepSeek Harness (… |
+| 7 | [dshmarket](https://github.com/dsh-market/dsh-market) | 2.2k | TypeScript | 2026-08-24 | Visual plugin market inside DeepSeek Harne… |
+| 8 | [codex-taskboard](https://github.com/chuspeeism/dashi-taskboard) | 2.5k | JavaScript | 2026-08-24 | — |
+| 9 | [dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale) | 1.7k | TypeScript | 2026-08-24 | Whale Girl skin series for DeepSeek Harnes… |
+| 10 | [browser-skill](https://github.com/Tencent/BrowserSkill) | 1.3k | TypeScript | 2026-08-24 | Let AI agents use your real, logged-in bro… |
+| 11 | [agentrq](https://github.com/agentrq/agentrq) | 1.1k | Go | 2026-08-24 | AgentRQ: Human-in-loop realtime conversati… |
+| 12 | [brooks-lint](https://github.com/hyhmrright/brooks-lint) | 1.4k | JavaScript | 2026-08-24 | AI code reviews grounded in 12 classic eng… |
+| 13 | [aegis](https://github.com/GanyuanRan/Aegis) | 1.1k | Python | 2026-08-24 | Make AI coding agents architecture-aware: … |
+| 14 | [DeepSeek-V4-J-Space-Capability-Realization-Report](https://github.com/Tiger3807861189/DeepSeek-V4-J-Space-Capability-Realization-Report) | 1k | — | 2026-08-23 | DeepSeek V4 × J-Space capability realizati… |
+| 15 | [openpets-v2-workspace](https://github.com/alvinunreal/openpets) | 1.1k | TypeScript | 2026-08-22 | OpenPets 2.0 workspace |
 | 16 | [deeptide](https://github.com/paean-ai/deeptide) | 1.1k | Rust | 2026-08-22 | DeepTide CLI — cross-platform terminal AI … |
 | 17 | [mem9](https://github.com/mem9-ai/mem9) | 1.2k | TypeScript | 2026-08-22 | Unlimited memory for OpenClaw |
 | 18 | [agent-vision-toolkit](https://github.com/Anionex/agent-vision-toolkit) | 1.1k | Python | 2026-08-21 | 为纯文本模型"看图“设计更好的视觉工具箱和技能，支持多图理解，图片问答，前端UI还原… |
