@@ -404,13 +404,17 @@ async function main() {
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
   let plugins = results.filter(Boolean);
 
-  // 全量时保留旧数据中本次未出现的仓库（GitHub 搜索偶发漏项保护）
-  if (mode === 'full') {
+  // 保留旧数据中本次未出现的仓库：
+  //  - 全量：GitHub 搜索偶发漏项保护（超幅桶 top-1000 轮换时避免误删）
+  //  - 增量：窗口内只含"有变更"的仓库，未变更的必须复用旧数据——
+  //    否则增量会拿窗口结果整表替换目录（曾导致 3153 → 1000 的数据回退）
+  {
     const currentNames = new Set(plugins.map((p) => p.full_name));
+    let kept = 0;
     for (const old of oldPlugins) {
-      if (!currentNames.has(old.full_name)) plugins.push(old);
+      if (!currentNames.has(old.full_name)) { plugins.push(old); kept++; }
     }
-    log(`全量合并后共 ${plugins.length} 个（含旧数据保留）`);
+    if (kept > 0) log(`${mode} 合并：保留 ${kept} 个未变更旧插件，共 ${plugins.length} 个`);
   }
 
   // 应用人工覆盖层（优先级最高）

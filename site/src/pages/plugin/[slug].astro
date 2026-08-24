@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { u } from '../../lib/urls';
 import { DETAIL_THRESHOLD } from '../../lib/threshold';
+import { fmtK } from '../../lib/format';
 
 export async function getStaticPaths() {
   let plugins = [];
@@ -42,66 +43,81 @@ const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
 ---
 
 <Layout title={`${plugin.name} · DSH Plugins Nav`} description={plugin.description}>
-  <nav class="crumbs"><a href={u('/')} data-i18n="pl_back">← 返回首页</a></nav>
-
   <article class="detail">
-    <header>
+    <header class="hero-card">
       <div class="title-row">
         <span class="avatar" style={`--h:${hue}`}>{initial}</span>
-        <h1>{plugin.name}</h1>
+        <div class="title-col">
+          <h1>{plugin.name}</h1>
+          <a class="repo-link" href={plugin.repo_url} target="_blank" rel="noopener noreferrer">{plugin.full_name} ↗</a>
+        </div>
+        <a class="gh-btn" href={plugin.repo_url} target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          GitHub
+        </a>
       </div>
       <div class="meta-line">
         <span class="badge gray" data-i18n-cat={plugin.category}>{CATEGORY_ZH[plugin.category] || plugin.category}</span>
         {plugin.verified && <span class="badge green" data-i18n="pl_verified">✓ verified</span>}
         {isNew && <span class="badge amber" data-i18n="pl_new">新上架</span>}
-        <span class="stars">★ {plugin.stars}</span>
-        <span class="muted">fork {plugin.forks} · issue {plugin.open_issues}</span>
+        {plugin.language && <span class="badge gray">{plugin.language}</span>}
+      </div>
+      <p class="desc">{plugin.description}</p>
+      <div class="stats">
+        <span class="stat" title="stars"><b class="s-star">★ {fmtK(plugin.stars)}</b><i>stars</i></span>
+        <span class="stat" title="forks"><b class="s-fork">⑂ {fmtK(plugin.forks)}</b><i>forks</i></span>
+        <span class="stat" title="issues"><b class="s-issue">✦ {fmtK(plugin.open_issues)}</b><i>issues</i></span>
+        <span class="stat" title="watchers"><b class="s-watch">◎ {fmtK(plugin.watchers)}</b><i>watchers</i></span>
       </div>
     </header>
 
-    <p class="desc">{plugin.description}</p>
+    <div class="layout">
+      <div class="main-col">
+        <section class="card">
+          <h2 data-i18n="pl_install">安装</h2>
+          <div class="code">
+            <code id="cmd">{plugin.install_cmd}</code>
+            <button id="copy" data-cmd={plugin.install_cmd} data-i18n="pl_copy">复制</button>
+          </div>
+          <div class="quick-btns">
+            <a class="qbtn" href={u(`/install/${plugin.slug}.sh`)} download data-i18n="pl_linux">Linux / macOS 脚本</a>
+            <a class="qbtn" href={u(`/install/${plugin.slug}.ps1`)} download data-i18n="pl_win">Windows 脚本</a>
+            <button class="qbtn dsh" id="open-dsh" data-full={plugin.full_name} data-slug={plugin.slug} data-i18n="pl_open_dsh">用 DSH 打开</button>
+          </div>
+        </section>
 
-    <section class="install">
-      <h2 data-i18n="pl_install">安装</h2>
-      <div class="code">
-        <code id="cmd">{plugin.install_cmd}</code>
-        <button id="copy" data-cmd={plugin.install_cmd} data-i18n="pl_copy">复制</button>
+        {plugin.readme_excerpt && (
+          <section class="card">
+            <h2 data-i18n="pl_about">简介</h2>
+            <p class="readme-text">{plugin.readme_excerpt}…</p>
+            <a class="readme-more" href={`${plugin.repo_url}#readme`} target="_blank" rel="noopener noreferrer" data-i18n="pl_readme_more">在 GitHub 查看完整 README ↗</a>
+          </section>
+        )}
       </div>
-    </section>
 
-    <section class="quick">
-      <h2 data-i18n="pl_quick">一键安装</h2>
-      <div class="quick-btns">
-        <a class="qbtn" href={u(`/install/${plugin.slug}.sh`)} download data-i18n="pl_linux">Linux / macOS 脚本</a>
-        <a class="qbtn" href={u(`/install/${plugin.slug}.ps1`)} download data-i18n="pl_win">Windows 脚本</a>
-        <button class="qbtn dsh" id="open-dsh" data-full={plugin.full_name} data-slug={plugin.slug} data-i18n="pl_open_dsh">用 DSH 打开</button>
-      </div>
-    </section>
+      <aside class="side-col">
+        <section class="card">
+          <h2 data-i18n="pl_info">信息</h2>
+          <table>
+            <tr><th data-i18n="pl_repo">仓库</th><td><a href={plugin.repo_url} target="_blank" rel="noopener noreferrer">{plugin.full_name}</a></td></tr>
+            <tr><th data-i18n="pl_language">语言</th><td>{plugin.language || '—'}</td></tr>
+            <tr><th data-i18n="pl_license">许可证</th><td>{plugin.license || '—'}</td></tr>
+            <tr><th data-i18n="pl_listed">收录时间</th><td>{listedAt}</td></tr>
+            <tr><th data-i18n="pl_updated">最近更新</th><td>{updatedAt}</td></tr>
+            {plugin.homepage && <tr><th data-i18n="pl_homepage">主页</th><td class="hp"><a href={plugin.homepage} target="_blank" rel="noopener">{plugin.homepage}</a></td></tr>}
+          </table>
+        </section>
 
-    <section class="info">
-      <h2 data-i18n="pl_info">信息</h2>
-      <table>
-        <tr><th data-i18n="pl_repo">仓库</th><td><a href={plugin.repo_url} target="_blank" rel="noopener noreferrer">{plugin.full_name}</a></td></tr>
-        <tr><th data-i18n="pl_language">语言</th><td>{plugin.language || '—'}</td></tr>
-        <tr><th data-i18n="pl_license">许可证</th><td>{plugin.license || '—'}</td></tr>
-        <tr><th data-i18n="pl_listed">收录时间</th><td>{listedAt}</td></tr>
-        <tr><th data-i18n="pl_updated">最近更新</th><td>{updatedAt}</td></tr>
-        {plugin.homepage && <tr><th data-i18n="pl_homepage">主页</th><td><a href={plugin.homepage} target="_blank" rel="noopener">{plugin.homepage}</a></td></tr>}
-      </table>
-    </section>
-
-    {plugin.readme_excerpt && (
-      <section class="readme">
-        <h2 data-i18n="pl_about">简介</h2>
-        <p>{plugin.readme_excerpt}…</p>
-      </section>
-    )}
-
-    {plugin.topics && plugin.topics.length > 0 && (
-      <section class="topics">
-        {plugin.topics.map((t: string) => <span class="tag">#{t}</span>)}
-      </section>
-    )}
+        {plugin.topics && plugin.topics.length > 0 && (
+          <section class="card">
+            <h2 data-i18n="pl_topics">标签</h2>
+            <div class="topics">
+              {plugin.topics.map((t: string) => <span class="tag">#{t}</span>)}
+            </div>
+          </section>
+        )}
+      </aside>
+    </div>
   </article>
 
   {related && related.length > 0 && (
@@ -150,33 +166,84 @@ const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
 </Layout>
 
 <style>
-  .crumbs { margin-bottom: 12px; font-size: 14px; }
-  .title-row { display: flex; align-items: center; gap: 14px; }
-  .avatar {
-    flex: none; width: 46px; height: 46px; border-radius: 14px;
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 800; color: #fff;
-    background: linear-gradient(135deg, hsl(var(--h, 210) 70% 55%), hsl(calc(var(--h, 210) + 40) 70% 45%));
-    text-shadow: 0 1px 3px rgb(0 0 0 / .25);
-  }
-  .detail h1 { margin: 0 0 10px; font-size: 26px; letter-spacing: -.01em; }
-  .meta-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
-  .stars { color: var(--amber); font-weight: 700; }
-  .muted { color: var(--muted); }
-  .desc { color: var(--muted); font-size: 15px; }
-  .install .code, .quick-btns { display: flex; align-items: center; gap: 10px; }
-  .install .code {
-    background: #0d1526; border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px;
+  .crumbs { margin-bottom: 14px; font-size: 14px; }
+
+  /* ---------- Hero 卡片 ---------- */
+  .hero-card {
+    position: relative; overflow: hidden;
+    border: 1px solid var(--border); border-radius: 18px;
+    background: var(--card); padding: 26px 26px 22px;
     box-shadow: var(--shadow-sm);
   }
-  .code code { flex: 1; font-size: 13px; word-break: break-all; color: #7dd3fc; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  .code button {
-    border: 1px solid #263650; background: #16233d; color: #cbd5e1; border-radius: 8px;
-    padding: 5px 14px; cursor: pointer; font-size: 13px; font-weight: 600;
-    transition: color .15s, border-color .15s;
+  .hero-card::before {
+    content: ''; position: absolute; inset: 0 0 auto 0; height: 3px;
+    background: var(--grad-accent);
   }
-  .code button:hover { color: #fff; border-color: #3b4f6e; }
-  .quick-btns { flex-wrap: wrap; }
+  .title-row { display: flex; align-items: center; gap: 16px; }
+  .avatar {
+    flex: none; width: 56px; height: 56px; border-radius: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, hsl(var(--h, 210) 70% 55%), hsl(calc(var(--h, 210) + 40) 70% 45%));
+    text-shadow: 0 2px 4px rgb(0 0 0 / .25);
+    box-shadow: 0 4px 12px hsl(var(--h, 210) 60% 50% / .35);
+  }
+  .title-col { min-width: 0; }
+  .detail h1 { margin: 0; font-size: 26px; letter-spacing: -.01em; line-height: 1.25; overflow-wrap: anywhere; }
+  .repo-link { font-size: 13px; color: var(--muted); }
+  .repo-link:hover { color: var(--accent); }
+  .gh-btn {
+    margin-left: auto; flex: none;
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--border); border-radius: 10px; padding: 7px 14px;
+    font-size: 13px; font-weight: 600; color: var(--fg); background: var(--bg-soft);
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+  }
+  .gh-btn:hover { text-decoration: none; transform: translateY(-1px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+  .meta-line { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; font-size: 13px; margin: 12px 0 0; }
+  .desc { color: var(--fg); opacity: .82; font-size: 15px; margin: 12px 0 0; }
+  .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .stat {
+    display: inline-flex; align-items: baseline; gap: 6px;
+    border: 1px solid var(--border); border-radius: 10px; padding: 5px 13px;
+    background: var(--bg-soft);
+  }
+  .stat b { font-size: 14.5px; font-weight: 800; }
+  .stat i { font-style: normal; font-size: 11.5px; color: var(--muted); }
+  .s-star, .s-star b { color: var(--amber); }
+  .s-fork, .s-fork b { color: var(--accent); }
+  .s-issue, .s-issue b { color: var(--green); }
+  .s-watch, .s-watch b { color: var(--accent-2, #7c3aed); }
+
+  /* ---------- 双栏 ---------- */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; margin-top: 18px; align-items: start; }
+  .main-col, .side-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .side-col { position: sticky; top: 84px; }
+
+  .card {
+    border: 1px solid var(--border); border-radius: 16px;
+    background: var(--card); padding: 20px 22px;
+    box-shadow: var(--shadow-sm);
+  }
+  .card h2 { font-size: 15.5px; margin: 0 0 12px; letter-spacing: .01em; }
+
+  /* ---------- 安装 ---------- */
+  .code {
+    display: flex; align-items: center; gap: 10px;
+    background: #0d1526; border: 1px solid #1e2d47; border-radius: 12px; padding: 13px 16px;
+    box-shadow: inset 0 1px 3px rgb(0 0 0 / .25);
+  }
+  .code code {
+    flex: 1; font-size: 13px; word-break: break-all; color: #7dd3fc;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .code button {
+    flex: none; border: 1px solid #263650; background: #16233d; color: #cbd5e1;
+    border-radius: 8px; padding: 5px 14px; cursor: pointer; font-size: 13px; font-weight: 600;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .code button:hover { color: #fff; border-color: #3b4f6e; background: #1b2c48; }
+  .quick-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
   .qbtn {
     border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent);
     background: transparent; border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 600;
@@ -184,16 +251,40 @@ const initial = (plugin.name || '?').trim().charAt(0).toUpperCase();
     transition: background .15s, transform .15s, box-shadow .15s;
   }
   .qbtn:hover { background: var(--accent-soft); text-decoration: none; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-  .qbtn.dsh {
-    background: var(--grad-accent); border: none; color: #fff;
-  }
+  .qbtn.dsh { background: var(--grad-accent); border: none; color: #fff; }
   .qbtn.dsh:hover { color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent); }
-  .info table { border-collapse: collapse; width: 100%; max-width: 560px; }
-  .info th, .info td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
-  .info th { color: var(--muted); width: 100px; font-weight: 500; }
-  .tag { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 3px 11px; font-size: 12px; margin: 0 6px 6px 0; }
-  section { margin-top: 24px; }
-  section h2 { font-size: 17px; margin: 0 0 10px; }
-  .related { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 24px; }
+
+  /* ---------- 简介 ---------- */
+  .readme-text { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+  .readme-more { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; }
+
+  /* ---------- 信息表 ---------- */
+  .card table { border-collapse: collapse; width: 100%; }
+  .card th, .card td { text-align: left; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: top; }
+  .card tr:last-child th, .card tr:last-child td { border-bottom: none; }
+  .card th { color: var(--muted); width: 76px; font-weight: 500; padding-right: 10px; }
+  .card td { overflow-wrap: anywhere; }
+
+  /* ---------- 标签 ---------- */
+  .topics { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    display: inline-block; background: var(--accent-soft); color: var(--accent);
+    border-radius: 999px; padding: 3px 11px; font-size: 12px; font-weight: 500;
+  }
+
+  /* ---------- 相关推荐 ---------- */
+  .related { margin-top: 36px; border-top: 1px solid var(--border); padding-top: 24px; }
+  .related h2 { font-size: 18px; margin: 0 0 14px; }
   .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .side-col { position: static; }
+  }
+  @media (max-width: 640px) {
+    .hero-card { padding: 20px 18px 18px; }
+    .title-row { flex-wrap: wrap; }
+    .gh-btn { margin-left: 0; }
+    .detail h1 { font-size: 22px; }
+  }
 </style>

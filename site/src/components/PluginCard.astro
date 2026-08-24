@@ -1,6 +1,7 @@
 ---
 import { u } from '../lib/urls';
 import { DETAIL_THRESHOLD } from '../lib/threshold';
+import { fmtK } from '../lib/format';
 
 interface Props {
   slug: string;
@@ -22,13 +23,6 @@ const { slug, name, description, stars, category, verified, trend, tags, isNew, 
 // 是否生成了静态详情页（与 plugin/[slug].astro 的 getStaticPaths 门槛保持一致）
 const hasDetail = stars >= DETAIL_THRESHOLD;
 const cardHref = hasDetail ? u(`/plugin/${slug}`) : `https://github.com/${full_name || slug}`;
-
-// 星数紧凑格式：12345 → 12.3k
-function fmtStars(n: number): string {
-  if (n >= 10000) return (n / 1000).toFixed(0) + 'k';
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  return String(n);
-}
 
 // 按名称 hash 生成头像渐变色相（稳定、无外部依赖）
 const hash = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -73,7 +67,7 @@ const CATEGORY_ZH: Record<string, string> = {
     <span class="avatar" style={`--h:${hue}`}>{initial}</span>
     <span class="name" title={name}>{name}</span>
     {verified && <span class="v-ico" title="verified">✓</span>}
-    <span class="stars" title={stars}>★ {fmtStars(stars)}</span>
+    <span class="stars" title={stars}>★ {fmtK(stars)}</span>
   </div>
   <div class="desc">{description}</div>
   <div class="meta">
