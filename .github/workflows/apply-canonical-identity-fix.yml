@@ -1,4 +1,4 @@
-name: Validate final collection hardening
+name: Validate ephemeral observation sidecar
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  harden:
+  verify:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -22,84 +22,45 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Harden manifest, classification, topics and observation metadata
+      - name: Replace persistent observation timestamps with sidecar
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
-          def replace_once(path, old, new):
-              p = Path(path)
-              text = p.read_text()
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f'{path}: expected exactly one match, got {count}')
-              p.write_text(text.replace(old, new, 1))
-
-          replace_once('scripts/github-discovery.mjs',
-              'repositoryTopics(first: 20) { nodes { topic { name } } }',
-              'repositoryTopics(first: 100) { nodes { topic { name } } }')
-
-          replace_once('scripts/sync.mjs',
-              "export function isAuthoritativeManifestFile(file) {\n  return MANIFEST_FILES.includes(String(file || ''));\n}\n\nexport function dedupeTags(arr) {",
-              "export function isAuthoritativeManifestFile(file) {\n  return MANIFEST_FILES.includes(String(file || ''));\n}\n\nexport function normalizeCategory(value, fallback = 'other') {\n  const category = String(value || '').trim();\n  return Object.prototype.hasOwnProperty.call(CATEGORIES, category) ? category : fallback;\n}\n\nexport function sanitizeManifest(data) {\n  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;\n  const clean = {};\n  if (typeof data.name === 'string' && data.name.trim()) clean.name = data.name.trim().slice(0, 200);\n  if (typeof data.description === 'string' && data.description.trim()) clean.description = data.description.trim().slice(0, 4000);\n  const category = normalizeCategory(data.category, '');\n  if (category) clean.category = category;\n  clean.tags = Array.isArray(data.tags)\n    ? data.tags.filter((tag) => typeof tag === 'string').map((tag) => tag.trim()).filter(Boolean).slice(0, 100)\n    : [];\n  return clean;\n}\n\nexport function dedupeTags(arr) {")
-
-          replace_once('scripts/sync.mjs',
-              "function detectCategory(repo, _manifest) {\n  const topics = (repo.topics || []).map((t) => t.toLowerCase());\n  const desc = `${repo.description || ''} ${(repo.name || '').toLowerCase()}`;\n  const matches = (kw) => topics.includes(kw) || desc.includes(kw);",
-              "export function detectCategory(repo, _manifest) {\n  const topics = (repo.topics || []).map((t) => String(t).toLowerCase());\n  const words = new Set(`${repo.description || ''} ${repo.name || ''}`.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));\n  const matches = (kw) => {\n    const normalized = String(kw).toLowerCase();\n    if (topics.includes(normalized)) return true;\n    const parts = normalized.split(/[^a-z0-9]+/).filter(Boolean);\n    return parts.length > 0 && parts.every((part) => words.has(part));\n  };")
-
-          replace_once('scripts/sync.mjs',
-              "    plugin.category = o.category in CATEGORIES ? o.category : 'other';",
-              "    plugin.category = normalizeCategory(o.category, 'other');")
-
-          replace_once('scripts/sync.mjs',
-              "      const data = await res.json();\n      if (!data || typeof data !== 'object') continue;\n      return { file, data };",
-              "      const data = await res.json();\n      const clean = sanitizeManifest(data);\n      if (!clean) continue;\n      return { file, data: clean };")
-
-          replace_once('scripts/sync.mjs',
-              "  const license = repo.license ? repo.license.spdx_id : null;\n  const category = manifest?.data?.category || detectCategory(repo, manifest);",
-              "  const license = repo.license ? repo.license.spdx_id : null;\n  const detectedCategory = detectCategory(repo, manifest);\n  const category = normalizeCategory(manifest?.data?.category, detectedCategory);")
-
-          replace_once('scripts/sync.mjs',
-              "    updated_at: repo.pushed_at || '',\n    first_seen: base.first_seen || now,",
-              "    updated_at: repo.pushed_at || '',\n    observed_at: now,\n    first_seen: base.first_seen || now,")
-
-          replace_once('tests/sync.test.ts',
-              "const { dedupeTags, computeTrendScore, isAuthoritativeManifestFile } = await import('../scripts/sync.mjs');",
-              "const { dedupeTags, computeTrendScore, detectCategory, isAuthoritativeManifestFile, normalizeCategory, sanitizeManifest } = await import('../scripts/sync.mjs');")
-
-          replace_once('tests/sync.test.ts',
-              "});\n\ndescribe('dedupeTags', () => {",
-              "\n  it('清洗 manifest 字段并拒绝非法分类', () => {\n    expect(normalizeCategory('mcp', 'other')).toBe('mcp');\n    expect(normalizeCategory('toString', 'other')).toBe('other');\n    expect(sanitizeManifest({ name: ' Brand ', description: ' demo ', category: 'not-real', tags: 'bad' })).toEqual({ name: 'Brand', description: 'demo', tags: [] });\n    expect(sanitizeManifest({ name: 'Demo', category: 'skills', tags: [' AI ', 3, '', 'mcp'] })).toEqual({ name: 'Demo', category: 'skills', tags: ['AI', 'mcp'] });\n  });\n});\n\ndescribe('category detection', () => {\n  it('使用 token 匹配避免 substring 误判', () => {\n    expect(detectCategory({ topics: [], description: 'MCP server bridge', name: 'Bridge' }, null)).toBe('mcp');\n    expect(detectCategory({ topics: [], description: 'Webhook integration bridge', name: 'Bridge' }, null)).toBe('integration');\n    expect(detectCategory({ topics: [], description: 'A codebook formatter', name: 'Codebook' }, null)).toBe('other');\n    expect(detectCategory({ topics: ['web-ui'], description: '', name: 'Anything' }, null)).toBe('web-ui');\n  });\n});\n\ndescribe('dedupeTags', () => {")
-
-          replace_once('scripts/validate.mjs',
-              "const PLUGINS_FILE = resolve(ROOT, 'catalog/plugins.json');",
-              "const PLUGINS_FILE = resolve(ROOT, 'catalog/plugins.json');\nconst VALID_CATEGORIES = new Set(['web-ui', 'desktop', 'mcp', 'skills', 'theme', 'terminal', 'coding', 'agent', 'vision', 'memory', 'security', 'integration', 'tool', 'other']);")
-          replace_once('scripts/validate.mjs',
-              "    if (!p.category) warns.push(`缺少 category: ${p.slug}`);",
-              "    if (!p.category) warns.push(`缺少 category: ${p.slug}`);\n    else if (!VALID_CATEGORIES.has(p.category)) errors.push(`category 非法: ${p.slug} -> ${p.category}`);")
+          p = Path('scripts/sync.mjs')
+          text = p.read_text()
+          old = "const FEED_FILE = resolve(CATALOG_DIR, 'feed.xml');\n"
+          new = "const FEED_FILE = resolve(CATALOG_DIR, 'feed.xml');\nconst OBSERVED_FILE = resolve(CATALOG_DIR, '.sync-observed.json');\n"
+          if text.count(old) != 1:
+              raise SystemExit('FEED_FILE anchor mismatch')
+          text = text.replace(old, new, 1)
+          old = "    observed_at: now,\n"
+          if text.count(old) != 1:
+              raise SystemExit('observed_at anchor mismatch')
+          text = text.replace(old, '', 1)
+          old = "  const extraCount = repos.filter((r) => r.__extra).length;\n  log(`搜索到 ${repos.length} 个候选仓库（含补充主题 ${extraCount} 个）`);\n"
+          new = "  const extraCount = repos.filter((r) => r.__extra).length;\n  log(`搜索到 ${repos.length} 个候选仓库（含补充主题 ${extraCount} 个）`);\n\n  // Full-sync liveness is passed to Sync V3 through an ephemeral sidecar. It is\n  // deliberately excluded from plugins.json so repeated full syncs remain idempotent.\n  if (mode === 'full') {\n    const observedRepos = [...new Set(repos.map((repo) => repo.full_name).filter(Boolean))];\n    const observedRepoIds = [...new Set(repos.map((repo) => discoveryRepoId(repo)).filter(Boolean))];\n    await writeFile(OBSERVED_FILE, JSON.stringify({ mode: 'full', repos: observedRepos, repo_ids: observedRepoIds }, null, 2) + '\\n');\n    log(`写入临时观测集合：repos=${observedRepos.length}, repo_ids=${observedRepoIds.length}`);\n  }\n"
+          if text.count(old) != 1:
+              raise SystemExit('dedupe log anchor mismatch')
+          p.write_text(text.replace(old, new, 1))
           PY
-      - name: Verify all code and UI
+      - name: Verify code and UI
         shell: bash
         run: |
           npm ci
           cd site && npm ci && cd ..
-          node --check scripts/github-discovery.mjs
           node --check scripts/sync.mjs
           node --check scripts/sync-v3.mjs
-          node --check scripts/validate.mjs
           node --check scripts/repository-identity.mjs
-          node --check scripts/registry-v3-builder.mjs
           npm run typecheck
           npm run lint
           npm test
           cd site && npm run check && cd ..
-      - name: Commit validated source changes
+      - name: Commit source change
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- scripts/github-discovery.mjs scripts/sync.mjs scripts/validate.mjs tests/sync.test.ts
-          if git diff --cached --quiet; then echo "No source changes"; exit 0; fi
-          git commit -m "fix: validate and classify collected metadata"
+          git add -- scripts/sync.mjs
+          git commit -m "fix: keep full-sync observations ephemeral"
           git push
