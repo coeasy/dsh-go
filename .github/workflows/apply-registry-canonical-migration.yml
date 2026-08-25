@@ -1,0 +1,42 @@
+name: Apply registry canonical migration hardening
+
+on:
+  push:
+    branches: ["fix/canonical-repository-identity"]
+    paths:
+      - ".github/workflows/apply-registry-canonical-migration.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Apply registry migration hardening
+        run: python3 .github/scripts/apply-registry-canonical-migration.py
+      - name: Verify registry migration hardening
+        run: |
+          npm ci
+          node --check scripts/registry-v3-builder.mjs
+          node --check scripts/validate-registry-v3.mjs
+          npm run typecheck
+          npm run lint
+          npm test
+      - name: Commit patches
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/registry-v3-builder.mjs scripts/validate-registry-v3.mjs tests/registry-v3.test.ts
+          git commit -m "fix: canonicalize legacy identity during registry migration"
+          git push
