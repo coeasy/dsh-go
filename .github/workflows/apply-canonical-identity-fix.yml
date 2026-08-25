@@ -1,4 +1,4 @@
-# Re-run marker: post-manifest-observation
+# Re-run marker: post-manifest-observation-with-discovery-fallback
 name: Validate ephemeral observation sidecar
 
 on:
@@ -52,6 +52,7 @@ jobs:
           cd site && npm ci && cd ..
           node --check scripts/sync.mjs
           node --check scripts/sync-v3.mjs
+          node --check scripts/github-discovery.mjs
           node --check scripts/repository-identity.mjs
           npm run typecheck
           npm run lint
