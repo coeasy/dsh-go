@@ -4,5 +4,6 @@ export type AgentWorkflow = {
 };
 
 export function createWorkflow(agentId: string, steps: string[]): AgentWorkflow {
-  return { agentId, steps };
+  if (!agentId.trim()) throw new Error('agent id is required');
+  return { agentId, steps: [...steps] };
 }

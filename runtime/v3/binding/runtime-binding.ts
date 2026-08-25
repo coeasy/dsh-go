@@ -6,12 +6,19 @@ export interface RuntimeBindingRequest {
 
 export interface RuntimeBindingResult {
   bound: boolean;
-  runtime: string;
+  planned: boolean;
+  runtime: 'dsh-runtime-v3';
+  transport: 'local';
+  reason?: string;
 }
 
-export function bindRuntime(request: RuntimeBindingRequest): RuntimeBindingResult {
+export function bindRuntime(request: RuntimeBindingRequest, localRuntime = false): RuntimeBindingResult {
+  const valid = Boolean(request.id.trim() && request.version.trim());
   return {
-    bound: Boolean(request.id),
-    runtime: 'dsh-runtime-v3'
+    bound: valid && localRuntime,
+    planned: valid,
+    runtime: 'dsh-runtime-v3',
+    transport: 'local',
+    reason: !valid ? 'runtime binding requires id and version' : localRuntime ? undefined : 'binding requires the local DSH runtime',
   };
 }

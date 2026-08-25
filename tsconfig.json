@@ -19,5 +19,15 @@
     "allowJs": true,
     "checkJs": false
   },
-  "include": ["functions/**/*.ts", "tests/**/*.ts", "site/src/i18n/**/*.ts"]
+  "include": [
+    "functions/**/*.ts",
+    "tests/**/*.ts",
+    "site/src/i18n/**/*.ts",
+    "marketplace/**/*.ts",
+    "mcp/**/*.ts",
+    "skills/**/*.ts",
+    "agents/**/*.ts",
+    "profiles/**/*.ts",
+    "runtime/v3/**/*.ts"
+  ]
 }
