@@ -31,6 +31,17 @@ describe('repository identity', () => {
     expect(merged.plugins[0].name).toBe('new-name');
   });
 
+  it('prunes stale package-only history but keeps explicit manifests and overrides', () => {
+    const existing: any[] = [
+      { full_name: 'owner/package-only', name: 'package-name', category: 'tool', manifest_file: 'package.json', verified: true, topics: ['deepseek-harness'] },
+      { full_name: 'owner/explicit', name: 'Explicit Brand', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true, topics: ['deepseek-harness'] },
+      { full_name: 'owner/manual', name: 'Manual Brand', category: 'tool', metadata_source: 'override', manifest_file: null, verified: false, topics: [] },
+    ];
+    const merged = mergeCatalogPluginsWithDiscovery(existing, []);
+    expect(merged.pruned).toBe(1);
+    expect(merged.plugins.map((p: any) => p.full_name).sort()).toEqual(['owner/explicit', 'owner/manual']);
+  });
+
   it('deduplicates repository identity case-insensitively', () => {
     expect(canonicalRepoKey('Owner/Repo')).toBe(canonicalRepoKey('owner/repo'));
   });
