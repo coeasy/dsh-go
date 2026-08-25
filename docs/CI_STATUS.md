@@ -8,8 +8,8 @@ Checks:
 - npm run lint
 - npm test
 
-Current state:
+Current:
 
-- Workflow running
-- Waiting for completion
-- Merge blocked until CI passes
+- Workflow started
+- Waiting for GitHub Actions result
+- Merge blocked until checks pass
