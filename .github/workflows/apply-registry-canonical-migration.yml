@@ -1,4 +1,4 @@
-name: Apply registry canonical migration hardening
+name: Apply repository lifecycle identity hardening
 
 on:
   push:
@@ -22,13 +22,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Apply registry migration hardening
+      - name: Apply repository lifecycle hardening
         run: python3 .github/scripts/apply-registry-canonical-migration.py
-      - name: Verify registry migration hardening
+      - name: Verify repository lifecycle hardening
         run: |
           npm ci
-          node --check scripts/registry-v3-builder.mjs
-          node --check scripts/validate-registry-v3.mjs
+          node --check scripts/repository-identity.mjs
+          node --check scripts/sync.mjs
           npm run typecheck
           npm run lint
           npm test
@@ -37,6 +37,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/registry-v3-builder.mjs scripts/validate-registry-v3.mjs tests/registry-v3.test.ts
-          git commit -m "fix: canonicalize legacy identity during registry migration"
+          git add scripts/repository-identity.mjs scripts/sync.mjs tests/repository-identity.test.ts
+          git commit -m "fix: preserve identity across repository lifecycle changes"
           git push
