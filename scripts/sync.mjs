@@ -39,6 +39,7 @@ const REQUEST_DELAY = 120; // ms，普通资源请求间隔
 // 搜索 API 速率：认证 30 req/min、匿名 10 req/min。主动限速避免 403 导致全量中途失败。
 const SEARCH_DELAY = TOKEN ? 2200 : 6000; // ms
 const README_EXCERPT_LEN = 500;
+const MANIFEST_FILES = Object.freeze(['dsh-plugin.json']);
 
 const CATEGORIES = {
   'web-ui': 'Web UI 组件',
@@ -117,6 +118,10 @@ export function computeTrendScore(p) {
 }
 
 // 合并 manifest.tags 与 GitHub topics，去重并清洗
+export function isAuthoritativeManifestFile(file) {
+  return MANIFEST_FILES.includes(String(file || ''));
+}
+
 export function dedupeTags(arr) {
   const out = [];
   const seen = new Set();
@@ -203,9 +208,10 @@ function applyOverrides(plugin, overrides) {
   return plugin;
 }
 
-// ---------- 清单抓取（走 raw 域名，不占 REST 配额） ----------
+// ---------- DSH 清单抓取（走 raw 域名，不占 REST 配额） ----------
+// package.json 是包管理元数据，不是 DSH manifest；不能用于覆盖仓库展示名、分类或 verified。
 async function fetchManifest(fullName, branch) {
-  for (const file of ['dsh-plugin.json', 'package.json']) {
+  for (const file of MANIFEST_FILES) {
     const url = `https://raw.githubusercontent.com/${fullName}/${branch}/${file}`;
     try {
       const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' } });
@@ -274,6 +280,8 @@ async function buildPlugin(repo, oldPlugins) {
   return {
     slug: fullName.replace('/', '-'),
     name: manifest?.data?.name || repo.name,
+    repo_name: repo.name,
+    metadata_source: manifest ? 'dsh-plugin' : 'github',
     full_name: fullName,
     description: manifest?.data?.description || repo.description || '',
     category,

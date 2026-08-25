@@ -6,8 +6,8 @@ function goodCatalog() {
     version: 2,
     meta: { etag: 'abc', count: 2, updated_at: '2024-01-01T00:00:00Z' },
     plugins: [
-      { slug: 'a-b', full_name: 'a/b', stars: 10, verified: true, category: 'mcp', install_cmd: 'x' },
-      { slug: 'c-d', full_name: 'c/d', stars: 0, verified: false, category: 'web-ui', install_cmd: 'y' },
+      { slug: 'a-b', full_name: 'a/b', stars: 10, verified: true, manifest_file: 'dsh-plugin.json', category: 'mcp', install_cmd: 'x' },
+      { slug: 'c-d', full_name: 'c/d', stars: 0, verified: false, manifest_file: null, category: 'web-ui', install_cmd: 'y' },
     ],
   };
 }
@@ -46,6 +46,13 @@ describe('validateCatalog', () => {
     const c = goodCatalog();
     c.meta.count = 99;
     expect(validateCatalog(c).errors.some((e) => e.includes('meta.count'))).toBe(true);
+  });
+
+  it('拒绝把 package.json 当成 manifest 或 verified 来源', () => {
+    const c = goodCatalog();
+    c.plugins[0].manifest_file = 'package.json';
+    expect(validateCatalog(c).errors.some((e) => e.includes('非法 manifest_file'))).toBe(true);
+    expect(validateCatalog(c).errors.some((e) => e.includes('verified 必须由 dsh-plugin.json'))).toBe(true);
   });
 
   it('缺少 install_cmd 产生警告而非错误', () => {

@@ -129,7 +129,9 @@ export function buildRegistryPlugin(legacy, normalized, commit) {
     capabilities: inferCapabilities(legacy),
     dependencies: Array.isArray(legacy.dependencies) ? legacy.dependencies : [],
     metadata: {
-      name: legacy.name || normalized.id, description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),
+      name: legacy.name || normalized.id, repo_name: legacy.repo_name || normalized.repo.split('/')[1],
+      metadata_source: legacy.metadata_source || (legacy.manifest_file === 'dsh-plugin.json' ? 'dsh-plugin' : 'github'),
+      description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),
       stars: Number(legacy.stars || 0), rank: Number(legacy.rank || 0), repo_url: legacy.repo_url || `https://github.com/${normalized.repo}`,
       install_cmd: legacy.install_cmd || '', manifest_file: legacy.manifest_file || null,
     },

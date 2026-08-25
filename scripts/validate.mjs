@@ -24,6 +24,8 @@ export function validateCatalog(data) {
     if (typeof p.stars !== 'number' || p.stars < 0) errors.push(`stars 非法: ${p.slug}`);
     if (!p.install_cmd) warns.push(`缺少 install_cmd: ${p.slug}`);
     if (typeof p.verified !== 'boolean') warns.push(`verified 非布尔: ${p.slug}`);
+    if (p.manifest_file && p.manifest_file !== 'dsh-plugin.json') errors.push(`非法 manifest_file（仅允许 dsh-plugin.json）: ${p.slug} -> ${p.manifest_file}`);
+    if (p.verified && p.manifest_file !== 'dsh-plugin.json') errors.push(`verified 必须由 dsh-plugin.json 提供: ${p.slug}`);
     if (!p.category) warns.push(`缺少 category: ${p.slug}`);
   }
   if (data.meta?.count !== data.plugins.length) errors.push(`meta.count (${data.meta?.count}) 与 plugins 实际数量 (${data.plugins.length}) 不一致`);

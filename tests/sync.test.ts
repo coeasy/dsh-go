@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest';
 
 // 顶层动态 import 走 Node 原生 ESM 加载，避免 vitest 对 .mjs 的 transform 兼容问题
-const { dedupeTags, computeTrendScore } = await import('../scripts/sync.mjs');
+const { dedupeTags, computeTrendScore, isAuthoritativeManifestFile } = await import('../scripts/sync.mjs');
+
+describe('manifest authority', () => {
+  it('只有 dsh-plugin.json 能作为 DSH manifest', () => {
+    expect(isAuthoritativeManifestFile('dsh-plugin.json')).toBe(true);
+    expect(isAuthoritativeManifestFile('package.json')).toBe(false);
+    expect(isAuthoritativeManifestFile('plugin.json')).toBe(false);
+  });
+});
 
 describe('dedupeTags', () => {
   it('去重、去空、小写化、忽略无效', () => {

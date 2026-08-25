@@ -234,6 +234,8 @@ export function discoveryRepoToLegacy(repo) {
   return {
     slug: fullName.replace('/', '-'),
     name: repo.name,
+    repo_name: repo.name,
+    metadata_source: 'github',
     full_name: fullName,
     description: repo.description || '',
     category,
