@@ -19,13 +19,23 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 30
     if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+      - name: Check canonical Registry V3
+        id: registry
+        shell: bash
+        run: |
+          if [ -f catalog/registry-v3.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Registry V3 is not committed yet; Sync workflow owns generation, so this deployment is a successful no-op"
+          fi
       - name: Setup Node.js
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -33,41 +43,36 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             site/package-lock.json
-
       - name: Install dependencies
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: |
           npm ci
           cd site && npm ci
-
-      - name: Ensure canonical Registry V3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/sync-v3.mjs --registry-only
-
       - name: Deploy Gate V3
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: npm run deploy:gate
-
       - name: Run checks
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: |
           npm run typecheck
           npm test
           npm run lint
-
       - name: Copy catalog into site
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: npm run copy-assets
-
       - name: Build site
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: cd site && npm run build
-
       - name: Verify build output
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: |
           test -f site/dist/index.html
           test -f site/dist/catalog/plugins.json
           test -f site/dist/catalog/registry-v3.json
           test -f site/dist/catalog/schema-v3.json
           node -e "const r=require('./site/dist/catalog/registry-v3.json'); if(r.registry_version!==3 || !r.plugins.length) process.exit(1)"
-
       - name: Deploy to Cloudflare Pages
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -75,8 +80,8 @@ jobs:
           projectName: dsh-go
           directory: site/dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Post-deploy Registry V3 check
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         shell: bash
         run: |
           for attempt in 1 2 3 4 5 6; do
