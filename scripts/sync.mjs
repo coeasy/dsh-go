@@ -123,6 +123,24 @@ export function isAuthoritativeManifestFile(file) {
   return MANIFEST_FILES.includes(String(file || ''));
 }
 
+export function normalizeCategory(value, fallback = 'other') {
+  const category = String(value || '').trim();
+  return Object.prototype.hasOwnProperty.call(CATEGORIES, category) ? category : fallback;
+}
+
+export function sanitizeManifest(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const clean = {};
+  if (typeof data.name === 'string' && data.name.trim()) clean.name = data.name.trim().slice(0, 200);
+  if (typeof data.description === 'string' && data.description.trim()) clean.description = data.description.trim().slice(0, 4000);
+  const category = normalizeCategory(data.category, '');
+  if (category) clean.category = category;
+  clean.tags = Array.isArray(data.tags)
+    ? data.tags.filter((tag) => typeof tag === 'string').map((tag) => tag.trim()).filter(Boolean).slice(0, 100)
+    : [];
+  return clean;
+}
+
 export function dedupeTags(arr) {
   const out = [];
   const seen = new Set();
@@ -136,10 +154,15 @@ export function dedupeTags(arr) {
   return out;
 }
 
-function detectCategory(repo, _manifest) {
-  const topics = (repo.topics || []).map((t) => t.toLowerCase());
-  const desc = `${repo.description || ''} ${(repo.name || '').toLowerCase()}`;
-  const matches = (kw) => topics.includes(kw) || desc.includes(kw);
+export function detectCategory(repo, _manifest) {
+  const topics = (repo.topics || []).map((t) => String(t).toLowerCase());
+  const words = new Set(`${repo.description || ''} ${repo.name || ''}`.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
+  const matches = (kw) => {
+    const normalized = String(kw).toLowerCase();
+    if (topics.includes(normalized)) return true;
+    const parts = normalized.split(/[^a-z0-9]+/).filter(Boolean);
+    return parts.length > 0 && parts.every((part) => words.has(part));
+  };
 
   // 用 topics 精确命中优先（注意顺序：先精确标签，再关键词模糊）
   if (topics.some((t) => ['web-ui', 'ui', 'dashboard', 'webapp', 'frontend', 'ui-library'].includes(t))) return 'web-ui';
@@ -195,7 +218,7 @@ function applyOverrides(plugin, overrides) {
   if (o.name) { plugin.name = o.name; plugin.metadata_source = 'override'; }
   if (o.description) { plugin.description = o.description; plugin.metadata_source = 'override'; }
   if (o.category) {
-    plugin.category = o.category in CATEGORIES ? o.category : 'other';
+    plugin.category = normalizeCategory(o.category, 'other');
     plugin.metadata_source = 'override';
     plugin.install_cmd = makeInstallCmd(plugin.full_name, plugin.category);
   }
@@ -214,8 +237,9 @@ async function fetchManifest(fullName, branch) {
       const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' } });
       if (!res.ok) continue;
       const data = await res.json();
-      if (!data || typeof data !== 'object') continue;
-      return { file, data };
+      const clean = sanitizeManifest(data);
+      if (!clean) continue;
+      return { file, data: clean };
     } catch { /* continue */ }
   }
   return null;
@@ -272,7 +296,8 @@ async function buildPlugin(repo, oldPlugins) {
   const readme = await fetchReadme(fullName, repo.default_branch || 'main');
 
   const license = repo.license ? repo.license.spdx_id : null;
-  const category = manifest?.data?.category || detectCategory(repo, manifest);
+  const detectedCategory = detectCategory(repo, manifest);
+  const category = normalizeCategory(manifest?.data?.category, detectedCategory);
   const base = old ? old : {};
   const now = new Date().toISOString();
 
@@ -293,6 +318,7 @@ async function buildPlugin(repo, oldPlugins) {
     open_issues: repo.open_issues_count || 0,
     created_at: repo.created_at || '',
     updated_at: repo.pushed_at || '',
+    observed_at: now,
     first_seen: base.first_seen || now,
     trend_score: 0, // 排序后重算
     language: repo.language || '',

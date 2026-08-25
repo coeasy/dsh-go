@@ -8,6 +8,7 @@ import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, repoNameFromFullNam
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGINS_FILE = resolve(ROOT, 'catalog/plugins.json');
+const VALID_CATEGORIES = new Set(['web-ui', 'desktop', 'mcp', 'skills', 'theme', 'terminal', 'coding', 'agent', 'vision', 'memory', 'security', 'integration', 'tool', 'other']);
 
 export function validateCatalog(data) {
   const errors = [];
@@ -38,6 +39,7 @@ export function validateCatalog(data) {
     if (p.manifest_file && p.manifest_file !== 'dsh-plugin.json') errors.push(`非法 manifest_file（仅允许 dsh-plugin.json）: ${p.slug} -> ${p.manifest_file}`);
     if (p.verified && p.manifest_file !== 'dsh-plugin.json') errors.push(`verified 必须由 dsh-plugin.json 提供: ${p.slug}`);
     if (!p.category) warns.push(`缺少 category: ${p.slug}`);
+    else if (!VALID_CATEGORIES.has(p.category)) errors.push(`category 非法: ${p.slug} -> ${p.category}`);
   }
   if (data.meta?.count !== data.plugins.length) errors.push(`meta.count (${data.meta?.count}) 与 plugins 实际数量 (${data.plugins.length}) 不一致`);
   return { errors, warns };

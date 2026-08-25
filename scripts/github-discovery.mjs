@@ -91,7 +91,7 @@ query TopicRepositories($name: String!, $after: String) {
         forkCount
         watchers { totalCount }
         issues(states: OPEN) { totalCount }
-        repositoryTopics(first: 20) { nodes { topic { name } } }
+        repositoryTopics(first: 100) { nodes { topic { name } } }
         createdAt
         updatedAt
         pushedAt
