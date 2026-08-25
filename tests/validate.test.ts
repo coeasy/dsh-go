@@ -51,7 +51,19 @@ describe('validateCatalog', () => {
   it('slug 重复', () => {
     const c = goodCatalog();
     c.plugins[1].slug = 'a-b';
-    expect(validateCatalog(c).errors.some((e) => e.includes('slug 重复'))).toBe(true);
+    expect(validateCatalog(c).errors.some((e) => e.includes('slug 大小写归一后重复'))).toBe(true);
+  });
+
+  it('slug 大小写冲突也会被阻断', () => {
+    const c = goodCatalog();
+    c.plugins[1].slug = 'A-B';
+    expect(validateCatalog(c).errors.some((e) => e.includes('slug 大小写归一后重复'))).toBe(true);
+  });
+
+  it('slug 含路径字符会被阻断', () => {
+    const c = goodCatalog();
+    c.plugins[0].slug = '../a-b';
+    expect(validateCatalog(c).errors.some((e) => e.includes('slug 非法'))).toBe(true);
   });
 
   it('full_name 非法', () => {

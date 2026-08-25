@@ -72,15 +72,15 @@ describe('repository identity', () => {
     expect(ensureUniquePluginSlugs(merged, existing).map((p: any) => p.slug)).toEqual(merged.map((p: any) => p.slug));
   });
 
-  it('prunes stale package-only history but keeps explicit manifests and overrides when observation is not required', () => {
+  it('prunes stale package-only and override-only history when repositories are no longer discoverable', () => {
     const existing: any[] = [
       { full_name: 'owner/package-only', name: 'package-name', category: 'tool', manifest_file: 'package.json', verified: true, topics: ['deepseek-harness'] },
       { full_name: 'owner/explicit', name: 'Explicit Brand', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true, topics: ['deepseek-harness'] },
       { full_name: 'owner/manual', name: 'Manual Brand', category: 'tool', metadata_source: 'override', override_fields: ['name'], manifest_file: null, verified: false, topics: [] },
     ];
     const merged = mergeCatalogPluginsWithDiscovery(existing, []);
-    expect(merged.pruned).toBe(1);
-    expect(merged.plugins.map((p: any) => p.full_name).sort()).toEqual(['owner/explicit', 'owner/manual']);
+    expect(merged.pruned).toBe(2);
+    expect(merged.plugins.map((p: any) => p.full_name)).toEqual(['owner/explicit']);
   });
 
   it('drops explicit-manifest records not observed during the current full sync', () => {
@@ -95,8 +95,8 @@ describe('repository identity', () => {
       observedRepos: ['OWNER/FRESH'],
       observedRepoIds: ['3'],
     });
-    expect(merged.pruned).toBe(1);
-    expect(merged.plugins.map((p: any) => p.full_name).sort()).toEqual(['owner/fresh', 'owner/fresh-by-id', 'owner/manual']);
+    expect(merged.pruned).toBe(2);
+    expect(merged.plugins.map((p: any) => p.full_name).sort()).toEqual(['owner/fresh', 'owner/fresh-by-id']);
   });
 
   it('does not let legacy record-wide override flags freeze polluted names', () => {

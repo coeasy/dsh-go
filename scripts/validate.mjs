@@ -22,8 +22,10 @@ export function validateCatalog(data) {
   const repoIds = new Set();
   for (const p of data.plugins) {
     if (!p.slug) errors.push(`存在缺少 slug 的插件: ${p.full_name || 'unknown'}`);
-    if (slugs.has(p.slug)) errors.push(`slug 重复: ${p.slug}`);
-    slugs.add(p.slug);
+    const slugKey = String(p.slug || '').toLowerCase();
+    if (p.slug && !/^[A-Za-z0-9_.-]+$/.test(p.slug)) errors.push(`slug 非法: ${p.slug}`);
+    if (slugs.has(slugKey)) errors.push(`slug 大小写归一后重复: ${p.slug}`);
+    slugs.add(slugKey);
     if (!isValidRepositoryName(p.full_name)) errors.push(`full_name 非法: ${p.slug}`);
     const repoKey = canonicalRepoKey(p.full_name);
     if (repos.has(repoKey)) errors.push(`full_name 大小写归一后重复: ${p.full_name}`);

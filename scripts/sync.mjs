@@ -666,7 +666,7 @@ function xmlEscape(s) {
 export function buildFeed(plugins) {
   // 收录 30 天内的插件（首次全量同步时包含所有新收录插件）
   const items = plugins
-    .filter((p) => (Date.now() - new Date(p.first_seen).getTime()) < 30 * 864e5)
+    .filter((p) => !p.deprecated && !p.disabled && (Date.now() - new Date(p.first_seen).getTime()) < 30 * 864e5)
     .slice(0, 30)
     .map((p) => {
       const isNew = (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5;

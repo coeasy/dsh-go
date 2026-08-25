@@ -285,7 +285,6 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
   for (const [key, plugin] of byKey) {
     const discovered = discoveredKeys.has(key);
     const manifestAuthoritative = plugin.manifest_file === 'dsh-plugin.json';
-    const manualOverride = normalizeOverrideFields(plugin.override_fields).length > 0;
     const repoId = plugin.repo_id ? String(plugin.repo_id) : '';
     const observedThisRun = !observationRequired || observedKeys.has(key) || (repoId && observedIds.has(repoId));
 
@@ -293,7 +292,7 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
     // Supplementary-source records must have an explicit DSH manifest and must have
     // been observed during the current full legacy discovery. The observation set is
     // ephemeral, so liveness checks do not create deploy-worthy catalog churn.
-    if (!discovered && !manualOverride && (!manifestAuthoritative || !observedThisRun)) {
+    if (!discovered && (!manifestAuthoritative || !observedThisRun)) {
       pruned++;
       continue;
     }

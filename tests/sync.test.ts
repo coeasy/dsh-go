@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 // 顶层动态 import 走 Node 原生 ESM 加载，避免 vitest 对 .mjs 的 transform 兼容问题
-const { dedupeTags, computeTrendScore, detectCategory, isAuthoritativeManifestFile, normalizeCategory, restRepositoryState, sanitizeManifest } = await import('../scripts/sync.mjs');
+const { buildFeed, dedupeTags, computeTrendScore, detectCategory, isAuthoritativeManifestFile, normalizeCategory, restRepositoryState, sanitizeManifest } = await import('../scripts/sync.mjs');
 
 describe('manifest authority', () => {
   it('只有 dsh-plugin.json 能作为 DSH manifest', () => {
@@ -41,6 +41,20 @@ describe('REST repository state', () => {
     expect(restRepositoryState({}, { watchers: 9, deprecated: true, disabled: true })).toEqual({
       watchers: 9, deprecated: true, disabled: true,
     });
+  });
+});
+
+describe('public feed liveness', () => {
+  it('does not publish archived or disabled repositories', () => {
+    const firstSeen = new Date().toISOString();
+    const feed = buildFeed([
+      { name: 'active', full_name: 'owner/active', repo_url: 'https://github.com/owner/active', first_seen: firstSeen, updated_at: firstSeen },
+      { name: 'archived', full_name: 'owner/archived', repo_url: 'https://github.com/owner/archived', first_seen: firstSeen, updated_at: firstSeen, deprecated: true },
+      { name: 'disabled', full_name: 'owner/disabled', repo_url: 'https://github.com/owner/disabled', first_seen: firstSeen, updated_at: firstSeen, disabled: true },
+    ]);
+    expect(feed).toContain('owner/active');
+    expect(feed).not.toContain('owner/archived');
+    expect(feed).not.toContain('owner/disabled');
   });
 });
 
