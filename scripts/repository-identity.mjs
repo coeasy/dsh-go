@@ -3,7 +3,9 @@ export const VALID_PLUGIN_CATEGORIES = Object.freeze([
   'web-ui', 'desktop', 'mcp', 'skills', 'theme', 'terminal', 'coding', 'agent',
   'vision', 'memory', 'security', 'integration', 'tool', 'other',
 ]);
+export const OVERRIDABLE_PLUGIN_FIELDS = Object.freeze(['name', 'description', 'category', 'tags', 'homepage']);
 const CATEGORY_SET = new Set(VALID_PLUGIN_CATEGORIES);
+const OVERRIDE_FIELD_SET = new Set(OVERRIDABLE_PLUGIN_FIELDS);
 
 export function canonicalRepoKey(value) {
   return String(value || '').trim().toLowerCase();
@@ -51,6 +53,11 @@ export function normalizeHttpUrl(value) {
   }
 }
 
+export function normalizeOverrideFields(value) {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.map((field) => String(field || '').trim()).filter((field) => OVERRIDE_FIELD_SET.has(field)))].sort();
+}
+
 export function discoveryTopics(repo) {
   if (Array.isArray(repo?.topics)) return repo.topics.filter(Boolean).map(String);
   const nodes = repo?.repositoryTopics?.nodes || [];
@@ -68,10 +75,13 @@ export function normalizeStoredPlugin(plugin) {
   if (!isValidRepositoryName(fullName)) return { ...plugin };
   const repoName = repoNameFromFullName(fullName);
   const authoritativeManifest = plugin?.manifest_file === 'dsh-plugin.json';
-  const manualOverride = plugin?.metadata_source === 'override';
+  // Legacy records used metadata_source=override as a record-wide flag. Do not trust that
+  // legacy flag by itself: only explicit override_fields may freeze individual fields.
+  const overrideFields = normalizeOverrideFields(plugin?.override_fields);
+  const overrideSet = new Set(overrideFields);
   const category = normalizePluginCategory(plugin?.category, 'other');
-  const metadataSource = manualOverride ? 'override' : (authoritativeManifest ? 'dsh-plugin' : 'github');
-  return {
+  const metadataSource = overrideFields.length ? 'override' : (authoritativeManifest ? 'dsh-plugin' : 'github');
+  const normalized = {
     ...plugin,
     full_name: fullName,
     repo_name: repoName,
@@ -82,8 +92,43 @@ export function normalizeStoredPlugin(plugin) {
     metadata_source: metadataSource,
     manifest_file: authoritativeManifest ? 'dsh-plugin.json' : null,
     verified: authoritativeManifest,
-    name: metadataSource === 'github' ? repoName : (plugin?.name || repoName),
+    name: (overrideSet.has('name') || authoritativeManifest) ? (plugin?.name || repoName) : repoName,
   };
+  if (overrideFields.length) normalized.override_fields = overrideFields;
+  else delete normalized.override_fields;
+  return normalized;
+}
+
+export function applyPluginOverride(plugin, override = {}) {
+  const result = { ...plugin };
+  const fields = new Set(normalizeOverrideFields(plugin?.override_fields));
+
+  if (typeof override.name === 'string' && override.name.trim()) {
+    result.name = override.name.trim().slice(0, 200);
+    fields.add('name');
+  }
+  if (typeof override.description === 'string') {
+    result.description = override.description.trim().slice(0, 4000);
+    fields.add('description');
+  }
+  if (Object.prototype.hasOwnProperty.call(override, 'category')) {
+    const category = normalizePluginCategory(override.category, '');
+    if (category) {
+      result.category = category;
+      fields.add('category');
+    }
+  }
+  if (Array.isArray(override.tags)) {
+    result.tags = [...new Set(override.tags.filter((tag) => typeof tag === 'string').map((tag) => tag.trim().toLowerCase()).filter(Boolean))].slice(0, 100);
+    fields.add('tags');
+  }
+  if (Object.prototype.hasOwnProperty.call(override, 'homepage')) {
+    result.homepage = normalizeHttpUrl(override.homepage);
+    fields.add('homepage');
+  }
+
+  result.override_fields = [...fields].sort();
+  return normalizeStoredPlugin(result);
 }
 
 export function mergeDiscoveredRepository(current, discovered) {
@@ -91,9 +136,27 @@ export function mergeDiscoveredRepository(current, discovered) {
   const base = normalizeStoredPlugin(current);
   const live = normalizeStoredPlugin(discovered);
   const manifestAuthoritative = base.manifest_file === 'dsh-plugin.json';
-  const manualOverride = base.metadata_source === 'override';
-  const contentAuthoritative = manifestAuthoritative || manualOverride;
-  const category = contentAuthoritative ? base.category : live.category;
+  const overrideFields = normalizeOverrideFields(base.override_fields);
+  const overrideSet = new Set(overrideFields);
+  const hasOverrides = overrideFields.length > 0;
+
+  const name = overrideSet.has('name')
+    ? (base.name || live.repo_name)
+    : manifestAuthoritative ? (base.name || live.repo_name) : live.repo_name;
+  const description = overrideSet.has('description')
+    ? (base.description || '')
+    : manifestAuthoritative ? (base.description || live.description || '') : (live.description || '');
+  const category = normalizePluginCategory(
+    overrideSet.has('category') ? base.category : (manifestAuthoritative ? base.category : live.category),
+    'other',
+  );
+  const tags = overrideSet.has('tags')
+    ? (Array.isArray(base.tags) ? base.tags : [])
+    : manifestAuthoritative ? (Array.isArray(base.tags) ? base.tags : live.tags) : (Array.isArray(live.tags) ? live.tags : []);
+  // dsh-plugin.json does not own the GitHub homepage field. Only an explicit homepage
+  // override may freeze it; otherwise always refresh from live repository metadata.
+  const homepage = normalizeHttpUrl(overrideSet.has('homepage') ? base.homepage : live.homepage);
+
   const merged = {
     ...base,
     repo_id: live.repo_id || base.repo_id || null,
@@ -110,30 +173,21 @@ export function mergeDiscoveredRepository(current, discovered) {
     updated_at: live.updated_at || base.updated_at || '',
     language: live.language || '',
     license: live.license || '',
-    homepage: normalizeHttpUrl(contentAuthoritative ? (base.homepage || live.homepage) : live.homepage),
+    homepage,
     snapshot_commit: live.snapshot_commit || base.snapshot_commit,
     snapshot_ref: live.snapshot_ref || base.snapshot_ref,
     deprecated: Boolean(live.deprecated),
     disabled: Boolean(live.disabled),
+    metadata_source: hasOverrides ? 'override' : (manifestAuthoritative ? 'dsh-plugin' : 'github'),
+    manifest_file: manifestAuthoritative ? 'dsh-plugin.json' : null,
+    verified: manifestAuthoritative,
+    category,
+    tags,
+    name,
+    description,
   };
-
-  if (contentAuthoritative) {
-    merged.metadata_source = manualOverride ? 'override' : 'dsh-plugin';
-    merged.manifest_file = manifestAuthoritative ? 'dsh-plugin.json' : null;
-    merged.verified = manifestAuthoritative;
-    merged.category = normalizePluginCategory(base.category, 'other');
-    merged.tags = Array.isArray(base.tags) ? base.tags : live.tags;
-    merged.name = base.name || live.repo_name;
-    merged.description = base.description || live.description || '';
-  } else {
-    merged.metadata_source = 'github';
-    merged.manifest_file = null;
-    merged.verified = false;
-    merged.category = normalizePluginCategory(live.category, 'other');
-    merged.tags = Array.isArray(live.tags) ? live.tags : [];
-    merged.name = live.repo_name;
-    merged.description = live.description || '';
-  }
+  if (hasOverrides) merged.override_fields = overrideFields;
+  else delete merged.override_fields;
   return merged;
 }
 
@@ -176,7 +230,7 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
   for (const [key, plugin] of byKey) {
     const discovered = discoveredKeys.has(key);
     const manifestAuthoritative = plugin.manifest_file === 'dsh-plugin.json';
-    const manualOverride = plugin.metadata_source === 'override';
+    const manualOverride = normalizeOverrideFields(plugin.override_fields).length > 0;
     const repoId = plugin.repo_id ? String(plugin.repo_id) : '';
     const observedThisRun = !observationRequired || observedKeys.has(key) || (repoId && observedIds.has(repoId));
 
