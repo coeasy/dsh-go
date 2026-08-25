@@ -63,6 +63,11 @@ replace_once(
 )
 replace_once(
     'tests/validate.test.ts',
+    "    expect(validateCatalog(c).errors.some((e) => e.includes('slug 重复'))).toBe(true);",
+    "    expect(validateCatalog(c).errors.some((e) => e.includes('slug 大小写归一后重复'))).toBe(true);",
+)
+replace_once(
+    'tests/validate.test.ts',
     "  it('full_name 非法', () => {",
     "  it('slug 大小写冲突也会被阻断', () => {\n    const c = goodCatalog();\n    c.plugins[1].slug = 'A-B';\n    expect(validateCatalog(c).errors.some((e) => e.includes('slug 大小写归一后重复'))).toBe(true);\n  });\n\n  it('slug 含路径字符会被阻断', () => {\n    const c = goodCatalog();\n    c.plugins[0].slug = '../a-b';\n    expect(validateCatalog(c).errors.some((e) => e.includes('slug 非法'))).toBe(true);\n  });\n\n  it('full_name 非法', () => {",
 )
