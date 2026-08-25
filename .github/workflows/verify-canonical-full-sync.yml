@@ -1,3 +1,4 @@
+# Verification revision: resilient discovery + ephemeral observations
 name: Verify canonical full sync
 
 on:
@@ -28,6 +29,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SYNC_MODE: full
           SYNC_CONCURRENCY: "16"
+          REGISTRY_GRAPHQL_PAGE_SIZE: "50"
         run: node scripts/sync-v3.mjs --full
       - name: Run strict data quality gates
         run: |
@@ -36,12 +38,14 @@ jobs:
           npm run registry:verify
           npm run runtime:check
           npm run deploy:gate
+          test ! -e catalog/.sync-observed.json
       - name: Assert canonical identity invariants
         shell: bash
         run: |
           node --input-type=module <<'NODE'
           import { readFile } from 'node:fs/promises';
           const data = JSON.parse(await readFile('catalog/plugins.json', 'utf8'));
+          const meta = JSON.parse(await readFile('catalog/meta.json', 'utf8'));
           const plugins = data.plugins || [];
           const errors = [];
           const repoKeys = new Set();
@@ -65,6 +69,7 @@ jobs:
             if (p.metadata_source === 'github' && p.name !== repoName) errors.push(`GitHub name mismatch: ${p.full_name} -> ${p.name}`);
             if (!validCategories.has(p.category)) errors.push(`invalid category: ${p.full_name} -> ${p.category}`);
             if (!String(p.install_cmd || '').includes(`github:${p.full_name}`)) errors.push(`install source mismatch: ${p.full_name}`);
+            if (Object.prototype.hasOwnProperty.call(p, 'observed_at')) errors.push(`transient observed_at leaked: ${p.full_name}`);
           }
           const ruflo = plugins.find((p) => String(p.full_name).toLowerCase() === 'ruvnet/ruflo');
           if (!ruflo) errors.push('ruvnet/ruflo missing after full sync');
@@ -75,6 +80,14 @@ jobs:
             if (ruflo.manifest_file !== null) errors.push(`ruflo manifest=${ruflo.manifest_file}`);
             if (ruflo.verified !== false) errors.push(`ruflo verified=${ruflo.verified}`);
           }
-          console.log(JSON.stringify({ count: plugins.length, verified: plugins.filter((p) => p.verified).length, repo_ids: repoIds.size, ruflo, errors: errors.slice(0, 100) }, null, 2));
+          console.log(JSON.stringify({
+            count: plugins.length,
+            verified: plugins.filter((p) => p.verified).length,
+            repo_ids: repoIds.size,
+            discovery_transport: meta.registry?.discovery_transport,
+            discovered_count: meta.registry?.discovered_count,
+            ruflo,
+            errors: errors.slice(0, 100),
+          }, null, 2));
           if (errors.length) throw new Error(`canonical identity assertions failed: ${errors.length}`);
           NODE
