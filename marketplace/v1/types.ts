@@ -65,6 +65,12 @@ export interface RegistryV3Item {
   metadata?: {
     name?: string;
     description?: string;
+    category?: string;
+    verified?: boolean;
+    stars?: number;
+    rank?: number;
+    repo_url?: string;
+    install_cmd?: string;
   };
 }
 
@@ -93,6 +99,7 @@ export function marketplaceItemFromRegistry(item: RegistryV3Item): MarketplaceIt
   const sourceType: MarketplaceSource['type'] = provider === 'npm' ? 'npm' : provider === 'github' ? 'github' : 'custom';
   const repo = item.source?.repo;
   const url = item.source?.archive_url
+    ?? item.metadata?.repo_url
     ?? (sourceType === 'github' && repo ? `https://github.com/${repo}` : repo ?? '');
 
   return {
@@ -113,6 +120,6 @@ export function marketplaceItemFromRegistry(item: RegistryV3Item): MarketplaceIt
     capabilities: [...(item.capabilities ?? [])],
     dependencies: (item.dependencies ?? []).map(normalizeDependency),
     artifact: item.artifact ? { integrity: item.artifact.integrity, archiveUrl: item.source?.archive_url } : undefined,
-    verified: item.verified,
+    verified: item.verified ?? item.metadata?.verified,
   };
 }
