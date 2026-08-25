@@ -1,4 +1,4 @@
-# Re-run marker: latest-head
+# Re-run marker: post-manifest-observation
 name: Validate ephemeral observation sidecar
 
 on:
@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Replace persistent observation timestamps with sidecar
+      - name: Replace persistent observation timestamps with post-manifest sidecar
         shell: bash
         run: |
           python3 - <<'PY'
@@ -39,10 +39,10 @@ jobs:
           if text.count(old) != 1:
               raise SystemExit('observed_at anchor mismatch')
           text = text.replace(old, '', 1)
-          old = "  const extraCount = repos.filter((r) => r.__extra).length;\n  log(`搜索到 ${repos.length} 个候选仓库（含补充主题 ${extraCount} 个）`);\n"
-          new = "  const extraCount = repos.filter((r) => r.__extra).length;\n  log(`搜索到 ${repos.length} 个候选仓库（含补充主题 ${extraCount} 个）`);\n\n  // Full-sync liveness is passed to Sync V3 through an ephemeral sidecar. It is\n  // deliberately excluded from plugins.json so repeated full syncs remain idempotent.\n  if (mode === 'full') {\n    const observedRepos = [...new Set(repos.map((repo) => repo.full_name).filter(Boolean))];\n    const observedRepoIds = [...new Set(repos.map((repo) => discoveryRepoId(repo)).filter(Boolean))];\n    await writeFile(OBSERVED_FILE, JSON.stringify({ mode: 'full', repos: observedRepos, repo_ids: observedRepoIds }, null, 2) + '\\n');\n    log(`写入临时观测集合：repos=${observedRepos.length}, repo_ids=${observedRepoIds.length}`);\n  }\n"
+          old = "  await Promise.all(Array.from({ length: CONCURRENCY }, worker));\n  let plugins = results.filter(Boolean);\n"
+          new = "  await Promise.all(Array.from({ length: CONCURRENCY }, worker));\n  let plugins = results.filter(Boolean);\n\n  // The liveness sidecar is derived only from records that passed current collection\n  // rules. For supplementary topics this means dsh-plugin.json was fetched now, so a\n  // repository that removed its manifest cannot inherit a historical verified state.\n  if (mode === 'full') {\n    const observedRepos = [...new Set(plugins.map((plugin) => plugin.full_name).filter(Boolean))];\n    const observedRepoIds = [...new Set(plugins.map((plugin) => String(plugin.repo_id || '')).filter(Boolean))];\n    await writeFile(OBSERVED_FILE, JSON.stringify({ mode: 'full', repos: observedRepos, repo_ids: observedRepoIds }, null, 2) + '\\n');\n    log(`写入临时有效观测集合：repos=${observedRepos.length}, repo_ids=${observedRepoIds.length}`);\n  }\n"
           if text.count(old) != 1:
-              raise SystemExit('dedupe log anchor mismatch')
+              raise SystemExit('post-worker anchor mismatch')
           p.write_text(text.replace(old, new, 1))
           PY
       - name: Verify code and UI
