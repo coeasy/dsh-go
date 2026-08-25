@@ -1,48 +1,75 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dsh-go.pages.dev/catalog/schema-v3.json",
   "title": "DSH Plugin Registry V3",
   "type": "object",
-  "required": ["registry_version", "plugins"],
+  "additionalProperties": false,
+  "required": ["registry_version", "schema_version", "defaults", "generated", "plugins"],
   "properties": {
-    "registry_version": {
-      "type": "integer",
-      "const": 3
+    "registry_version": { "type": "integer", "const": 3 },
+    "schema_version": { "type": "string", "const": "3.0.0" },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plugin_version"],
+      "properties": { "plugin_version": { "type": "string", "const": "0.1.0" } }
     },
     "generated": {
       "type": "object",
+      "required": ["at", "source_catalog_etag", "source_catalog_count", "count", "excluded_count", "content_hash", "discovery_mode", "discovered_count"],
       "properties": {
-        "commit": {"type": "string"},
-        "timestamp": {"type": "string"},
-        "hash": {"type": "string"}
+        "at": { "type": "string", "format": "date-time" },
+        "source_catalog_etag": { "type": "string", "minLength": 1 },
+        "source_catalog_count": { "type": "integer", "minimum": 0 },
+        "count": { "type": "integer", "minimum": 0 },
+        "excluded_count": { "type": "integer", "minimum": 0 },
+        "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "discovery_mode": { "type": "string", "const": "complete" },
+        "discovered_count": { "type": "integer", "minimum": 1 }
       }
     },
     "plugins": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "version", "source"],
+        "additionalProperties": false,
+        "required": ["id", "version", "source", "artifact", "runtime", "capabilities", "dependencies", "metadata"],
         "properties": {
-          "id": {"type": "string"},
-          "version": {"type": "string"},
+          "id": { "type": "string", "minLength": 1 },
+          "version": { "type": "string", "const": "0.1.0" },
           "source": {
             "type": "object",
-            "required": ["repo", "commit"],
+            "required": ["provider", "repo", "ref", "commit", "updated_at", "archive_url"],
             "properties": {
-              "repo": {"type": "string"},
-              "commit": {"type": "string"}
+              "provider": { "type": "string", "const": "github" },
+              "repo": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+              "ref": { "type": "string", "minLength": 1 },
+              "commit": { "type": "string", "pattern": "^[0-9a-fA-F]{40}$" },
+              "updated_at": { "type": "string" },
+              "archive_url": { "type": "string", "format": "uri" }
             }
           },
           "artifact": {
             "type": "object",
+            "required": ["kind", "algorithm", "integrity_scope", "integrity"],
             "properties": {
-              "checksum": {"type": "string"}
+              "kind": { "type": "string", "const": "git-source" },
+              "algorithm": { "type": "string", "const": "sha256" },
+              "integrity_scope": { "type": "string", "const": "source-identity" },
+              "integrity": { "type": "string", "pattern": "^sha256-[0-9a-f]{64}$" }
             }
           },
-          "runtime": {"type": "object"},
-          "capabilities": {
-            "type": "array",
-            "items": {"type": "string"}
-          }
+          "runtime": {
+            "type": "object",
+            "required": ["type", "activation"],
+            "properties": {
+              "type": { "type": "string", "enum": ["plugin", "mcp", "skill", "agent"] },
+              "activation": { "type": "string", "const": "restart-required" }
+            }
+          },
+          "capabilities": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+          "dependencies": { "type": "array" },
+          "metadata": { "type": "object" }
         }
       }
     }
