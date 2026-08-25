@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 25 Aug 2026 08:23:38 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 25 Aug 2026 08:41:59 GMT</lastBuildDate>
     <item>
       <title>🆕 @deepseek-ai/dsh-root</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
@@ -16,8 +16,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-08-25T08:22:08Z</guid>
-      <pubDate>Tue, 25 Aug 2026 08:22:08 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-08-25T08:37:18Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:37:18 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 deepseek-harness-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-08-25T07:49:58Z</guid>
-      <pubDate>Tue, 25 Aug 2026 07:49:58 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-08-25T08:34:35Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:34:35 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; DSH Desktop&lt;/h1 &lt;p align=&quot;center&quot; &lt;strong 基于 DeepSeek Harness 构建的 Windows 和 macOS 开源桌面客户端。&lt;/strong &lt;br 一键下载，开箱即用。&lt;br 万物皆「插件」，桌面本身也是「插件」。 &lt</description>
     </item>
     <item>
@@ -156,8 +156,8 @@
     <item>
       <title>🆕 codex-taskboard</title>
       <link>https://github.com/chuspeeism/dashi-taskboard</link>
-      <guid isPermaLink="false">chuspeeism/dashi-taskboard@2026-08-25T08:17:10Z</guid>
-      <pubDate>Tue, 25 Aug 2026 08:17:10 GMT</pubDate>
+      <guid isPermaLink="false">chuspeeism/dashi-taskboard@2026-08-25T08:36:26Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:36:26 GMT</pubDate>
       <description>English 简体中文 Codex Taskboard A local first issue board that runs in a browser and can be embedded in Codex through the standalone CDP launcher or its injection script. The same HTTP API powers the Rea</description>
     </item>
     <item>
