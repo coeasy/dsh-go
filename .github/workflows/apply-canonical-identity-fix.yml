@@ -1,0 +1,115 @@
+name: Apply canonical repository identity fix
+
+on:
+  push:
+    branches: ["fix/canonical-repository-identity"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Apply source fix and regression tests
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, got {count}')
+              p.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'scripts/sync.mjs',
+              "const README_EXCERPT_LEN = 500;\n",
+              "const README_EXCERPT_LEN = 500;\nconst MANIFEST_FILES = Object.freeze(['dsh-plugin.json']);\n",
+          )
+          replace_once(
+              'scripts/sync.mjs',
+              "export function dedupeTags(arr) {\n  const out = [];",
+              "export function isAuthoritativeManifestFile(file) {\n  return MANIFEST_FILES.includes(String(file || ''));\n}\n\nexport function dedupeTags(arr) {\n  const out = [];",
+          )
+          replace_once(
+              'scripts/sync.mjs',
+              "// ---------- 清单抓取（走 raw 域名，不占 REST 配额） ----------\nasync function fetchManifest(fullName, branch) {\n  for (const file of ['dsh-plugin.json', 'package.json']) {",
+              "// ---------- DSH 清单抓取（走 raw 域名，不占 REST 配额） ----------\n// package.json 是包管理元数据，不是 DSH manifest；不能用于覆盖仓库展示名、分类或 verified。\nasync function fetchManifest(fullName, branch) {\n  for (const file of MANIFEST_FILES) {",
+          )
+          replace_once(
+              'scripts/sync.mjs',
+              "    name: manifest?.data?.name || repo.name,\n    full_name: fullName,",
+              "    name: manifest?.data?.name || repo.name,\n    repo_name: repo.name,\n    metadata_source: manifest ? 'dsh-plugin' : 'github',\n    full_name: fullName,",
+          )
+
+          replace_once(
+              'scripts/github-discovery.mjs',
+              "    name: repo.name,\n    full_name: fullName,",
+              "    name: repo.name,\n    repo_name: repo.name,\n    metadata_source: 'github',\n    full_name: fullName,",
+          )
+
+          replace_once(
+              'scripts/registry-v3-builder.mjs',
+              "      name: legacy.name || normalized.id, description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),\n      stars: Number(legacy.stars || 0), rank: Number(legacy.rank || 0), repo_url: legacy.repo_url || `https://github.com/${normalized.repo}`,",
+              "      name: legacy.name || normalized.id, repo_name: legacy.repo_name || normalized.repo.split('/')[1],\n      metadata_source: legacy.metadata_source || (legacy.manifest_file === 'dsh-plugin.json' ? 'dsh-plugin' : 'github'),\n      description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),\n      stars: Number(legacy.stars || 0), rank: Number(legacy.rank || 0), repo_url: legacy.repo_url || `https://github.com/${normalized.repo}`,",
+          )
+
+          replace_once(
+              'scripts/validate.mjs',
+              "    if (typeof p.verified !== 'boolean') warns.push(`verified 非布尔: ${p.slug}`);\n    if (!p.category) warns.push(`缺少 category: ${p.slug}`);",
+              "    if (typeof p.verified !== 'boolean') warns.push(`verified 非布尔: ${p.slug}`);\n    if (p.manifest_file && p.manifest_file !== 'dsh-plugin.json') errors.push(`非法 manifest_file（仅允许 dsh-plugin.json）: ${p.slug} -> ${p.manifest_file}`);\n    if (p.verified && p.manifest_file !== 'dsh-plugin.json') errors.push(`verified 必须由 dsh-plugin.json 提供: ${p.slug}`);\n    if (!p.category) warns.push(`缺少 category: ${p.slug}`);",
+          )
+
+          replace_once(
+              'tests/sync.test.ts',
+              "const { dedupeTags, computeTrendScore } = await import('../scripts/sync.mjs');",
+              "const { dedupeTags, computeTrendScore, isAuthoritativeManifestFile } = await import('../scripts/sync.mjs');",
+          )
+          replace_once(
+              'tests/sync.test.ts',
+              "describe('dedupeTags', () => {",
+              "describe('manifest authority', () => {\n  it('只有 dsh-plugin.json 能作为 DSH manifest', () => {\n    expect(isAuthoritativeManifestFile('dsh-plugin.json')).toBe(true);\n    expect(isAuthoritativeManifestFile('package.json')).toBe(false);\n    expect(isAuthoritativeManifestFile('plugin.json')).toBe(false);\n  });\n});\n\ndescribe('dedupeTags', () => {",
+          )
+
+          replace_once(
+              'tests/validate.test.ts',
+              "      { slug: 'a-b', full_name: 'a/b', stars: 10, verified: true, category: 'mcp', install_cmd: 'x' },\n      { slug: 'c-d', full_name: 'c/d', stars: 0, verified: false, category: 'web-ui', install_cmd: 'y' },",
+              "      { slug: 'a-b', full_name: 'a/b', stars: 10, verified: true, manifest_file: 'dsh-plugin.json', category: 'mcp', install_cmd: 'x' },\n      { slug: 'c-d', full_name: 'c/d', stars: 0, verified: false, manifest_file: null, category: 'web-ui', install_cmd: 'y' },",
+          )
+          replace_once(
+              'tests/validate.test.ts',
+              "  it('缺少 install_cmd 产生警告而非错误', () => {",
+              "  it('拒绝把 package.json 当成 manifest 或 verified 来源', () => {\n    const c = goodCatalog();\n    c.plugins[0].manifest_file = 'package.json';\n    expect(validateCatalog(c).errors.some((e) => e.includes('非法 manifest_file'))).toBe(true);\n    expect(validateCatalog(c).errors.some((e) => e.includes('verified 必须由 dsh-plugin.json'))).toBe(true);\n  });\n\n  it('缺少 install_cmd 产生警告而非错误', () => {",
+          )
+          PY
+      - name: Verify patch
+        run: |
+          npm ci
+          node --check scripts/sync.mjs
+          node --check scripts/github-discovery.mjs
+          node --check scripts/registry-v3-builder.mjs
+          node --check scripts/validate.mjs
+          npm run typecheck
+          npm run lint
+          npm test
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/sync.mjs scripts/github-discovery.mjs scripts/registry-v3-builder.mjs scripts/validate.mjs tests/sync.test.ts tests/validate.test.ts
+          git commit -m "fix: canonicalize repository identity during sync"
+          git push
