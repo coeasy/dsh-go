@@ -1,0 +1,55 @@
+name: Ecosystem Platform V1
+
+on:
+  pull_request:
+    paths:
+      - 'marketplace/**'
+      - 'mcp/**'
+      - 'skills/**'
+      - 'agents/**'
+      - 'profiles/**'
+      - 'runtime/v3/**'
+      - 'runtime/loader.mjs'
+      - 'functions/**'
+      - 'site/**'
+      - 'docs/ECOSYSTEM_PLATFORM_V1.md'
+      - 'tests/ecosystem-v1/**'
+      - 'tests/runtime-v3/**'
+      - 'tests/runtime-platform/activation.test.ts'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.github/workflows/ecosystem-platform.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ecosystem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install site dependencies
+        run: cd site && npm ci
+      - name: Full source typecheck
+        run: npm run typecheck
+      - name: Full lint
+        run: npm run lint
+      - name: Ecosystem tests
+        run: npm run ecosystem:test
+      - name: Full regression tests
+        run: npm test
+      - name: Site check
+        run: cd site && npm run check
+      - name: Registry V3 compatibility
+        run: npm run runtime:check

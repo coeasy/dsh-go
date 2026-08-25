@@ -9,12 +9,8 @@ export interface VerifyResult {
 }
 
 export function verifyPackage(request: VerifyRequest): VerifyResult {
-  if (!request.expectedChecksum) {
-    return { verified: true };
-  }
-
-  return {
-    verified: request.checksum === request.expectedChecksum,
-    reason: request.checksum === request.expectedChecksum ? undefined : 'checksum mismatch',
-  };
+  if (!request.expectedChecksum) return { verified: false, reason: 'expected checksum is required' };
+  if (!request.checksum) return { verified: false, reason: 'checksum is required' };
+  const verified = request.checksum === request.expectedChecksum;
+  return { verified, reason: verified ? undefined : 'checksum mismatch' };
 }

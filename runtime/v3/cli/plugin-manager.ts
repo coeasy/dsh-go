@@ -1,18 +1,24 @@
-import { createRegistry, removeFromRegistry, upsertRegistry } from '../storage/persistence.js';
+import {
+  createRegistry,
+  removeFromRegistry,
+  upsertRegistry,
+  type RuntimeRegistry,
+} from '../storage/persistence.js';
 
-export function listPlugins() {
-  return createRegistry().items;
+export function listPlugins(registry: RuntimeRegistry = createRegistry()) {
+  return [...registry.items];
 }
 
-export function removePlugin(id: string) {
-  return removeFromRegistry(createRegistry(), id);
+export function removePlugin(registry: RuntimeRegistry, id: string) {
+  return removeFromRegistry(registry, id);
 }
 
-export function updatePlugin(id: string, version: string) {
-  return upsertRegistry(createRegistry(), {
+export function updatePlugin(registry: RuntimeRegistry, id: string, version: string) {
+  return upsertRegistry(registry, {
     id,
     type: 'plugin',
     version,
     state: 'installed',
+    restartRequired: true,
   });
 }

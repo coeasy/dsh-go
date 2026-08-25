@@ -1,6 +1,6 @@
-// POST /api/v1/mcp —— MCP 端点（AI Agent 通过 JSON-RPC 2.0 查询插件目录）
-// 工具：list_plugins / get_plugin / list_categories / search_plugins
+// POST /api/v1/mcp — read-only MCP endpoint for catalog and Registry V3 discovery.
 import { loadCatalog, filterPlugins, json, error, type Env } from '../../_lib';
+import { filterEcosystem, loadRegistryV3, toEcosystemItem } from '../../_registry';
 
 interface McpArgs {
   category?: string;
@@ -10,6 +10,11 @@ interface McpArgs {
   limit?: number;
   slug?: string;
   q?: string;
+  id?: string;
+  version?: string;
+  type?: string;
+  channel?: string;
+  capability?: string;
 }
 
 interface JsonRpcBody {
@@ -21,13 +26,13 @@ interface JsonRpcBody {
 const TOOLS = [
   {
     name: 'list_plugins',
-    description: '列出 DSH 插件，可按分类/关键词/排序/分页过滤',
+    description: '列出 DSH 插件，可按分类/关键词/排序过滤',
     inputSchema: {
       type: 'object',
       properties: {
-        category: { type: 'string', description: '分类 id，如 web-ui' },
-        search: { type: 'string', description: '关键词搜索' },
-        verified: { type: 'boolean', description: '仅含已验证插件' },
+        category: { type: 'string' },
+        search: { type: 'string' },
+        verified: { type: 'boolean' },
         sort: { type: 'string', enum: ['stars', 'trend', 'updated', 'created', 'name'], default: 'stars' },
         limit: { type: 'number', default: 20 },
       },
@@ -36,11 +41,7 @@ const TOOLS = [
   {
     name: 'get_plugin',
     description: '获取单个插件详情（含 README 摘要与安装命令）',
-    inputSchema: {
-      type: 'object',
-      properties: { slug: { type: 'string', description: '插件 slug，如 owner-repo' } },
-      required: ['slug'],
-    },
+    inputSchema: { type: 'object', properties: { slug: { type: 'string' } }, required: ['slug'] },
   },
   {
     name: 'list_categories',
@@ -50,11 +51,31 @@ const TOOLS = [
   {
     name: 'search_plugins',
     description: '关键词搜索插件',
+    inputSchema: { type: 'object', properties: { q: { type: 'string' }, limit: { type: 'number', default: 10 } }, required: ['q'] },
+  },
+  {
+    name: 'list_ecosystem',
+    description: '从 Registry V3 查询 plugin / MCP / skill / agent；只读，不修改本机状态',
     inputSchema: {
       type: 'object',
-      properties: { q: { type: 'string', description: '搜索关键词' }, limit: { type: 'number', default: 10 } },
-      required: ['q'],
+      properties: {
+        type: { type: 'string', enum: ['plugin', 'mcp', 'skill', 'agent'] },
+        search: { type: 'string' },
+        capability: { type: 'string' },
+        verified: { type: 'boolean' },
+        limit: { type: 'number', default: 20 },
+      },
     },
+  },
+  {
+    name: 'get_ecosystem_item',
+    description: '读取 Registry V3 中单个生态条目及本地 Runtime 安装计划',
+    inputSchema: { type: 'object', properties: { id: { type: 'string' }, version: { type: 'string' } }, required: ['id'] },
+  },
+  {
+    name: 'plan_local_install',
+    description: '生成本地 DSH Runtime 安装命令；仅生成计划，不执行安装',
+    inputSchema: { type: 'object', properties: { id: { type: 'string' }, version: { type: 'string' } }, required: ['id'] },
   },
 ];
 
@@ -66,7 +87,6 @@ function rpcError(id: unknown, code: number, message: string) {
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  // 请求体大小上限，防止超大 payload 拖垮无状态 Functions
   const len = Number(request.headers.get('content-length'));
   if (Number.isFinite(len) && len > 1_000_000) return error(413, 'payload too large');
 
@@ -83,21 +103,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!method) return error(400, 'missing method');
 
   try {
-    const { data } = await loadCatalog(env);
-    const plugins = data.plugins;
-    const activePlugins = filterPlugins(plugins, {});
-
     if (method === 'initialize') {
       return rpcResult(id, {
         protocolVersion: '2025-03-26',
         capabilities: { tools: {} },
-        serverInfo: { name: 'dsh-go', version: '2.0.0' },
+        serverInfo: { name: 'dsh-go', version: '2.3.0' },
       });
     }
-
-    if (method === 'tools/list') {
-      return rpcResult(id, { tools: TOOLS });
-    }
+    if (method === 'tools/list') return rpcResult(id, { tools: TOOLS });
 
     if (method === 'tools/call') {
       const { name, arguments: args } = params || {};
@@ -105,37 +118,62 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
       switch (name) {
         case 'list_plugins': {
-          const q = {
-            category: args?.category,
-            search: args?.search,
-            verified: args?.verified === true,
-            sort: args?.sort || 'stars',
-          };
+          const { data } = await loadCatalog(env);
+          const q = { category: args?.category, search: args?.search, verified: args?.verified === true, sort: args?.sort || 'stars' };
           const limit = Math.max(1, Math.min(Number(args?.limit) || 20, 100));
-          const list = filterPlugins(plugins, q).slice(0, limit);
-          result = list.map((p) => ({
-            slug: p.slug, name: p.name, category: p.category, stars: p.stars,
-            description: p.description, install: p.install_cmd, verified: p.verified,
+          result = filterPlugins(data.plugins, q).slice(0, limit).map((plugin) => ({
+            slug: plugin.slug,
+            name: plugin.name,
+            category: plugin.category,
+            stars: plugin.stars,
+            description: plugin.description,
+            install: plugin.install_cmd,
+            verified: plugin.verified,
           }));
           break;
         }
         case 'get_plugin': {
+          const { data } = await loadCatalog(env);
           const requestedSlug = String(args?.slug || '').toLowerCase();
-          const p = activePlugins.find((x) => x.slug.toLowerCase() === requestedSlug);
-          result = p || null;
+          result = filterPlugins(data.plugins, {}).find((plugin) => plugin.slug.toLowerCase() === requestedSlug) || null;
           break;
         }
         case 'list_categories': {
+          const { data } = await loadCatalog(env);
           const counts: Record<string, number> = {};
-          for (const plugin of activePlugins) counts[plugin.category || 'other'] = (counts[plugin.category || 'other'] || 0) + 1;
+          for (const plugin of filterPlugins(data.plugins, {})) counts[plugin.category || 'other'] = (counts[plugin.category || 'other'] || 0) + 1;
           result = counts;
           break;
         }
         case 'search_plugins': {
-          const kw = (args?.q || '').toLowerCase();
+          const { data } = await loadCatalog(env);
+          const keyword = (args?.q || '').toLowerCase();
           const limit = Math.max(1, Math.min(Number(args?.limit) || 10, 100));
-          const list = filterPlugins(plugins, { search: kw, sort: 'stars' }).slice(0, limit);
-          result = list.map((p) => ({ slug: p.slug, name: p.name, stars: p.stars, description: p.description }));
+          result = filterPlugins(data.plugins, { search: keyword, sort: 'stars' })
+            .slice(0, limit)
+            .map((plugin) => ({ slug: plugin.slug, name: plugin.name, stars: plugin.stars, description: plugin.description }));
+          break;
+        }
+        case 'list_ecosystem': {
+          const { data } = await loadRegistryV3(env, request.url);
+          const limit = Math.max(1, Math.min(Number(args?.limit) || 20, 100));
+          result = filterEcosystem(data.plugins, {
+            type: args?.type,
+            channel: args?.channel,
+            capability: args?.capability,
+            search: args?.search,
+            verified: args?.verified,
+          }).slice(0, limit).map(toEcosystemItem);
+          break;
+        }
+        case 'get_ecosystem_item':
+        case 'plan_local_install': {
+          if (!args?.id) return rpcError(id, -32602, 'id is required');
+          const { data } = await loadRegistryV3(env, request.url);
+          const match = data.plugins.find((plugin) => plugin.id === args.id && (!args.version || plugin.version === args.version));
+          if (!match) return rpcError(id, -32602, `ecosystem item not found: ${args.id}`);
+          const item = toEcosystemItem(match);
+          result = name === 'plan_local_install' ? item.local_install : item;
           break;
         }
         default:
@@ -145,27 +183,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return rpcResult(id, { content: [{ type: 'text', text: JSON.stringify(result) }] });
     }
 
-    if (method === 'notifications/initialized') {
-      return new Response(null, { status: 202 });
-    }
-
+    if (method === 'notifications/initialized') return new Response(null, { status: 202 });
     return rpcError(id, -32601, `unsupported method: ${method}`);
-  } catch (e) {
-    // JSON-RPC 内部错误：完整日志给运维，客户端只收通用信息
-    console.error('[dsh-go] mcp internal error:', e);
+  } catch (cause) {
+    console.error('[dsh-go] mcp internal error:', cause);
     return rpcError(id, -32603, 'internal error');
   }
 };
 
-// GET 返回端点说明（供人工/浏览器探查）
 export const onRequestGet: PagesFunction = async () =>
   json({
     name: 'DSH Go MCP',
-    description: 'JSON-RPC 2.0 over HTTP。用 POST + Content-Type: application/json 调用 initialize / tools/list / tools/call',
-    tools: TOOLS.map((t) => t.name),
+    description: 'Read-only JSON-RPC 2.0 catalog discovery. Local mutation tools are intentionally not exposed by this remote endpoint.',
+    tools: TOOLS.map((tool) => tool.name),
   });
 
-// 浏览器跨域 POST 会先发 OPTIONS 预检，必须返回 CORS 头，否则浏览器侧 MCP 客户端不可用
 export const onRequestOptions: PagesFunction = async () =>
   json(null, {
     headers: {

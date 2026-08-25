@@ -30,6 +30,7 @@ export async function installPlugin(plugin, options = {}) {
   const plan = {
     id: plugin.id,
     version: plugin.version,
+    channel: plugin.channel || 'stable',
     repo: plugin.repo,
     commit: plugin.commit,
     target,
@@ -45,15 +46,17 @@ export async function installPlugin(plugin, options = {}) {
   try {
     await mkdir(temp, { recursive: true });
     await git(['init', '-q'], temp);
-    await git(['remote', 'add', 'origin', 'https://github.com/' + plugin.repo + '.git'], temp);
+    await git(['remote', 'add', 'origin', options.repositoryUrl || 'https://github.com/' + plugin.repo + '.git'], temp);
     await git(['fetch', '--depth', '1', 'origin', plugin.commit], temp);
     await git(['checkout', '--detach', '-q', 'FETCH_HEAD'], temp);
     await verifyInstalledCommit(temp, plugin.commit);
 
     const lock = {
       registry_version: 3,
+      runtime_registry_version: 2,
       id: plugin.id,
       version: plugin.version,
+      channel: plugin.channel || 'stable',
       source: plugin.source,
       artifact: plugin.artifact,
       runtime: plugin.runtime,
@@ -66,7 +69,9 @@ export async function installPlugin(plugin, options = {}) {
 
     if (options.force) {
       await rm(backup, { recursive: true, force: true });
-      try { await rename(target, backup); } catch (error) {
+      try {
+        await rename(target, backup);
+      } catch (error) {
         if (error?.code !== 'ENOENT') throw error;
       }
     } else {
@@ -87,7 +92,9 @@ export async function installPlugin(plugin, options = {}) {
       await access(backup);
       await rm(target, { recursive: true, force: true });
       await rename(backup, target);
-    } catch { /* no previous installation to restore */ }
+    } catch {
+      // No previous installation to restore.
+    }
     throw error;
   }
 }

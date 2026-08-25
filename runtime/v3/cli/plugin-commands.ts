@@ -1,11 +1,19 @@
-export function listPlugins(registry: { packages: unknown[] }) {
-  return registry.packages;
+import { removeFromRegistry, upsertRegistry, type RuntimeRegistry } from '../storage/persistence';
+
+export function listPlugins(registry: RuntimeRegistry) {
+  return [...registry.items];
 }
 
-export function removePlugin(id: string) {
-  return { id, removed: true };
+export function removePlugin(registry: RuntimeRegistry, id: string): RuntimeRegistry {
+  return removeFromRegistry(registry, id);
 }
 
-export function updatePlugin(id: string, version: string) {
-  return { id, version, updated: true };
+export function updatePlugin(registry: RuntimeRegistry, id: string, version: string): RuntimeRegistry {
+  return upsertRegistry(registry, {
+    id,
+    type: 'plugin',
+    version,
+    state: 'installed',
+    restartRequired: true,
+  });
 }

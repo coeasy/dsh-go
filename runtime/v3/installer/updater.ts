@@ -6,14 +6,22 @@ export interface UpdateRequest {
 
 export interface UpdateResult {
   id: string;
-  updated: boolean;
-  rollbackAvailable: boolean;
+  updated: false;
+  planned: boolean;
+  rollbackAvailable: false;
+  requiresLocalRuntime: true;
+  command: 'node';
+  argv: string[];
 }
 
 export function updatePackage(request: UpdateRequest): UpdateResult {
   return {
     id: request.id,
-    updated: true,
-    rollbackAvailable: true,
+    updated: false,
+    planned: Boolean(request.id.trim() && request.toVersion.trim()),
+    rollbackAvailable: false,
+    requiresLocalRuntime: true,
+    command: 'node',
+    argv: ['runtime/cli.mjs', 'plugin', 'update', request.id, request.toVersion],
   };
 }

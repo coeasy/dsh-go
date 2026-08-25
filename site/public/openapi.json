@@ -2,266 +2,153 @@
   "openapi": "3.0.3",
   "info": {
     "title": "DSH Go API",
-    "version": "1.0.0",
-    "description": "DeepSeek Harness 插件目录公共 API。CORS 全开、无需认证、支持 ETag 协商缓存。数据由 GitHub Actions 每日自动同步。",
+    "version": "2.3.0",
+    "description": "DSH Go public read-only catalog and Registry V3 ecosystem API. Local installation and runtime mutation are never executed by this service.",
     "license": { "name": "CC-BY-4.0" }
   },
   "servers": [{ "url": "https://dsh-go.pages.dev" }],
   "tags": [
-    { "name": "目录", "description": "插件目录数据" },
-    { "name": "搜索", "description": "关键词搜索" },
-    { "name": "元信息", "description": "同步状态与健康检查" },
-    { "name": "MCP", "description": "AI Agent 可用的 JSON-RPC 端点" }
+    { "name": "Plugins", "description": "Backward-compatible plugin catalog" },
+    { "name": "Ecosystem", "description": "Registry V3 plugin/MCP/skill/agent discovery" },
+    { "name": "Metadata", "description": "Health, sync and registry metadata" },
+    { "name": "MCP", "description": "Read-only JSON-RPC discovery endpoint" }
   ],
   "paths": {
     "/api/v1/plugins": {
       "get": {
-        "tags": ["目录"],
-        "summary": "插件列表（过滤/搜索/排序/分页）",
+        "tags": ["Plugins"],
+        "summary": "List legacy marketplace plugins",
         "parameters": [
-          { "name": "category", "in": "query", "schema": { "type": "string" }, "description": "分类 id，如 web-ui" },
-          { "name": "verified", "in": "query", "schema": { "type": "boolean" }, "description": "仅含已验证插件" },
-          { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "关键词（name/description/topics）" },
-          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["stars", "trend", "updated", "created", "name"] }, "description": "排序字段", "default": "stars" },
-          { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"] }, "description": "排序方向", "default": "desc" },
-          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 }, "description": "页码" },
-          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 }, "description": "每页数量" },
-          { "name": "created_after", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "仅返回之后创建" },
-          { "name": "updated_after", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "仅返回之后更新" }
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "verified", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["stars", "trend", "updated", "created", "name"] } },
+          { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200 } }
+        ],
+        "responses": { "200": { "description": "Plugin list" }, "304": { "description": "Not modified" }, "500": { "$ref": "#/components/responses/ServerError" } }
+      }
+    },
+    "/api/v1/plugins/{slug}": {
+      "get": {
+        "tags": ["Plugins"],
+        "summary": "Get plugin detail",
+        "parameters": [{ "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Plugin detail" }, "404": { "$ref": "#/components/responses/NotFound" }, "500": { "$ref": "#/components/responses/ServerError" } }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "tags": ["Plugins"],
+        "summary": "Search legacy plugins",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }
+        ],
+        "responses": { "200": { "description": "Search results" }, "400": { "$ref": "#/components/responses/BadRequest" }, "500": { "$ref": "#/components/responses/ServerError" } }
+      }
+    },
+    "/api/v1/categories": { "get": { "tags": ["Plugins"], "summary": "List plugin categories", "responses": { "200": { "description": "Category counts" } } } },
+    "/api/v1/stats": { "get": { "tags": ["Plugins"], "summary": "Plugin catalog statistics", "responses": { "200": { "description": "Statistics" } } } },
+    "/api/v1/meta": { "get": { "tags": ["Metadata"], "summary": "Synchronization metadata", "responses": { "200": { "description": "Metadata" } } } },
+    "/api/v1/health": { "get": { "tags": ["Metadata"], "summary": "Health check", "responses": { "200": { "description": "Healthy" } } } },
+    "/api/v1/registry": {
+      "get": {
+        "tags": ["Ecosystem"],
+        "summary": "Download canonical Registry V3",
+        "responses": { "200": { "description": "Raw Registry V3 JSON" }, "500": { "$ref": "#/components/responses/ServerError" } }
+      }
+    },
+    "/api/v1/ecosystem": {
+      "get": {
+        "tags": ["Ecosystem"],
+        "summary": "List Registry V3 ecosystem items",
+        "description": "Returns plugin, MCP, skill and agent entries. The local_install field is a plan only and is never executed by the API.",
+        "parameters": [
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["plugin", "mcp", "skill", "agent"] } },
+          { "name": "capability", "in": "query", "schema": { "type": "string" } },
+          { "name": "verified", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "channel", "in": "query", "schema": { "type": "string", "default": "stable" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200 } }
         ],
         "responses": {
           "200": {
-            "description": "插件分页列表",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/PluginListResponse" }
-              }
-            }
+            "description": "Paginated ecosystem entries",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/EcosystemItem" } } } } } }
           },
-          "304": { "description": "ETag 命中，返回缓存（无内容）" },
+          "304": { "description": "Not modified" },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "500": { "$ref": "#/components/responses/ServerError" }
         }
       }
     },
-    "/api/v1/plugins/{slug}": {
+    "/api/v1/ecosystem/{id}": {
       "get": {
-        "tags": ["目录"],
-        "summary": "插件详情",
-        "parameters": [{ "name": "slug", "in": "path", "required": true, "schema": { "type": "string" }, "description": "插件 slug（owner-repo 形式）" }],
+        "tags": ["Ecosystem"],
+        "summary": "Get one Registry V3 ecosystem item",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
         "responses": {
-          "200": {
-            "description": "插件对象 + 相关推荐",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/PluginDetailResponse" }
-              }
-            }
-          },
-          "304": { "description": "ETag 命中，返回缓存（无内容）" },
+          "200": { "description": "Resolved ecosystem item and versions" },
+          "304": { "description": "Not modified" },
           "404": { "$ref": "#/components/responses/NotFound" },
           "500": { "$ref": "#/components/responses/ServerError" }
         }
       }
     },
-    "/api/v1/search": {
-      "get": {
-        "tags": ["搜索"],
-        "summary": "关键词搜索",
-        "description": "在 name / description / topics / tags 中匹配关键词。q 必填。",
-        "parameters": [
-          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "搜索关键词" },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }, "description": "返回条数上限" }
-        ],
-        "responses": {
-          "200": {
-            "description": "搜索结果",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SearchResponse" }
-              }
-            }
-          },
-          "304": { "description": "ETag 命中，返回缓存（无内容）" },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      }
-    },
-    "/api/v1/categories": {
-      "get": {
-        "tags": ["目录"],
-        "summary": "分类注册表（含计数）",
-        "responses": {
-          "200": {
-            "description": "分类与数量",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": { "type": "integer" },
-                  "example": { "mcp": 12, "web-ui": 8 }
-                }
-              }
-            }
-          },
-          "304": { "description": "ETag 命中（无内容）" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      }
-    },
-    "/api/v1/stats": {
-      "get": {
-        "tags": ["目录"],
-        "summary": "聚合统计 + Top 榜单",
-        "responses": {
-          "200": {
-            "description": "聚合统计",
-            "content": {
-              "application/json": {
-                "schema": { "type": "object", "additionalProperties": true, "example": { "total": 5, "verified": 3 } }
-              }
-            }
-          },
-          "304": { "description": "ETag 命中（无内容）" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      }
-    },
-    "/api/v1/meta": {
-      "get": {
-        "tags": ["元信息"],
-        "summary": "同步元信息（供监控）",
-        "responses": {
-          "200": {
-            "description": "最近同步时间与状态",
-            "content": {
-              "application/json": {
-                "schema": { "type": "object", "additionalProperties": true, "example": { "updated_at": "2026-08-23T16:00:00.000Z", "count": 5 } }
-              }
-            }
-          },
-          "304": { "description": "ETag 命中（无内容）" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      }
-    },
-    "/api/v1/health": {
-      "get": {
-        "tags": ["元信息"],
-        "summary": "健康检查",
-        "responses": {
-          "200": {
-            "description": "服务健康",
-            "content": {
-              "application/json": {
-                "schema": { "type": "object", "additionalProperties": true, "example": { "status": "ok" } }
-              }
-            }
-          },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
-      }
-    },
     "/api/v1/mcp": {
+      "get": {
+        "tags": ["MCP"],
+        "summary": "Describe the read-only MCP endpoint",
+        "responses": { "200": { "description": "MCP endpoint metadata" } }
+      },
       "post": {
         "tags": ["MCP"],
-        "summary": "MCP 端点（JSON-RPC 2.0）",
-        "description": "接收 JSON-RPC 2.0 请求，供 AI Agent 查询插件目录。单次请求体不超过 1MB。",
+        "summary": "Invoke read-only MCP JSON-RPC tools",
+        "description": "Supports legacy plugin discovery plus list_ecosystem, get_ecosystem_item and plan_local_install. plan_local_install returns a command only and never mutates local state.",
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["method"],
-                "properties": {
-                  "jsonrpc": { "type": "string", "enum": ["2.0"], "default": "2.0" },
-                  "id": { "type": ["number", "string"] },
-                  "method": { "type": "string", "enum": ["list_plugins", "search_plugins"] },
-                  "params": { "type": "object" }
-                }
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "type": "object", "required": ["method"], "additionalProperties": true } } }
         },
-        "responses": {
-          "200": {
-            "description": "成功执行 MCP 请求（JSON-RPC 响应）",
-            "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
-          },
-          "413": { "$ref": "#/components/responses/PayloadTooLarge" },
-          "500": { "$ref": "#/components/responses/ServerError" }
-        }
+        "responses": { "200": { "description": "JSON-RPC response" }, "413": { "$ref": "#/components/responses/PayloadTooLarge" }, "500": { "$ref": "#/components/responses/ServerError" } }
       }
     }
   },
   "components": {
     "responses": {
-      "BadRequest": { "description": "参数缺失或非法", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "NotFound": { "description": "资源不存在", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "PayloadTooLarge": { "description": "请求体超过 1MB", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "ServerError": { "description": "服务器内部错误（已脱敏）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+      "BadRequest": { "description": "Invalid request" },
+      "NotFound": { "description": "Resource not found" },
+      "PayloadTooLarge": { "description": "Request body exceeds 1 MB" },
+      "ServerError": { "description": "Internal server error" }
     },
     "schemas": {
-      "Error": {
+      "EcosystemItem": {
         "type": "object",
-        "required": ["error", "message"],
+        "required": ["id", "name", "type", "version", "channel", "source", "local_install"],
         "properties": {
-          "error": { "type": "string" },
-          "message": { "type": "string" }
-        },
-        "example": { "error": "not_found", "message": "plugin not found: foo" }
-      },
-      "Plugin": {
-        "type": "object",
-        "required": ["slug", "name", "full_name"],
-        "properties": {
-          "slug": { "type": "string" },
+          "id": { "type": "string" },
           "name": { "type": "string" },
-          "full_name": { "type": "string" },
+          "type": { "type": "string", "enum": ["plugin", "mcp", "skill", "agent"] },
+          "version": { "type": "string" },
+          "channel": { "type": "string" },
           "description": { "type": "string" },
-          "category": { "type": "string" },
-          "stars": { "type": "integer" },
-          "forks": { "type": "integer" },
           "verified": { "type": "boolean" },
-          "trend_score": { "type": "number" },
-          "install_cmd": { "type": "string" },
-          "repo_url": { "type": "string", "format": "uri" }
-        }
-      },
-      "PluginListResponse": {
-        "type": "object",
-        "required": ["items", "pagination"],
-        "properties": {
-          "items": { "type": "array", "items": { "$ref": "#/components/schemas/Plugin" } },
-          "pagination": {
+          "capabilities": { "type": "array", "items": { "type": "string" } },
+          "dependencies": { "type": "array", "items": {} },
+          "source": { "type": "object", "additionalProperties": true },
+          "artifact": { "type": "object", "additionalProperties": true },
+          "local_install": {
             "type": "object",
+            "required": ["command", "executed", "requires_local_runtime", "restart_required"],
             "properties": {
-              "page": { "type": "integer" },
-              "per_page": { "type": "integer" },
-              "total": { "type": "integer" },
-              "total_pages": { "type": "integer" }
+              "command": { "type": "string" },
+              "executed": { "type": "boolean", "enum": [false] },
+              "requires_local_runtime": { "type": "boolean", "enum": [true] },
+              "restart_required": { "type": "boolean", "enum": [true] }
             }
           }
-        }
-      },
-      "PluginDetailResponse": {
-        "type": "object",
-        "required": ["plugin"],
-        "properties": {
-          "plugin": { "$ref": "#/components/schemas/Plugin" },
-          "related": { "type": "array", "items": { "$ref": "#/components/schemas/Plugin" } },
-          "meta": { "type": "object", "additionalProperties": true }
-        }
-      },
-      "SearchResponse": {
-        "type": "object",
-        "required": ["query", "total", "results"],
-        "properties": {
-          "query": { "type": "string" },
-          "total": { "type": "integer" },
-          "results": { "type": "array", "items": { "$ref": "#/components/schemas/Plugin" } }
         }
       }
     }

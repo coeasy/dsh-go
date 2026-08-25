@@ -1,5 +1,5 @@
 import { getInstallDirectory } from '../installer/install-directory.js';
-import { installPlugin } from '../installer/installer.js';
+import { createRuntimeInstallPlan } from '../installer/installer.js';
 
 export interface PluginInstallOptions {
   id: string;
@@ -9,8 +9,7 @@ export interface PluginInstallOptions {
 
 export async function pluginInstall(options: PluginInstallOptions) {
   const directories = getInstallDirectory(process.env.HOME ?? '.');
-
-  return installPlugin({
+  return createRuntimeInstallPlan({
     id: options.id,
     type: 'plugin',
     version: options.version ?? '0.1.0',
