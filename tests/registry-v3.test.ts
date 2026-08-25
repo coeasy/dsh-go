@@ -9,7 +9,7 @@ const { verifyResolvedPlugin } = await import('../runtime/verifier.mjs');
 describe('Registry V3', () => {
   const legacy = {
     slug: 'owner-demo', full_name: 'owner/demo', name: 'demo', description: 'x', category: 'mcp',
-    updated_at: '2026-08-25T00:00:00Z', verified: true, stars: 10, rank: 1,
+    updated_at: '2026-08-25T00:00:00Z', verified: true, manifest_file: 'dsh-plugin.json', stars: 10, rank: 1,
   };
   const commit = '0123456789abcdef0123456789abcdef01234567';
 
