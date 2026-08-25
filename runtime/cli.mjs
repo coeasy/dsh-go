@@ -36,16 +36,18 @@ function print(value) {
 
 async function loadRuntimePlugin(raw, registry, options = {}) {
   const input = String(raw || '').replace(/^github:/, '');
-  const parsed = parsePluginSpec(input, registry.defaults?.plugin_version);
+  const defaultVersion = options.channel ? '*' : registry.defaults?.plugin_version;
+  const parsed = parsePluginSpec(input, defaultVersion);
   try {
     return resolvePlugin(registry, parsed.id, parsed.version, { channel: options.channel });
   } catch (error) {
     const at = input.lastIndexOf('@');
     const repo = at > 0 ? input.slice(0, at) : input;
-    const version = at > 0 ? input.slice(at + 1) : registry.defaults?.plugin_version || '0.1.0';
-    const match = (registry.plugins || []).find((item) => item.version === version && item.source?.repo === repo);
+    const version = at > 0 ? input.slice(at + 1) : defaultVersion || '0.1.0';
+    const match = (registry.plugins || []).find((item) =>
+      item.source?.repo === repo && (!options.channel || (item.channel || item.release_channel || 'stable') === options.channel));
     if (!match) throw error;
-    return resolvePlugin(registry, match.id, match.version, { channel: options.channel });
+    return resolvePlugin(registry, match.id, version, { channel: options.channel });
   }
 }
 
@@ -303,7 +305,7 @@ async function main() {
 
   if (command === 'resolve') {
     const registry = await loadRegistryFile(catalog);
-    const spec = parsePluginSpec(process.argv[3], registry.defaults?.plugin_version);
+    const spec = parsePluginSpec(process.argv[3], channel ? '*' : registry.defaults?.plugin_version);
     print(resolvePlugin(registry, spec.id, spec.version, { channel }));
     return;
   }
