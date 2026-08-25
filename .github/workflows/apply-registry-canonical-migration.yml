@@ -1,3 +1,4 @@
+# Retry after aligning the test import with the current branch
 name: Apply incremental repository state hardening
 
 on:
