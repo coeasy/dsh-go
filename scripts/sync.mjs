@@ -229,19 +229,64 @@ function applyOverrides(plugin, overrides) {
 
 // ---------- DSH 清单抓取（走 raw 域名，不占 REST 配额） ----------
 // package.json 是包管理元数据，不是 DSH manifest；不能用于覆盖仓库展示名、分类或 verified。
-async function fetchManifest(fullName, branch) {
-  for (const file of MANIFEST_FILES) {
-    const url = `https://raw.githubusercontent.com/${fullName}/${branch}/${file}`;
+export async function observeDshManifest(fullName, branch) {
+  const file = MANIFEST_FILES[0];
+  const url = `https://raw.githubusercontent.com/${fullName}/${branch}/${file}`;
+  let lastError = '';
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' } });
-      if (!res.ok) continue;
-      const data = await res.json();
+      const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' }, signal: AbortSignal.timeout(15000) });
+      if (res.status === 404) return { observed: true, manifest: null, status: 404 };
+      if (!res.ok) {
+        lastError = `HTTP ${res.status}`;
+        if ([403, 429, 500, 502, 503, 504].includes(res.status) && attempt < 2) {
+          await sleep(500 * (attempt + 1));
+          continue;
+        }
+        return { observed: false, manifest: null, status: res.status, error: lastError };
+      }
+      let data;
+      try { data = await res.json(); }
+      catch { return { observed: true, manifest: null, status: res.status, error: 'invalid-json' }; }
       const clean = sanitizeManifest(data);
-      if (!clean) continue;
-      return { file, data: clean };
-    } catch { /* continue */ }
+      return { observed: true, manifest: clean ? { file, data: clean } : null, status: res.status, error: clean ? '' : 'invalid-manifest' };
+    } catch (error) {
+      lastError = error?.message || String(error);
+      if (attempt < 2) { await sleep(500 * (attempt + 1)); continue; }
+    }
   }
-  return null;
+  return { observed: false, manifest: null, status: 0, error: lastError || 'manifest-observation-failed' };
+}
+
+async function fetchManifest(fullName, branch) {
+  const observation = await observeDshManifest(fullName, branch);
+  if (!observation.observed) throw new Error(`DSH manifest observation failed for ${fullName}: ${observation.error || observation.status}`);
+  return observation.manifest;
+}
+
+export function applyManifestObservation(plugin, observation) {
+  const base = normalizeStoredPlugin(plugin);
+  if (!observation?.observed) return base;
+  const manifest = observation.manifest;
+  const result = manifest ? {
+    ...base,
+    name: manifest.data?.name || base.repo_name,
+    description: manifest.data?.description || base.description || '',
+    category: normalizeCategory(manifest.data?.category, base.category || 'other'),
+    tags: dedupeTags([...(manifest.data?.tags || []), ...(base.topics || [])]),
+    metadata_source: 'dsh-plugin',
+    manifest_file: 'dsh-plugin.json',
+    verified: true,
+  } : {
+    ...base,
+    name: base.repo_name,
+    metadata_source: 'github',
+    manifest_file: null,
+    verified: false,
+  };
+  result.install_cmd = makeInstallCmd(result.full_name, result.category);
+  result._manifest_observed = true;
+  return normalizeStoredPlugin(result);
 }
 
 async function fetchReadme(fullName, branch) {

@@ -5,8 +5,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { sha256 } from './checksum.mjs';
-import { buildFeed } from './sync.mjs';
-import { mergeCatalogPluginsWithDiscovery } from './repository-identity.mjs';
+import { applyManifestObservation, buildFeed, observeDshManifest } from './sync.mjs';
+import { canonicalRepoKey, mergeCatalogPluginsWithDiscovery } from './repository-identity.mjs';
 import { buildRegistryV3 } from './registry-v3-builder.mjs';
 import { discoverAllRepositories, discoveryRepoToLegacy } from './github-discovery.mjs';
 import { validateRegistry } from './validate-registry-v3.mjs';
@@ -82,6 +82,47 @@ async function main() {
       if (requireObservation && observations.mode !== 'full') {
         throw new Error('full sync observation sidecar missing or invalid; refusing stale-repository pruning');
       }
+
+      // Legacy REST star buckets cannot enumerate every low-star repository. For records that
+      // were not actually processed by the legacy full pass, observe dsh-plugin.json directly
+      // so complete discovery does not create false-negative verification/name/category data.
+      const observedKeys = new Set((observations.repos || []).map(canonicalRepoKey).filter(Boolean));
+      const observedIds = new Set((observations.repo_ids || []).map((id) => String(id)).filter(Boolean));
+      const legacyKeys = new Set((legacy.plugins || []).map((plugin) => canonicalRepoKey(plugin.full_name)).filter(Boolean));
+      const legacyIds = new Set((legacy.plugins || []).map((plugin) => String(plugin.repo_id || '')).filter(Boolean));
+      const targetIndexes = [];
+      for (let index = 0; index < discoveredPlugins.length; index++) {
+        const plugin = discoveredPlugins[index];
+        const key = canonicalRepoKey(plugin.full_name);
+        const id = String(plugin.repo_id || '');
+        const alreadyObserved = requireObservation
+          ? (observedKeys.has(key) || (id && observedIds.has(id)))
+          : (legacyKeys.has(key) || (id && legacyIds.has(id)));
+        if (!alreadyObserved) targetIndexes.push(index);
+      }
+      if (targetIndexes.length) {
+        const manifestConcurrency = Math.max(1, Math.min(64, Number(process.env.REGISTRY_MANIFEST_CONCURRENCY || 32)));
+        let manifestCursor = 0;
+        let manifestObserved = 0;
+        let manifestUncertain = 0;
+        async function manifestWorker() {
+          while (manifestCursor < targetIndexes.length) {
+            const targetIndex = targetIndexes[manifestCursor++];
+            const plugin = discoveredPlugins[targetIndex];
+            const observation = await observeDshManifest(plugin.full_name, plugin.snapshot_ref || 'HEAD');
+            if (observation.observed) {
+              discoveredPlugins[targetIndex] = applyManifestObservation(plugin, observation);
+              manifestObserved++;
+            } else {
+              manifestUncertain++;
+              console.warn(`[sync-v3] manifest observation uncertain for ${plugin.full_name}: ${observation.error || observation.status}`);
+            }
+          }
+        }
+        await Promise.all(Array.from({ length: Math.min(manifestConcurrency, targetIndexes.length) }, manifestWorker));
+        console.log(`[sync-v3] complete-discovery manifest backfill targets=${targetIndexes.length} observed=${manifestObserved} uncertain=${manifestUncertain}`);
+      }
+
       const merged = mergeCatalogPluginsWithDiscovery(legacy.plugins || [], discoveredPlugins, {
         requireObservation,
         observedRepos: observations.repos || [],

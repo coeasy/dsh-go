@@ -132,29 +132,31 @@ export function applyPluginOverride(plugin, override = {}) {
 }
 
 export function mergeDiscoveredRepository(current, discovered) {
-  if (!current) return normalizeStoredPlugin(discovered);
-  const base = normalizeStoredPlugin(current);
+  const liveManifestObserved = discovered?._manifest_observed === true;
   const live = normalizeStoredPlugin(discovered);
-  const manifestAuthoritative = base.manifest_file === 'dsh-plugin.json';
+  delete live._manifest_observed;
+  if (!current) return live;
+
+  const base = normalizeStoredPlugin(current);
+  const manifestSource = liveManifestObserved ? live : base;
+  const manifestAuthoritative = manifestSource.manifest_file === 'dsh-plugin.json';
   const overrideFields = normalizeOverrideFields(base.override_fields);
   const overrideSet = new Set(overrideFields);
   const hasOverrides = overrideFields.length > 0;
 
   const name = overrideSet.has('name')
     ? (base.name || live.repo_name)
-    : manifestAuthoritative ? (base.name || live.repo_name) : live.repo_name;
+    : manifestAuthoritative ? (manifestSource.name || live.repo_name) : live.repo_name;
   const description = overrideSet.has('description')
     ? (base.description || '')
-    : manifestAuthoritative ? (base.description || live.description || '') : (live.description || '');
+    : manifestAuthoritative ? (manifestSource.description || live.description || '') : (live.description || '');
   const category = normalizePluginCategory(
-    overrideSet.has('category') ? base.category : (manifestAuthoritative ? base.category : live.category),
+    overrideSet.has('category') ? base.category : (manifestAuthoritative ? manifestSource.category : live.category),
     'other',
   );
   const tags = overrideSet.has('tags')
     ? (Array.isArray(base.tags) ? base.tags : [])
-    : manifestAuthoritative ? (Array.isArray(base.tags) ? base.tags : live.tags) : (Array.isArray(live.tags) ? live.tags : []);
-  // dsh-plugin.json does not own the GitHub homepage field. Only an explicit homepage
-  // override may freeze it; otherwise always refresh from live repository metadata.
+    : manifestAuthoritative ? (Array.isArray(manifestSource.tags) ? manifestSource.tags : live.tags) : (Array.isArray(live.tags) ? live.tags : []);
   const homepage = normalizeHttpUrl(overrideSet.has('homepage') ? base.homepage : live.homepage);
 
   const merged = {
@@ -188,6 +190,7 @@ export function mergeDiscoveredRepository(current, discovered) {
   };
   if (hasOverrides) merged.override_fields = overrideFields;
   else delete merged.override_fields;
+  delete merged._manifest_observed;
   return merged;
 }
 

@@ -5,6 +5,7 @@ const {
   mergeCatalogPluginsWithDiscovery, normalizePluginCategory, normalizeStoredPlugin,
 } = await import('../scripts/repository-identity.mjs');
 const { discoveryRepoToLegacy } = await import('../scripts/github-discovery.mjs');
+const { applyManifestObservation } = await import('../scripts/sync.mjs');
 const { auditCatalogIdentity } = await import('../scripts/audit-catalog-identity.mjs');
 
 describe('repository identity', () => {
@@ -117,6 +118,38 @@ describe('repository identity', () => {
     expect(plugin.open_issues).toBe(3);
     expect(plugin.repo_url).toBe('https://github.com/owner/demo');
     expect(plugin.repo_id).toBe('7');
+  });
+
+  it('upgrades and downgrades manifest authority only after an explicit observation', () => {
+    const github: any = { full_name: 'owner/demo', repo_id: '7', name: 'demo', repo_name: 'demo', category: 'tool', topics: ['dsh-plugin'] };
+    const observedManifest: any = applyManifestObservation(github, {
+      observed: true,
+      manifest: { file: 'dsh-plugin.json', data: { name: 'Branded Demo', category: 'mcp', tags: ['custom'] } },
+    });
+    const upgraded = mergeCatalogPluginsWithDiscovery([github], [observedManifest]).plugins[0] as any;
+    expect(upgraded.name).toBe('Branded Demo');
+    expect(upgraded.category).toBe('mcp');
+    expect(upgraded.verified).toBe(true);
+    expect(upgraded.manifest_file).toBe('dsh-plugin.json');
+
+    const observedAbsent: any = applyManifestObservation(observedManifest, { observed: true, manifest: null });
+    const downgraded = mergeCatalogPluginsWithDiscovery([upgraded], [observedAbsent]).plugins[0] as any;
+    expect(downgraded.name).toBe('demo');
+    expect(downgraded.verified).toBe(false);
+    expect(downgraded.manifest_file).toBeNull();
+  });
+
+  it('preserves historical manifest authority when live manifest observation is uncertain', () => {
+    const current: any = {
+      full_name: 'owner/demo', repo_id: '7', name: 'Branded Demo', category: 'mcp', metadata_source: 'dsh-plugin',
+      manifest_file: 'dsh-plugin.json', verified: true, tags: ['custom'],
+    };
+    const live: any = { full_name: 'owner/demo', repo_id: '7', name: 'demo', repo_name: 'demo', category: 'tool', topics: ['dsh-plugin'] };
+    const uncertain: any = applyManifestObservation(live, { observed: false, manifest: null });
+    const merged = mergeCatalogPluginsWithDiscovery([current], [uncertain]).plugins[0] as any;
+    expect(merged.name).toBe('Branded Demo');
+    expect(merged.verified).toBe(true);
+    expect(merged.manifest_file).toBe('dsh-plugin.json');
   });
 
   it('audits wrong repo URLs and install sources', () => {
