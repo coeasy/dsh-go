@@ -6,9 +6,7 @@ export const DEFAULT_PLUGIN_VERSION = '0.1.0';
 const COMMIT_RE = /^[0-9a-f]{40}$/i;
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 
-export function isCommitSha(value) {
-  return COMMIT_RE.test(String(value || ''));
-}
+export function isCommitSha(value) { return COMMIT_RE.test(String(value || '')); }
 
 export function inferRuntimeType(plugin) {
   switch (plugin.category) {
@@ -23,51 +21,30 @@ export function inferCapabilities(plugin) {
   const caps = new Set(['plugin']);
   const runtime = inferRuntimeType(plugin);
   if (runtime !== 'plugin') caps.add(runtime);
-  for (const cap of plugin.capabilities || []) {
-    if (typeof cap === 'string' && cap.trim()) caps.add(cap.trim().toLowerCase());
-  }
+  for (const cap of plugin.capabilities || []) if (typeof cap === 'string' && cap.trim()) caps.add(cap.trim().toLowerCase());
   return [...caps].sort();
 }
 
 export function normalizeLegacyPlugin(plugin) {
   const repo = String(plugin.full_name || plugin.source?.repo || '').trim();
   if (!REPO_RE.test(repo)) return { error: 'invalid repository name' };
-
   const id = String(plugin.id || plugin.slug || repo.replace('/', '-')).trim();
   if (!id) return { error: 'missing plugin id' };
-
   const snapshot = String(plugin.snapshot_commit || '').trim();
-  const ref = String(
-    plugin.snapshot_ref ||
-    plugin.source?.ref ||
-    (!isCommitSha(snapshot) ? snapshot : '') ||
-    'HEAD'
-  ).trim();
-
+  const ref = String(plugin.snapshot_ref || plugin.source?.ref || (!isCommitSha(snapshot) ? snapshot : '') || 'HEAD').trim();
   return { id, repo, ref };
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 async function githubJson(url, token, retries = 4) {
   for (let attempt = 0; attempt < retries; attempt++) {
-    const headers = {
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'dsh-go-registry-v3',
-      'X-GitHub-Api-Version': '2022-11-28',
-    };
+    const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'dsh-go-registry-v3', 'X-GitHub-Api-Version': '2022-11-28' };
     if (token) headers.Authorization = `Bearer ${token}`;
     let response;
-    try {
-      response = await fetch(url, { headers, signal: AbortSignal.timeout(20000) });
-    } catch (error) {
-      if (attempt === retries - 1) throw error;
-      await sleep(1000 * (attempt + 1));
-      continue;
-    }
-    if (response.status === 404) return null;
+    try { response = await fetch(url, { headers, signal: AbortSignal.timeout(20000) }); }
+    catch (error) { if (attempt === retries - 1) throw error; await sleep(1000 * (attempt + 1)); continue; }
+    if ([404, 409, 422].includes(response.status)) return null;
     if (response.ok) return response.json();
     if ([403, 429, 500, 502, 503, 504].includes(response.status) && attempt < retries - 1) {
       const retryAfter = Number(response.headers.get('retry-after') || 0);
@@ -82,11 +59,10 @@ async function githubJson(url, token, retries = 4) {
 }
 
 async function resolveRepositoryCommitRest(repo, ref, token) {
-  const url = `https://api.github.com/repos/${repo}/commits/${encodeURIComponent(ref || 'HEAD')}`;
-  const data = await githubJson(url, token);
+  const data = await githubJson(`https://api.github.com/repos/${repo}/commits/${encodeURIComponent(ref || 'HEAD')}`, token);
   if (!data) return null;
   const commit = String(data.sha || '');
-  if (!isCommitSha(commit)) throw new Error(`invalid commit returned for ${repo}@${ref}`);
+  if (!isCommitSha(commit)) return null;
   return { commit: commit.toLowerCase(), ref };
 }
 
@@ -104,14 +80,8 @@ async function graphqlBatch(entries, token) {
   });
   const query = `query(${declarations.join(',')}){${fields.join(' ')} rateLimit{remaining resetAt cost}}`;
   const response = await fetch('https://api.github.com/graphql', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'User-Agent': 'dsh-go-registry-v3',
-    },
-    body: JSON.stringify({ query, variables }),
-    signal: AbortSignal.timeout(30000),
+    method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'dsh-go-registry-v3' },
+    body: JSON.stringify({ query, variables }), signal: AbortSignal.timeout(30000),
   });
   if (!response.ok) throw new Error(`GitHub GraphQL ${response.status}`);
   const payload = await response.json();
@@ -135,19 +105,12 @@ async function resolveCommits(entries, token) {
         const values = await graphqlBatch(chunk, token);
         values.forEach((value, index) => resolved.set(chunk[index].repo, value));
         continue;
-      } catch (error) {
-        console.warn(`[registry-v3] GraphQL batch failed, falling back to REST for ${chunk.length} repos: ${error.message}`);
-      }
-      for (const entry of chunk) {
-        resolved.set(entry.repo, await resolveRepositoryCommitRest(entry.repo, entry.ref, token));
-      }
+      } catch (error) { console.warn(`[registry-v3] GraphQL batch failed, falling back to REST for ${chunk.length} repos: ${error.message}`); }
+      for (const entry of chunk) resolved.set(entry.repo, await resolveRepositoryCommitRest(entry.repo, entry.ref, token));
     }
     return resolved;
   }
-
-  for (const entry of entries) {
-    resolved.set(entry.repo, await resolveRepositoryCommitRest(entry.repo, entry.ref, token));
-  }
+  for (const entry of entries) resolved.set(entry.repo, await resolveRepositoryCommitRest(entry.repo, entry.ref, token));
   return resolved;
 }
 
@@ -158,35 +121,17 @@ export function buildRegistryPlugin(legacy, normalized, commit) {
     id: normalized.id,
     version,
     source: {
-      provider: 'github',
-      repo: normalized.repo,
-      ref: normalized.ref,
-      commit: commit.toLowerCase(),
-      updated_at: legacy.updated_at || '',
+      provider: 'github', repo: normalized.repo, ref: normalized.ref, commit: commit.toLowerCase(), updated_at: legacy.updated_at || '',
       archive_url: `https://github.com/${normalized.repo}/archive/${commit.toLowerCase()}.tar.gz`,
     },
-    artifact: {
-      kind: 'git-source',
-      algorithm: 'sha256',
-      integrity_scope: 'source-identity',
-      integrity: '',
-    },
-    runtime: {
-      type: runtimeType,
-      activation: 'restart-required',
-    },
+    artifact: { kind: 'git-source', algorithm: 'sha256', integrity_scope: 'source-identity', integrity: '' },
+    runtime: { type: runtimeType, activation: 'restart-required' },
     capabilities: inferCapabilities(legacy),
     dependencies: Array.isArray(legacy.dependencies) ? legacy.dependencies : [],
     metadata: {
-      name: legacy.name || normalized.id,
-      description: legacy.description || '',
-      category: legacy.category || 'other',
-      verified: Boolean(legacy.verified),
-      stars: Number(legacy.stars || 0),
-      rank: Number(legacy.rank || 0),
-      repo_url: legacy.repo_url || `https://github.com/${normalized.repo}`,
-      install_cmd: legacy.install_cmd || '',
-      manifest_file: legacy.manifest_file || null,
+      name: legacy.name || normalized.id, description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),
+      stars: Number(legacy.stars || 0), rank: Number(legacy.rank || 0), repo_url: legacy.repo_url || `https://github.com/${normalized.repo}`,
+      install_cmd: legacy.install_cmd || '', manifest_file: legacy.manifest_file || null,
     },
   };
   record.artifact.integrity = artifactIntegrity(record);
@@ -196,12 +141,7 @@ export function buildRegistryPlugin(legacy, normalized, commit) {
 export async function buildRegistryV3(legacyCatalog, existingRegistry = null, options = {}) {
   const token = options.token || '';
   const preserveExisting = Boolean(options.preserveExisting);
-  const existingByRepo = new Map(
-    (existingRegistry?.plugins || [])
-      .filter((p) => p?.source?.repo)
-      .map((p) => [p.source.repo, p])
-  );
-
+  const existingByRepo = new Map((existingRegistry?.plugins || []).filter((p) => p?.source?.repo).map((p) => [p.source.repo, p]));
   const inputs = [];
   const excluded = [];
   const seenIds = new Set();
@@ -209,53 +149,35 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
 
   for (const legacy of legacyCatalog?.plugins || []) {
     const normalized = normalizeLegacyPlugin(legacy);
-    if (normalized.error) {
-      excluded.push({ repo: legacy?.full_name || '', reason: normalized.error });
-      continue;
-    }
-    if (seenIds.has(normalized.id)) {
-      excluded.push({ repo: normalized.repo, reason: `duplicate id: ${normalized.id}` });
-      continue;
-    }
-    if (seenRepos.has(normalized.repo)) {
-      excluded.push({ repo: normalized.repo, reason: 'duplicate repository' });
-      continue;
-    }
-    seenIds.add(normalized.id);
-    seenRepos.add(normalized.repo);
-    inputs.push({ legacy, normalized });
+    if (normalized.error) { excluded.push({ repo: legacy?.full_name || '', reason: normalized.error }); continue; }
+    if (seenIds.has(normalized.id)) { excluded.push({ repo: normalized.repo, reason: `duplicate id: ${normalized.id}` }); continue; }
+    if (seenRepos.has(normalized.repo)) { excluded.push({ repo: normalized.repo, reason: 'duplicate repository' }); continue; }
+    seenIds.add(normalized.id); seenRepos.add(normalized.repo); inputs.push({ legacy, normalized });
   }
 
   const plugins = [];
   const toResolve = [];
   let reused = 0;
+  let pinnedFromDiscovery = 0;
   let reusedExistingOnly = 0;
 
   for (const input of inputs) {
     const { legacy, normalized } = input;
     const previous = existingByRepo.get(normalized.repo);
-    if (
-      previous &&
-      previous.version === DEFAULT_PLUGIN_VERSION &&
-      isCommitSha(previous.source?.commit) &&
-      previous.artifact?.integrity === artifactIntegrity(previous) &&
-      previous.source?.ref === normalized.ref &&
-      previous.source?.updated_at === (legacy.updated_at || '')
-    ) {
-      plugins.push(previous);
-      reused++;
-    } else {
-      toResolve.push(input);
+    if (previous && previous.version === DEFAULT_PLUGIN_VERSION && isCommitSha(previous.source?.commit) && previous.artifact?.integrity === artifactIntegrity(previous) && previous.source?.ref === normalized.ref && previous.source?.updated_at === (legacy.updated_at || '')) {
+      plugins.push(previous); reused++; continue;
     }
+    const discoveredCommit = String(legacy.snapshot_commit || legacy.source?.commit || '').trim();
+    if (isCommitSha(discoveredCommit)) {
+      plugins.push(buildRegistryPlugin(legacy, normalized, discoveredCommit)); pinnedFromDiscovery++; continue;
+    }
+    toResolve.push(input);
   }
 
   const commitMap = await resolveCommits(toResolve.map(({ normalized }) => normalized), token);
   for (const { legacy, normalized } of toResolve) {
     const resolved = commitMap.get(normalized.repo);
-    if (!resolved) {
-      excluded.push({ repo: normalized.repo, reason: 'repository/ref not found' });
-      continue;
-    }
+    if (!resolved) { excluded.push({ repo: normalized.repo, reason: 'repository/ref has no installable commit' }); continue; }
     normalized.ref = resolved.ref || normalized.ref;
     plugins.push(buildRegistryPlugin(legacy, normalized, resolved.commit));
   }
@@ -265,10 +187,7 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
       const repo = previous?.source?.repo;
       if (!repo || seenRepos.has(repo)) continue;
       if (!isCommitSha(previous.source?.commit) || previous.artifact?.integrity !== artifactIntegrity(previous)) continue;
-      plugins.push(previous);
-      seenRepos.add(repo);
-      seenIds.add(previous.id);
-      reusedExistingOnly++;
+      plugins.push(previous); seenRepos.add(repo); seenIds.add(previous.id); reusedExistingOnly++;
     }
   }
 
@@ -278,28 +197,11 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
     schema_version: SCHEMA_VERSION,
     defaults: { plugin_version: DEFAULT_PLUGIN_VERSION },
     generated: {
-      at: new Date().toISOString(),
-      source_catalog_etag: legacyCatalog?.meta?.etag || '',
-      source_catalog_count: Number(legacyCatalog?.meta?.count ?? legacyCatalog?.plugins?.length ?? 0),
-      count: plugins.length,
-      excluded_count: excluded.length,
-      discovery_mode: options.discoveryMode || 'catalog',
-      discovered_count: Number(options.discoveredCount || 0),
-      content_hash: '',
+      at: new Date().toISOString(), source_catalog_etag: legacyCatalog?.meta?.etag || '', source_catalog_count: Number(legacyCatalog?.meta?.count ?? legacyCatalog?.plugins?.length ?? 0),
+      count: plugins.length, excluded_count: excluded.length, discovery_mode: options.discoveryMode || 'catalog', discovered_count: Number(options.discoveredCount || 0), content_hash: '',
     },
     plugins,
   };
   registry.generated.content_hash = registryContentHash(registry);
-
-  return {
-    registry,
-    stats: {
-      input: inputs.length,
-      output: plugins.length,
-      reused,
-      resolved: toResolve.length - excluded.filter((x) => x.reason === 'repository/ref not found').length,
-      reused_existing_only: reusedExistingOnly,
-      excluded,
-    },
-  };
+  return { registry, stats: { input: inputs.length, output: plugins.length, reused, pinned_from_discovery: pinnedFromDiscovery, resolved: toResolve.length - excluded.filter((x) => x.reason === 'repository/ref has no installable commit').length, reused_existing_only: reusedExistingOnly, excluded } };
 }
