@@ -59,9 +59,15 @@ async function persistInstall(plugin, result) {
   return writeRuntimeRegistry({ ...registry, plugins: [...plugins, recordFor(plugin, result)] });
 }
 
-async function installFromSpec(raw, options) {
-  const sourceRegistry = await loadRegistryFile(options.catalog);
-  const plugin = await loadRuntimePlugin(raw, sourceRegistry);
+async function installResolved(plugin, sourceRegistry, options, visiting = new Set()) {
+  if (visiting.has(plugin.id)) throw new Error('dependency cycle detected at ' + plugin.id);
+  visiting.add(plugin.id);
+  for (const dependency of plugin.dependencies || []) {
+    const dependencyId = typeof dependency === 'string' ? dependency : dependency.id;
+    const dependencyPlugin = await loadRuntimePlugin(dependencyId, sourceRegistry);
+    await installResolved(dependencyPlugin, sourceRegistry, options, visiting);
+  }
+  visiting.delete(plugin.id);
   const result = await installPlugin(plugin, {
     root: options.root,
     force: options.force,
@@ -69,6 +75,12 @@ async function installFromSpec(raw, options) {
   });
   if (!options.dryRun) await persistInstall(plugin, result);
   return result;
+}
+
+async function installFromSpec(raw, options) {
+  const sourceRegistry = await loadRegistryFile(options.catalog);
+  const plugin = await loadRuntimePlugin(raw, sourceRegistry);
+  return installResolved(plugin, sourceRegistry, options);
 }
 
 async function listPlugins() {
@@ -94,8 +106,7 @@ async function updatePlugin(id, version, options) {
   const sourceRegistry = await loadRegistryFile(options.catalog);
   const targetVersion = version || current.version;
   const plugin = resolvePlugin(sourceRegistry, id, targetVersion);
-  const result = await installPlugin(plugin, { root: options.root, force: true, dryRun: options.dryRun });
-  if (!options.dryRun) await persistInstall(plugin, result);
+  const result = await installResolved(plugin, sourceRegistry, { ...options, force: true });
   print({ ...result, updated: true, rollbackAvailable: await pathExists(result.backup) });
 }
 
