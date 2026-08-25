@@ -155,6 +155,8 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
   for (const legacy of legacyCatalog?.plugins || []) {
     const normalized = normalizeLegacyPlugin(legacy);
     if (normalized.error) { excluded.push({ repo: legacy?.full_name || '', reason: normalized.error }); continue; }
+    if (legacy?.disabled) { excluded.push({ repo: normalized.repo, reason: 'repository disabled' }); continue; }
+    if (legacy?.deprecated) { excluded.push({ repo: normalized.repo, reason: 'repository archived/deprecated' }); continue; }
     if (seenIds.has(normalized.id)) { excluded.push({ repo: normalized.repo, reason: `duplicate id: ${normalized.id}` }); continue; }
     const repoKey = canonicalRepoKey(normalized.repo);
     if (seenRepos.has(repoKey)) { excluded.push({ repo: normalized.repo, reason: 'duplicate repository' }); continue; }

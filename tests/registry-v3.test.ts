@@ -76,6 +76,21 @@ describe('Registry V3', () => {
     expect(registry.plugins[0].metadata.repo_url).toBe('https://github.com/owner/new-name');
     expect(registry.plugins[0].artifact.integrity).toBe(artifactIntegrity(registry.plugins[0]));
   });
+  it('excludes archived or disabled repositories from the installable registry', async () => {
+    const commit = '0123456789abcdef0123456789abcdef01234567';
+    const catalog: any = {
+      meta: { etag: 'abc', count: 3 },
+      plugins: [
+        { slug: 'owner-active', full_name: 'owner/active', name: 'active', category: 'tool', snapshot_commit: commit, snapshot_ref: 'main' },
+        { slug: 'owner-archived', full_name: 'owner/archived', name: 'archived', category: 'tool', snapshot_commit: commit, snapshot_ref: 'main', deprecated: true },
+        { slug: 'owner-disabled', full_name: 'owner/disabled', name: 'disabled', category: 'tool', snapshot_commit: commit, snapshot_ref: 'main', disabled: true },
+      ],
+    };
+    const { registry, stats } = await buildRegistryV3(catalog, null, { discoveryMode: 'complete', discoveredCount: 3 });
+    expect(registry.plugins.map((p: any) => p.source.repo)).toEqual(['owner/active']);
+    expect(stats.excluded.some((x: any) => x.reason.includes('archived'))).toBe(true);
+    expect(stats.excluded.some((x: any) => x.reason.includes('disabled'))).toBe(true);
+  });
 });
 
 describe('Runtime resolver', () => {

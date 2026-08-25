@@ -26,6 +26,8 @@ export interface Plugin {
   repo_url: string;
   homepage: string | null;
   verified: boolean;
+  deprecated?: boolean;
+  disabled?: boolean;
   has_readme: boolean;
   readme_excerpt: string;
   rank?: number;
@@ -154,6 +156,7 @@ export function parseQuery(url: URL): Query {
 
 export function filterPlugins(plugins: Plugin[], q: Query): Plugin[] {
   let list = plugins;
+  if (!q.include_deprecated) list = list.filter((p) => !p.deprecated && !p.disabled);
   if (q.category && q.category !== 'all') {
     list = list.filter((p) => p.category === q.category);
   }

@@ -79,11 +79,18 @@ describe('validateCatalog', () => {
     expect(validateCatalog(c).errors.some((e) => e.includes('verified 必须由 dsh-plugin.json'))).toBe(true);
   });
 
-  it('缺少 install_cmd 产生警告而非错误', () => {
+  it('缺少 canonical install_cmd 直接阻断', () => {
     const c = goodCatalog();
     delete (c.plugins[0] as Record<string, unknown>).install_cmd;
-    const { errors, warns } = validateCatalog(c);
-    expect(errors).toEqual([]);
-    expect(warns.some((w) => w.includes('install_cmd'))).toBe(true);
+    expect(validateCatalog(c).errors.some((e) => e.includes('install_cmd 与仓库身份不一致'))).toBe(true);
+  });
+
+  it('拒绝无字段来源的 legacy override 与危险 homepage', () => {
+    const c = goodCatalog();
+    c.plugins[1].metadata_source = 'override';
+    (c.plugins[1] as Record<string, unknown>).homepage = 'javascript:alert(1)';
+    const errors = validateCatalog(c).errors;
+    expect(errors.some((e) => e.includes('override 来源缺少字段级来源'))).toBe(true);
+    expect(errors.some((e) => e.includes('homepage 非法'))).toBe(true);
   });
 });

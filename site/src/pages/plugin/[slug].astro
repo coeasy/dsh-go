@@ -17,7 +17,7 @@ export async function getStaticPaths() {
   } catch { /* 无数据时仅首页可访问 */ }
 
   // 详情页门槛：仅生成 stars >= DETAIL_THRESHOLD 的静态详情页（低星插件只做列表介绍，卡片直接跳 GitHub）
-  const detailed = plugins.filter((p) => p.stars >= DETAIL_THRESHOLD);
+  const detailed = plugins.filter((p) => !p.deprecated && !p.disabled && p.stars >= DETAIL_THRESHOLD);
 
   return detailed.map((p) => {
     const related = detailed
