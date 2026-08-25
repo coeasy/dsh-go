@@ -1,3 +1,4 @@
+# Retry after aligning the legacy slug assertion
 name: Apply catalog liveness boundary hardening
 
 on:
