@@ -21,7 +21,7 @@ import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { applyPluginOverride, canonicalRepoKey, canonicalRepoUrl, discoveryRepoId, makeInstallCmd, normalizeStoredPlugin } from './repository-identity.mjs';
+import { applyPluginOverride, canonicalRepoKey, canonicalRepoUrl, discoveryRepoId, ensureUniquePluginSlugs, findStoredPluginForRepository, makeInstallCmd, normalizeStoredPlugin } from './repository-identity.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -334,8 +334,7 @@ async function fetchRange(query, opts = {}) {
 async function buildPlugin(repo, oldPlugins) {
   const fullName = repo.full_name;
   const repoId = discoveryRepoId(repo);
-  const repoKey = canonicalRepoKey(fullName);
-  const old = oldPlugins.find((p) => (repoId && String(p.repo_id || '') === repoId) || canonicalRepoKey(p.full_name) === repoKey);
+  const old = findStoredPluginForRepository(oldPlugins, repo);
   const manifest = await fetchManifest(fullName, repo.default_branch || 'main');
   const readme = await fetchReadme(fullName, repo.default_branch || 'main');
 
@@ -346,7 +345,7 @@ async function buildPlugin(repo, oldPlugins) {
   const now = new Date().toISOString();
 
   return normalizeStoredPlugin({
-    slug: fullName.replace('/', '-'),
+    slug: base.slug || fullName.replace('/', '-'),
     repo_id: repoId,
     name: manifest?.data?.name || repo.name,
     repo_name: repo.name,
@@ -564,6 +563,10 @@ async function main() {
     plugins = plugins.map((p) => applyOverrides(p, overrides)).filter((p) => !p.hidden);
     log(`应用覆盖层：处理 ${Object.keys(overrides).length} 条，生效后 ${plugins.length} 个（隐藏 ${before - plugins.length} 个）`);
   }
+
+  // Preserve stable ids across renames while repairing the rare case where a new
+  // repository later reuses an old owner/name path and would otherwise collide on slug.
+  plugins = ensureUniquePluginSlugs(plugins, oldPlugins);
 
   // 排序 + trend_score（verified 优先，其次 trend_score，符合方案 §3.1）
   // 先重算 trend_score，再排序，最后赋 rank（保证 rank/API sort=trend 一致）

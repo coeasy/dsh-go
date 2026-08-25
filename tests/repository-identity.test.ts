@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const {
-  applyPluginOverride, canonicalRepoKey, canonicalRepoUrl, discoveryTopics, makeInstallCmd,
+  applyPluginOverride, canonicalRepoKey, canonicalRepoUrl, discoveryTopics, ensureUniquePluginSlugs, findStoredPluginForRepository, makeInstallCmd,
   mergeCatalogPluginsWithDiscovery, normalizePluginCategory, normalizeStoredPlugin,
 } = await import('../scripts/repository-identity.mjs');
 const { discoveryRepoToLegacy } = await import('../scripts/github-discovery.mjs');
@@ -30,13 +30,46 @@ describe('repository identity', () => {
   });
 
   it('uses stable repo ids to reconcile renames and removes stale identity', () => {
-    const current: any = { full_name: 'owner/old-name', repo_id: '42', name: 'old-name', category: 'tool', topics: ['dsh-plugin'] };
+    const current: any = { slug: 'owner-old-name', full_name: 'owner/old-name', repo_id: '42', name: 'old-name', category: 'tool', topics: ['dsh-plugin'] };
     const live: any = { full_name: 'owner/new-name', repo_id: '42', name: 'new-name', repo_name: 'new-name', category: 'tool', topics: ['dsh-plugin'], tags: ['dsh-plugin'], stars: 1, repo_url: 'x' };
     const merged = mergeCatalogPluginsWithDiscovery([current], [live]);
     expect(merged.renamed).toBe(1);
     expect(merged.plugins).toHaveLength(1);
     expect(merged.plugins[0].full_name).toBe('owner/new-name');
     expect(merged.plugins[0].name).toBe('new-name');
+    expect(merged.plugins[0].slug).toBe('owner-old-name');
+  });
+
+  it('treats a reused owner/repo path with a different repo id as a new repository identity', () => {
+    const previous: any = {
+      slug: 'owner-demo', full_name: 'owner/demo', repo_id: '1', name: 'Old Brand', category: 'mcp',
+      metadata_source: 'dsh-plugin', manifest_file: 'dsh-plugin.json', verified: true, tags: ['old'],
+    };
+    const replacement: any = {
+      slug: 'owner-demo', full_name: 'owner/demo', repo_id: '2', repo_name: 'demo', name: 'demo', category: 'tool',
+      metadata_source: 'github', manifest_file: null, verified: false, topics: ['dsh-plugin'], tags: ['dsh-plugin'],
+    };
+    expect(findStoredPluginForRepository([previous], { id: 2, full_name: 'owner/demo' })).toBeNull();
+    const merged = mergeCatalogPluginsWithDiscovery([previous], [replacement]).plugins[0] as any;
+    expect(merged.repo_id).toBe('2');
+    expect(merged.name).toBe('demo');
+    expect(merged.verified).toBe(false);
+    expect(merged.manifest_file).toBeNull();
+  });
+
+  it('keeps stable renamed ids while giving a replacement repository a collision-free slug', () => {
+    const existing: any[] = [{
+      slug: 'owner-old', full_name: 'owner/old', repo_id: '1', name: 'old', category: 'tool', metadata_source: 'github',
+    }];
+    const replacement: any = { slug: 'owner-old', full_name: 'owner/old', repo_id: '2', repo_name: 'old', name: 'old', category: 'tool', metadata_source: 'github' };
+    const renamed: any = { slug: 'owner-new', full_name: 'owner/new', repo_id: '1', repo_name: 'new', name: 'new', category: 'tool', metadata_source: 'github' };
+    const merged = mergeCatalogPluginsWithDiscovery(existing, [replacement, renamed]).plugins as any[];
+    const oldIdentity = merged.find((p: any) => p.repo_id === '1');
+    const newIdentity = merged.find((p: any) => p.repo_id === '2');
+    expect(oldIdentity.slug).toBe('owner-old');
+    expect(newIdentity.slug).not.toBe('owner-old');
+    expect(new Set(merged.map((p: any) => p.slug)).size).toBe(2);
+    expect(ensureUniquePluginSlugs(merged, existing).map((p: any) => p.slug)).toEqual(merged.map((p: any) => p.slug));
   });
 
   it('prunes stale package-only history but keeps explicit manifests and overrides when observation is not required', () => {

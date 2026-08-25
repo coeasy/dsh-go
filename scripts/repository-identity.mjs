@@ -70,6 +70,53 @@ export function discoveryRepoId(repo) {
   return String(id);
 }
 
+function pluginIdentityKey(plugin) {
+  const repoId = plugin?.repo_id ? String(plugin.repo_id) : '';
+  return repoId ? `id:${repoId}` : `repo:${canonicalRepoKey(plugin?.full_name)}`;
+}
+
+export function findStoredPluginForRepository(existingPlugins, repo) {
+  const repoId = discoveryRepoId(repo);
+  const repoKey = canonicalRepoKey(repo?.full_name || repo?.nameWithOwner);
+  if (repoId) {
+    const byId = (existingPlugins || []).find((plugin) => String(plugin?.repo_id || '') === repoId);
+    if (byId) return byId;
+  }
+  const byPath = (existingPlugins || []).find((plugin) => canonicalRepoKey(plugin?.full_name) === repoKey) || null;
+  if (repoId && byPath?.repo_id && String(byPath.repo_id) !== repoId) return null;
+  return byPath;
+}
+
+export function ensureUniquePluginSlugs(plugins, reservedPlugins = []) {
+  const claimed = new Map();
+  // Historical repo_id -> slug ownership wins over discovery order. This preserves a
+  // renamed repository's stable id when a new repository later reuses its old path.
+  for (const raw of reservedPlugins || []) {
+    const slug = String(raw?.slug || '').trim();
+    if (!slug) continue;
+    const key = slug.toLowerCase();
+    if (!claimed.has(key)) claimed.set(key, pluginIdentityKey(raw));
+  }
+  return (plugins || []).map((raw) => {
+    const plugin = { ...raw };
+    const identity = pluginIdentityKey(plugin);
+    const fallback = String(plugin.full_name || '').replace('/', '-');
+    const base = String(plugin.slug || fallback || 'plugin').trim();
+    let candidate = base;
+    let sequence = 2;
+    while (true) {
+      const key = candidate.toLowerCase();
+      const owner = claimed.get(key);
+      if (!owner || owner === identity) {
+        claimed.set(key, identity);
+        plugin.slug = candidate;
+        return plugin;
+      }
+      candidate = plugin.repo_id ? `${base}-${plugin.repo_id}` : `${base}-${sequence++}`;
+    }
+  });
+}
+
 export function normalizeStoredPlugin(plugin) {
   const fullName = String(plugin?.full_name || plugin?.source?.repo || '').trim();
   if (!isValidRepositoryName(fullName)) return { ...plugin };
@@ -196,7 +243,7 @@ export function mergeDiscoveredRepository(current, discovered) {
 
 export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlugins, options = {}) {
   const byKey = new Map();
-  const idToKey = new Map();
+  const existingById = new Map();
   const observationRequired = Boolean(options.requireObservation);
   const observedKeys = new Set((options.observedRepos || []).map(canonicalRepoKey).filter(Boolean));
   const observedIds = new Set((options.observedRepoIds || []).map((id) => String(id)).filter(Boolean));
@@ -206,7 +253,7 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
     const key = canonicalRepoKey(plugin.full_name);
     if (!key) continue;
     byKey.set(key, plugin);
-    if (plugin.repo_id) idToKey.set(String(plugin.repo_id), key);
+    if (plugin.repo_id) existingById.set(String(plugin.repo_id), plugin);
   }
 
   const discoveredKeys = new Set();
@@ -217,15 +264,20 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
     if (!liveKey) continue;
     discoveredKeys.add(liveKey);
     const id = live.repo_id ? String(live.repo_id) : '';
-    const matchedKey = (id && idToKey.get(id)) || (byKey.has(liveKey) ? liveKey : '');
-    const current = matchedKey ? byKey.get(matchedKey) : null;
+    const idCurrent = id ? existingById.get(id) : null;
+    const pathCurrent = byKey.get(liveKey) || null;
+    const pathIdentityCompatible = !id || !pathCurrent?.repo_id || String(pathCurrent.repo_id) === id;
+    const current = idCurrent || (pathIdentityCompatible ? pathCurrent : null);
+    const matchedKey = current ? canonicalRepoKey(current.full_name) : '';
     if (matchedKey && matchedKey !== liveKey) {
-      byKey.delete(matchedKey);
+      const occupant = byKey.get(matchedKey);
+      if (occupant && pluginIdentityKey(occupant) === pluginIdentityKey(current)) byKey.delete(matchedKey);
       renamed++;
     }
+    // Same owner/repo path with a different stable GitHub repository id is a replacement,
+    // not a continuation. Do not inherit historical manifest/override metadata from it.
     const merged = mergeDiscoveredRepository(current, live);
     byKey.set(liveKey, merged);
-    if (id) idToKey.set(id, liveKey);
   }
 
   const plugins = [];
@@ -247,5 +299,5 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
     }
     plugins.push(plugin);
   }
-  return { plugins, renamed, pruned };
+  return { plugins: ensureUniquePluginSlugs(plugins, existingPlugins), renamed, pruned };
 }
