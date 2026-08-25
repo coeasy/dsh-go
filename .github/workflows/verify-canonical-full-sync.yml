@@ -1,4 +1,4 @@
-# Verification revision: resilient discovery + ephemeral observations
+# Final verification: canonical identity + manifest observation + active registry
 name: Verify canonical full sync
 
 on:
@@ -28,8 +28,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SYNC_MODE: full
-          SYNC_CONCURRENCY: "16"
-          REGISTRY_GRAPHQL_PAGE_SIZE: "50"
+          SYNC_CONCURRENCY: "32"
+          REGISTRY_GRAPHQL_PAGE_SIZE: "100"
+          REGISTRY_GRAPHQL_DELAY: "0"
+          REGISTRY_MANIFEST_CONCURRENCY: "48"
         run: node scripts/sync-v3.mjs --full
       - name: Run strict data quality gates
         run: |
@@ -45,12 +47,14 @@ jobs:
           node --input-type=module <<'NODE'
           import { readFile } from 'node:fs/promises';
           const data = JSON.parse(await readFile('catalog/plugins.json', 'utf8'));
+          const registry = JSON.parse(await readFile('catalog/registry-v3.json', 'utf8'));
           const meta = JSON.parse(await readFile('catalog/meta.json', 'utf8'));
           const plugins = data.plugins || [];
           const errors = [];
           const repoKeys = new Set();
           const repoIds = new Set();
           const validCategories = new Set(['web-ui','desktop','mcp','skills','theme','terminal','coding','agent','vision','memory','security','integration','tool','other']);
+          const installableRepos = new Set((registry.plugins || []).map((p) => String(p.source?.repo || '').toLowerCase()));
           for (const p of plugins) {
             const key = String(p.full_name || '').toLowerCase();
             if (repoKeys.has(key)) errors.push(`duplicate repo: ${p.full_name}`);
@@ -67,9 +71,12 @@ jobs:
             if (p.manifest_file && p.manifest_file !== 'dsh-plugin.json') errors.push(`invalid manifest: ${p.full_name}`);
             if (p.verified && p.manifest_file !== 'dsh-plugin.json') errors.push(`false verified: ${p.full_name}`);
             if (p.metadata_source === 'github' && p.name !== repoName) errors.push(`GitHub name mismatch: ${p.full_name} -> ${p.name}`);
+            if (p.metadata_source === 'dsh-plugin' && (!p.verified || p.manifest_file !== 'dsh-plugin.json')) errors.push(`manifest authority mismatch: ${p.full_name}`);
+            if (p.metadata_source === 'override' && (!Array.isArray(p.override_fields) || !p.override_fields.length)) errors.push(`override provenance missing: ${p.full_name}`);
             if (!validCategories.has(p.category)) errors.push(`invalid category: ${p.full_name} -> ${p.category}`);
             if (!String(p.install_cmd || '').includes(`github:${p.full_name}`)) errors.push(`install source mismatch: ${p.full_name}`);
-            if (Object.prototype.hasOwnProperty.call(p, 'observed_at')) errors.push(`transient observed_at leaked: ${p.full_name}`);
+            if (Object.prototype.hasOwnProperty.call(p, '_manifest_observed')) errors.push(`transient manifest marker leaked: ${p.full_name}`);
+            if ((p.deprecated || p.disabled) && installableRepos.has(key)) errors.push(`inactive repo leaked into registry: ${p.full_name}`);
           }
           const ruflo = plugins.find((p) => String(p.full_name).toLowerCase() === 'ruvnet/ruflo');
           if (!ruflo) errors.push('ruvnet/ruflo missing after full sync');
@@ -82,11 +89,23 @@ jobs:
           }
           console.log(JSON.stringify({
             count: plugins.length,
+            active: plugins.filter((p) => !p.deprecated && !p.disabled).length,
+            archived_or_disabled: plugins.filter((p) => p.deprecated || p.disabled).length,
             verified: plugins.filter((p) => p.verified).length,
+            manifest_sources: plugins.filter((p) => p.metadata_source === 'dsh-plugin').length,
+            overrides: plugins.filter((p) => p.metadata_source === 'override').length,
+            registry_count: registry.plugins?.length || 0,
             repo_ids: repoIds.size,
             discovery_transport: meta.registry?.discovery_transport,
             discovered_count: meta.registry?.discovered_count,
-            ruflo,
+            ruflo: {
+              name: ruflo?.name,
+              repo_name: ruflo?.repo_name,
+              repo_url: ruflo?.repo_url,
+              verified: ruflo?.verified,
+              manifest_file: ruflo?.manifest_file,
+              watchers: ruflo?.watchers,
+            },
             errors: errors.slice(0, 100),
           }, null, 2));
           if (errors.length) throw new Error(`canonical identity assertions failed: ${errors.length}`);
