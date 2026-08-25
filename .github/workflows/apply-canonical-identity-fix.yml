@@ -1,5 +1,4 @@
-# Re-run marker: post-manifest-observation-with-discovery-fallback
-name: Validate ephemeral observation sidecar
+name: Validate final identity hardening
 
 on:
   push:
@@ -8,11 +7,10 @@ on:
       - ".github/workflows/apply-canonical-identity-fix.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -23,28 +21,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Replace persistent observation timestamps with post-manifest sidecar
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('scripts/sync.mjs')
-          text = p.read_text()
-          old = "const FEED_FILE = resolve(CATALOG_DIR, 'feed.xml');\n"
-          new = "const FEED_FILE = resolve(CATALOG_DIR, 'feed.xml');\nconst OBSERVED_FILE = resolve(CATALOG_DIR, '.sync-observed.json');\n"
-          if text.count(old) != 1:
-              raise SystemExit('FEED_FILE anchor mismatch')
-          text = text.replace(old, new, 1)
-          old = "    observed_at: now,\n"
-          if text.count(old) != 1:
-              raise SystemExit('observed_at anchor mismatch')
-          text = text.replace(old, '', 1)
-          old = "  await Promise.all(Array.from({ length: CONCURRENCY }, worker));\n  let plugins = results.filter(Boolean);\n"
-          new = "  await Promise.all(Array.from({ length: CONCURRENCY }, worker));\n  let plugins = results.filter(Boolean);\n\n  // The liveness sidecar is derived only from records that passed current collection\n  // rules. For supplementary topics this means dsh-plugin.json was fetched now, so a\n  // repository that removed its manifest cannot inherit a historical verified state.\n  if (mode === 'full') {\n    const observedRepos = [...new Set(plugins.map((plugin) => plugin.full_name).filter(Boolean))];\n    const observedRepoIds = [...new Set(plugins.map((plugin) => String(plugin.repo_id || '')).filter(Boolean))];\n    await writeFile(OBSERVED_FILE, JSON.stringify({ mode: 'full', repos: observedRepos, repo_ids: observedRepoIds }, null, 2) + '\\n');\n    log(`写入临时有效观测集合：repos=${observedRepos.length}, repo_ids=${observedRepoIds.length}`);\n  }\n"
-          if text.count(old) != 1:
-              raise SystemExit('post-worker anchor mismatch')
-          p.write_text(text.replace(old, new, 1))
-          PY
       - name: Verify code and UI
         shell: bash
         run: |
@@ -54,15 +30,11 @@ jobs:
           node --check scripts/sync-v3.mjs
           node --check scripts/github-discovery.mjs
           node --check scripts/repository-identity.mjs
+          node --check scripts/audit-catalog-identity.mjs
+          node --check scripts/registry-v3-builder.mjs
+          node --check scripts/validate.mjs
+          node --check scripts/validate-registry-v3.mjs
           npm run typecheck
           npm run lint
           npm test
           cd site && npm run check && cd ..
-      - name: Commit source change
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- scripts/sync.mjs
-          git commit -m "fix: keep full-sync observations ephemeral"
-          git push
