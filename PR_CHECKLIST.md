@@ -8,6 +8,7 @@
 - [x] GitHub Actions workflow
 - [x] Registry tests
 - [x] Runtime install tests
-- [x] CI started
+- [x] CI workflow started
 - [ ] CI green
+- [ ] PR ready
 - [ ] Merge to main
