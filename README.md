@@ -17,7 +17,7 @@ API调用使用域名：https://dsh-go.pages.dev/
 <!-- HOT-PLUGINS:START -->
 ## 🔥 最近热门推荐（300-5000★）
 
-> 自动生成 · 仅收录**命名含 dsh / deepseek-harness 的 DSH 原生插件**（排除 awesome 盘点型仓库），并固定推荐 modlens / dsh-better-sidebar · 按最近更新排序 · Top20（每次同步后刷新）
+> 自动生成 · 收录** DSH 原生插件**  按最近更新排序 · Top20（每次同步后刷新）
 
 | # | 插件 | ★ Stars | 语言 | 最近更新 | 简介 |
 |---|------|---------|------|----------|------|
