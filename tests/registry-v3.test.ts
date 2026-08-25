@@ -45,7 +45,8 @@ describe('Registry V3', () => {
   it('reuses immutable commit but refreshes renamed repository metadata', async () => {
     const oldLegacy: any = {
       slug: 'owner-stable-id', full_name: 'owner/old-name', repo_id: '42', repo_name: 'old-name', name: 'old-name',
-      category: 'tool', updated_at: '2026-08-25T00:00:00Z', verified: false, manifest_file: null, metadata_source: 'github', stars: 1, rank: 2,
+      category: 'tool', updated_at: '2026-08-25T00:00:00Z', snapshot_ref: 'main', verified: false,
+      manifest_file: null, metadata_source: 'github', stars: 1, rank: 2,
     };
     const previous: any = buildRegistryPlugin(oldLegacy, { id: 'owner-stable-id', repo: 'owner/old-name', ref: 'main' }, commit);
     const existing: any = {
