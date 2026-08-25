@@ -7,6 +7,10 @@ export interface MarketplaceDependency {
   optional?: boolean;
 }
 
+export interface RegistryDependency extends MarketplaceDependency {
+  version?: string;
+}
+
 export interface MarketplaceSource {
   type: 'github' | 'npm' | 'custom';
   url: string;
@@ -58,7 +62,7 @@ export interface RegistryV3Item {
     dsh?: string;
   };
   capabilities?: string[];
-  dependencies?: Array<string | MarketplaceDependency>;
+  dependencies?: Array<string | RegistryDependency>;
   artifact?: {
     integrity?: string;
   };
@@ -84,9 +88,13 @@ function inferItemType(item: RegistryV3Item): MarketplaceItemType {
   return 'plugin';
 }
 
-function normalizeDependency(dependency: string | MarketplaceDependency): MarketplaceDependency {
+function normalizeDependency(dependency: string | RegistryDependency): MarketplaceDependency {
   if (typeof dependency !== 'string') {
-    return { id: dependency.id, range: dependency.range ?? '*', optional: dependency.optional === true };
+    return {
+      id: dependency.id,
+      range: dependency.range ?? dependency.version ?? '*',
+      optional: dependency.optional === true,
+    };
   }
   const at = dependency.lastIndexOf('@');
   return at > 0

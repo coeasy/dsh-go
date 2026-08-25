@@ -2,6 +2,13 @@ import type { Env } from './_lib';
 
 export type EcosystemType = 'plugin' | 'mcp' | 'skill' | 'agent';
 
+export interface RegistryDependency {
+  id: string;
+  range?: string;
+  version?: string;
+  optional?: boolean;
+}
+
 export interface RegistryV3Plugin {
   id: string;
   version: string;
@@ -20,7 +27,7 @@ export interface RegistryV3Plugin {
     activation?: string;
   };
   capabilities?: string[];
-  dependencies?: unknown[];
+  dependencies?: Array<string | RegistryDependency>;
   metadata?: {
     name?: string;
     description?: string;
@@ -62,7 +69,7 @@ export interface EcosystemItem {
   description: string;
   verified: boolean;
   capabilities: string[];
-  dependencies: unknown[];
+  dependencies: Array<string | RegistryDependency>;
   source: RegistryV3Plugin['source'];
   artifact?: RegistryV3Plugin['artifact'];
   metadata: RegistryV3Plugin['metadata'];

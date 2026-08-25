@@ -25,8 +25,6 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
     <link rel="apple-touch-icon" href={u('/favicon.svg')} />
     <link rel="canonical" href={`${SITE}${Astro.url.pathname}`} />
     <meta name="robots" content="index, follow" />
-
-    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="DSH Go" />
     <meta property="og:title" content={title} />
@@ -35,7 +33,6 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
     <meta name="twitter:card" content="summary" />
 
     <style>
-      /* ---------- 设计系统 ---------- */
       :root {
         --bg: #f6f8fb; --bg-soft: #eef2f7; --card: #ffffff; --fg: #0f172a; --muted: #64748b;
         --border: #e2e8f0; --border-strong: #cbd5e1;
@@ -80,7 +77,6 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
         font-variant-numeric: tabular-nums;
         -webkit-font-smoothing: antialiased;
       }
-      /* 顶部渐变光斑背景装饰 */
       body::before {
         content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
         background:
@@ -90,8 +86,6 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
       a { color: var(--accent); text-decoration: none; }
       a:hover { text-decoration: underline; }
       :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-
-      /* ---------- 导航 ---------- */
       header.nav {
         position: sticky; top: 0; z-index: 10;
         background: color-mix(in srgb, var(--bg) 82%, transparent);
@@ -100,15 +94,11 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
       }
       .nav-inner { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
       .brand { font-weight: 800; font-size: 17px; display: flex; align-items: center; gap: 9px; letter-spacing: -.01em; }
-      .brand img { width: 24px; height: 24px; border-radius: 6px; }
+      .brand img { width: 24px; height: 24px; border-radius: 6px; transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
       .brand:hover { text-decoration: none; color: var(--fg); }
       .brand:hover img { transform: rotate(12deg) scale(1.08); }
-      .brand img { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
       .nav-links { display: flex; gap: 4px; margin-left: auto; font-size: 14px; color: var(--muted); align-items: center; }
-      .nav-links a {
-        color: var(--muted); padding: 6px 12px; border-radius: 999px;
-        transition: color .15s, background .15s;
-      }
+      .nav-links a { color: var(--muted); padding: 6px 12px; border-radius: 999px; transition: color .15s, background .15s; }
       .nav-links a:hover { color: var(--fg); background: var(--bg-soft); text-decoration: none; }
       .nav-links a.active { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
       .nav-btn {
@@ -121,24 +111,21 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
       main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 64px; }
       footer {
         border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 20px;
-        text-align: center; color: var(--muted); font-size: 13px;
-        background: var(--bg-soft);
+        text-align: center; color: var(--muted); font-size: 13px; background: var(--bg-soft);
       }
       .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; letter-spacing: .01em; }
       .badge.green { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
       .badge.amber { background: color-mix(in srgb, var(--amber) 15%, transparent); color: var(--amber); }
       .badge.gray { background: color-mix(in srgb, var(--muted) 13%, transparent); color: var(--muted); }
       .badge.grad { background: var(--grad-accent); color: #fff; }
-
-      /* 通用标题渐变 */
       .grad-text {
         background: var(--grad-accent); -webkit-background-clip: text; background-clip: text;
         -webkit-text-fill-color: transparent; color: transparent;
       }
-
-      @media (max-width: 640px) {
-        .nav-links { gap: 0; }
-        .nav-links a { padding: 6px 8px; font-size: 13px; }
+      @media (max-width: 760px) {
+        .nav-inner { align-items: flex-start; flex-wrap: wrap; }
+        .nav-links { width: 100%; margin-left: 0; overflow-x: auto; padding-bottom: 2px; }
+        .nav-links a { padding: 6px 8px; font-size: 13px; white-space: nowrap; }
       }
     </style>
   </head>
@@ -148,6 +135,7 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
         <a class="brand" href={u('/')}><img src={u('/favicon.svg')} alt="logo" />DSH <span class="grad-text">Go</span></a>
         <nav class="nav-links" data-path={Astro.url.pathname.replace(/\/$/, '') || '/'}>
           <a href={u('/')} data-i18n="nav_home" data-nav="/">首页</a>
+          <a href={u('/ecosystem')} data-nav={u('/ecosystem')}>Ecosystem</a>
           <a href={u('/docs')} data-i18n="nav_docs" data-nav={u('/docs')}>API 文档</a>
           <a href={u('/stats')} data-i18n="nav_stats" data-nav={u('/stats')}>统计</a>
           <a href={u('/trending')} data-i18n="nav_trending" data-nav={u('/trending')}>趋势</a>
@@ -157,13 +145,10 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
         </nav>
       </div>
     </header>
-    <main>
-      <slot />
-    </main>
+    <main><slot /></main>
     <footer>
       <span data-i18n="footer" data-api={apiUrl('/api/v1/health')}>DSH Go · 数据每日自动同步自 GitHub topic:dsh-plugin · <a href="/api/v1/health">API 状态</a></span>
     </footer>
-
     <script>
       import { initI18n } from '../scripts/i18n';
       initI18n();

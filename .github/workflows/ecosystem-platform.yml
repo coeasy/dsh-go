@@ -9,8 +9,13 @@ on:
       - 'agents/**'
       - 'profiles/**'
       - 'runtime/v3/**'
+      - 'runtime/loader.mjs'
+      - 'functions/**'
+      - 'site/**'
+      - 'docs/ECOSYSTEM_PLATFORM_V1.md'
       - 'tests/ecosystem-v1/**'
       - 'tests/runtime-v3/**'
+      - 'tests/runtime-platform/activation.test.ts'
       - 'package.json'
       - 'tsconfig.json'
       - '.github/workflows/ecosystem-platform.yml'
@@ -29,7 +34,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install site dependencies
+        run: cd site && npm ci
       - name: Full source typecheck
         run: npm run typecheck
       - name: Full lint
@@ -38,5 +49,7 @@ jobs:
         run: npm run ecosystem:test
       - name: Full regression tests
         run: npm test
+      - name: Site check
+        run: cd site && npm run check
       - name: Registry V3 compatibility
         run: npm run runtime:check
