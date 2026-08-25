@@ -1,11 +1,11 @@
 {
   "last_sync": {
-    "at": "2026-08-25T07:08:49.121Z",
-    "mode": "incremental",
-    "duration_ms": 24950,
-    "scanned": 974,
-    "included": 674,
-    "skipped": 39,
+    "at": "2026-08-25T07:56:30.153Z",
+    "mode": "full",
+    "duration_ms": 252580,
+    "scanned": 4240,
+    "included": 3291,
+    "skipped": 104,
     "data_changed": true,
     "errors": []
   },
@@ -119,32 +119,42 @@
       "skipped": 39,
       "data_changed": true,
       "errors": []
+    },
+    {
+      "at": "2026-08-25T07:56:30.153Z",
+      "mode": "full",
+      "duration_ms": 252580,
+      "scanned": 4240,
+      "included": 3291,
+      "skipped": 104,
+      "data_changed": true,
+      "errors": []
     }
   ],
   "registry_version": 3,
   "registry": {
     "schema_version": "3.0.0",
     "path": "catalog/registry-v3.json",
-    "count": 11605,
-    "excluded_count": 15,
-    "source_catalog_etag": "e9c0a28f822dc94b",
-    "content_hash": "7a58a1df49000e1b4ac6bd055b1be7ce716f293b5bc908bb962991ff26019528",
+    "count": 11634,
+    "excluded_count": 19,
+    "source_catalog_etag": "63d7e14d753a7fa7",
+    "content_hash": "12456207fac491c24dd4c462d30214f3572c30f76e4e7ba412675e488ff7f7ab",
     "schema_hash": "871521a58a5d6ca6e7d0055cfd68275fcd413cc3386e1159954a70de7af8fa1a",
-    "generated_at": "2026-08-25T07:09:15.772Z",
+    "generated_at": "2026-08-25T08:10:10.350Z",
     "discovery_mode": "complete",
     "discovery_transport": "graphql-topic",
-    "discovered_count": 11573
+    "discovered_count": 11621
   },
   "pipeline": {
     "stage": "sync-v3",
     "verified": true,
     "frozen": true,
     "registry_changed": true,
-    "run_at": "2026-08-25T07:09:16.171Z",
-    "source_catalog_etag": "e9c0a28f822dc94b",
-    "mode": "incremental",
-    "input_count": 5921,
-    "output_count": 11605,
-    "excluded_count": 15
+    "run_at": "2026-08-25T08:10:10.819Z",
+    "source_catalog_etag": "63d7e14d753a7fa7",
+    "mode": "full",
+    "input_count": 11653,
+    "output_count": 11634,
+    "excluded_count": 19
   }
 }
