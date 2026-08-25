@@ -161,10 +161,11 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
     if (normalized.error) { excluded.push({ repo: legacy?.full_name || '', reason: normalized.error }); continue; }
     if (legacy?.disabled) { excluded.push({ repo: normalized.repo, reason: 'repository disabled' }); continue; }
     if (legacy?.deprecated) { excluded.push({ repo: normalized.repo, reason: 'repository archived/deprecated' }); continue; }
-    if (seenIds.has(normalized.id)) { excluded.push({ repo: normalized.repo, reason: `duplicate id: ${normalized.id}` }); continue; }
+    const idKey = normalized.id.toLowerCase();
+    if (seenIds.has(idKey)) { excluded.push({ repo: normalized.repo, reason: `duplicate id after case normalization: ${normalized.id}` }); continue; }
     const repoKey = canonicalRepoKey(normalized.repo);
     if (seenRepos.has(repoKey)) { excluded.push({ repo: normalized.repo, reason: 'duplicate repository' }); continue; }
-    seenIds.add(normalized.id); seenRepos.add(repoKey); inputs.push({ legacy, normalized });
+    seenIds.add(idKey); seenRepos.add(repoKey); inputs.push({ legacy, normalized });
   }
 
   const plugins = [];

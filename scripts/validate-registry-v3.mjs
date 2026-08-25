@@ -27,9 +27,11 @@ export function validateRegistry(data) {
   const repos = new Set();
   for (const plugin of data.plugins) {
     const id = String(plugin?.id || '');
+    const idKey = id.toLowerCase();
     if (!id) errors.push('plugin missing id');
-    if (ids.has(id)) errors.push(`duplicate id: ${id}`);
-    ids.add(id);
+    else if (!/^[A-Za-z0-9_.-]+$/.test(id)) errors.push(`invalid id: ${id}`);
+    if (ids.has(idKey)) errors.push(`duplicate id after case normalization: ${id}`);
+    ids.add(idKey);
 
     if (plugin?.version !== DEFAULT_PLUGIN_VERSION) errors.push(`${id}: version must be ${DEFAULT_PLUGIN_VERSION}`);
     const repo = String(plugin?.source?.repo || '');

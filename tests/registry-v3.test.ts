@@ -100,6 +100,35 @@ describe('Registry V3', () => {
     expect(validateRegistry(registry).errors).toEqual([]);
   });
 
+  it('deduplicates registry ids case-insensitively during migration', async () => {
+    const commit = '0123456789abcdef0123456789abcdef01234567';
+    const catalog: any = {
+      meta: { etag: 'case-id', count: 2 },
+      plugins: [
+        { slug: 'Owner-Demo', full_name: 'owner/demo-one', name: 'demo-one', category: 'tool', snapshot_commit: commit, snapshot_ref: 'main' },
+        { slug: 'owner-demo', full_name: 'owner/demo-two', name: 'demo-two', category: 'tool', snapshot_commit: commit, snapshot_ref: 'main' },
+      ],
+    };
+    const { registry, stats } = await buildRegistryV3(catalog, null, { discoveryMode: 'complete', discoveredCount: 2 });
+    expect(registry.plugins).toHaveLength(1);
+    expect(stats.excluded.some((x: any) => x.reason.includes('duplicate id after case normalization'))).toBe(true);
+  });
+
+  it('validator rejects unsafe or case-colliding ids', () => {
+    const plugin: any = buildRegistryPlugin(legacy, { id: 'owner-demo', repo: 'owner/demo', ref: 'main' }, commit);
+    const duplicate: any = buildRegistryPlugin({ ...legacy, full_name: 'owner/demo-two' }, { id: 'OWNER-DEMO', repo: 'owner/demo-two', ref: 'main' }, commit);
+    const registry: any = {
+      registry_version: 3, schema_version: '3.0.0', defaults: { plugin_version: '0.1.0' },
+      generated: { at: new Date().toISOString(), source_catalog_etag: 'abc', source_catalog_count: 2, count: 2, excluded_count: 0, discovery_mode: 'complete', discovered_count: 2, content_hash: '' },
+      plugins: [plugin, duplicate],
+    };
+    registry.generated.content_hash = registryContentHash(registry);
+    expect(validateRegistry(registry).errors.some((e: string) => e.includes('duplicate id after case normalization'))).toBe(true);
+    registry.plugins[1].id = '../bad';
+    registry.generated.content_hash = registryContentHash(registry);
+    expect(validateRegistry(registry).errors.some((e: string) => e.includes('invalid id'))).toBe(true);
+  });
+
   it('excludes archived or disabled repositories from the installable registry', async () => {
     const commit = '0123456789abcdef0123456789abcdef01234567';
     const catalog: any = {
