@@ -10,7 +10,7 @@ const COMMIT_RE = /^[0-9a-f]{40}$/i;
 export function verifyResolvedPlugin(plugin) {
   const errors = [];
   if (!plugin?.id) errors.push('missing id');
-  if (plugin?.version !== '0.1.0') errors.push('version must be 0.1.0');
+  if (!/^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/.test(plugin?.version || '')) errors.push('invalid version');
   if (!plugin?.repo || !plugin.repo.includes('/')) errors.push('invalid repository');
   if (!COMMIT_RE.test(plugin?.commit || '')) errors.push('invalid commit');
 
