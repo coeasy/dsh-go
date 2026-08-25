@@ -1,6 +1,6 @@
 # CI Status
 
-Registry V3 CI workflow enabled.
+Registry V3 CI pipeline is configured.
 
 Checks:
 
@@ -10,5 +10,6 @@ Checks:
 
 Current state:
 
-- Workflow dispatched
-- Waiting for GitHub Actions completion before merge
+- Workflow running
+- Waiting for completion
+- Merge blocked until CI passes
