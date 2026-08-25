@@ -1,7 +1,13 @@
 import { access, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { defaultPluginHome } from './installer.mjs';
-import { getRuntimePlugin, readRuntimeRegistry } from './registry.mjs';
+import { activatePlugin } from './platform.mjs';
+import {
+  getRuntimePlugin,
+  readRuntimeRegistry,
+  upsertRuntimePlugin,
+  writeRuntimeRegistry,
+} from './registry.mjs';
 import { readInstallLock, verifyInstalledCommit } from './verifier.mjs';
 
 async function exists(path) {
@@ -15,13 +21,17 @@ async function exists(path) {
 
 export async function loadInstalledPlugin(id, options = {}) {
   if (!/^[A-Za-z0-9_.-]+$/.test(id)) throw new Error(`unsafe plugin id: ${id}`);
-  const runtimeRegistry = await readRuntimeRegistry();
+  const runtimeRegistry = await readRuntimeRegistry(options.registryFile);
   const runtimeRecord = getRuntimePlugin(runtimeRegistry, id, { includeRemoved: true });
   if (runtimeRecord?.state === 'removed') throw new Error(`plugin is removed: ${id}`);
   if (runtimeRecord?.enabled === false || runtimeRecord?.state === 'disabled') throw new Error(`plugin is disabled: ${id}`);
 
   const root = resolve(options.root || defaultPluginHome());
-  const target = join(root, id);
+  const target = options.root
+    ? join(root, id)
+    : runtimeRecord?.path
+      ? resolve(runtimeRecord.path)
+      : join(root, id);
   const lock = await readInstallLock(target);
   if (lock.id !== id) throw new Error(`install lock id mismatch: expected ${id}, got ${lock.id}`);
   if (options.version && lock.version !== options.version) throw new Error(`installed version mismatch: expected ${options.version}, got ${lock.version}`);
@@ -37,10 +47,20 @@ export async function loadInstalledPlugin(id, options = {}) {
       break;
     }
   }
+
+  let activatedRecord = runtimeRecord;
+  if (runtimeRecord) {
+    activatedRecord = activatePlugin(runtimeRecord);
+    await writeRuntimeRegistry(
+      upsertRuntimePlugin(runtimeRegistry, activatedRecord),
+      options.registryFile,
+    );
+  }
+
   return {
     id: lock.id,
     version: lock.version,
-    channel: lock.channel || runtimeRecord?.channel || 'stable',
+    channel: lock.channel || activatedRecord?.channel || 'stable',
     target,
     commit: lock.source.commit,
     runtime: lock.runtime,
@@ -48,7 +68,7 @@ export async function loadInstalledPlugin(id, options = {}) {
     manifest_file: manifestFile,
     manifest,
     activation: 'active',
-    restart_required: false,
-    message: 'Plugin source is installed and verified for runtime activation.',
+    restart_required: activatedRecord?.restart_required ?? false,
+    message: 'Plugin source is installed, verified, and activated by the client startup loader.',
   };
 }
