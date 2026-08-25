@@ -110,7 +110,8 @@ async function updatePlugin(id, version, options) {
   const sourceRegistry = await loadRegistryFile(options.catalog);
   const targetVersion = version || current.version;
   const plugin = resolvePlugin(sourceRegistry, id, targetVersion);
-  const installRoot = options.root || (current.path ? dirname(current.path) : undefined);\n  const result = await installResolved(plugin, sourceRegistry, { ...options, root: installRoot, force: true });
+  const installRoot = options.root || (current.path ? dirname(current.path) : undefined);
+  const result = await installResolved(plugin, sourceRegistry, { ...options, root: installRoot, force: true });
   print({ ...result, updated: true, rollbackAvailable: await pathExists(result.backup) });
 }
 
