@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 25 Aug 2026 09:17:49 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 25 Aug 2026 09:46:36 GMT</lastBuildDate>
     <item>
       <title>🆕 @deepseek-ai/dsh-root</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
@@ -16,8 +16,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-08-25T08:51:26Z</guid>
-      <pubDate>Tue, 25 Aug 2026 08:51:26 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-08-25T09:43:10Z</guid>
+      <pubDate>Tue, 25 Aug 2026 09:43:10 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -30,8 +30,8 @@
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/amruthpillai/reactive-resume</link>
-      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-08-24T19:50:35Z</guid>
-      <pubDate>Mon, 24 Aug 2026 19:50:35 GMT</pubDate>
+      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-08-25T09:35:29Z</guid>
+      <pubDate>Tue, 25 Aug 2026 09:35:29 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://rxresu.me&quot; &lt;img src=&quot;apps/web/public/opengraph/banner.jpg&quot; alt=&quot;Reactive Resume&quot; / &lt;/a &lt;h1 Reactive Resume&l</description>
     </item>
     <item>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 deepseek-harness-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-08-25T08:55:30Z</guid>
-      <pubDate>Tue, 25 Aug 2026 08:55:30 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-08-25T09:34:03Z</guid>
+      <pubDate>Tue, 25 Aug 2026 09:34:03 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; DSH Desktop&lt;/h1 &lt;p align=&quot;center&quot; &lt;strong 基于 DeepSeek Harness 构建的 Windows 和 macOS 开源桌面客户端。&lt;/strong &lt;br 一键下载，开箱即用。&lt;br 万物皆「插件」，桌面本身也是「插件」。 &lt</description>
     </item>
     <item>
@@ -100,8 +100,8 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-08-25T08:46:10Z</guid>
-      <pubDate>Tue, 25 Aug 2026 08:46:10 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-08-25T09:21:01Z</guid>
+      <pubDate>Tue, 25 Aug 2026 09:21:01 GMT</pubDate>
       <description>dsh web · DeepSeek Harness（DSH）Web GUI 插件聚合生态包 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/dsh web banner.png&quot; alt=&quot;dsh web&quot; width=&quot;100%&quot; &lt;/p &lt;p ali</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 @ipollo/ipollowork-workspace</title>
       <link>https://github.com/Devin-AXIS/iPolloWork</link>
-      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-08-25T07:51:51Z</guid>
-      <pubDate>Tue, 25 Aug 2026 07:51:51 GMT</pubDate>
+      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-08-25T09:43:19Z</guid>
+      <pubDate>Tue, 25 Aug 2026 09:43:19 GMT</pubDate>
       <description>iPolloWork &lt;p align=&quot;center&quot; English · &lt;a href=&quot;./docs/translations/README ZH.md&quot; 简体中文&lt;/a · &lt;a href=&quot;./docs/translations/README ZH hk.md&quot; 繁體中文&lt;/a · &lt;a h</description>
     </item>
     <item>
@@ -156,15 +156,15 @@
     <item>
       <title>🆕 codex-taskboard</title>
       <link>https://github.com/chuspeeism/dashi-taskboard</link>
-      <guid isPermaLink="false">chuspeeism/dashi-taskboard@2026-08-25T09:14:47Z</guid>
-      <pubDate>Tue, 25 Aug 2026 09:14:47 GMT</pubDate>
+      <guid isPermaLink="false">chuspeeism/dashi-taskboard@2026-08-25T09:18:27Z</guid>
+      <pubDate>Tue, 25 Aug 2026 09:18:27 GMT</pubDate>
       <description>English 简体中文 Codex Taskboard A local first issue board that runs in a browser and can be embedded in Codex through the standalone CDP launcher or its injection script. The same HTTP API powers the Rea</description>
     </item>
     <item>
       <title>🆕 @deepseek-harness-tui/dsh-tui</title>
       <link>https://github.com/ccch1mneyyy/dsh-TUI</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-TUI@2026-08-25T09:04:02Z</guid>
-      <pubDate>Tue, 25 Aug 2026 09:04:02 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-TUI@2026-08-25T09:39:59Z</guid>
+      <pubDate>Tue, 25 Aug 2026 09:39:59 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/logo.svg&quot; alt=&quot;dsh TUI DeepSeek Harness terminal interface&quot; width=&quot;560&quot; &lt;/p &lt;p align=&quot;center&quot; &lt;</description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 BitFun</title>
       <link>https://github.com/GCWing/BitFun</link>
-      <guid isPermaLink="false">GCWing/BitFun@2026-08-25T09:08:03Z</guid>
-      <pubDate>Tue, 25 Aug 2026 09:08:03 GMT</pubDate>
+      <guid isPermaLink="false">GCWing/BitFun@2026-08-25T09:29:34Z</guid>
+      <pubDate>Tue, 25 Aug 2026 09:29:34 GMT</pubDate>
       <description>English 中文 &lt;div align=&quot;center&quot; A desktop AI agent that turns every task into an app you can open Writes code, produces documents, and drives the desktop — with Mini Apps, a Rust runtime, </description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 deepseek-harness-desktop</title>
       <link>https://github.com/dsh-tauri-desk/deepseek-harness-desktop</link>
-      <guid isPermaLink="false">dsh-tauri-desk/deepseek-harness-desktop@2026-08-25T09:02:07Z</guid>
-      <pubDate>Tue, 25 Aug 2026 09:02:07 GMT</pubDate>
+      <guid isPermaLink="false">dsh-tauri-desk/deepseek-harness-desktop@2026-08-25T09:43:12Z</guid>
+      <pubDate>Tue, 25 Aug 2026 09:43:12 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://github.com/hairyf/deepseek harness desktop&quot; &lt;img src=&quot;public/favicon.svg&quot; width=&quot;96&quot; alt=&quot;DeepSeek Harness Desk</description>
     </item>
     <item>
