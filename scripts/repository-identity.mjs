@@ -140,7 +140,10 @@ export function mergeDiscoveredRepository(current, discovered) {
 export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlugins, options = {}) {
   const byKey = new Map();
   const idToKey = new Map();
-  const freshAfter = Number(options.freshAfter || 0);
+  const observationRequired = Boolean(options.requireObservation);
+  const observedKeys = new Set((options.observedRepos || []).map(canonicalRepoKey).filter(Boolean));
+  const observedIds = new Set((options.observedRepoIds || []).map((id) => String(id)).filter(Boolean));
+
   for (const raw of existingPlugins || []) {
     const plugin = normalizeStoredPlugin(raw);
     const key = canonicalRepoKey(plugin.full_name);
@@ -174,13 +177,13 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
     const discovered = discoveredKeys.has(key);
     const manifestAuthoritative = plugin.manifest_file === 'dsh-plugin.json';
     const manualOverride = plugin.metadata_source === 'override';
-    const observedAt = Date.parse(plugin.observed_at || '');
-    const observedThisRun = freshAfter <= 0 || (Number.isFinite(observedAt) && observedAt >= freshAfter);
+    const repoId = plugin.repo_id ? String(plugin.repo_id) : '';
+    const observedThisRun = !observationRequired || observedKeys.has(key) || (repoId && observedIds.has(repoId));
 
     // Complete topic discovery is authoritative for ordinary GitHub-sourced records.
     // Supplementary-source records must have an explicit DSH manifest and must have
-    // been observed during the current full sync. This removes deleted/moved/stale
-    // historical records instead of retaining dead repository URLs forever.
+    // been observed during the current full legacy discovery. The observation set is
+    // ephemeral, so liveness checks do not create deploy-worthy catalog churn.
     if (!discovered && !manualOverride && (!manifestAuthoritative || !observedThisRun)) {
       pruned++;
       continue;
