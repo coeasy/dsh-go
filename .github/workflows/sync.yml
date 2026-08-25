@@ -2,9 +2,7 @@ name: Sync Plugins
 
 on:
   schedule:
-    # 全量同步：每日北京时间 08:18（UTC 00:18）
     - cron: "18 0 * * *"
-    # 增量同步：每 6 小时，北京时间 14:18 / 20:18 / 02:18
     - cron: "18 6 * * *"
     - cron: "18 12 * * *"
     - cron: "18 18 * * *"
@@ -15,8 +13,6 @@ on:
         type: choice
         default: full
         options: [full, incremental]
-  repository_dispatch:
-    types: [sync-plugins]
 
 permissions:
   contents: write
@@ -28,85 +24,36 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    # 全量 1 万+ 仓库需搜索(15 req) + 多主题分桶(约 +15 req) + 并发抓取；放宽以避免中途超时
     timeout-minutes: 90
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Resolve sync mode
-        id: mode
-        run: |
-          MODE="${{ github.event.inputs.mode || 'incremental' }}"
-          if [ "${{ github.event_name }}" = "schedule" ] && [ "${{ github.event.schedule }}" = "18 0 * * *" ]; then
-            MODE="full"
-          fi
-          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            MODE="${{ github.event.client_payload.mode || 'full' }}"
-          fi
-          echo "mode=$MODE" >> $GITHUB_OUTPUT
-          echo "同步模式: $MODE"
-
-      - name: Sync plugin data
+      - name: Sync V3 pipeline
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SYNC_MODE: ${{ steps.mode.outputs.mode }}
-          SYNC_CONCURRENCY: "16"
-        run: node scripts/sync.mjs
+          SYNC_MODE: ${{ github.event.inputs.mode || 'incremental' }}
+        run: |
+          node scripts/sync-v3.mjs
+          node scripts/registry-pipeline-v3.mjs
 
-      - name: Validate catalog (gate)
-        run: node scripts/validate.mjs
+      - name: Validate Registry V3
+        run: node scripts/validate-registry-v3.mjs
 
-      - name: Update README hot recommendations
+      - name: Update README
         run: node scripts/update-readme.mjs
 
-      - name: Detect data changes
-        id: diff
+      - name: Commit
         run: |
-          # 只看数据文件是否变化（meta.json 每次心跳都会更新，不做判定依据）
-          if ! git diff --quiet catalog/plugins.json catalog/feed.xml; then
-            echo "data_changed=true" >> $GITHUB_OUTPUT
-            echo "插件数据有变化，将触发部署"
-          else
-            echo "data_changed=false" >> $GITHUB_OUTPUT
-            echo "插件数据无变化（仅 meta 心跳）"
-          fi
-
-      - name: Commit & push
-        run: |
-          # catalog（含 meta 心跳）与 README 有任何变化就提交；无变化则完全跳过
-          if git diff --quiet catalog/ README.md; then
-            echo "catalog / README 均无变化，跳过提交"
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add catalog/ README.md
-          if [ "${{ steps.diff.outputs.data_changed }}" = "true" ]; then
-            COUNT=$(node -p "require('./catalog/plugins.json').meta.count")
-            MSG="chore(sync): 更新插件目录 (${COUNT} 个插件, ${{ steps.mode.outputs.mode }})"
-          else
-            # 心跳提交：数据未变，打 [no deploy] 标记，由 deploy.yml 跳过部署
-            MSG="chore(sync): 心跳 [no deploy]"
-          fi
-          git commit -m "$MSG"
-          # push 失败多为并发 push 冲突，pull --rebase 后重试一次
-          git push || { echo "初次 push 失败，rebase 后重试"; git pull --rebase; git push; }
-
-      - name: Summary
-        if: always()
-        run: |
-          echo "### 同步报告 (${{ steps.mode.outputs.mode || 'n/a' }})" >> $GITHUB_STEP_SUMMARY
-          if [ -f catalog/meta.json ]; then
-            node -e "const m=require('./catalog/meta.json');console.log('- 时间: '+m.last_sync.at+'\n- 收录: '+m.last_sync.included+' / 扫描: '+m.last_sync.scanned+'\n- 跳过: '+m.last_sync.skipped)" >> $GITHUB_STEP_SUMMARY
-          fi
+          git add catalog README.md
+          git diff --cached --quiet || git commit -m "chore(sync): registry v3 update"
+          git push || true
