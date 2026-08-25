@@ -27,7 +27,7 @@ describe('Sync V3 -> deploy closure', () => {
   it('gates deployed Registry V3 against the latest main registry', () => {
     const monitor = workflow('monitor.yml');
 
-    expect(monitor).toContain('uses: actions/checkout@v4');
+    expect(monitor).toContain('uses: actions/checkout@v7');
     expect(monitor).toContain('ref: main');
     expect(monitor).toContain('MAIN_HASH=');
     expect(monitor).toContain('MAIN_COUNT=');
