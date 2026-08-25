@@ -1,22 +1,24 @@
-import { execFile } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
 
-const exec = promisify(execFile);
 const { artifactIntegrity } = await import('../../scripts/checksum.mjs');
 const { checkRuntimeHealth } = await import('../../runtime/health.mjs');
 const { installPlugin } = await import('../../runtime/installer.mjs');
 const { rollbackInstalledPath } = await import('../../runtime/rollback.mjs');
 const { readInstallLock } = await import('../../runtime/verifier.mjs');
 
+function git(repo: string, args: string[]) {
+  return execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim();
+}
+
 async function commitFixture(repo: string, version: string) {
   await writeFile(join(repo, 'package.json'), JSON.stringify({ name: 'fixture-plugin', version }, null, 2));
-  await exec('git', ['add', 'package.json'], { cwd: repo });
-  await exec('git', ['commit', '-m', `fixture ${version}`], { cwd: repo });
-  return (await exec('git', ['rev-parse', 'HEAD'], { cwd: repo })).stdout.trim();
+  git(repo, ['add', 'package.json']);
+  git(repo, ['commit', '-m', `fixture ${version}`]);
+  return git(repo, ['rev-parse', 'HEAD']);
 }
 
 function resolved(version: string, commit: string) {
@@ -41,9 +43,9 @@ describe('Runtime Platform V2 install/update/health/rollback E2E', () => {
   it('uses a real local git repository and atomic backup recovery', async () => {
     const fixture = await mkdtemp(join(tmpdir(), 'dsh-fixture-'));
     const root = await mkdtemp(join(tmpdir(), 'dsh-runtime-'));
-    await exec('git', ['init', '-q'], { cwd: fixture });
-    await exec('git', ['config', 'user.email', 'runtime@test.local'], { cwd: fixture });
-    await exec('git', ['config', 'user.name', 'Runtime Test'], { cwd: fixture });
+    git(fixture, ['init', '-q']);
+    git(fixture, ['config', 'user.email', 'runtime@test.local']);
+    git(fixture, ['config', 'user.name', 'Runtime Test']);
 
     const firstCommit = await commitFixture(fixture, '0.1.0');
     const first = resolved('0.1.0', firstCommit);
