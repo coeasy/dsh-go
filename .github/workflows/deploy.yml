@@ -3,16 +3,12 @@ name: Deploy
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "**.md"
-      - "LICENSE"
   workflow_dispatch:
 
 permissions:
   contents: read
   deployments: write
 
-# 连续推送只跑最新一次，避免并行部署互相覆盖
 concurrency:
   group: deploy
   cancel-in-progress: true
@@ -20,48 +16,33 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    # 心跳提交（sync 打 [no deploy]）跳过部署；手动/dispatch 不受影响
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
+    timeout-minutes: 30
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          # 根 + site 两份 lockfile 都缓存
-          cache-dependency-path: |
-            package-lock.json
-            site/package-lock.json
 
-      - name: Install dependencies (root + site)
-        # 必须先装 site 依赖：tests/i18n.test.ts 导入 site/src/i18n/dict.ts，
-        # vitest(esbuild) 会就近解析 site/tsconfig.json 的 extends "astro/tsconfigs/base"
+      - run: npm ci
+
+      - name: Deploy Gate V3
+        run: node scripts/deploy-gate-v3.mjs
+
+      - name: Install site dependencies
+        run: cd site && npm ci
+
+      - name: Build
         run: |
-          npm ci
-          cd site && npm ci
+          node scripts/copy-assets.mjs
+          cd site && npm run build
 
-      - name: Run checks
-        run: |
-          npm run typecheck
-          npm test
-
-      - name: Copy catalog into site (API 数据源 + 静态下载)
-        run: node scripts/copy-assets.mjs
-
-      - name: Build site
-        run: cd site && npm run build
-
-      - name: Verify build output
+      - name: Verify build
         run: |
           test -f site/dist/index.html
           test -f site/dist/catalog/plugins.json
-          echo "构建产物校验通过"
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
