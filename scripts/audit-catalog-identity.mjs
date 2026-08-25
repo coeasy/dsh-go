@@ -26,6 +26,7 @@ export function auditCatalogIdentity(data) {
     if (plugin.verified && plugin.manifest_file !== 'dsh-plugin.json') errors.push(`${label}: verified without dsh-plugin.json`);
     if (plugin.metadata_source === 'github' && plugin.name !== repoName) errors.push(`${label}: GitHub-sourced name mismatch (${plugin.name})`);
     if (plugin.repo_url?.startsWith('https://api.github.com/')) errors.push(`${label}: GitHub API URL exposed as repository URL`);
+    if (Object.prototype.hasOwnProperty.call(plugin, 'observed_at')) errors.push(`${label}: transient observed_at leaked into persisted catalog`);
   }
   return { errors, count: data?.plugins?.length || 0 };
 }
