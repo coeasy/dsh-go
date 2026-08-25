@@ -30,6 +30,14 @@ function runNode(args, env = process.env) {
 async function writeJsonAtomic(file, value) { const temp = `${file}.tmp-${process.pid}`; await writeFile(temp, JSON.stringify(value, null, 2) + '\n', 'utf8'); await rename(temp, file); }
 function parseMode() { if (process.argv.includes('--full')) return 'full'; if (process.argv.includes('--incremental')) return 'incremental'; return process.env.SYNC_MODE === 'full' ? 'full' : 'incremental'; }
 
+export function observationWindowStart(meta) {
+  const finishedAt = Date.parse(meta?.last_sync?.at || '');
+  const durationMs = Number(meta?.last_sync?.duration_ms || 0);
+  if (!Number.isFinite(finishedAt)) return 0;
+  // Small clock/serialization tolerance ensures records stamped at worker start are included.
+  return finishedAt - Math.max(0, durationMs) - 5000;
+}
+
 function rebuildLegacyCatalog(source, plugins) {
   const now = Date.now();
   for (const plugin of plugins) {
@@ -60,6 +68,7 @@ async function main() {
   let legacy = await readJson(LEGACY_FILE);
   if (!legacy?.plugins?.length) throw new Error('legacy catalog is empty; refusing to build Registry V3');
   const existing = await readJson(REGISTRY_FILE, null);
+  const syncMeta = await readJson(META_FILE, { last_sync: null });
   const needsCompleteDiscovery = mode === 'full' || !existing || existing.generated?.discovery_mode !== 'complete';
   let registryCatalog = legacy;
   let discoveryMode = existing?.generated?.discovery_mode || 'catalog';
@@ -73,7 +82,8 @@ async function main() {
     discoveryMode = 'complete';
     discoveryTransport = discovery.transport || 'unknown';
     const discoveredPlugins = discovery.repositories.map(discoveryRepoToLegacy).filter((plugin) => plugin.full_name && !plugin.disabled);
-    const merged = mergeCatalogPluginsWithDiscovery(legacy.plugins || [], discoveredPlugins);
+    const freshAfter = !registryOnly && mode === 'full' ? observationWindowStart(syncMeta) : 0;
+    const merged = mergeCatalogPluginsWithDiscovery(legacy.plugins || [], discoveredPlugins, { freshAfter });
     const canonicalLegacy = rebuildLegacyCatalog(legacy, merged.plugins);
     const legacyChanged = JSON.stringify(canonicalLegacy.plugins) !== JSON.stringify(legacy.plugins || []);
     if (legacyChanged) {
@@ -93,7 +103,7 @@ async function main() {
 
   const validation = validateRegistry(candidate);
   if (validation.errors.length) { validation.errors.slice(0, 50).forEach((error) => console.error('[REGISTRY ERROR]', error)); throw new Error(`Registry V3 validation failed with ${validation.errors.length} error(s)`); }
-  validation.warns.slice(0, 50).forEach((warning) => console.warn('[REGISTRY WARN]', warning));
+  validation.warns.slice(0, 50).forEach((warning) => console.warn(`[REGISTRY WARN] ${warning}`));
 
   const unchanged = existing?.generated?.content_hash === candidate.generated.content_hash;
   let published = candidate;
