@@ -2,9 +2,6 @@
 
 DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。
 
-[![Deploy](https://github.com/coeasy/dsh_go/actions/workflows/deploy.yml/badge.svg)](https://github.com/coeasy/dsh_go/actions/workflows/deploy.yml)
-[![Sync](https://github.com/coeasy/dsh_go/actions/workflows/sync.yml/badge.svg)](https://github.com/coeasy/dsh_go/actions/workflows/sync.yml)
-[![Monitor](https://github.com/coeasy/dsh_go/actions/workflows/monitor.yml/badge.svg)](https://github.com/coeasy/dsh_go/actions/workflows/monitor.yml)
 
 ## 特性
 
@@ -19,9 +16,7 @@ DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API
 
 <!-- HOT-PLUGINS:START -->
 ## 🔥 最近热门推荐（300-5000★）
-
-> 自动生成 · 仅收录**命名含 dsh / deepseek-harness 的 DSH 原生插件**（排除 awesome 盘点型仓库），并固定推荐 modlens / dsh-better-sidebar · 按最近更新排序 · Top20（每次同步后刷新）
-
+插件全部来自互联网，不构成推荐建议
 | # | 插件 | ★ Stars | 语言 | 最近更新 | 简介 |
 |---|------|---------|------|----------|------|
 | 1 | [@liustack/modlens](https://github.com/liustack/modlens) | 3.6k | TypeScript | 2026-08-24 | Plug-in vision for text-only LLMs, powered… |
