@@ -9,7 +9,8 @@ describe('Runtime Platform V2 lifecycle', () => {
     record = transitionPlugin(record, LIFECYCLE_STATES.INSTALLING);
     record = transitionPlugin(record, LIFECYCLE_STATES.INSTALLED);
     expect(record.state).toBe('installed');
-    expect(record.history.at(-1)?.to).toBe('installed');
+    expect(record.history.at(-1)?.state).toBe('installed');
+    expect(record.history.at(-1)?.event).toBe('state-change');
     expect(() => transitionPlugin(record, 'available')).toThrow(/invalid runtime transition/);
   });
 
