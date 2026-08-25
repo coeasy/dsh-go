@@ -1,11 +1,8 @@
-import { execFile } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
-
-const exec = promisify(execFile);
 
 describe('Runtime Platform V2 CLI', () => {
   it('supports status, disable, enable, and history through persisted registry state', async () => {
@@ -20,21 +17,20 @@ describe('Runtime Platform V2 CLI', () => {
       }],
     }));
     const env = { ...process.env, DSH_REGISTRY: registry };
+    const run = (args: string[]) => execFileSync('node', args, { env, encoding: 'utf8' });
 
-    const status = await exec('node', ['runtime/cli.mjs', 'plugin', 'status', 'demo'], { env });
-    expect(JSON.parse(status.stdout).id).toBe('demo');
+    expect(JSON.parse(run(['runtime/cli.mjs', 'plugin', 'status', 'demo'])).id).toBe('demo');
 
-    await exec('node', ['runtime/cli.mjs', 'plugin', 'disable', 'demo'], { env });
+    run(['runtime/cli.mjs', 'plugin', 'disable', 'demo']);
     let stored = JSON.parse(await readFile(registry, 'utf8'));
     expect(stored.plugins[0].state).toBe('disabled');
     expect(stored.plugins[0].restart_required).toBe(true);
 
-    await exec('node', ['runtime/cli.mjs', 'plugin', 'enable', 'demo'], { env });
+    run(['runtime/cli.mjs', 'plugin', 'enable', 'demo']);
     stored = JSON.parse(await readFile(registry, 'utf8'));
     expect(stored.plugins[0].state).toBe('installed');
     expect(stored.plugins[0].enabled).toBe(true);
 
-    const history = await exec('node', ['runtime/cli.mjs', 'plugin', 'history', 'demo'], { env });
-    expect(JSON.parse(history.stdout).history.length).toBeGreaterThanOrEqual(2);
+    expect(JSON.parse(run(['runtime/cli.mjs', 'plugin', 'history', 'demo'])).history.length).toBeGreaterThanOrEqual(2);
   });
 });
