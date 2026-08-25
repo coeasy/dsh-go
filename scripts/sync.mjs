@@ -29,6 +29,7 @@ const CATALOG_DIR = resolve(ROOT, 'catalog');
 const PLUGINS_FILE = resolve(CATALOG_DIR, 'plugins.json');
 const META_FILE = resolve(CATALOG_DIR, 'meta.json');
 const FEED_FILE = resolve(CATALOG_DIR, 'feed.xml');
+const OBSERVED_FILE = resolve(CATALOG_DIR, '.sync-observed.json');
 
 const TOKEN = process.env.GITHUB_TOKEN || '';
 const API_BASE = 'https://api.github.com';
@@ -318,7 +319,6 @@ async function buildPlugin(repo, oldPlugins) {
     open_issues: repo.open_issues_count || 0,
     created_at: repo.created_at || '',
     updated_at: repo.pushed_at || '',
-    observed_at: now,
     first_seen: base.first_seen || now,
     trend_score: 0, // 排序后重算
     language: repo.language || '',
@@ -486,6 +486,16 @@ async function main() {
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
   let plugins = results.filter(Boolean);
+
+  // The liveness sidecar is derived only from records that passed current collection
+  // rules. For supplementary topics this means dsh-plugin.json was fetched now, so a
+  // repository that removed its manifest cannot inherit a historical verified state.
+  if (mode === 'full') {
+    const observedRepos = [...new Set(plugins.map((plugin) => plugin.full_name).filter(Boolean))];
+    const observedRepoIds = [...new Set(plugins.map((plugin) => String(plugin.repo_id || '')).filter(Boolean))];
+    await writeFile(OBSERVED_FILE, JSON.stringify({ mode: 'full', repos: observedRepos, repo_ids: observedRepoIds }, null, 2) + '\n');
+    log(`写入临时有效观测集合：repos=${observedRepos.length}, repo_ids=${observedRepoIds.length}`);
+  }
 
   // 保留旧数据中本次未出现的仓库：
   //  - 全量：GitHub 搜索偶发漏项保护（超幅桶 top-1000 轮换时避免误删）
