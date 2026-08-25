@@ -1,11 +1,5 @@
 name: Deploy CN Mirrors (Gitee/GitCode)
 
-# 国内静态镜像：把纯静态子路径产物推送到 Gitee / GitCode 仓库分支。
-# 与 GitHub Pages 镜像的区别：这里"只推分支、不自动发布"——
-#   - Gitee 免费版：push 后需到仓库「服务 → Gitee Pages」手动点"更新"+ 过内容审核。
-#   - GitCode Pages：配置指定分支为发布源后，push 即自动构建发布。
-# 镜像站均为纯静态（无 functions），页面内指向 /api/* 的链接自动回指 Cloudflare 主站。
-
 on:
   push:
     branches: [main]
@@ -19,19 +13,17 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # 每个平台独立的仓库标识，由 GitHub Repository Variables 注入；缺省用平台默认用户名
   GITEE_REPO: ${{ vars.GITEE_REPO || 'easy5277/dsh_go' }}
   GITCODE_REPO: ${{ vars.GITCODE_REPO || 'easy5277/dsh_go' }}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     if: ${{ (github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]')) && (secrets.GITEE_TOKEN != '' || secrets.GITCODE_TOKEN != '') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -40,32 +32,33 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             site/package-lock.json
-
-      - name: Install dependencies (root + site)
+      - name: Install dependencies
         run: |
           npm ci
           cd site && npm ci
-
-      - name: Copy catalog into site (API 数据源 + 静态下载)
-        run: node scripts/copy-assets.mjs
-
-      # 两平台子路径相同（都是 /dsh_go），构建一次即可同时复用。
-      # PUBLIC_SITE_URL 用于 canonical/sitemap：指向各平台自己的域名，避免重复内容。
-      - name: Build site (CN mirror sub-path)
+      - name: Ensure canonical Registry V3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-v3.mjs --registry-only
+      - name: Deploy Gate V3
+        run: npm run deploy:gate
+      - name: Copy catalog into site
+        run: npm run copy-assets
+      - name: Build mirror site
         run: cd site && npm run build
         env:
           PUBLIC_BASE_PATH: /dsh_go
           PUBLIC_SITE_URL: https://easy5277.gitee.io/dsh_go
           PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
-
       - name: Verify build output
         run: |
           test -f site/dist/index.html
-          echo "构建产物校验通过"
-
-      # 把同一份构建产物分别推到两个平台的 pages 分支；只推分支、不改源码。
-      - name: Deploy to Gitee Pages (push branch only)
+          test -f site/dist/catalog/registry-v3.json
+          test -f site/dist/catalog/schema-v3.json
+      - name: Deploy to Gitee Pages branch
         if: ${{ secrets.GITEE_TOKEN != '' }}
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
         run: |
           cd site/dist
           git init -q
@@ -74,10 +67,10 @@ jobs:
           git add -A
           git commit -q -m "deploy: ${{ github.sha }}"
           git push -f "https://easy5277:${GITEE_TOKEN}@gitee.com/${GITEE_REPO}.git" HEAD:gh-pages
-          echo "已推送 Gitee（gh-pages 分支）。若 Gitee Pages 已配置该分支，需到页面手动点『更新』发布。"
-
-      - name: Deploy to GitCode Pages (push branch only)
+      - name: Deploy to GitCode Pages branch
         if: ${{ secrets.GITCODE_TOKEN != '' }}
+        env:
+          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
         run: |
           cd site/dist
           git init -q
@@ -86,4 +79,3 @@ jobs:
           git add -A
           git commit -q -m "deploy: ${{ github.sha }}"
           git push -f "https://oauth2:${GITCODE_TOKEN}@gitcode.com/${GITCODE_REPO}.git" HEAD:gh-pages
-          echo "已推送 GitCode（gh-pages 分支）。若 GitCode Pages 已配置该分支为发布源，将自动构建发布。"

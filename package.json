@@ -6,15 +6,19 @@
   "private": true,
   "engines": { "node": ">=20" },
   "scripts": {
-    "sync": "node scripts/sync.mjs",
-    "sync:full": "node scripts/sync.mjs --full",
-    "sync:incremental": "node scripts/sync.mjs --incremental",
+    "sync": "node scripts/sync-v3.mjs",
+    "sync:legacy": "node scripts/sync.mjs",
+    "sync:full": "node scripts/sync-v3.mjs --full",
+    "sync:incremental": "node scripts/sync-v3.mjs --incremental",
     "sync:v3": "node scripts/sync-v3.mjs",
     "sync:v3:full": "node scripts/sync-v3.mjs --full",
-    "deploy:gate": "node scripts/deploy-gate.mjs",
-    "registry:migrate": "node scripts/migration-v3.mjs",
+    "registry:migrate": "node scripts/sync-v3.mjs --registry-only",
     "registry:verify": "node scripts/validate-registry-v3.mjs",
-    "runtime:check": "node runtime/resolver.mjs",
+    "registry:pipeline": "node scripts/registry-pipeline-v3.mjs",
+    "runtime:check": "node runtime/cli.mjs check-registry",
+    "runtime:resolve": "node runtime/cli.mjs resolve",
+    "runtime:install": "node runtime/cli.mjs install",
+    "deploy:gate": "node scripts/deploy-gate-v3.mjs",
     "validate": "node scripts/validate.mjs",
     "readme:update": "node scripts/update-readme.mjs",
     "copy-assets": "node scripts/copy-assets.mjs",
@@ -28,6 +32,17 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run typecheck && npm run lint && cd site && npm run check"
+    "check": "npm run typecheck && npm run lint && npm test && cd site && npm run check"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "@types/node": "^22.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.114.0"
   }
 }

@@ -13,7 +13,6 @@ permissions:
   pages: write
   id-token: write
 
-# 连续推送只跑最新一次，避免并行部署互相覆盖
 concurrency:
   group: pages-deploy
   cancel-in-progress: true
@@ -21,8 +20,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    # 心跳提交（sync 打 [no deploy]）跳过部署；手动/dispatch 不受影响
+    timeout-minutes: 40
     if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
     environment:
       name: github-pages
@@ -30,57 +28,47 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Pages
         uses: actions/configure-pages@v6
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          # 根 + site 两份 lockfile 都缓存
           cache-dependency-path: |
             package-lock.json
             site/package-lock.json
-
-      - name: Install dependencies (root + site)
-        # 必须先装 site 依赖：tests/i18n.test.ts 导入 site/src/i18n/dict.ts，
-        # vitest(esbuild) 会就近解析 site/tsconfig.json 的 extends "astro/tsconfigs/base"
+      - name: Install dependencies
         run: |
           npm ci
           cd site && npm ci
-
-      - name: Run checks
+      - name: Ensure canonical Registry V3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-v3.mjs --registry-only
+      - name: Deploy Gate V3 and tests
         run: |
+          npm run deploy:gate
           npm run typecheck
           npm test
-
-      - name: Copy catalog into site (API 数据源 + 静态下载)
-        run: node scripts/copy-assets.mjs
-
-      - name: Build site (GitHub Pages 子路径)
-        # 项目站部署在 https://<owner>.github.io/<repo>/ 子路径：
-        #  - PUBLIC_BASE_PATH  前端绝对链接前缀（urls.ts 的 u()）
-        #  - PUBLIC_SITE_URL   canonical/og/sitemap 指向本站域名，避免被指向 pages.dev 造成重复内容
-        #  - PUBLIC_API_URL    保持 Cloudflare 主站，因 GitHub Pages 无 functions（/api/* 不存在）
+      - name: Copy catalog into site
+        run: npm run copy-assets
+      - name: Build site for GitHub Pages
         run: cd site && npm run build
         env:
           PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
           PUBLIC_SITE_URL: https://${{ github.event.repository.owner.login }}.github.io/${{ github.event.repository.name }}
           PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
-
       - name: Verify build output
         run: |
           test -f site/dist/index.html
           test -f site/dist/catalog/plugins.json
-          echo "构建产物校验通过"
-
+          test -f site/dist/catalog/registry-v3.json
+          test -f site/dist/catalog/schema-v3.json
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/dist
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

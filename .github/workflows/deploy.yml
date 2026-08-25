@@ -3,6 +3,9 @@ name: Deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
   workflow_dispatch:
 
 permissions:
@@ -16,33 +19,55 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
 
-      - run: npm ci
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd site && npm ci
+
+      - name: Ensure canonical Registry V3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-v3.mjs --registry-only
 
       - name: Deploy Gate V3
-        run: node scripts/deploy-gate-v3.mjs
+        run: npm run deploy:gate
 
-      - name: Install site dependencies
-        run: cd site && npm ci
-
-      - name: Build
+      - name: Run checks
         run: |
-          node scripts/copy-assets.mjs
-          cd site && npm run build
+          npm run typecheck
+          npm test
+          npm run lint
 
-      - name: Verify build
+      - name: Copy catalog into site
+        run: npm run copy-assets
+
+      - name: Build site
+        run: cd site && npm run build
+
+      - name: Verify build output
         run: |
           test -f site/dist/index.html
           test -f site/dist/catalog/plugins.json
+          test -f site/dist/catalog/registry-v3.json
+          test -f site/dist/catalog/schema-v3.json
+          node -e "const r=require('./site/dist/catalog/registry-v3.json'); if(r.registry_version!==3 || !r.plugins.length) process.exit(1)"
 
-      - name: Deploy
+      - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -50,3 +75,16 @@ jobs:
           projectName: dsh-go
           directory: site/dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post-deploy Registry V3 check
+        shell: bash
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 20 https://dsh-go.pages.dev/catalog/registry-v3.json | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins?.length) process.exit(1)})"; then
+              echo "Registry V3 is live"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Registry V3 did not become healthy after deployment"
+          exit 1

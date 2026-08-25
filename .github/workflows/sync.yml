@@ -9,10 +9,12 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "同步模式"
+        description: "Sync mode"
         type: choice
         default: full
         options: [full, incremental]
+  repository_dispatch:
+    types: [sync-plugins]
 
 permissions:
   contents: write
@@ -26,34 +28,85 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Sync V3 pipeline
+      - name: Resolve sync mode
+        id: mode
+        shell: bash
+        run: |
+          MODE="${{ github.event.inputs.mode || github.event.client_payload.mode || 'incremental' }}"
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "${{ github.event.schedule }}" = "18 0 * * *" ]; then
+            MODE="full"
+          fi
+          case "$MODE" in
+            full|incremental) ;;
+            *) echo "Invalid sync mode: $MODE"; exit 1 ;;
+          esac
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Sync mode: $MODE"
+
+      - name: Run Sync V3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SYNC_MODE: ${{ github.event.inputs.mode || 'incremental' }}
+          SYNC_MODE: ${{ steps.mode.outputs.mode }}
+          SYNC_CONCURRENCY: "16"
+        run: node scripts/sync-v3.mjs --${{ steps.mode.outputs.mode }}
+
+      - name: Run integrity gates
         run: |
-          node scripts/sync-v3.mjs
-          node scripts/registry-pipeline-v3.mjs
+          npm run validate
+          npm run registry:verify
+          npm run runtime:check
+          npm run deploy:gate
 
-      - name: Validate Registry V3
-        run: node scripts/validate-registry-v3.mjs
+      - name: Update README hot recommendations
+        run: npm run readme:update
 
-      - name: Update README
-        run: node scripts/update-readme.mjs
+      - name: Detect deploy-worthy changes
+        id: diff
+        shell: bash
+        run: |
+          if ! git diff --quiet -- catalog/plugins.json catalog/feed.xml catalog/registry-v3.json catalog/schema-v3.json; then
+            echo "data_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "data_changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Commit
+      - name: Commit and push generated data
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add catalog README.md
-          git diff --cached --quiet || git commit -m "chore(sync): registry v3 update"
-          git push || true
+          git add -- catalog/ README.md
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit"
+            exit 0
+          fi
+          if [ "${{ steps.diff.outputs.data_changed }}" = "true" ]; then
+            COUNT=$(node -p "require('./catalog/plugins.json').meta.count")
+            MSG="chore(sync): Registry V3 update (${COUNT} plugins, ${{ steps.mode.outputs.mode }})"
+          else
+            MSG="chore(sync): heartbeat [no deploy]"
+          fi
+          git commit -m "$MSG"
+          git push || { echo "Push raced with another commit; rebasing once"; git pull --rebase; git push; }
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Registry V3 sync (${{ steps.mode.outputs.mode || 'n/a' }})" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f catalog/meta.json ]; then
+            node -e "const m=require('./catalog/meta.json'); console.log('- last sync: '+(m.last_sync?.at||'n/a')+'\n- registry hash: '+(m.registry?.content_hash||'n/a')+'\n- registry count: '+(m.registry?.count||0))" >> "$GITHUB_STEP_SUMMARY"
+          fi

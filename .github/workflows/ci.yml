@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd site && npm ci
+
+      - name: Typecheck, lint, tests
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test
+          cd site && npm run check
+
+      - name: Syntax check V3 runtime scripts
+        run: |
+          node --check scripts/sync-v3.mjs
+          node --check scripts/registry-v3-builder.mjs
+          node --check scripts/validate-registry-v3.mjs
+          node --check scripts/deploy-gate-v3.mjs
+          node --check runtime/cli.mjs
+          node --check runtime/installer.mjs
+          node --check runtime/loader.mjs

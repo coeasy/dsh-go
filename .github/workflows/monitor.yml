@@ -13,31 +13,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check SITE_URL configured
+      - name: Require SITE_URL
         run: |
-          [ -n "$SITE_URL" ] || { echo "未配置 SITE_URL（请在仓库 Variables 中添加）"; exit 1; }
+          [ -n "$SITE_URL" ] || { echo "SITE_URL repository variable is missing"; exit 1; }
         env:
           SITE_URL: ${{ vars.SITE_URL }}
-
-      - name: Check site homepage
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${SITE_URL}/")
-          [ "$STATUS" = "200" ] || { echo "首页异常: $STATUS"; exit 1; }
+      - name: Check site and API
         env:
           SITE_URL: ${{ vars.SITE_URL }}
-
-      - name: Check API
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${SITE_URL}/api/v1/health")
-          [ "$STATUS" = "200" ] || { echo "API 异常: $STATUS"; exit 1; }
+          curl -fsS --max-time 20 "${SITE_URL}/" >/dev/null
+          curl -fsS --max-time 20 "${SITE_URL}/api/v1/health" >/dev/null
+          curl -fsS --max-time 20 "${SITE_URL}/api/v1/registry" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);if(r.registry_version!==3||!r.generated?.content_hash||!r.plugins?.length)process.exit(1)})"
+      - name: Check data freshness and registry consistency
         env:
           SITE_URL: ${{ vars.SITE_URL }}
-
-      - name: Check data freshness
         run: |
-          UPDATED=$(curl -s --max-time 20 "${SITE_URL}/api/v1/meta" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).last_sync.at))")
+          META=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/meta")
+          UPDATED=$(printf '%s' "$META" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).last_sync.at))")
           AGE_H=$(( ( $(date +%s) - $(date -d "$UPDATED" +%s) ) / 3600 ))
-          [ "$AGE_H" -lt 36 ] || { echo "数据已 ${AGE_H} 小时未更新"; exit 1; }
-          echo "数据新鲜度正常 (${AGE_H}h)"
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
+          [ "$AGE_H" -lt 36 ] || { echo "Data is stale: ${AGE_H}h"; exit 1; }
+          META_HASH=$(printf '%s' "$META" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).registry.content_hash))")
+          REG_HASH=$(curl -fsS --max-time 20 "${SITE_URL}/catalog/registry-v3.json" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).generated.content_hash))")
+          [ "$META_HASH" = "$REG_HASH" ] || { echo "Registry/meta hash mismatch"; exit 1; }
+          echo "Registry healthy, data age=${AGE_H}h, hash=${REG_HASH}"
