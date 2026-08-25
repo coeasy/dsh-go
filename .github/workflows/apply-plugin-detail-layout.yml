@@ -1,3 +1,4 @@
+# Trigger branch-only layout verification
 name: Apply plugin detail layout balance
 
 on:
