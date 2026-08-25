@@ -1,4 +1,4 @@
-# Exact-head final verification after reconciling latest main.
+# Branch-only verification harness. Remove after the repaired catalog is committed.
 name: Verify canonical full sync
 
 on:
@@ -8,12 +8,12 @@ on:
       - ".github/workflows/verify-canonical-full-sync.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,20 +23,33 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          cd site && npm ci
+      - name: Run static and regression checks
+        run: |
+          node --check scripts/github-discovery.mjs
+          node --check scripts/repository-identity.mjs
+          node --check scripts/audit-catalog-identity.mjs
+          node --check scripts/sync.mjs
+          node --check scripts/sync-v3.mjs
+          npm run typecheck
+          npm run lint
+          npm test
+          cd site && npm run check
       - name: Run real full Registry V3 sync
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SYNC_MODE: full
           SYNC_CONCURRENCY: "32"
-          REGISTRY_GRAPHQL_PAGE_SIZE: "100"
-          REGISTRY_GRAPHQL_DELAY: "0"
+          REGISTRY_GRAPHQL_PAGE_SIZE: "50"
+          REGISTRY_GRAPHQL_DELAY: "50"
           REGISTRY_MANIFEST_CONCURRENCY: "64"
         run: node scripts/sync-v3.mjs --full
       - name: Run strict data quality gates
         run: |
           npm run validate
-          npm run audit:identity -- --strict
+          npm run audit:identity:report -- --strict
           npm run registry:verify
           npm run runtime:check
           npm run deploy:gate
@@ -49,6 +62,7 @@ jobs:
           const data = JSON.parse(await readFile('catalog/plugins.json', 'utf8'));
           const registry = JSON.parse(await readFile('catalog/registry-v3.json', 'utf8'));
           const meta = JSON.parse(await readFile('catalog/meta.json', 'utf8'));
+          const audit = JSON.parse(await readFile('catalog/audit-report.json', 'utf8'));
           const plugins = data.plugins || [];
           const errors = [];
           const repoKeys = new Set();
@@ -82,6 +96,7 @@ jobs:
             if (!validCategories.has(p.category)) errors.push(`invalid category: ${p.full_name} -> ${p.category}`);
             if (!String(p.install_cmd || '').includes(`github:${p.full_name}`)) errors.push(`install source mismatch: ${p.full_name}`);
             if (Object.prototype.hasOwnProperty.call(p, '_manifest_observed')) errors.push(`transient manifest marker leaked: ${p.full_name}`);
+            if (Object.prototype.hasOwnProperty.call(p, 'observed_at')) errors.push(`transient observation leaked: ${p.full_name}`);
             if ((p.deprecated || p.disabled) && installableRepos.has(key)) errors.push(`inactive repo leaked into registry: ${p.full_name}`);
           }
           for (const p of registry.plugins || []) {
@@ -101,6 +116,8 @@ jobs:
           const verified = plugins.filter((p) => p.verified).length;
           const manifestSources = plugins.filter((p) => p.metadata_source === 'dsh-plugin').length;
           if (verified !== manifestSources) errors.push(`verified/source count mismatch: ${verified}/${manifestSources}`);
+          if (!audit.ok || audit.error_count !== 0) errors.push(`audit report is not clean: ${audit.error_count}`);
+          if (audit.plugin_count !== plugins.length) errors.push(`audit count mismatch: ${audit.plugin_count}/${plugins.length}`);
           console.log(JSON.stringify({
             count: plugins.length,
             active: plugins.filter((p) => !p.deprecated && !p.disabled).length,
@@ -114,6 +131,8 @@ jobs:
             unique_registry_ids: registryIdKeys.size,
             discovery_transport: meta.registry?.discovery_transport,
             discovered_count: meta.registry?.discovered_count,
+            audit_ok: audit.ok,
+            audit_errors: audit.error_count,
             ruflo: {
               name: ruflo?.name,
               repo_name: ruflo?.repo_name,
@@ -126,3 +145,16 @@ jobs:
           }, null, 2));
           if (errors.length) throw new Error(`canonical identity assertions failed: ${errors.length}`);
           NODE
+      - name: Commit repaired historical catalog
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git status --short
+          git add -- catalog/plugins.json catalog/meta.json catalog/feed.xml catalog/registry-v3.json catalog/audit-report.json
+          if git diff --cached --quiet; then
+            echo "No generated catalog changes to commit"
+          else
+            git commit -m "data: repair canonical catalog identity"
+            git push
+          fi
