@@ -5,7 +5,11 @@
   "type": "module",
   "private": true,
   "engines": { "node": ">=20" },
+  "bin": {
+    "dsh": "bin/dsh.mjs"
+  },
   "scripts": {
+    "dsh": "node bin/dsh.mjs",
     "sync": "node scripts/sync-v3.mjs",
     "sync:legacy": "node scripts/sync.mjs",
     "sync:full": "node scripts/sync-v3.mjs --full",
@@ -20,7 +24,9 @@
     "runtime:install": "node runtime/cli.mjs install",
     "runtime:plugin": "node runtime/cli.mjs plugin",
     "runtime:doctor": "node runtime/cli.mjs plugin doctor",
+    "runtime:startup": "node bin/dsh.mjs startup activate",
     "runtime:test": "vitest run tests/runtime-platform",
+    "phase7:test": "vitest run tests/runtime-platform/host-bridge.test.ts tests/runtime-platform/startup-batch.test.ts tests/runtime-platform/bin-cli.test.ts tests/runtime-platform/self-update.test.ts tests/runtime-platform/client-bridge-e2e.test.ts",
     "ecosystem:test": "vitest run tests/ecosystem-v1",
     "ecosystem:check": "npm run typecheck && npm run lint && npm run ecosystem:test",
     "deploy:gate": "node scripts/deploy-gate-v3.mjs",
