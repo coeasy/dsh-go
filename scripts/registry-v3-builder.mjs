@@ -170,7 +170,9 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
     const { legacy, normalized } = input;
     const previous = (legacy.repo_id && existingByRepoId.get(String(legacy.repo_id))) || existingByRepo.get(canonicalRepoKey(normalized.repo));
     if (previous && previous.version === DEFAULT_PLUGIN_VERSION && isCommitSha(previous.source?.commit) && previous.artifact?.integrity === artifactIntegrity(previous) && previous.source?.ref === normalized.ref && previous.source?.updated_at === (legacy.updated_at || '')) {
-      plugins.push(previous); reused++; continue;
+      // Reuse only the immutable commit. Rebuild source/metadata so repository renames,
+      // canonical URLs, names, categories and verification state cannot remain stale.
+      plugins.push(buildRegistryPlugin(legacy, normalized, previous.source.commit)); reused++; continue;
     }
     const discoveredCommit = String(legacy.snapshot_commit || legacy.source?.commit || '').trim();
     if (isCommitSha(discoveredCommit)) {
