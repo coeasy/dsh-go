@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 25 Aug 2026 13:24:32 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 25 Aug 2026 14:03:45 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -212,8 +212,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-08-25T12:54:20Z</guid>
-      <pubDate>Tue, 25 Aug 2026 12:54:20 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-08-25T13:42:51Z</guid>
+      <pubDate>Tue, 25 Aug 2026 13:42:51 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
   </channel>
