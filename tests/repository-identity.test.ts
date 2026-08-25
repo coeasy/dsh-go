@@ -38,7 +38,7 @@ describe('repository identity', () => {
     expect(merged.plugins[0].name).toBe('new-name');
   });
 
-  it('prunes stale package-only history but keeps explicit manifests and overrides without an observation window', () => {
+  it('prunes stale package-only history but keeps explicit manifests and overrides when observation is not required', () => {
     const existing: any[] = [
       { full_name: 'owner/package-only', name: 'package-name', category: 'tool', manifest_file: 'package.json', verified: true, topics: ['deepseek-harness'] },
       { full_name: 'owner/explicit', name: 'Explicit Brand', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true, topics: ['deepseek-harness'] },
@@ -49,16 +49,20 @@ describe('repository identity', () => {
     expect(merged.plugins.map((p: any) => p.full_name).sort()).toEqual(['owner/explicit', 'owner/manual']);
   });
 
-  it('drops explicit-manifest records that were not observed in the current full sync', () => {
-    const freshAfter = Date.parse('2026-08-25T09:00:00Z');
+  it('drops explicit-manifest records not observed during the current full sync', () => {
     const existing: any[] = [
-      { full_name: 'owner/stale', name: 'Stale', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true, observed_at: '2026-08-24T09:00:00Z' },
-      { full_name: 'owner/fresh', name: 'Fresh', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true, observed_at: '2026-08-25T09:01:00Z' },
-      { full_name: 'owner/manual', name: 'Manual', category: 'tool', metadata_source: 'override', observed_at: '2020-01-01T00:00:00Z' },
+      { full_name: 'owner/stale', repo_id: '1', name: 'Stale', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true },
+      { full_name: 'owner/fresh', repo_id: '2', name: 'Fresh', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true },
+      { full_name: 'owner/fresh-by-id', repo_id: '3', name: 'Fresh by ID', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true },
+      { full_name: 'owner/manual', name: 'Manual', category: 'tool', metadata_source: 'override' },
     ];
-    const merged = mergeCatalogPluginsWithDiscovery(existing, [], { freshAfter });
+    const merged = mergeCatalogPluginsWithDiscovery(existing, [], {
+      requireObservation: true,
+      observedRepos: ['OWNER/FRESH'],
+      observedRepoIds: ['3'],
+    });
     expect(merged.pruned).toBe(1);
-    expect(merged.plugins.map((p: any) => p.full_name).sort()).toEqual(['owner/fresh', 'owner/manual']);
+    expect(merged.plugins.map((p: any) => p.full_name).sort()).toEqual(['owner/fresh', 'owner/fresh-by-id', 'owner/manual']);
   });
 
   it('deduplicates repository identity case-insensitively', () => {
