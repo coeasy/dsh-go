@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeHttpUrl, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
 
@@ -31,17 +31,45 @@ export function auditCatalogIdentity(data) {
     if (plugin.homepage && normalizeHttpUrl(plugin.homepage) !== plugin.homepage) errors.push(`${label}: invalid/non-normalized homepage`);
     if (plugin.repo_url?.startsWith('https://api.github.com/')) errors.push(`${label}: GitHub API URL exposed as repository URL`);
     if (Object.prototype.hasOwnProperty.call(plugin, 'observed_at')) errors.push(`${label}: transient observed_at leaked into persisted catalog`);
+    if (Object.prototype.hasOwnProperty.call(plugin, '_manifest_observed')) errors.push(`${label}: transient manifest observation leaked into persisted catalog`);
   }
   return { errors, count: data?.plugins?.length || 0 };
 }
 
+export function buildAuditReport(data, result = auditCatalogIdentity(data)) {
+  return {
+    schema_version: 1,
+    generated_at: new Date().toISOString(),
+    catalog_updated_at: data?.meta?.updated_at || null,
+    plugin_count: result.count,
+    error_count: result.errors.length,
+    ok: result.errors.length === 0,
+    errors: [...result.errors],
+  };
+}
+
+function optionValue(args, name) {
+  const exact = args.find((arg) => arg.startsWith(`${name}=`));
+  if (exact) return exact.slice(name.length + 1);
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : null;
+}
+
 async function main() {
-  const file = process.argv.find((arg) => arg.endsWith('.json')) || resolve(process.cwd(), 'catalog/plugins.json');
-  const strict = process.argv.includes('--strict');
+  const args = process.argv.slice(2);
+  const file = args.find((arg) => arg.endsWith('.json') && !arg.startsWith('--report=')) || resolve(process.cwd(), 'catalog/plugins.json');
+  const strict = args.includes('--strict');
+  const reportArg = optionValue(args, '--report');
+  const reportFile = reportArg ? resolve(process.cwd(), reportArg) : null;
   const data = JSON.parse(await readFile(file, 'utf8'));
   const result = auditCatalogIdentity(data);
+  const report = buildAuditReport(data, result);
   console.log(`[identity-audit] plugins=${result.count} errors=${result.errors.length}`);
   result.errors.slice(0, 100).forEach((error) => console.error(`[identity-audit] ${error}`));
+  if (reportFile) {
+    await writeFile(reportFile, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+    console.log(`[identity-audit] report=${reportFile}`);
+  }
   if (strict && result.errors.length) process.exit(1);
 }
 
