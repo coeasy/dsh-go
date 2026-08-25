@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Checkout main registry
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
       - name: Require SITE_URL
         run: |
           [ -n "$SITE_URL" ] || { echo "SITE_URL repository variable is missing"; exit 1; }
@@ -25,15 +30,30 @@ jobs:
           curl -fsS --max-time 20 "${SITE_URL}/" >/dev/null
           curl -fsS --max-time 20 "${SITE_URL}/api/v1/health" >/dev/null
           curl -fsS --max-time 20 "${SITE_URL}/api/v1/registry" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);if(r.registry_version!==3||!r.generated?.content_hash||!r.plugins?.length)process.exit(1)})"
-      - name: Check data freshness and registry consistency
+      - name: Check data freshness and deployed registry convergence
         env:
           SITE_URL: ${{ vars.SITE_URL }}
         run: |
-          META=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/meta")
-          UPDATED=$(printf '%s' "$META" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).last_sync.at))")
-          AGE_H=$(( ( $(date +%s) - $(date -d "$UPDATED" +%s) ) / 3600 ))
-          [ "$AGE_H" -lt 36 ] || { echo "Data is stale: ${AGE_H}h"; exit 1; }
-          META_HASH=$(printf '%s' "$META" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).registry.content_hash))")
-          REG_HASH=$(curl -fsS --max-time 20 "${SITE_URL}/catalog/registry-v3.json" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).generated.content_hash))")
-          [ "$META_HASH" = "$REG_HASH" ] || { echo "Registry/meta hash mismatch"; exit 1; }
-          echo "Registry healthy, data age=${AGE_H}h, hash=${REG_HASH}"
+          set -euo pipefail
+          MAIN_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
+          MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
+          UPDATED=""
+          for attempt in 1 2 3 4 5 6 7 8 9; do
+            META=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/meta")
+            UPDATED=$(printf '%s' "$META" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).last_sync.at))")
+            META_HASH=$(printf '%s' "$META" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).registry.content_hash))")
+            REGISTRY=$(curl -fsS --max-time 20 "${SITE_URL}/catalog/registry-v3.json")
+            REG_HASH=$(printf '%s' "$REGISTRY" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).generated.content_hash))")
+            REG_COUNT=$(printf '%s' "$REGISTRY" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).plugins.length))")
+            API_HASH=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/registry" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).generated.content_hash))")
+            if [ "$META_HASH" = "$MAIN_HASH" ] && [ "$REG_HASH" = "$MAIN_HASH" ] && [ "$API_HASH" = "$MAIN_HASH" ] && [ "$REG_COUNT" = "$MAIN_COUNT" ]; then
+              AGE_H=$(( ( $(date +%s) - $(date -d "$UPDATED" +%s) ) / 3600 ))
+              [ "$AGE_H" -lt 36 ] || { echo "Data is stale: ${AGE_H}h"; exit 1; }
+              echo "Registry converged with main, data age=${AGE_H}h, count=${REG_COUNT}, hash=${MAIN_HASH}"
+              exit 0
+            fi
+            echo "Registry not converged (attempt ${attempt}/9): main=${MAIN_HASH}/${MAIN_COUNT}, meta=${META_HASH}, catalog=${REG_HASH}/${REG_COUNT}, api=${API_HASH}"
+            sleep 10
+          done
+          echo "Deployed Registry V3 did not converge to main within the monitor retry window"
+          exit 1
