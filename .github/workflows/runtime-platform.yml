@@ -32,19 +32,7 @@ jobs:
       - name: Install site dependencies
         run: cd site && npm ci
       - name: Typecheck
-        id: typecheck
-        continue-on-error: true
-        run: npm run typecheck > typecheck.log 2>&1
-      - name: Upload typecheck diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: runtime-typecheck-${{ github.sha }}
-          path: typecheck.log
-          retention-days: 1
-      - name: Typecheck gate
-        if: steps.typecheck.outcome == 'failure'
-        run: exit 1
+        run: npm run typecheck
       - name: Full lint
         run: npm run lint
       - name: Runtime Platform tests
