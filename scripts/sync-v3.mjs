@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Canonical DSH Registry V3 sync orchestrator. */
-import { readFile, writeFile, rename, access } from 'node:fs/promises';
+import { readFile, writeFile, rename, access, unlink } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
@@ -17,6 +17,7 @@ const LEGACY_FILE = resolve(CATALOG, 'plugins.json');
 const REGISTRY_FILE = resolve(CATALOG, 'registry-v3.json');
 const META_FILE = resolve(CATALOG, 'meta.json');
 const FEED_FILE = resolve(CATALOG, 'feed.xml');
+const OBSERVED_FILE = resolve(CATALOG, '.sync-observed.json');
 const SCHEMA_FILE = resolve(CATALOG, 'schema-v3.json');
 
 async function readJson(file, fallback = null) { try { return JSON.parse(await readFile(file, 'utf8')); } catch { return fallback; } }
@@ -30,22 +31,13 @@ function runNode(args, env = process.env) {
 async function writeJsonAtomic(file, value) { const temp = `${file}.tmp-${process.pid}`; await writeFile(temp, JSON.stringify(value, null, 2) + '\n', 'utf8'); await rename(temp, file); }
 function parseMode() { if (process.argv.includes('--full')) return 'full'; if (process.argv.includes('--incremental')) return 'incremental'; return process.env.SYNC_MODE === 'full' ? 'full' : 'incremental'; }
 
-export function observationWindowStart(meta) {
-  const finishedAt = Date.parse(meta?.last_sync?.at || '');
-  const durationMs = Number(meta?.last_sync?.duration_ms || 0);
-  if (!Number.isFinite(finishedAt)) return 0;
-  // Small clock/serialization tolerance ensures records stamped at worker start are included.
-  return finishedAt - Math.max(0, durationMs) - 5000;
-}
-
 function rebuildLegacyCatalog(source, plugins) {
   const now = Date.now();
   for (const plugin of plugins) {
     const updated7 = now - new Date(plugin.updated_at || 0).getTime() < 7 * 864e5 ? 1 : 0;
     const created30 = now - new Date(plugin.created_at || 0).getTime() < 30 * 864e5 ? 1 : 0;
     plugin.trend_score = Number(plugin.stars || 0) + 20 * updated7 + 10 * created30;
-    // observed_at is a per-run liveness signal only. Never persist it in the catalog,
-    // otherwise every full sync would create a deploy-worthy content diff.
+    // Defensive migration cleanup: old experimental liveness timestamps must never persist.
     delete plugin.observed_at;
   }
   plugins.sort((a, b) => (a.verified !== b.verified ? (a.verified ? -1 : 1) : Number(b.trend_score || 0) - Number(a.trend_score || 0)));
@@ -71,32 +63,44 @@ async function main() {
   let legacy = await readJson(LEGACY_FILE);
   if (!legacy?.plugins?.length) throw new Error('legacy catalog is empty; refusing to build Registry V3');
   const existing = await readJson(REGISTRY_FILE, null);
-  const syncMeta = await readJson(META_FILE, { last_sync: null });
+  const observations = await readJson(OBSERVED_FILE, { mode: null, repos: [], repo_ids: [] });
   const needsCompleteDiscovery = mode === 'full' || !existing || existing.generated?.discovery_mode !== 'complete';
   let registryCatalog = legacy;
   let discoveryMode = existing?.generated?.discovery_mode || 'catalog';
   let discoveredCount = Number(existing?.generated?.discovered_count || 0);
   let discoveryTransport = existing?.generated?.discovery_transport || '';
 
-  if (needsCompleteDiscovery) {
-    console.log('[sync-v3] starting complete topic discovery using cursor pagination when authenticated');
-    const discovery = await discoverAllRepositories('topic:dsh-plugin', { token: process.env.GITHUB_TOKEN || '' });
-    discoveredCount = discovery.repositories.length;
-    discoveryMode = 'complete';
-    discoveryTransport = discovery.transport || 'unknown';
-    const discoveredPlugins = discovery.repositories.map(discoveryRepoToLegacy).filter((plugin) => plugin.full_name && !plugin.disabled);
-    const freshAfter = !registryOnly && mode === 'full' ? observationWindowStart(syncMeta) : 0;
-    const merged = mergeCatalogPluginsWithDiscovery(legacy.plugins || [], discoveredPlugins, { freshAfter });
-    const canonicalLegacy = rebuildLegacyCatalog(legacy, merged.plugins);
-    const legacyChanged = JSON.stringify(canonicalLegacy.plugins) !== JSON.stringify(legacy.plugins || []);
-    if (legacyChanged) {
-      await writeJsonAtomic(LEGACY_FILE, canonicalLegacy);
-      await writeFile(FEED_FILE, buildFeed(canonicalLegacy.plugins), 'utf8');
-      console.log(`[sync-v3] canonical legacy catalog repaired: renamed=${merged.renamed} pruned=${merged.pruned} count=${canonicalLegacy.plugins.length}`);
+  try {
+    if (needsCompleteDiscovery) {
+      console.log('[sync-v3] starting complete topic discovery using cursor pagination when authenticated');
+      const discovery = await discoverAllRepositories('topic:dsh-plugin', { token: process.env.GITHUB_TOKEN || '' });
+      discoveredCount = discovery.repositories.length;
+      discoveryMode = 'complete';
+      discoveryTransport = discovery.transport || 'unknown';
+      const discoveredPlugins = discovery.repositories.map(discoveryRepoToLegacy).filter((plugin) => plugin.full_name && !plugin.disabled);
+      const requireObservation = !registryOnly && mode === 'full';
+      if (requireObservation && observations.mode !== 'full') {
+        throw new Error('full sync observation sidecar missing or invalid; refusing stale-repository pruning');
+      }
+      const merged = mergeCatalogPluginsWithDiscovery(legacy.plugins || [], discoveredPlugins, {
+        requireObservation,
+        observedRepos: observations.repos || [],
+        observedRepoIds: observations.repo_ids || [],
+      });
+      const canonicalLegacy = rebuildLegacyCatalog(legacy, merged.plugins);
+      const legacyChanged = JSON.stringify(canonicalLegacy.plugins) !== JSON.stringify(legacy.plugins || []);
+      if (legacyChanged) {
+        await writeJsonAtomic(LEGACY_FILE, canonicalLegacy);
+        await writeFile(FEED_FILE, buildFeed(canonicalLegacy.plugins), 'utf8');
+        console.log(`[sync-v3] canonical legacy catalog repaired: renamed=${merged.renamed} pruned=${merged.pruned} count=${canonicalLegacy.plugins.length}`);
+      }
+      legacy = canonicalLegacy;
+      registryCatalog = canonicalLegacy;
+      console.log(`[sync-v3] complete discovery transport=${discoveryTransport} reported=${discovery.reported_total} unique=${discoveredCount} merged=${registryCatalog.plugins.length}`);
     }
-    legacy = canonicalLegacy;
-    registryCatalog = canonicalLegacy;
-    console.log(`[sync-v3] complete discovery transport=${discoveryTransport} reported=${discovery.reported_total} unique=${discoveredCount} merged=${registryCatalog.plugins.length}`);
+  } finally {
+    // Ephemeral liveness data is never published or committed.
+    await unlink(OBSERVED_FILE).catch(() => {});
   }
 
   const { registry: candidate, stats } = await buildRegistryV3(registryCatalog, existing, {
