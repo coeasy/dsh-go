@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const { artifactIntegrity, registryContentHash } = await import('../scripts/checksum.mjs');
-const { buildRegistryPlugin, inferCapabilities, inferRuntimeType } = await import('../scripts/registry-v3-builder.mjs');
+const { buildRegistryPlugin, buildRegistryV3, inferCapabilities, inferRuntimeType } = await import('../scripts/registry-v3-builder.mjs');
 const { validateRegistry } = await import('../scripts/validate-registry-v3.mjs');
 const { parsePluginSpec, resolvePlugin } = await import('../runtime/resolver.mjs');
 const { verifyResolvedPlugin } = await import('../runtime/verifier.mjs');
@@ -40,6 +40,40 @@ describe('Registry V3', () => {
     expect(validateRegistry(registry).errors).toEqual([]);
     registry.plugins[0].source.commit = 'bad';
     expect(validateRegistry(registry).errors.some((e: string) => e.includes('source.commit'))).toBe(true);
+  });
+
+  it('reuses immutable commit but refreshes renamed repository metadata', async () => {
+    const oldLegacy: any = {
+      slug: 'owner-stable-id', full_name: 'owner/old-name', repo_id: '42', repo_name: 'old-name', name: 'old-name',
+      category: 'tool', updated_at: '2026-08-25T00:00:00Z', verified: false, manifest_file: null, metadata_source: 'github', stars: 1, rank: 2,
+    };
+    const previous: any = buildRegistryPlugin(oldLegacy, { id: 'owner-stable-id', repo: 'owner/old-name', ref: 'main' }, commit);
+    const existing: any = {
+      registry_version: 3,
+      schema_version: '3.0.0',
+      defaults: { plugin_version: '0.1.0' },
+      generated: { discovery_mode: 'complete', discovered_count: 1 },
+      plugins: [previous],
+    };
+    const renamed: any = {
+      ...oldLegacy,
+      full_name: 'owner/new-name', repo_name: 'new-name', name: 'new-name',
+      repo_url: 'https://github.com/owner/new-name', install_cmd: 'dsh plugin --profile tools add github:owner/new-name',
+    };
+    const { registry, stats }: any = await buildRegistryV3(
+      { meta: { etag: 'abc', count: 1 }, plugins: [renamed] },
+      existing,
+      { discoveryMode: 'complete', discoveredCount: 1 },
+    );
+    expect(stats.reused).toBe(1);
+    expect(registry.plugins).toHaveLength(1);
+    expect(registry.plugins[0].id).toBe('owner-stable-id');
+    expect(registry.plugins[0].source.repo).toBe('owner/new-name');
+    expect(registry.plugins[0].source.commit).toBe(commit);
+    expect(registry.plugins[0].source.archive_url).toContain('/owner/new-name/');
+    expect(registry.plugins[0].metadata.repo_name).toBe('new-name');
+    expect(registry.plugins[0].metadata.repo_url).toBe('https://github.com/owner/new-name');
+    expect(registry.plugins[0].artifact.integrity).toBe(artifactIntegrity(registry.plugins[0]));
   });
 });
 
