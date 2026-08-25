@@ -33,8 +33,9 @@ describe('Runtime Platform V2 dependency resolver', () => {
     const root = plugin('root', '0.1.0', [{ id: 'dep', range: '^1.0.0' }]);
     const registry = { registry_version: 3, defaults: { plugin_version: '0.1.0' }, plugins: [root, dep] };
     const plan = buildDependencyPlan(registry, root);
+    const graph = plan.graph as Record<string, Array<{ id: string; range: string; version: string; optional: boolean }>>;
     expect(plan.order.map((item: any) => item.id)).toEqual(['dep', 'root']);
-    expect(plan.graph.root[0].version).toBe('1.2.0');
+    expect(graph.root[0].version).toBe('1.2.0');
   });
 
   it('rejects cycles and incompatible dependency constraints', () => {
