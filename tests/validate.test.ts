@@ -6,8 +6,32 @@ function goodCatalog() {
     version: 2,
     meta: { etag: 'abc', count: 2, updated_at: '2024-01-01T00:00:00Z' },
     plugins: [
-      { slug: 'a-b', full_name: 'a/b', stars: 10, verified: true, manifest_file: 'dsh-plugin.json', category: 'mcp', install_cmd: 'x' },
-      { slug: 'c-d', full_name: 'c/d', stars: 0, verified: false, manifest_file: null, category: 'web-ui', install_cmd: 'y' },
+      {
+        slug: 'a-b',
+        full_name: 'a/b',
+        repo_name: 'b',
+        name: 'b',
+        metadata_source: 'dsh-plugin',
+        stars: 10,
+        verified: true,
+        manifest_file: 'dsh-plugin.json',
+        category: 'mcp',
+        repo_url: 'https://github.com/a/b',
+        install_cmd: 'dsh plugin --profile tools add github:a/b',
+      },
+      {
+        slug: 'c-d',
+        full_name: 'c/d',
+        repo_name: 'd',
+        name: 'd',
+        metadata_source: 'github',
+        stars: 0,
+        verified: false,
+        manifest_file: null,
+        category: 'web-ui',
+        repo_url: 'https://github.com/c/d',
+        install_cmd: 'dsh plugin --profile web add github:c/d',
+      },
     ],
   };
 }
@@ -57,7 +81,6 @@ describe('validateCatalog', () => {
 
   it('缺少 install_cmd 产生警告而非错误', () => {
     const c = goodCatalog();
-    // 用 Record 断言以允许 delete 可选语义
     delete (c.plugins[0] as Record<string, unknown>).install_cmd;
     const { errors, warns } = validateCatalog(c);
     expect(errors).toEqual([]);
