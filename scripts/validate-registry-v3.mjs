@@ -49,9 +49,14 @@ export function validateRegistry(data) {
     if (!Array.isArray(plugin?.capabilities) || !plugin.capabilities.includes('plugin')) errors.push(`${id}: capabilities must include plugin`);
     if (!Array.isArray(plugin?.dependencies)) errors.push(`${id}: dependencies must be array`);
     const metadata = plugin?.metadata || {};
-    if (metadata.repo_name && metadata.repo_name !== repoNameFromFullName(repo)) errors.push(`${id}: metadata.repo_name mismatch`);
-    if (metadata.repo_url && metadata.repo_url !== canonicalRepoUrl(repo)) errors.push(`${id}: metadata.repo_url is not canonical`);
-    if (metadata.install_cmd && metadata.install_cmd !== makeInstallCmd(repo, metadata.category || 'other')) errors.push(`${id}: metadata.install_cmd source mismatch`);
+    const repoName = repoNameFromFullName(repo);
+    if (metadata.repo_name !== repoName) errors.push(`${id}: metadata.repo_name mismatch`);
+    if (metadata.repo_url !== canonicalRepoUrl(repo)) errors.push(`${id}: metadata.repo_url is not canonical`);
+    if (metadata.install_cmd !== makeInstallCmd(repo, metadata.category || 'other')) errors.push(`${id}: metadata.install_cmd source mismatch`);
+    if (!['github', 'dsh-plugin', 'override'].includes(metadata.metadata_source)) errors.push(`${id}: unsupported metadata_source ${metadata.metadata_source || '<missing>'}`);
+    if (metadata.metadata_source === 'github' && metadata.name !== repoName) errors.push(`${id}: GitHub metadata.name must match repository name`);
+    if (metadata.metadata_source === 'github' && (metadata.verified || metadata.manifest_file)) errors.push(`${id}: GitHub metadata cannot be verified or manifest-backed`);
+    if (metadata.metadata_source === 'dsh-plugin' && (!metadata.verified || metadata.manifest_file !== 'dsh-plugin.json')) errors.push(`${id}: dsh-plugin metadata requires verified dsh-plugin.json`);
     if (metadata.verified && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: verified metadata requires dsh-plugin.json`);
     if (metadata.manifest_file && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: unsupported manifest_file ${metadata.manifest_file}`);
     const overrideFields = normalizeOverrideFields(metadata.override_fields);

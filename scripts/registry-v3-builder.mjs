@@ -1,5 +1,5 @@
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
-import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, repoNameFromFullName } from './repository-identity.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeStoredPlugin, repoNameFromFullName } from './repository-identity.mjs';
 
 export const REGISTRY_VERSION = 3;
 export const SCHEMA_VERSION = '3.0.0';
@@ -152,7 +152,11 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
   const seenIds = new Set();
   const seenRepos = new Set();
 
-  for (const legacy of legacyCatalog?.plugins || []) {
+  for (const rawLegacy of legacyCatalog?.plugins || []) {
+    // Registry build/migration is also an identity boundary. Never assume the legacy
+    // catalog was produced by the latest sync code: canonicalize stale names, URLs,
+    // install commands, manifest authority and legacy record-wide override flags here.
+    const legacy = normalizeStoredPlugin(rawLegacy);
     const normalized = normalizeLegacyPlugin(legacy);
     if (normalized.error) { excluded.push({ repo: legacy?.full_name || '', reason: normalized.error }); continue; }
     if (legacy?.disabled) { excluded.push({ repo: normalized.repo, reason: 'repository disabled' }); continue; }

@@ -76,6 +76,30 @@ describe('Registry V3', () => {
     expect(registry.plugins[0].metadata.repo_url).toBe('https://github.com/owner/new-name');
     expect(registry.plugins[0].artifact.integrity).toBe(artifactIntegrity(registry.plugins[0]));
   });
+  it('self-heals polluted legacy identity during standalone Registry V3 migration', async () => {
+    const commit = '0123456789abcdef0123456789abcdef01234567';
+    const catalog: any = {
+      meta: { etag: 'legacy', count: 1 },
+      plugins: [{
+        slug: 'ruvnet-ruflo', full_name: 'ruvnet/ruflo', name: 'claude-flow', category: 'skills',
+        metadata_source: 'override', verified: true, manifest_file: 'package.json',
+        repo_url: 'https://api.github.com/repos/ruvnet/ruflo', install_cmd: 'dsh plugin add github:ruvnet/claude-flow',
+        snapshot_commit: commit, snapshot_ref: 'main',
+      }],
+    };
+    const { registry } = await buildRegistryV3(catalog, null, { discoveryMode: 'complete', discoveredCount: 1 });
+    const plugin: any = registry.plugins[0];
+    expect(plugin.source.repo).toBe('ruvnet/ruflo');
+    expect(plugin.metadata.name).toBe('ruflo');
+    expect(plugin.metadata.repo_name).toBe('ruflo');
+    expect(plugin.metadata.repo_url).toBe('https://github.com/ruvnet/ruflo');
+    expect(plugin.metadata.install_cmd).toContain('github:ruvnet/ruflo');
+    expect(plugin.metadata.metadata_source).toBe('github');
+    expect(plugin.metadata.verified).toBe(false);
+    expect(plugin.metadata.manifest_file).toBeNull();
+    expect(validateRegistry(registry).errors).toEqual([]);
+  });
+
   it('excludes archived or disabled repositories from the installable registry', async () => {
     const commit = '0123456789abcdef0123456789abcdef01234567';
     const catalog: any = {
