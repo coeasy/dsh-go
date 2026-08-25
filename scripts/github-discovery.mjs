@@ -4,6 +4,7 @@ const API_BASE = 'https://api.github.com';
 const GRAPHQL_URL = 'https://api.github.com/graphql';
 const SEARCH_DELAY = Number(process.env.REGISTRY_SEARCH_DELAY || (process.env.GITHUB_TOKEN ? 2200 : 6200));
 const GRAPHQL_DELAY = Number(process.env.REGISTRY_GRAPHQL_DELAY || 100);
+const GRAPHQL_PAGE_SIZE = Math.min(100, Math.max(10, Number(process.env.REGISTRY_GRAPHQL_PAGE_SIZE || 50)));
 const EARLIEST = new Date('2008-01-01T00:00:00Z');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -18,7 +19,14 @@ async function apiJson(path, token, retries = 4) {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   for (let attempt = 0; attempt < retries; attempt++) {
-    const response = await fetch(`${API_BASE}${path}`, { headers, signal: AbortSignal.timeout(20000) });
+    let response;
+    try {
+      response = await fetch(`${API_BASE}${path}`, { headers, signal: AbortSignal.timeout(20000) });
+    } catch (error) {
+      if (attempt === retries - 1) throw error;
+      await sleep(1000 * (attempt + 1));
+      continue;
+    }
     if (response.ok) return response.json();
     if ([403, 429, 500, 502, 503, 504].includes(response.status) && attempt < retries - 1) {
       const retryAfter = Number(response.headers.get('retry-after') || (response.status === 403 ? 60 : 3));
@@ -60,8 +68,8 @@ async function graphqlJson(query, variables, token, retries = 5) {
 
     const payload = await response.json();
     if (payload.errors?.length) {
-      const rateLimited = payload.errors.some((error) => /rate limit|secondary rate/i.test(error.message || ''));
-      if (rateLimited && attempt < retries - 1) {
+      const retryable = payload.errors.some((error) => /rate limit|secondary rate|timeout|temporar|server/i.test(error.message || ''));
+      if (retryable && attempt < retries - 1) {
         await sleep(3000 * (attempt + 1));
         continue;
       }
@@ -74,10 +82,10 @@ async function graphqlJson(query, variables, token, retries = 5) {
 }
 
 const TOPIC_QUERY = `
-query TopicRepositories($name: String!, $after: String) {
+query TopicRepositories($name: String!, $after: String, $pageSize: Int!) {
   topic(name: $name) {
     name
-    repositories(first: 100, after: $after) {
+    repositories(first: $pageSize, after: $after) {
       totalCount
       pageInfo { hasNextPage endCursor }
       nodes {
@@ -91,7 +99,7 @@ query TopicRepositories($name: String!, $after: String) {
         forkCount
         watchers { totalCount }
         issues(states: OPEN) { totalCount }
-        repositoryTopics(first: 100) { nodes { topic { name } } }
+        repositoryTopics(first: 20) { nodes { topic { name } } }
         createdAt
         updatedAt
         pushedAt
@@ -112,6 +120,7 @@ query TopicRepositories($name: String!, $after: String) {
 export async function discoverTopicRepositories(topicName = 'dsh-plugin', options = {}) {
   const token = options.token || process.env.GITHUB_TOKEN || '';
   if (!token) return null;
+  const pageSize = Math.min(100, Math.max(10, Number(options.pageSize || GRAPHQL_PAGE_SIZE)));
 
   const repositories = new Map();
   let cursor = null;
@@ -119,7 +128,7 @@ export async function discoverTopicRepositories(topicName = 'dsh-plugin', option
   let page = 0;
 
   while (true) {
-    const data = await graphqlJson(TOPIC_QUERY, { name: topicName, after: cursor }, token);
+    const data = await graphqlJson(TOPIC_QUERY, { name: topicName, after: cursor, pageSize }, token);
     const connection = data.topic?.repositories;
     if (!connection) throw new Error(`GitHub topic not found or has no repository connection: ${topicName}`);
     if (totalCount === null) totalCount = Number(connection.totalCount || 0);
@@ -130,7 +139,7 @@ export async function discoverTopicRepositories(topicName = 'dsh-plugin', option
 
     page += 1;
     if (page % 25 === 0 || !connection.pageInfo?.hasNextPage) {
-      console.log(`[discovery] topic:${topicName} page=${page} unique=${repositories.size}/${totalCount} rate_remaining=${data.rateLimit?.remaining ?? 'n/a'}`);
+      console.log(`[discovery] topic:${topicName} page=${page} page_size=${pageSize} unique=${repositories.size}/${totalCount} rate_remaining=${data.rateLimit?.remaining ?? 'n/a'}`);
     }
 
     if (!connection.pageInfo?.hasNextPage) break;
@@ -185,7 +194,7 @@ async function fetchCreatedRange(baseQuery, start, end, token, depth = 0) {
 
   const days = Math.floor((end.getTime() - start.getTime()) / 86400000);
   if (days <= 0 || depth >= 24) {
-    throw new Error(`REST fallback cannot enumerate complete GitHub search range without truncation: ${query} total=${first.total}; use GITHUB_TOKEN for GraphQL topic pagination`);
+    throw new Error(`REST fallback cannot enumerate complete GitHub search range without truncation: ${query} total=${first.total}`);
   }
 
   const leftDays = Math.floor(days / 2);
@@ -197,14 +206,7 @@ async function fetchCreatedRange(baseQuery, start, end, token, depth = 0) {
   return [...left, ...right];
 }
 
-export async function discoverAllRepositories(baseQuery = 'topic:dsh-plugin', options = {}) {
-  const token = options.token || process.env.GITHUB_TOKEN || '';
-  const topicMatch = /^topic:([A-Za-z0-9_.-]+)$/.exec(baseQuery.trim());
-  if (topicMatch && token) {
-    const graph = await discoverTopicRepositories(topicMatch[1], { token });
-    if (graph) return graph;
-  }
-
+async function discoverViaRest(baseQuery, token) {
   const first = await searchPage(baseQuery, 1, token);
   let items;
   if (first.total <= 1000) {
@@ -220,7 +222,21 @@ export async function discoverAllRepositories(baseQuery = 'topic:dsh-plugin', op
   const deficit = first.total - unique.size;
   const tolerance = Math.max(5, Math.ceil(first.total * 0.005));
   if (deficit > tolerance) throw new Error(`Complete discovery deficit too large: expected about ${first.total}, got ${unique.size}`);
-  return { repositories: [...unique.values()], reported_total: first.total, transport: 'rest-search' };
+  return { repositories: [...unique.values()], reported_total: first.total, transport: 'rest-created-range' };
+}
+
+export async function discoverAllRepositories(baseQuery = 'topic:dsh-plugin', options = {}) {
+  const token = options.token || process.env.GITHUB_TOKEN || '';
+  const topicMatch = /^topic:([A-Za-z0-9_.-]+)$/.exec(baseQuery.trim());
+  if (topicMatch && token) {
+    try {
+      const graph = await discoverTopicRepositories(topicMatch[1], { token, pageSize: options.pageSize });
+      if (graph) return graph;
+    } catch (error) {
+      console.warn(`[discovery] GraphQL complete discovery failed (${error.message}); falling back to REST created-range enumeration`);
+    }
+  }
+  return discoverViaRest(baseQuery, token);
 }
 
 export function discoveryRepoToLegacy(repo) {
