@@ -1,3 +1,4 @@
+# Retry with deterministic historical slug ownership
 name: Apply repository lifecycle identity hardening
 
 on:
