@@ -18,14 +18,14 @@ function releaseChannel(plugin) {
 export function resolvePlugin(registry, id, version = registry?.defaults?.plugin_version || '0.1.0', options = {}) {
   if (registry?.registry_version !== 3) throw new Error('Registry V3 is required');
   const range = version || '*';
-  const channel = options.channel || null;
+  const channel = options.channel || 'stable';
   const candidates = (registry.plugins || [])
     .filter((item) => item.id === id)
-    .filter((item) => !channel || releaseChannel(item) === channel)
+    .filter((item) => releaseChannel(item) === channel)
     .filter((item) => satisfiesVersion(item.version, range))
     .sort((a, b) => compareVersions(b.version, a.version));
   const plugin = candidates[0];
-  if (!plugin) throw new Error(`Plugin not found: ${id}@${range}${channel ? ` [${channel}]` : ''}`);
+  if (!plugin) throw new Error(`Plugin not found: ${id}@${range} [${channel}]`);
 
   return {
     id: plugin.id,
