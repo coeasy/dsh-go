@@ -1,5 +1,4 @@
-# Retry after aligning the legacy slug assertion
-name: Apply catalog liveness boundary hardening
+name: Apply active API surface consistency hardening
 
 on:
   push:
@@ -23,14 +22,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Apply liveness boundary hardening
+      - name: Apply active API surface hardening
         run: python3 .github/scripts/apply-registry-canonical-migration.py
-      - name: Verify liveness boundary hardening
+      - name: Verify active API surface hardening
         run: |
           npm ci
-          node --check scripts/repository-identity.mjs
-          node --check scripts/sync.mjs
-          node --check scripts/validate.mjs
+          node --check scripts/update-readme.mjs
           npm run typecheck
           npm run lint
           npm test
@@ -39,6 +36,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/repository-identity.mjs scripts/sync.mjs scripts/validate.mjs tests/repository-identity.test.ts tests/sync.test.ts tests/validate.test.ts
-          git commit -m "fix: separate metadata overrides from repository liveness"
+          git add functions/api/v1/categories.ts functions/api/v1/stats.ts functions/api/v1/plugins/[slug].ts functions/api/v1/meta.ts functions/api/v1/mcp.ts scripts/update-readme.mjs tests/update-readme.test.mjs tests/api-active-surface.test.ts
+          git commit -m "fix: align public API surfaces with active repository state"
           git push
