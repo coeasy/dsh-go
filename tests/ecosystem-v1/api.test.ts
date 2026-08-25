@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ecosystemType, filterEcosystem, toEcosystemItem, type RegistryV3Plugin } from '../../functions/_registry';
 import { marketplaceItemFromRegistry } from '../../marketplace/v1/types';
 
-function plugin(type: 'plugin' | 'mcp' | 'skill' | 'agent', id = type): RegistryV3Plugin {
+function plugin(type: 'plugin' | 'mcp' | 'skill' | 'agent', id: string = type): RegistryV3Plugin {
   return {
     id,
     version: '0.1.0',
