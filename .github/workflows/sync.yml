@@ -27,6 +27,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: sync
@@ -83,12 +84,19 @@ jobs:
             echo "data_changed=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Commit and push generated data
+        id: publish
         shell: bash
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- catalog/ README.md
-          if git diff --cached --quiet; then echo "No generated changes to commit"; exit 0; fi
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit"
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if [ "${{ steps.diff.outputs.data_changed }}" = "true" ]; then
             COUNT=$(node -p "require('./catalog/plugins.json').meta.count")
             MSG="chore(sync): Registry V3 update (${COUNT} plugins, ${{ steps.mode.outputs.mode }})"
@@ -97,10 +105,30 @@ jobs:
           fi
           git commit -m "$MSG"
           git push || { echo "Push raced with another commit; rebasing once"; git pull --rebase; git push; }
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Dispatch deploy workflows for synced data
+        if: steps.publish.outputs.pushed == 'true' && steps.diff.outputs.data_changed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SHA="${{ steps.publish.outputs.commit_sha }}"
+          echo "Registry data committed at ${SHA}; dispatching deploy workflows from main"
+          for workflow in deploy.yml deploy-pages.yml deploy-mirror.yml; do
+            echo "Dispatching ${workflow}"
+            gh workflow run "$workflow" --ref main
+          done
       - name: Summary
         if: always()
         run: |
           echo "### Registry V3 sync (${{ steps.mode.outputs.mode || 'n/a' }})" >> "$GITHUB_STEP_SUMMARY"
           if [ -f catalog/meta.json ]; then
             node -e "const m=require('./catalog/meta.json'); console.log('- last sync: '+(m.last_sync?.at||'n/a')+'\n- registry hash: '+(m.registry?.content_hash||'n/a')+'\n- registry count: '+(m.registry?.count||0))" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "- generated commit pushed: ${{ steps.publish.outputs.pushed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- deploy-worthy data changed: ${{ steps.diff.outputs.data_changed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.publish.outputs.pushed }}" = "true" ]; then
+            echo "- generated commit: ${{ steps.publish.outputs.commit_sha }}" >> "$GITHUB_STEP_SUMMARY"
           fi
