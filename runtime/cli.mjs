@@ -119,7 +119,8 @@ async function executeInstallPlan(rootPlugin, sourceRegistry, options, action = 
     const target = current?.path || pluginPath(plugin.id, options.root);
     const exact = current && current.state !== 'removed' && current.version === plugin.version && current.commit === plugin.commit && await pathExists(target);
     const isRoot = plugin.id === rootPlugin.id;
-    if (exact && (!isRoot || !options.forceRepair)) {
+    const shouldReinstallRoot = isRoot && (options.force || options.forceRepair);
+    if (exact && !shouldReinstallRoot) {
       results.push({ id: plugin.id, skipped: true, reason: 'already-current', target });
       continue;
     }
