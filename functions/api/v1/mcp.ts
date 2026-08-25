@@ -119,7 +119,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       switch (name) {
         case 'list_plugins': {
           const { data } = await loadCatalog(env);
-          const q = { category: args?.category, search: args?.search, verified: args?.verified === true, sort: args?.sort || 'stars' };
+          const q = { category: args?.category, search: args?.search, verified: args?.verified, sort: args?.sort || 'stars' };
           const limit = Math.max(1, Math.min(Number(args?.limit) || 20, 100));
           result = filterPlugins(data.plugins, q).slice(0, limit).map((plugin) => ({
             slug: plugin.slug,
@@ -134,25 +134,22 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         }
         case 'get_plugin': {
           const { data } = await loadCatalog(env);
-          result = data.plugins.find((plugin) => plugin.slug === args?.slug) || null;
+          const requestedSlug = String(args?.slug || '').toLowerCase();
+          result = filterPlugins(data.plugins, {}).find((plugin) => plugin.slug.toLowerCase() === requestedSlug) || null;
           break;
         }
         case 'list_categories': {
           const { data } = await loadCatalog(env);
-          result = data.meta.stats.by_category;
+          const counts: Record<string, number> = {};
+          for (const plugin of filterPlugins(data.plugins, {})) counts[plugin.category || 'other'] = (counts[plugin.category || 'other'] || 0) + 1;
+          result = counts;
           break;
         }
         case 'search_plugins': {
           const { data } = await loadCatalog(env);
           const keyword = (args?.q || '').toLowerCase();
           const limit = Math.max(1, Math.min(Number(args?.limit) || 10, 100));
-          result = data.plugins
-            .filter((plugin) =>
-              plugin.name.toLowerCase().includes(keyword)
-              || plugin.description.toLowerCase().includes(keyword)
-              || plugin.topics.some((topic) => topic.includes(keyword))
-              || plugin.full_name.toLowerCase().includes(keyword))
-            .sort((left, right) => right.stars - left.stars)
+          result = filterPlugins(data.plugins, { search: keyword, sort: 'stars' })
             .slice(0, limit)
             .map((plugin) => ({ slug: plugin.slug, name: plugin.name, stars: plugin.stars, description: plugin.description }));
           break;
@@ -173,7 +170,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         case 'plan_local_install': {
           if (!args?.id) return rpcError(id, -32602, 'id is required');
           const { data } = await loadRegistryV3(env, request.url);
-          const match = data.plugins.find((plugin) => plugin.id === args.id && (!args.version || plugin.version === args.version));
+          const requestedId = String(args.id).toLowerCase();
+          const match = data.plugins.find((plugin) => plugin.id.toLowerCase() === requestedId && (!args.version || plugin.version === args.version));
           if (!match) return rpcError(id, -32602, `ecosystem item not found: ${args.id}`);
           const item = toEcosystemItem(match);
           result = name === 'plan_local_install' ? item.local_install : item;

@@ -25,6 +25,8 @@ const { slug, name, description, stars, category, verified, trend, tags, isNew, 
 // 是否生成了静态详情页（与 plugin/[slug].astro 的 getStaticPaths 门槛保持一致）
 const hasDetail = stars >= DETAIL_THRESHOLD;
 const cardHref = hasDetail ? u(`/plugin/${slug}`) : `https://github.com/${full_name || slug}`;
+const repoName = full_name?.split('/').pop() || '';
+const showRepoIdentity = Boolean(full_name && repoName && name.trim().toLowerCase() !== repoName.toLowerCase());
 
 // 按名称 hash 生成头像渐变色相（稳定、无外部依赖）
 const hash = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -73,6 +75,7 @@ const CATEGORY_ZH: Record<string, string> = {
     {verified && <span class="v-ico" title="verified">✓</span>}
     <span class="stars" title={String(stars)}>★ {fmtK(stars)}</span>
   </div>
+  {showRepoIdentity && <div class="repo-id" title={full_name}>GitHub: {full_name}</div>}
   <div class="desc">{description}</div>
   <div class="meta">
     <span class="badge gray" data-i18n-cat={category}>{CATEGORY_ZH[category] || category}</span>
@@ -117,6 +120,11 @@ const CATEGORY_ZH: Record<string, string> = {
     text-shadow: 0 1px 2px rgb(0 0 0 / .2);
   }
   .name { font-weight: 700; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .repo-id {
+    margin: 5px 0 -2px 39px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--muted, #64748b); opacity: .85;
+  }
   .v-ico {
     flex: none; font-size: 11px; font-weight: 800; color: var(--green, #16a34a);
     background: color-mix(in srgb, var(--green, #16a34a) 14%, transparent);

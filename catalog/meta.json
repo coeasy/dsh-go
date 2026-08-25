@@ -1,10 +1,10 @@
 {
   "last_sync": {
-    "at": "2026-08-25T13:05:35.135Z",
+    "at": "2026-08-25T13:06:44.117Z",
     "mode": "full",
-    "duration_ms": 325808,
-    "scanned": 4259,
-    "included": 3299,
+    "duration_ms": 201562,
+    "scanned": 4261,
+    "included": 3290,
     "skipped": 106,
     "data_changed": true,
     "errors": []
@@ -171,11 +171,11 @@
       "errors": []
     },
     {
-      "at": "2026-08-25T13:05:35.135Z",
+      "at": "2026-08-25T13:06:44.117Z",
       "mode": "full",
-      "duration_ms": 325808,
-      "scanned": 4259,
-      "included": 3299,
+      "duration_ms": 201562,
+      "scanned": 4261,
+      "included": 3290,
       "skipped": 106,
       "data_changed": true,
       "errors": []
@@ -185,12 +185,12 @@
   "registry": {
     "schema_version": "3.0.0",
     "path": "catalog/registry-v3.json",
-    "count": 11741,
-    "excluded_count": 19,
-    "source_catalog_etag": "4e613a9c5f902358",
-    "content_hash": "52a10fe2be9164c0eecfc1dcf5ae9f9882d7a801702c33ebdfb2d8a233844d5e",
+    "count": 11678,
+    "excluded_count": 43,
+    "source_catalog_etag": "55315e1d8e0e0b89",
+    "content_hash": "4888b787890a544545261e649af1ad739dcd71f94dcb25f96248b26f7a4d1088",
     "schema_hash": "871521a58a5d6ca6e7d0055cfd68275fcd413cc3386e1159954a70de7af8fa1a",
-    "generated_at": "2026-08-25T13:18:50.573Z",
+    "generated_at": "2026-08-25T13:24:33.656Z",
     "discovery_mode": "complete",
     "discovery_transport": "graphql-topic",
     "discovered_count": 11721
@@ -200,11 +200,11 @@
     "verified": true,
     "frozen": true,
     "registry_changed": true,
-    "run_at": "2026-08-25T13:18:51.030Z",
-    "source_catalog_etag": "4e613a9c5f902358",
+    "run_at": "2026-08-25T13:24:34.325Z",
+    "source_catalog_etag": "55315e1d8e0e0b89",
     "mode": "full",
-    "input_count": 11760,
-    "output_count": 11741,
-    "excluded_count": 19
+    "input_count": 11687,
+    "output_count": 11678,
+    "excluded_count": 43
   }
 }

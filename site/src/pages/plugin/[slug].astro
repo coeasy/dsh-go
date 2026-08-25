@@ -17,7 +17,7 @@ export async function getStaticPaths() {
   } catch { /* 无数据时仅首页可访问 */ }
 
   // 详情页门槛：仅生成 stars >= DETAIL_THRESHOLD 的静态详情页（低星插件只做列表介绍，卡片直接跳 GitHub）
-  const detailed = plugins.filter((p) => p.stars >= DETAIL_THRESHOLD);
+  const detailed = plugins.filter((p) => !p.deprecated && !p.disabled && p.stars >= DETAIL_THRESHOLD);
 
   return detailed.map((p) => {
     const related = detailed
@@ -89,7 +89,7 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
           <div class="quick-btns">
             <a class="qbtn" href={u(`/install/${plugin.slug}.sh`)} download data-i18n="pl_linux">Linux / macOS 脚本</a>
             <a class="qbtn" href={u(`/install/${plugin.slug}.ps1`)} download data-i18n="pl_win">Windows 脚本</a>
-            <button class="qbtn dsh" id="open-dsh" data-full={plugin.full_name} data-slug={plugin.slug} data-i18n="pl_open_dsh">用 DSH 打开</button>
+            <button class="qbtn dsh" id="open-dsh" data-full={plugin.full_name} data-slug={plugin.slug} data-cmd={plugin.install_cmd} data-i18n="pl_open_dsh">用 DSH 打开</button>
           </div>
         </section>
       </div>
@@ -166,7 +166,7 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
         document.body.appendChild(ifr);
         setTimeout(() => { if (ifr.parentNode) ifr.parentNode.removeChild(ifr); }, 1500);
         // 降级：复制 dsh 安装命令到剪贴板
-        const cmd = `dsh plugin add github:${full}`;
+        const cmd = dsh.dataset.cmd || `dsh plugin add github:${full}`;
         if (navigator.clipboard) navigator.clipboard.writeText(cmd).catch(() => {});
       });
     }

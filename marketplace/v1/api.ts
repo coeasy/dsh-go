@@ -18,10 +18,12 @@ export function marketplaceApi(
       return searchEngine.search(items, { keyword: query });
     },
     async detail(id) {
-      return items.find((item) => item.id === id) ?? null;
+      const key = id.toLowerCase();
+      return items.find((item) => item.id.toLowerCase() === key) ?? null;
     },
     async install(id) {
-      const item = items.find((entry) => entry.id === id);
+      const key = id.toLowerCase();
+      const item = items.find((entry) => entry.id.toLowerCase() === key);
       if (item) return installer.install({ id: item.id, version: item.version, channel: item.channel });
       const plan = { command: 'node' as const, argv: [], requiresLocalRuntime: true as const, restartRequired: true as const };
       return {

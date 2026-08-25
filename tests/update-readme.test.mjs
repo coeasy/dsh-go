@@ -55,6 +55,14 @@ describe('update-readme 推荐表生成', () => {
     expect(hot[0].full_name).toBe('liustack/modlens');
   });
 
+  it('pickHot：archived/disabled 即使 pinned 也不会重新公开', () => {
+    const archivedPinned = { ...p('liustack/modlens', 3560, '2026-08-24'), deprecated: true };
+    const disabled = { ...p('ysr666/dsh-disabled', 952, '2026-08-24'), disabled: true };
+    const active = p('ccch1mneyyy/dsh-TUI', 2400, '2026-08-23');
+    const hot = pickHot([archivedPinned, disabled, active], { min: 300, max: 5000, top: 10 });
+    expect(hot.map((x) => x.full_name)).toEqual(['ccch1mneyyy/dsh-TUI']);
+  });
+
   it('buildTable：非空输出表头与行，空列表输出占位', () => {
     const row = buildTable([p('ysr666/dsh-vision-router', 952, '2026-08-24')]);
     expect(row).toContain('| # | 插件 |');

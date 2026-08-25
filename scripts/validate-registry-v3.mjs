@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
 import { DEFAULT_PLUGIN_VERSION, REGISTRY_VERSION, SCHEMA_VERSION, isCommitSha } from './registry-v3-builder.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_FILE = resolve(ROOT, 'catalog/registry-v3.json');
@@ -26,15 +27,18 @@ export function validateRegistry(data) {
   const repos = new Set();
   for (const plugin of data.plugins) {
     const id = String(plugin?.id || '');
+    const idKey = id.toLowerCase();
     if (!id) errors.push('plugin missing id');
-    if (ids.has(id)) errors.push(`duplicate id: ${id}`);
-    ids.add(id);
+    else if (!/^[A-Za-z0-9_.-]+$/.test(id)) errors.push(`invalid id: ${id}`);
+    if (ids.has(idKey)) errors.push(`duplicate id after case normalization: ${id}`);
+    ids.add(idKey);
 
     if (plugin?.version !== DEFAULT_PLUGIN_VERSION) errors.push(`${id}: version must be ${DEFAULT_PLUGIN_VERSION}`);
     const repo = String(plugin?.source?.repo || '');
     if (!REPO_RE.test(repo)) errors.push(`${id}: invalid source.repo`);
-    if (repos.has(repo)) errors.push(`${id}: duplicate source.repo ${repo}`);
-    repos.add(repo);
+    const repoKey = canonicalRepoKey(repo);
+    if (repos.has(repoKey)) errors.push(`${id}: duplicate source.repo ${repo}`);
+    repos.add(repoKey);
     if (!plugin?.source?.ref) errors.push(`${id}: missing source.ref`);
     if (!isCommitSha(plugin?.source?.commit)) errors.push(`${id}: invalid source.commit`);
 
@@ -46,6 +50,20 @@ export function validateRegistry(data) {
     if (plugin?.runtime?.activation !== 'restart-required') warns.push(`${id}: runtime activation is not restart-required`);
     if (!Array.isArray(plugin?.capabilities) || !plugin.capabilities.includes('plugin')) errors.push(`${id}: capabilities must include plugin`);
     if (!Array.isArray(plugin?.dependencies)) errors.push(`${id}: dependencies must be array`);
+    const metadata = plugin?.metadata || {};
+    const repoName = repoNameFromFullName(repo);
+    if (metadata.repo_name !== repoName) errors.push(`${id}: metadata.repo_name mismatch`);
+    if (metadata.repo_url !== canonicalRepoUrl(repo)) errors.push(`${id}: metadata.repo_url is not canonical`);
+    if (metadata.install_cmd !== makeInstallCmd(repo, metadata.category || 'other')) errors.push(`${id}: metadata.install_cmd source mismatch`);
+    if (!['github', 'dsh-plugin', 'override'].includes(metadata.metadata_source)) errors.push(`${id}: unsupported metadata_source ${metadata.metadata_source || '<missing>'}`);
+    if (metadata.metadata_source === 'github' && metadata.name !== repoName) errors.push(`${id}: GitHub metadata.name must match repository name`);
+    if (metadata.metadata_source === 'github' && (metadata.verified || metadata.manifest_file)) errors.push(`${id}: GitHub metadata cannot be verified or manifest-backed`);
+    if (metadata.metadata_source === 'dsh-plugin' && (!metadata.verified || metadata.manifest_file !== 'dsh-plugin.json')) errors.push(`${id}: dsh-plugin metadata requires verified dsh-plugin.json`);
+    if (metadata.verified && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: verified metadata requires dsh-plugin.json`);
+    if (metadata.manifest_file && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: unsupported manifest_file ${metadata.manifest_file}`);
+    const overrideFields = normalizeOverrideFields(metadata.override_fields);
+    if (metadata.metadata_source === 'override' && overrideFields.length === 0) errors.push(`${id}: override metadata missing override_fields`);
+    if (Array.isArray(metadata.override_fields) && overrideFields.length !== metadata.override_fields.length) errors.push(`${id}: unsupported override_fields`);
   }
 
   if (data.generated?.count !== data.plugins.length) errors.push(`generated.count (${data.generated?.count}) does not match plugins length (${data.plugins.length})`);

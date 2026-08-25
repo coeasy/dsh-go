@@ -60,14 +60,15 @@ export function isDshRelated(p) {
 
 // 挑选推荐列表：PINNED 必需项固定在最前，其余按区间 + DSH 过滤、按最近更新降序补足，总数不超过 top。
 export function pickHot(plugins, { min = DEFAULT_MIN, max = DEFAULT_MAX, top = TOP, pinned = PINNED } = {}) {
-  const byFull = new Map(plugins.map((p) => [String(p.full_name || '').toLowerCase(), p]));
+  const activePlugins = plugins.filter((p) => !p.deprecated && !p.disabled);
+  const byFull = new Map(activePlugins.map((p) => [String(p.full_name || '').toLowerCase(), p]));
   const pinnedItems = [];
   for (const id of pinned) {
     const item = byFull.get(String(id).toLowerCase());
     if (item) pinnedItems.push(item);
   }
   const pinnedSet = new Set(pinnedItems.map((x) => x.full_name));
-  const rest = plugins
+  const rest = activePlugins
     .filter((p) => {
       const stars = Number(p.stars || 0);
       const full = `${p.full_name || ''} ${p.name || ''}`;

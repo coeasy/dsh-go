@@ -4,6 +4,10 @@
 export interface Plugin {
   slug: string;
   name: string;
+  repo_name?: string;
+  repo_id?: string | null;
+  metadata_source?: 'github' | 'dsh-plugin' | 'override';
+  override_fields?: string[];
   full_name: string;
   description: string;
   category: string;
@@ -22,6 +26,8 @@ export interface Plugin {
   repo_url: string;
   homepage: string | null;
   verified: boolean;
+  deprecated?: boolean;
+  disabled?: boolean;
   has_readme: boolean;
   readme_excerpt: string;
   rank?: number;
@@ -150,10 +156,11 @@ export function parseQuery(url: URL): Query {
 
 export function filterPlugins(plugins: Plugin[], q: Query): Plugin[] {
   let list = plugins;
+  if (!q.include_deprecated) list = list.filter((p) => !p.deprecated && !p.disabled);
   if (q.category && q.category !== 'all') {
     list = list.filter((p) => p.category === q.category);
   }
-  if (q.verified === true) list = list.filter((p) => p.verified);
+  if (q.verified !== undefined) list = list.filter((p) => p.verified === q.verified);
   if (q.language) list = list.filter((p) => p.language?.toLowerCase() === q.language!.toLowerCase());
   if (q.license) list = list.filter((p) => p.license?.toLowerCase() === q.license!.toLowerCase());
   if (q.created_after) list = list.filter((p) => p.created_at >= q.created_after!);
@@ -163,6 +170,8 @@ export function filterPlugins(plugins: Plugin[], q: Query): Plugin[] {
     list = list.filter(
       (p) =>
         p.name.toLowerCase().includes(kw) ||
+        p.full_name.toLowerCase().includes(kw) ||
+        (p.repo_name || '').toLowerCase().includes(kw) ||
         p.description.toLowerCase().includes(kw) ||
         p.topics.some((t) => t.includes(kw)) ||
         p.tags.some((t) => t.includes(kw))

@@ -1,4 +1,5 @@
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeStoredPlugin, repoNameFromFullName } from './repository-identity.mjs';
 
 export const REGISTRY_VERSION = 3;
 export const SCHEMA_VERSION = '3.0.0';
@@ -129,9 +130,12 @@ export function buildRegistryPlugin(legacy, normalized, commit) {
     capabilities: inferCapabilities(legacy),
     dependencies: Array.isArray(legacy.dependencies) ? legacy.dependencies : [],
     metadata: {
-      name: legacy.name || normalized.id, description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),
-      stars: Number(legacy.stars || 0), rank: Number(legacy.rank || 0), repo_url: legacy.repo_url || `https://github.com/${normalized.repo}`,
-      install_cmd: legacy.install_cmd || '', manifest_file: legacy.manifest_file || null,
+      name: legacy.name || normalized.id, repo_id: legacy.repo_id || null, repo_name: legacy.repo_name || repoNameFromFullName(normalized.repo),
+      metadata_source: legacy.metadata_source || (legacy.manifest_file === 'dsh-plugin.json' ? 'dsh-plugin' : 'github'),
+      override_fields: Array.isArray(legacy.override_fields) ? legacy.override_fields : [],
+      description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),
+      stars: Number(legacy.stars || 0), rank: Number(legacy.rank || 0), repo_url: canonicalRepoUrl(normalized.repo),
+      install_cmd: makeInstallCmd(normalized.repo, legacy.category || 'other'), manifest_file: legacy.manifest_file || null,
     },
   };
   record.artifact.integrity = artifactIntegrity(record);
@@ -141,18 +145,27 @@ export function buildRegistryPlugin(legacy, normalized, commit) {
 export async function buildRegistryV3(legacyCatalog, existingRegistry = null, options = {}) {
   const token = options.token || '';
   const preserveExisting = Boolean(options.preserveExisting);
-  const existingByRepo = new Map((existingRegistry?.plugins || []).filter((p) => p?.source?.repo).map((p) => [p.source.repo, p]));
+  const existingByRepo = new Map((existingRegistry?.plugins || []).filter((p) => p?.source?.repo).map((p) => [canonicalRepoKey(p.source.repo), p]));
+  const existingByRepoId = new Map((existingRegistry?.plugins || []).filter((p) => p?.metadata?.repo_id).map((p) => [String(p.metadata.repo_id), p]));
   const inputs = [];
   const excluded = [];
   const seenIds = new Set();
   const seenRepos = new Set();
 
-  for (const legacy of legacyCatalog?.plugins || []) {
+  for (const rawLegacy of legacyCatalog?.plugins || []) {
+    // Registry build/migration is also an identity boundary. Never assume the legacy
+    // catalog was produced by the latest sync code: canonicalize stale names, URLs,
+    // install commands, manifest authority and legacy record-wide override flags here.
+    const legacy = normalizeStoredPlugin(rawLegacy);
     const normalized = normalizeLegacyPlugin(legacy);
     if (normalized.error) { excluded.push({ repo: legacy?.full_name || '', reason: normalized.error }); continue; }
-    if (seenIds.has(normalized.id)) { excluded.push({ repo: normalized.repo, reason: `duplicate id: ${normalized.id}` }); continue; }
-    if (seenRepos.has(normalized.repo)) { excluded.push({ repo: normalized.repo, reason: 'duplicate repository' }); continue; }
-    seenIds.add(normalized.id); seenRepos.add(normalized.repo); inputs.push({ legacy, normalized });
+    if (legacy?.disabled) { excluded.push({ repo: normalized.repo, reason: 'repository disabled' }); continue; }
+    if (legacy?.deprecated) { excluded.push({ repo: normalized.repo, reason: 'repository archived/deprecated' }); continue; }
+    const idKey = normalized.id.toLowerCase();
+    if (seenIds.has(idKey)) { excluded.push({ repo: normalized.repo, reason: `duplicate id after case normalization: ${normalized.id}` }); continue; }
+    const repoKey = canonicalRepoKey(normalized.repo);
+    if (seenRepos.has(repoKey)) { excluded.push({ repo: normalized.repo, reason: 'duplicate repository' }); continue; }
+    seenIds.add(idKey); seenRepos.add(repoKey); inputs.push({ legacy, normalized });
   }
 
   const plugins = [];
@@ -163,9 +176,11 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
 
   for (const input of inputs) {
     const { legacy, normalized } = input;
-    const previous = existingByRepo.get(normalized.repo);
+    const previous = (legacy.repo_id && existingByRepoId.get(String(legacy.repo_id))) || existingByRepo.get(canonicalRepoKey(normalized.repo));
     if (previous && previous.version === DEFAULT_PLUGIN_VERSION && isCommitSha(previous.source?.commit) && previous.artifact?.integrity === artifactIntegrity(previous) && previous.source?.ref === normalized.ref && previous.source?.updated_at === (legacy.updated_at || '')) {
-      plugins.push(previous); reused++; continue;
+      // Reuse only the immutable commit. Rebuild source/metadata so repository renames,
+      // canonical URLs, names, categories and verification state cannot remain stale.
+      plugins.push(buildRegistryPlugin(legacy, normalized, previous.source.commit)); reused++; continue;
     }
     const discoveredCommit = String(legacy.snapshot_commit || legacy.source?.commit || '').trim();
     if (isCommitSha(discoveredCommit)) {
@@ -185,9 +200,10 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
   if (preserveExisting && existingRegistry) {
     for (const previous of existingRegistry.plugins || []) {
       const repo = previous?.source?.repo;
-      if (!repo || seenRepos.has(repo)) continue;
+      const repoKey = canonicalRepoKey(repo);
+      if (!repo || seenRepos.has(repoKey)) continue;
       if (!isCommitSha(previous.source?.commit) || previous.artifact?.integrity !== artifactIntegrity(previous)) continue;
-      plugins.push(previous); seenRepos.add(repo); seenIds.add(previous.id); reusedExistingOnly++;
+      plugins.push(previous); seenRepos.add(repoKey); seenIds.add(previous.id); reusedExistingOnly++;
     }
   }
 

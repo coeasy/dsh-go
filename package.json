@@ -25,6 +25,8 @@
     "ecosystem:check": "npm run typecheck && npm run lint && npm run ecosystem:test",
     "deploy:gate": "node scripts/deploy-gate-v3.mjs",
     "validate": "node scripts/validate.mjs",
+    "audit:identity": "node scripts/audit-catalog-identity.mjs",
+    "audit:identity:report": "node scripts/audit-catalog-identity.mjs --report catalog/audit-report.json",
     "readme:update": "node scripts/update-readme.mjs",
     "copy-assets": "node scripts/copy-assets.mjs",
     "site:install": "cd site && npm ci",

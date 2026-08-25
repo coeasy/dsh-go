@@ -68,6 +68,7 @@ jobs:
       - name: Run integrity gates
         run: |
           npm run validate
+          npm run audit:identity:report -- --strict
           npm run registry:verify
           npm run runtime:check
           npm run deploy:gate

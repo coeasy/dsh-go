@@ -1,7 +1,62 @@
 import { describe, it, expect } from 'vitest';
 
 // 顶层动态 import 走 Node 原生 ESM 加载，避免 vitest 对 .mjs 的 transform 兼容问题
-const { dedupeTags, computeTrendScore } = await import('../scripts/sync.mjs');
+const { buildFeed, dedupeTags, computeTrendScore, detectCategory, isAuthoritativeManifestFile, normalizeCategory, restRepositoryState, sanitizeManifest } = await import('../scripts/sync.mjs');
+
+describe('manifest authority', () => {
+  it('只有 dsh-plugin.json 能作为 DSH manifest', () => {
+    expect(isAuthoritativeManifestFile('dsh-plugin.json')).toBe(true);
+    expect(isAuthoritativeManifestFile('package.json')).toBe(false);
+    expect(isAuthoritativeManifestFile('plugin.json')).toBe(false);
+  });
+
+  it('清洗 manifest 字段并拒绝非法分类', () => {
+    expect(normalizeCategory('mcp', 'other')).toBe('mcp');
+    expect(normalizeCategory('toString', 'other')).toBe('other');
+    expect(sanitizeManifest({ name: ' Brand ', description: ' demo ', category: 'not-real', tags: 'bad' })).toEqual({ name: 'Brand', description: 'demo', tags: [] });
+    expect(sanitizeManifest({ name: 'Demo', category: 'skills', tags: [' AI ', 3, '', 'mcp'] })).toEqual({ name: 'Demo', category: 'skills', tags: ['AI', 'mcp'] });
+  });
+});
+
+describe('category detection', () => {
+  it('使用 token 匹配避免 substring 误判', () => {
+    expect(detectCategory({ topics: [], description: 'MCP server bridge', name: 'Bridge' }, null)).toBe('mcp');
+    expect(detectCategory({ topics: [], description: 'Webhook integration bridge', name: 'Bridge' }, null)).toBe('integration');
+    expect(detectCategory({ topics: [], description: 'A codebook formatter', name: 'Codebook' }, null)).toBe('other');
+    expect(detectCategory({ topics: ['web-ui'], description: '', name: 'Anything' }, null)).toBe('web-ui');
+  });
+});
+
+describe('REST repository state', () => {
+  it('preserves true watcher counts when search results omit subscribers_count', () => {
+    expect(restRepositoryState({ archived: false, disabled: false }, { watchers: 443 })).toEqual({
+      watchers: 443, deprecated: false, disabled: false,
+    });
+    expect(restRepositoryState({ subscribers_count: 12, archived: true, disabled: true }, { watchers: 443 })).toEqual({
+      watchers: 12, deprecated: true, disabled: true,
+    });
+  });
+
+  it('preserves inactive state if a partial REST record omits lifecycle flags', () => {
+    expect(restRepositoryState({}, { watchers: 9, deprecated: true, disabled: true })).toEqual({
+      watchers: 9, deprecated: true, disabled: true,
+    });
+  });
+});
+
+describe('public feed liveness', () => {
+  it('does not publish archived or disabled repositories', () => {
+    const firstSeen = new Date().toISOString();
+    const feed = buildFeed([
+      { name: 'active', full_name: 'owner/active', repo_url: 'https://github.com/owner/active', first_seen: firstSeen, updated_at: firstSeen },
+      { name: 'archived', full_name: 'owner/archived', repo_url: 'https://github.com/owner/archived', first_seen: firstSeen, updated_at: firstSeen, deprecated: true },
+      { name: 'disabled', full_name: 'owner/disabled', repo_url: 'https://github.com/owner/disabled', first_seen: firstSeen, updated_at: firstSeen, disabled: true },
+    ]);
+    expect(feed).toContain('owner/active');
+    expect(feed).not.toContain('owner/archived');
+    expect(feed).not.toContain('owner/disabled');
+  });
+});
 
 describe('dedupeTags', () => {
   it('去重、去空、小写化、忽略无效', () => {

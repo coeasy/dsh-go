@@ -19,8 +19,9 @@ export function resolvePlugin(registry, id, version = registry?.defaults?.plugin
   if (registry?.registry_version !== 3) throw new Error('Registry V3 is required');
   const range = version || '*';
   const channel = options.channel || 'stable';
+  const idKey = String(id || '').toLowerCase();
   const candidates = (registry.plugins || [])
-    .filter((item) => item.id === id)
+    .filter((item) => String(item.id || '').toLowerCase() === idKey)
     .filter((item) => releaseChannel(item) === channel)
     .filter((item) => satisfiesVersion(item.version, range))
     .sort((a, b) => compareVersions(b.version, a.version));
@@ -93,7 +94,7 @@ export function buildDependencyPlan(registry, rootPlugin, options = {}) {
         if (dependency.optional) continue;
         throw error;
       }
-      const previousConstraint = constraints.get(dependency.id);
+      const previousConstraint = constraints.get(resolved.id);
       if (previousConstraint && !satisfiesVersion(resolved.version, previousConstraint)) {
         throw new Error(`dependency conflict: ${dependency.id} cannot satisfy ${previousConstraint} and ${dependency.range}`);
       }
@@ -110,7 +111,8 @@ export function buildDependencyPlan(registry, rootPlugin, options = {}) {
   const installed = options.installed || [];
   const replacements = order
     .filter((plugin) => {
-      const current = installed.find((item) => item.id === plugin.id && item.state !== 'removed');
+      const pluginKey = String(plugin.id || '').toLowerCase();
+      const current = installed.find((item) => String(item.id || '').toLowerCase() === pluginKey && item.state !== 'removed');
       return current && (current.version !== plugin.version || current.commit !== plugin.commit);
     })
     .map((plugin) => plugin.id);

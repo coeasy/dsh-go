@@ -21,6 +21,7 @@ import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { applyPluginOverride, canonicalRepoKey, canonicalRepoUrl, discoveryRepoId, ensureUniquePluginSlugs, findStoredPluginForRepository, makeInstallCmd, normalizeStoredPlugin } from './repository-identity.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -28,6 +29,7 @@ const CATALOG_DIR = resolve(ROOT, 'catalog');
 const PLUGINS_FILE = resolve(CATALOG_DIR, 'plugins.json');
 const META_FILE = resolve(CATALOG_DIR, 'meta.json');
 const FEED_FILE = resolve(CATALOG_DIR, 'feed.xml');
+const OBSERVED_FILE = resolve(CATALOG_DIR, '.sync-observed.json');
 
 const TOKEN = process.env.GITHUB_TOKEN || '';
 const API_BASE = 'https://api.github.com';
@@ -39,6 +41,7 @@ const REQUEST_DELAY = 120; // ms，普通资源请求间隔
 // 搜索 API 速率：认证 30 req/min、匿名 10 req/min。主动限速避免 403 导致全量中途失败。
 const SEARCH_DELAY = TOKEN ? 2200 : 6000; // ms
 const README_EXCERPT_LEN = 500;
+const MANIFEST_FILES = Object.freeze(['dsh-plugin.json']);
 
 const CATEGORIES = {
   'web-ui': 'Web UI 组件',
@@ -117,6 +120,28 @@ export function computeTrendScore(p) {
 }
 
 // 合并 manifest.tags 与 GitHub topics，去重并清洗
+export function isAuthoritativeManifestFile(file) {
+  return MANIFEST_FILES.includes(String(file || ''));
+}
+
+export function normalizeCategory(value, fallback = 'other') {
+  const category = String(value || '').trim();
+  return Object.prototype.hasOwnProperty.call(CATEGORIES, category) ? category : fallback;
+}
+
+export function sanitizeManifest(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const clean = {};
+  if (typeof data.name === 'string' && data.name.trim()) clean.name = data.name.trim().slice(0, 200);
+  if (typeof data.description === 'string' && data.description.trim()) clean.description = data.description.trim().slice(0, 4000);
+  const category = normalizeCategory(data.category, '');
+  if (category) clean.category = category;
+  clean.tags = Array.isArray(data.tags)
+    ? data.tags.filter((tag) => typeof tag === 'string').map((tag) => tag.trim()).filter(Boolean).slice(0, 100)
+    : [];
+  return clean;
+}
+
 export function dedupeTags(arr) {
   const out = [];
   const seen = new Set();
@@ -130,10 +155,25 @@ export function dedupeTags(arr) {
   return out;
 }
 
-function detectCategory(repo, _manifest) {
-  const topics = (repo.topics || []).map((t) => t.toLowerCase());
-  const desc = `${repo.description || ''} ${(repo.name || '').toLowerCase()}`;
-  const matches = (kw) => topics.includes(kw) || desc.includes(kw);
+export function restRepositoryState(repo, previous = {}) {
+  const subscribers = repo?.subscribers_count;
+  const watchers = typeof subscribers === 'number' && Number.isFinite(subscribers)
+    ? subscribers
+    : Number(previous?.watchers || 0);
+  const deprecated = typeof repo?.archived === 'boolean' ? repo.archived : Boolean(previous?.deprecated);
+  const disabled = typeof repo?.disabled === 'boolean' ? repo.disabled : Boolean(previous?.disabled);
+  return { watchers, deprecated, disabled };
+}
+
+export function detectCategory(repo, _manifest) {
+  const topics = (repo.topics || []).map((t) => String(t).toLowerCase());
+  const words = new Set(`${repo.description || ''} ${repo.name || ''}`.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
+  const matches = (kw) => {
+    const normalized = String(kw).toLowerCase();
+    if (topics.includes(normalized)) return true;
+    const parts = normalized.split(/[^a-z0-9]+/).filter(Boolean);
+    return parts.length > 0 && parts.every((part) => words.has(part));
+  };
 
   // 用 topics 精确命中优先（注意顺序：先精确标签，再关键词模糊）
   if (topics.some((t) => ['web-ui', 'ui', 'dashboard', 'webapp', 'frontend', 'ui-library'].includes(t))) return 'web-ui';
@@ -168,11 +208,6 @@ function detectCategory(repo, _manifest) {
   return 'other';
 }
 
-function makeInstallCmd(fullName, category) {
-  const profile = category === 'web-ui' ? 'web' : category === 'desktop' ? 'desktop' : 'tools';
-  return `dsh plugin --profile ${profile} add github:${fullName}`;
-}
-
 // ---------- 数据读取 ----------
 async function readJSON(file, fallback) {
   try { await access(file); return JSON.parse(await readFile(file, 'utf-8')); }
@@ -184,38 +219,84 @@ async function readJSON(file, fallback) {
 // 结构：{ "owner/repo": { "category": "web-ui", "name": "别名", "description": "修正描述", "tags": [...], "hidden": true } }
 async function loadOverrides() {
   const raw = await readJSON(resolve(CATALOG_DIR, 'overrides.json'), {});
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;
-  return {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const normalized = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (key.startsWith('$') || !value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const canonicalKey = canonicalRepoKey(key);
+    if (canonicalKey) normalized[canonicalKey] = value;
+  }
+  return normalized;
 }
 
 function applyOverrides(plugin, overrides) {
-  const o = overrides[plugin.full_name];
+  const o = overrides[canonicalRepoKey(plugin.full_name)];
   if (!o) return plugin;
-  if (o.name) plugin.name = o.name;
-  if (o.description) plugin.description = o.description;
-  if (o.category) {
-    plugin.category = o.category in CATEGORIES ? o.category : 'other';
-    plugin.install_cmd = makeInstallCmd(plugin.full_name, plugin.category);
-  }
-  if (Array.isArray(o.tags)) plugin.tags = o.tags;
-  if (o.homepage) plugin.homepage = o.homepage;
-  if (o.hidden) plugin.hidden = true;
-  return plugin;
+  const result = applyPluginOverride(plugin, o);
+  if (Object.prototype.hasOwnProperty.call(o, 'hidden')) result.hidden = Boolean(o.hidden);
+  return result;
 }
 
-// ---------- 清单抓取（走 raw 域名，不占 REST 配额） ----------
-async function fetchManifest(fullName, branch) {
-  for (const file of ['dsh-plugin.json', 'package.json']) {
-    const url = `https://raw.githubusercontent.com/${fullName}/${branch}/${file}`;
+// ---------- DSH 清单抓取（走 raw 域名，不占 REST 配额） ----------
+// package.json 是包管理元数据，不是 DSH manifest；不能用于覆盖仓库展示名、分类或 verified。
+export async function observeDshManifest(fullName, branch) {
+  const file = MANIFEST_FILES[0];
+  const url = `https://raw.githubusercontent.com/${fullName}/${branch}/${file}`;
+  let lastError = '';
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' } });
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (!data || typeof data !== 'object') continue;
-      return { file, data };
-    } catch { /* continue */ }
+      const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' }, signal: AbortSignal.timeout(15000) });
+      if (res.status === 404) return { observed: true, manifest: null, status: 404 };
+      if (!res.ok) {
+        lastError = `HTTP ${res.status}`;
+        if ([403, 429, 500, 502, 503, 504].includes(res.status) && attempt < 2) {
+          await sleep(500 * (attempt + 1));
+          continue;
+        }
+        return { observed: false, manifest: null, status: res.status, error: lastError };
+      }
+      let data;
+      try { data = await res.json(); }
+      catch { return { observed: true, manifest: null, status: res.status, error: 'invalid-json' }; }
+      const clean = sanitizeManifest(data);
+      return { observed: true, manifest: clean ? { file, data: clean } : null, status: res.status, error: clean ? '' : 'invalid-manifest' };
+    } catch (error) {
+      lastError = error?.message || String(error);
+      if (attempt < 2) { await sleep(500 * (attempt + 1)); continue; }
+    }
   }
-  return null;
+  return { observed: false, manifest: null, status: 0, error: lastError || 'manifest-observation-failed' };
+}
+
+async function fetchManifest(fullName, branch) {
+  const observation = await observeDshManifest(fullName, branch);
+  if (!observation.observed) throw new Error(`DSH manifest observation failed for ${fullName}: ${observation.error || observation.status}`);
+  return observation.manifest;
+}
+
+export function applyManifestObservation(plugin, observation) {
+  const base = normalizeStoredPlugin(plugin);
+  if (!observation?.observed) return base;
+  const manifest = observation.manifest;
+  const result = manifest ? {
+    ...base,
+    name: manifest.data?.name || base.repo_name,
+    description: manifest.data?.description || base.description || '',
+    category: normalizeCategory(manifest.data?.category, base.category || 'other'),
+    tags: dedupeTags([...(manifest.data?.tags || []), ...(base.topics || [])]),
+    metadata_source: 'dsh-plugin',
+    manifest_file: 'dsh-plugin.json',
+    verified: true,
+  } : {
+    ...base,
+    name: base.repo_name,
+    metadata_source: 'github',
+    manifest_file: null,
+    verified: false,
+  };
+  result.install_cmd = makeInstallCmd(result.full_name, result.category);
+  result._manifest_observed = true;
+  return normalizeStoredPlugin(result);
 }
 
 async function fetchReadme(fullName, branch) {
@@ -262,18 +343,24 @@ async function fetchRange(query, opts = {}) {
 // ---------- 构建插件对象 ----------
 async function buildPlugin(repo, oldPlugins) {
   const fullName = repo.full_name;
-  const old = oldPlugins.find((p) => p.full_name === fullName);
+  const repoId = discoveryRepoId(repo);
+  const old = findStoredPluginForRepository(oldPlugins, repo);
   const manifest = await fetchManifest(fullName, repo.default_branch || 'main');
   const readme = await fetchReadme(fullName, repo.default_branch || 'main');
 
   const license = repo.license ? repo.license.spdx_id : null;
-  const category = manifest?.data?.category || detectCategory(repo, manifest);
+  const detectedCategory = detectCategory(repo, manifest);
+  const category = normalizeCategory(manifest?.data?.category, detectedCategory);
   const base = old ? old : {};
+  const repoState = restRepositoryState(repo, base);
   const now = new Date().toISOString();
 
-  return {
-    slug: fullName.replace('/', '-'),
+  return normalizeStoredPlugin({
+    slug: base.slug || fullName.replace('/', '-'),
+    repo_id: repoId,
     name: manifest?.data?.name || repo.name,
+    repo_name: repo.name,
+    metadata_source: manifest ? 'dsh-plugin' : 'github',
     full_name: fullName,
     description: manifest?.data?.description || repo.description || '',
     category,
@@ -281,7 +368,7 @@ async function buildPlugin(repo, oldPlugins) {
     tags: dedupeTags([...(manifest?.data?.tags || []), ...(repo.topics || [])]),
     stars: repo.stargazers_count || 0,
     forks: repo.forks_count || 0,
-    watchers: repo.subscribers_count || repo.watchers_count || 0,
+    watchers: repoState.watchers,
     open_issues: repo.open_issues_count || 0,
     created_at: repo.created_at || '',
     updated_at: repo.pushed_at || '',
@@ -290,14 +377,17 @@ async function buildPlugin(repo, oldPlugins) {
     language: repo.language || '',
     license: license || '',
     install_cmd: makeInstallCmd(fullName, category),
-    repo_url: repo.html_url || `https://github.com/${fullName}`,
+    repo_url: canonicalRepoUrl(fullName),
     homepage: repo.homepage || null,
+    deprecated: repoState.deprecated,
+    disabled: repoState.disabled,
     verified: Boolean(manifest),
     manifest_file: manifest ? manifest.file : null,
     has_readme: readme.has,
     readme_excerpt: readme.excerpt,
     snapshot_commit: repo.default_branch || 'main',
-  };
+    snapshot_ref: repo.default_branch || 'main',
+  });
 }
 
 // ---------- 主流程 ----------
@@ -409,8 +499,9 @@ async function main() {
   // 去重：主源优先——补充主题候选若与主源重复，丢弃补充源条目（保留主源数据）
   const seen = new Set();
   repos = repos.filter((r) => {
-    if (seen.has(r.full_name)) return false;
-    seen.add(r.full_name);
+    const key = String(discoveryRepoId(r) || canonicalRepoKey(r.full_name));
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
     return true;
   });
   const extraCount = repos.filter((r) => r.__extra).length;
@@ -451,15 +542,29 @@ async function main() {
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
   let plugins = results.filter(Boolean);
 
+  // The liveness sidecar is derived only from records that passed current collection
+  // rules. For supplementary topics this means dsh-plugin.json was fetched now, so a
+  // repository that removed its manifest cannot inherit a historical verified state.
+  if (mode === 'full') {
+    const observedRepos = [...new Set(plugins.map((plugin) => plugin.full_name).filter(Boolean))];
+    const observedRepoIds = [...new Set(plugins.map((plugin) => String(plugin.repo_id || '')).filter(Boolean))];
+    await writeFile(OBSERVED_FILE, JSON.stringify({ mode: 'full', repos: observedRepos, repo_ids: observedRepoIds }, null, 2) + '\n');
+    log(`写入临时有效观测集合：repos=${observedRepos.length}, repo_ids=${observedRepoIds.length}`);
+  }
+
   // 保留旧数据中本次未出现的仓库：
   //  - 全量：GitHub 搜索偶发漏项保护（超幅桶 top-1000 轮换时避免误删）
   //  - 增量：窗口内只含"有变更"的仓库，未变更的必须复用旧数据——
   //    否则增量会拿窗口结果整表替换目录（曾导致 3153 → 1000 的数据回退）
   {
-    const currentNames = new Set(plugins.map((p) => p.full_name));
+    const currentKeys = new Set(plugins.map((p) => canonicalRepoKey(p.full_name)));
+    const currentIds = new Set(plugins.map((p) => String(p.repo_id || '')).filter(Boolean));
     let kept = 0;
-    for (const old of oldPlugins) {
-      if (!currentNames.has(old.full_name)) { plugins.push(old); kept++; }
+    for (const oldRaw of oldPlugins) {
+      const old = normalizeStoredPlugin(oldRaw);
+      const oldKey = canonicalRepoKey(old.full_name);
+      const oldId = String(old.repo_id || '');
+      if (!currentKeys.has(oldKey) && (!oldId || !currentIds.has(oldId))) { plugins.push(old); kept++; }
     }
     if (kept > 0) log(`${mode} 合并：保留 ${kept} 个未变更旧插件，共 ${plugins.length} 个`);
   }
@@ -471,6 +576,10 @@ async function main() {
     plugins = plugins.map((p) => applyOverrides(p, overrides)).filter((p) => !p.hidden);
     log(`应用覆盖层：处理 ${Object.keys(overrides).length} 条，生效后 ${plugins.length} 个（隐藏 ${before - plugins.length} 个）`);
   }
+
+  // Preserve stable ids across renames while repairing the rare case where a new
+  // repository later reuses an old owner/name path and would otherwise collide on slug.
+  plugins = ensureUniquePluginSlugs(plugins, oldPlugins);
 
   // 排序 + trend_score（verified 优先，其次 trend_score，符合方案 §3.1）
   // 先重算 trend_score，再排序，最后赋 rank（保证 rank/API sort=trend 一致）
@@ -554,10 +663,10 @@ function xmlEscape(s) {
     .replace(/'/g, '&apos;');
 }
 
-function buildFeed(plugins) {
+export function buildFeed(plugins) {
   // 收录 30 天内的插件（首次全量同步时包含所有新收录插件）
   const items = plugins
-    .filter((p) => (Date.now() - new Date(p.first_seen).getTime()) < 30 * 864e5)
+    .filter((p) => !p.deprecated && !p.disabled && (Date.now() - new Date(p.first_seen).getTime()) < 30 * 864e5)
     .slice(0, 30)
     .map((p) => {
       const isNew = (Date.now() - new Date(p.first_seen).getTime()) < 7 * 864e5;

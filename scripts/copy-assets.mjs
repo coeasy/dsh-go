@@ -40,7 +40,7 @@ async function genInstallScripts() {
   if (!(await exists(src))) { console.warn('Missing plugins.json; skipping install scripts'); return; }
   const data = JSON.parse(await readFile(src, 'utf8'));
   await mkdir(INSTALL_DIR, { recursive: true });
-  const wanted = new Set((data.plugins || []).filter((plugin) => (plugin.stars || 0) >= DETAIL_THRESHOLD).flatMap((plugin) => [`${plugin.slug}.sh`, `${plugin.slug}.ps1`]));
+  const wanted = new Set((data.plugins || []).filter((plugin) => !plugin.deprecated && !plugin.disabled && (plugin.stars || 0) >= DETAIL_THRESHOLD).flatMap((plugin) => [`${plugin.slug}.sh`, `${plugin.slug}.ps1`]));
   try {
     for (const file of await readdir(INSTALL_DIR)) {
       if ((file.endsWith('.sh') || file.endsWith('.ps1')) && !wanted.has(file)) await unlink(resolve(INSTALL_DIR, file));
@@ -49,7 +49,7 @@ async function genInstallScripts() {
 
   let generated = 0;
   for (const plugin of data.plugins || []) {
-    if ((plugin.stars || 0) < DETAIL_THRESHOLD) continue;
+    if (plugin.deprecated || plugin.disabled || (plugin.stars || 0) < DETAIL_THRESHOLD) continue;
     const full = plugin.full_name || '';
     if (!full || !plugin.slug) continue;
     const installCmd = plugin.install_cmd || `dsh plugin add github:${full}`;
