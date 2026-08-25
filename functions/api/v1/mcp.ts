@@ -85,6 +85,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const { data } = await loadCatalog(env);
     const plugins = data.plugins;
+    const activePlugins = filterPlugins(plugins, {});
 
     if (method === 'initialize') {
       return rpcResult(id, {
@@ -119,26 +120,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
           break;
         }
         case 'get_plugin': {
-          const p = plugins.find((x) => x.slug === args?.slug);
+          const requestedSlug = String(args?.slug || '').toLowerCase();
+          const p = activePlugins.find((x) => x.slug.toLowerCase() === requestedSlug);
           result = p || null;
           break;
         }
         case 'list_categories': {
-          result = data.meta.stats.by_category;
+          const counts: Record<string, number> = {};
+          for (const plugin of activePlugins) counts[plugin.category || 'other'] = (counts[plugin.category || 'other'] || 0) + 1;
+          result = counts;
           break;
         }
         case 'search_plugins': {
           const kw = (args?.q || '').toLowerCase();
           const limit = Math.max(1, Math.min(Number(args?.limit) || 10, 100));
-          const list = plugins
-            .filter((p) =>
-              p.name.toLowerCase().includes(kw) ||
-              p.description.toLowerCase().includes(kw) ||
-              p.topics.some((t) => t.includes(kw)) ||
-              p.full_name.toLowerCase().includes(kw)
-            )
-            .sort((a, b) => b.stars - a.stars)
-            .slice(0, limit);
+          const list = filterPlugins(plugins, { search: kw, sort: 'stars' }).slice(0, limit);
           result = list.map((p) => ({ slug: p.slug, name: p.name, stars: p.stars, description: p.description }));
           break;
         }

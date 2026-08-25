@@ -1,5 +1,5 @@
 // GET /api/v1/categories —— 分类注册表（含计数）
-import { loadCatalog, json, internalError, type Env } from '../../_lib';
+import { loadCatalog, filterPlugins, json, internalError, type Env } from '../../_lib';
 
 const CATEGORY_ZH: Record<string, string> = {
   'web-ui': 'Web UI 组件',
@@ -18,10 +18,13 @@ const CATEGORY_ZH: Record<string, string> = {
   other: '其他',
 };
 
-export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const { data, etag } = await loadCatalog(env);
-    const byCategory = data.meta.stats.by_category || {};
+    const includeDeprecated = new URL(request.url).searchParams.get('include_deprecated') === 'true';
+    const plugins = filterPlugins(data.plugins, { include_deprecated: includeDeprecated });
+    const byCategory: Record<string, number> = {};
+    for (const plugin of plugins) byCategory[plugin.category || 'other'] = (byCategory[plugin.category || 'other'] || 0) + 1;
 
     const categories = Object.entries(byCategory)
       .map(([id, count]) => ({
@@ -33,7 +36,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
       .sort((a, b) => b.count - a.count);
 
     return json(
-      { categories, total: data.meta.count, meta: { updated_at: data.meta.updated_at } },
+      { categories, total: plugins.length, meta: { updated_at: data.meta.updated_at, catalog_total: data.meta.count } },
       { headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300' } },
       etag
     );
