@@ -5,14 +5,14 @@
     "plugin_version": "0.1.0"
   },
   "generated": {
-    "at": "2026-08-25T08:54:52.003Z",
-    "source_catalog_etag": "1b0c58f99c41337c",
-    "source_catalog_count": 11667,
-    "count": 11648,
+    "at": "2026-08-25T09:31:25.092Z",
+    "source_catalog_etag": "6ecfac70c364fc9b",
+    "source_catalog_count": 11677,
+    "count": 11658,
     "excluded_count": 19,
     "discovery_mode": "complete",
-    "discovered_count": 11633,
-    "content_hash": "3fa5939018ef86a7bb692dfb4fd9d58969b1fadc04f5f5171f6c009ce7983d8b",
+    "discovered_count": 11641,
+    "content_hash": "bdc0b79feb3bb14c59a49915c7d7338a431c2f7e9a74d150b014bbf338acf309",
     "discovery_transport": "graphql-topic"
   },
   "plugins": [
@@ -1542,15 +1542,15 @@
         "provider": "github",
         "repo": "1024483906-pixel/dsh-novel-reader",
         "ref": "main",
-        "commit": "b6707c8d0a1b92cb5a05eca3976836e7946ae952",
-        "updated_at": "2026-08-25T08:51:49Z",
-        "archive_url": "https://github.com/1024483906-pixel/dsh-novel-reader/archive/b6707c8d0a1b92cb5a05eca3976836e7946ae952.tar.gz"
+        "commit": "31de6c15e5626dd07779fdf2c2225ffe7c7885cb",
+        "updated_at": "2026-08-25T09:01:51Z",
+        "archive_url": "https://github.com/1024483906-pixel/dsh-novel-reader/archive/31de6c15e5626dd07779fdf2c2225ffe7c7885cb.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-5d3a7d9fe3c056672ce09dad715828cd2cb6c701eb1019ffc52a870f14ad4447"
+        "integrity": "sha256-1984a3362939f029e470dfe602fbd4eb31155301e31aec7636df722dc9cc9965"
       },
       "runtime": {
         "type": "plugin",
@@ -1562,14 +1562,14 @@
       "dependencies": [],
       "metadata": {
         "name": "dsh-novel-reader",
-        "description": "DSH休闲阅读文本插件",
+        "description": "Read imported .txt novels in a draggable floating window while the model works.",
         "category": "other",
-        "verified": false,
+        "verified": true,
         "stars": 0,
-        "rank": 0,
+        "rank": 1981,
         "repo_url": "https://github.com/1024483906-pixel/dsh-novel-reader",
         "install_cmd": "dsh plugin --profile tools add github:1024483906-pixel/dsh-novel-reader",
-        "manifest_file": null
+        "manifest_file": "package.json"
       }
     },
     {
@@ -3470,15 +3470,15 @@
         "provider": "github",
         "repo": "1692775560/dsh-Mimir-Academic-research",
         "ref": "main",
-        "commit": "2876b950d6d7128e953344a9172e9ad189565373",
-        "updated_at": "2026-08-25T08:29:28Z",
-        "archive_url": "https://github.com/1692775560/dsh-Mimir-Academic-research/archive/2876b950d6d7128e953344a9172e9ad189565373.tar.gz"
+        "commit": "1d211958beb6f52ad74c02f24599e2397c92f989",
+        "updated_at": "2026-08-25T09:15:28Z",
+        "archive_url": "https://github.com/1692775560/dsh-Mimir-Academic-research/archive/1d211958beb6f52ad74c02f24599e2397c92f989.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-186c988d71c78bad8a881b529e2161a888d83ce3839f1baa7b9245f18300ccaa"
+        "integrity": "sha256-6d5b03e25e1491e3c0f5cc62164d3ef029cf766dc4d8c1326d08e58ad12087c8"
       },
       "runtime": {
         "type": "plugin",
@@ -5581,15 +5581,15 @@
         "provider": "github",
         "repo": "240xu/dsh-websearch",
         "ref": "main",
-        "commit": "93bdff2c24423cbe031ad70144bbc198a6bf1307",
-        "updated_at": "2026-08-24T17:02:12Z",
-        "archive_url": "https://github.com/240xu/dsh-websearch/archive/93bdff2c24423cbe031ad70144bbc198a6bf1307.tar.gz"
+        "commit": "1be6586b729b17c2ed3148bccf683e2e12063101",
+        "updated_at": "2026-08-25T09:03:06Z",
+        "archive_url": "https://github.com/240xu/dsh-websearch/archive/1be6586b729b17c2ed3148bccf683e2e12063101.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-b26ec562ea5af0fadb0544f0d784103431b9ef3c95e364c621b01f8d95d34cb8"
+        "integrity": "sha256-1bfc756e3bfada27d76bf3b08709f22833443b0979e259f3eef3e12ed8c18ef9"
       },
       "runtime": {
         "type": "plugin",
@@ -16080,15 +16080,15 @@
         "provider": "github",
         "repo": "ai-daming/clickvibe",
         "ref": "main",
-        "commit": "acc993c78e7d6ae7112bb3c7b2dd622327a3ff87",
-        "updated_at": "2026-08-25T08:36:47Z",
-        "archive_url": "https://github.com/ai-daming/clickvibe/archive/acc993c78e7d6ae7112bb3c7b2dd622327a3ff87.tar.gz"
+        "commit": "0bfb9881d2114183cc2974d7645f6f1d71799127",
+        "updated_at": "2026-08-25T09:09:48Z",
+        "archive_url": "https://github.com/ai-daming/clickvibe/archive/0bfb9881d2114183cc2974d7645f6f1d71799127.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-4323795c32f8d182b1980bb9236ecf3ef521285b16350789279f4f6c03a53674"
+        "integrity": "sha256-4cbdc6f0f4d6526de14fb7f92a54844aaa553f3752dd01a5dc9a796b8efedfa9"
       },
       "runtime": {
         "type": "plugin",
@@ -16104,7 +16104,7 @@
         "category": "terminal",
         "verified": true,
         "stars": 9,
-        "rank": 548,
+        "rank": 546,
         "repo_url": "https://github.com/ai-daming/clickvibe",
         "install_cmd": "dsh plugin --profile tools add github:ai-daming/clickvibe",
         "manifest_file": "package.json"
@@ -16599,15 +16599,15 @@
         "provider": "github",
         "repo": "ai4paper/ipaper",
         "ref": "main",
-        "commit": "e5848d40dd5eb19f8d298e8028b1175fee18fcb3",
-        "updated_at": "2026-05-11T15:12:32Z",
-        "archive_url": "https://github.com/ai4paper/ipaper/archive/e5848d40dd5eb19f8d298e8028b1175fee18fcb3.tar.gz"
+        "commit": "4b6cc8570a92a046b14f453494e82836ebdc2949",
+        "updated_at": "2026-08-25T09:17:29Z",
+        "archive_url": "https://github.com/ai4paper/ipaper/archive/4b6cc8570a92a046b14f453494e82836ebdc2949.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-0938e5ab7b04e3c8c3dbf38c3aef9860cc511d18f7a48675fb972ddb48d6264b"
+        "integrity": "sha256-d17472c95b4cb0a1f41baaa059a87cc668e86789529b657c6c0f700b91ee9023"
       },
       "runtime": {
         "type": "plugin",
@@ -17601,15 +17601,15 @@
         "provider": "github",
         "repo": "Aisland-SJL/dsh-worktable",
         "ref": "main",
-        "commit": "2fa1384bb249bc807315c04a6a4f20b7cb60a493",
-        "updated_at": "2026-08-24T18:21:50Z",
-        "archive_url": "https://github.com/Aisland-SJL/dsh-worktable/archive/2fa1384bb249bc807315c04a6a4f20b7cb60a493.tar.gz"
+        "commit": "de4c5e2bf8404ae06dd1d1a97313bf832f0489b3",
+        "updated_at": "2026-08-25T08:52:11Z",
+        "archive_url": "https://github.com/Aisland-SJL/dsh-worktable/archive/de4c5e2bf8404ae06dd1d1a97313bf832f0489b3.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-dffa89e5c5082f05a4175314be62626b8ec1618475be3ae18a584eac9ffc2a14"
+        "integrity": "sha256-de1572b600a8c1da0ba174ac68a87dacf6c0e79fb8e075f812710be915bc14fc"
       },
       "runtime": {
         "type": "agent",
@@ -17625,8 +17625,8 @@
         "description": "🖥️ Agent-project workbench for DeepSeek Harness — sidebar app drawer + dockable split workspace + a live control room watching every project.",
         "category": "agent",
         "verified": false,
-        "stars": 98,
-        "rank": 4831,
+        "stars": 119,
+        "rank": 5587,
         "repo_url": "https://github.com/Aisland-SJL/dsh-worktable",
         "install_cmd": "dsh plugin --profile tools add github:Aisland-SJL/dsh-worktable",
         "manifest_file": null
@@ -20349,15 +20349,15 @@
         "provider": "github",
         "repo": "alib8b8/aflare",
         "ref": "main",
-        "commit": "c16e034d6db9ed5e2c85eebf34d7a6df3561c011",
-        "updated_at": "2026-08-25T08:19:43Z",
-        "archive_url": "https://github.com/alib8b8/aflare/archive/c16e034d6db9ed5e2c85eebf34d7a6df3561c011.tar.gz"
+        "commit": "ee8a2ba509f28aad650551a6a5be8a493336f7ca",
+        "updated_at": "2026-08-25T08:46:20Z",
+        "archive_url": "https://github.com/alib8b8/aflare/archive/ee8a2ba509f28aad650551a6a5be8a493336f7ca.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-038f148ca59749c28657dc0c750a822a45b4279cc2c430e247cf630206287e6d"
+        "integrity": "sha256-27d28419c953ba6255e30b6b38b723faa6a02271a6973b745dc8c94faceefb4e"
       },
       "runtime": {
         "type": "mcp",
@@ -20374,7 +20374,7 @@
         "category": "mcp",
         "verified": false,
         "stars": 12,
-        "rank": 5718,
+        "rank": 5732,
         "repo_url": "https://github.com/alib8b8/aflare",
         "install_cmd": "dsh plugin --profile tools add github:alib8b8/aflare",
         "manifest_file": null
@@ -20424,15 +20424,15 @@
         "provider": "github",
         "repo": "alibaba/anolisa",
         "ref": "main",
-        "commit": "072f96d7ad6e878fd1c1e4b7fe21c2854ba0bee0",
-        "updated_at": "2026-08-25T08:19:02Z",
-        "archive_url": "https://github.com/alibaba/anolisa/archive/072f96d7ad6e878fd1c1e4b7fe21c2854ba0bee0.tar.gz"
+        "commit": "d2305e2c4b09cd23f45bfd3fab338d41852df0ef",
+        "updated_at": "2026-08-25T08:45:57Z",
+        "archive_url": "https://github.com/alibaba/anolisa/archive/d2305e2c4b09cd23f45bfd3fab338d41852df0ef.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-7348d2a6b5ea2353b4e55e3fcde32ad63979eca6ea60833484b89f9b8978754e"
+        "integrity": "sha256-49fde5db5da030028fe64f533ecda4e24f891c118a3b29723eb4118b83bf34ad"
       },
       "runtime": {
         "type": "skill",
@@ -20448,8 +20448,8 @@
         "description": "ANOLISA (Agentic Nexus Operating Layer & Interface System Architecture) | Agentic OS with runtime, security, observability, and Tokenless response compression for lower token usage and cost.",
         "category": "skills",
         "verified": false,
-        "stars": 396,
-        "rank": 5549,
+        "stars": 397,
+        "rank": 5566,
         "repo_url": "https://github.com/alibaba/anolisa",
         "install_cmd": "dsh plugin --profile tools add github:alibaba/anolisa",
         "manifest_file": null
@@ -20944,15 +20944,15 @@
         "provider": "github",
         "repo": "alloevil/dsh-xray",
         "ref": "master",
-        "commit": "6a593dd6a70962b0d5fab7312d1c65a6e990b94d",
-        "updated_at": "2026-08-21T08:46:43Z",
-        "archive_url": "https://github.com/alloevil/dsh-xray/archive/6a593dd6a70962b0d5fab7312d1c65a6e990b94d.tar.gz"
+        "commit": "1b1ae10e446ffd535a118a743bc2ebc9b2dbf66b",
+        "updated_at": "2026-08-25T09:11:26Z",
+        "archive_url": "https://github.com/alloevil/dsh-xray/archive/1b1ae10e446ffd535a118a743bc2ebc9b2dbf66b.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-ca0e98681006f2f66d4a9dfbf42727ba7e2da3cefe1ee7572deaf9fca3938176"
+        "integrity": "sha256-22381abcb54eaa13938c28cc2ea24a2c17ac2a2f862241d40afe8e6c429b2de7"
       },
       "runtime": {
         "type": "plugin",
@@ -20965,13 +20965,13 @@
       "metadata": {
         "name": "dsh-xray",
         "description": "X-ray for your DeepSeek Harness — see what's actually loaded, why, and what it costs you.",
-        "category": "other",
-        "verified": false,
+        "category": "integration",
+        "verified": true,
         "stars": 3,
-        "rank": 0,
+        "rank": 1155,
         "repo_url": "https://github.com/alloevil/dsh-xray",
         "install_cmd": "dsh plugin --profile tools add github:alloevil/dsh-xray",
-        "manifest_file": null
+        "manifest_file": "package.json"
       }
     },
     {
@@ -21986,15 +21986,15 @@
         "provider": "github",
         "repo": "amazing-fish/dsh-plugins",
         "ref": "main",
-        "commit": "baca6e7c76b2f75a9ed9d512f31107759beb3adc",
-        "updated_at": "2026-08-15T12:48:06Z",
-        "archive_url": "https://github.com/amazing-fish/dsh-plugins/archive/baca6e7c76b2f75a9ed9d512f31107759beb3adc.tar.gz"
+        "commit": "3523965b612ba764113e8f828b8eaedfa0667d3d",
+        "updated_at": "2026-08-25T09:21:40Z",
+        "archive_url": "https://github.com/amazing-fish/dsh-plugins/archive/3523965b612ba764113e8f828b8eaedfa0667d3d.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-fde5ad8c7293073e1472651334a7caf13445c2954da50e75e0f8b12616f124c0"
+        "integrity": "sha256-b0c211a53c75eb6847a88f2f2b2a4596970f851f8ff8c7a2a89edd0591e707fd"
       },
       "runtime": {
         "type": "plugin",
@@ -24812,15 +24812,15 @@
         "provider": "github",
         "repo": "annexwu/dsh-cos",
         "ref": "main",
-        "commit": "d473058ac906a6ab7e131854aab52a210f123a85",
-        "updated_at": "2026-08-21T04:01:51Z",
-        "archive_url": "https://github.com/annexwu/dsh-cos/archive/d473058ac906a6ab7e131854aab52a210f123a85.tar.gz"
+        "commit": "6eb84409e8a1bfeaa7781f24ca4a12c1542538ce",
+        "updated_at": "2026-08-25T08:59:48Z",
+        "archive_url": "https://github.com/annexwu/dsh-cos/archive/6eb84409e8a1bfeaa7781f24ca4a12c1542538ce.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-8316cadd2f571614e0b8384c2ecc376c473919deddd5df7afcb572d4249fcfbd"
+        "integrity": "sha256-a3d38bb4b8578b7333a8eb1f03b99a0413d2e53b091ceb2472d39d3e9152b7a2"
       },
       "runtime": {
         "type": "plugin",
@@ -25776,7 +25776,7 @@
         "repo": "anywhere-labs/dsh-desktop",
         "ref": "master",
         "commit": "2172b1b2f2b0de4c2b3a1d8b55f11f8083a9305e",
-        "updated_at": "2026-08-25T08:34:35Z",
+        "updated_at": "2026-08-25T08:55:30Z",
         "archive_url": "https://github.com/anywhere-labs/dsh-desktop/archive/2172b1b2f2b0de4c2b3a1d8b55f11f8083a9305e.tar.gz"
       },
       "artifact": {
@@ -25798,7 +25798,7 @@
         "description": "DSH Desktop product workspace",
         "category": "desktop",
         "verified": true,
-        "stars": 19981,
+        "stars": 20010,
         "rank": 8,
         "repo_url": "https://github.com/anywhere-labs/dsh-desktop",
         "install_cmd": "dsh plugin --profile desktop add github:anywhere-labs/dsh-desktop",
@@ -28783,15 +28783,15 @@
         "provider": "github",
         "repo": "Asher-2000/dsh-expert-mode",
         "ref": "main",
-        "commit": "a7695c6a1b5c6d07a16a42f902a06cf17c3ed0e4",
-        "updated_at": "2026-08-24T09:27:55Z",
-        "archive_url": "https://github.com/Asher-2000/dsh-expert-mode/archive/a7695c6a1b5c6d07a16a42f902a06cf17c3ed0e4.tar.gz"
+        "commit": "bc4879f2988b78ce5ec0adcbca3159db3c2027b6",
+        "updated_at": "2026-08-25T08:55:16Z",
+        "archive_url": "https://github.com/Asher-2000/dsh-expert-mode/archive/bc4879f2988b78ce5ec0adcbca3159db3c2027b6.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-b06610630a89e742b2bcb14f490cc920b737416cfe6934b6c1b9526bf6be6528"
+        "integrity": "sha256-58cdf3baff04cd170b680dc723c87cca21843088e73f2e36f6a2db629ad72521"
       },
       "runtime": {
         "type": "agent",
@@ -28808,7 +28808,7 @@
         "category": "agent",
         "verified": true,
         "stars": 8,
-        "rank": 581,
+        "rank": 626,
         "repo_url": "https://github.com/Asher-2000/dsh-expert-mode",
         "install_cmd": "dsh plugin --profile tools add github:Asher-2000/dsh-expert-mode",
         "manifest_file": "package.json"
@@ -30974,15 +30974,15 @@
         "provider": "github",
         "repo": "Awesome-AI-Pedia/Awesome-AI-Pedia",
         "ref": "master",
-        "commit": "1090f3fe688461aa9fef05043fbd37767ab61793",
-        "updated_at": "2026-08-24T09:10:22Z",
-        "archive_url": "https://github.com/Awesome-AI-Pedia/Awesome-AI-Pedia/archive/1090f3fe688461aa9fef05043fbd37767ab61793.tar.gz"
+        "commit": "8bb648f1ec25208adf996b738959611fae129403",
+        "updated_at": "2026-08-25T09:15:36Z",
+        "archive_url": "https://github.com/Awesome-AI-Pedia/Awesome-AI-Pedia/archive/8bb648f1ec25208adf996b738959611fae129403.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-88a3795fff3031131637314fe5dd4b184e4d554049abbe7071bd66388b949cf6"
+        "integrity": "sha256-7d2892ce623f89dba5c62367277a66a91c33a3c29ac011d2005b053372dafdab"
       },
       "runtime": {
         "type": "skill",
@@ -30998,7 +30998,7 @@
         "description": "基于 VitePress 的 AI 知识库与博客平台，涵盖 Claude Code、Cursor、MCP、Prompt、Rules、Skills 等 AI 工具的实战经验与最佳实践。",
         "category": "skills",
         "verified": true,
-        "stars": 254,
+        "stars": 258,
         "rank": 78,
         "repo_url": "https://github.com/Awesome-AI-Pedia/Awesome-AI-Pedia",
         "install_cmd": "dsh plugin --profile tools add github:Awesome-AI-Pedia/Awesome-AI-Pedia",
@@ -31123,15 +31123,15 @@
         "provider": "github",
         "repo": "awesome-dsh-plugin/awesome-dsh-plugin",
         "ref": "main",
-        "commit": "9b8c8dd392c262e44c619732c555ffb94ac79e7a",
-        "updated_at": "2026-08-25T08:16:22Z",
-        "archive_url": "https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/archive/9b8c8dd392c262e44c619732c555ffb94ac79e7a.tar.gz"
+        "commit": "d73e57a300656c96a83cd7f9530fb9d90b717c17",
+        "updated_at": "2026-08-25T09:15:22Z",
+        "archive_url": "https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/archive/d73e57a300656c96a83cd7f9530fb9d90b717c17.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-32361fc96ece1ea782e81fb051f043a1535d4b02b7f62747b459f683851f0478"
+        "integrity": "sha256-2ae12e2b9152a2a47b1de59d6c0bb3b73d083391e360f3912229fa19d384584e"
       },
       "runtime": {
         "type": "plugin",
@@ -31146,7 +31146,7 @@
         "description": "A curated list of DeepSeek Harness (dsh) plugins · DeepSeek Harness 插件精选列表",
         "category": "other",
         "verified": true,
-        "stars": 12442,
+        "stars": 12469,
         "rank": 13,
         "repo_url": "https://github.com/awesome-dsh-plugin/awesome-dsh-plugin",
         "install_cmd": "dsh plugin --profile tools add github:awesome-dsh-plugin/awesome-dsh-plugin",
@@ -31264,6 +31264,43 @@
         "repo_url": "https://github.com/AwesomeHou/dsh-plugin-marketplace",
         "install_cmd": "dsh plugin --profile tools add github:AwesomeHou/dsh-plugin-marketplace",
         "manifest_file": "package.json"
+      }
+    },
+    {
+      "id": "AwesomeHou-dsh-trace-collapse",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "AwesomeHou/dsh-trace-collapse",
+        "ref": "master",
+        "commit": "75f14264b0de9ae9203ab4f9c4d3d86c1836cc78",
+        "updated_at": "2026-08-25T05:53:55Z",
+        "archive_url": "https://github.com/AwesomeHou/dsh-trace-collapse/archive/75f14264b0de9ae9203ab4f9c4d3d86c1836cc78.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-2abdf20d2b5d88c17d4c7733228c386ae1fae8eaad38d3f814ef0a49e66f65b2"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "dsh-trace-collapse",
+        "description": "DeepSeek Harness web plugin: collapse the agent trajectory while always keeping the agent's final output; default-collapse after final output is on by default (configurable in Settings).",
+        "category": "other",
+        "verified": false,
+        "stars": 0,
+        "rank": 0,
+        "repo_url": "https://github.com/AwesomeHou/dsh-trace-collapse",
+        "install_cmd": "dsh plugin --profile tools add github:AwesomeHou/dsh-trace-collapse",
+        "manifest_file": null
       }
     },
     {
@@ -37876,7 +37913,7 @@
         "repo": "better-er/dsh-tool-autoexpand",
         "ref": "master",
         "commit": "89b9a094201d5c97c0adc0d608543fc242af34d1",
-        "updated_at": "2026-08-19T04:15:50Z",
+        "updated_at": "2026-08-25T09:00:12Z",
         "archive_url": "https://github.com/better-er/dsh-tool-autoexpand/archive/89b9a094201d5c97c0adc0d608543fc242af34d1.tar.gz"
       },
       "artifact": {
@@ -37899,7 +37936,7 @@
         "category": "tool",
         "verified": true,
         "stars": 8,
-        "rank": 606,
+        "rank": 637,
         "repo_url": "https://github.com/better-er/dsh-tool-autoexpand",
         "install_cmd": "dsh plugin --profile tools add github:better-er/dsh-tool-autoexpand",
         "manifest_file": "package.json"
@@ -43069,15 +43106,15 @@
         "provider": "github",
         "repo": "bradeGithub/DSH-Plugins-Marketplace",
         "ref": "main",
-        "commit": "b6a0eaf30be01093ba2c9dd11d3c3a2320134af1",
-        "updated_at": "2026-08-25T07:11:56Z",
-        "archive_url": "https://github.com/bradeGithub/DSH-Plugins-Marketplace/archive/b6a0eaf30be01093ba2c9dd11d3c3a2320134af1.tar.gz"
+        "commit": "c54078861bd808ad0c14ff8c704ce4368499ba51",
+        "updated_at": "2026-08-25T09:10:46Z",
+        "archive_url": "https://github.com/bradeGithub/DSH-Plugins-Marketplace/archive/c54078861bd808ad0c14ff8c704ce4368499ba51.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-4be9142b45d8bc5dc1a6f51d44f68982049452c9198a00861d3e0bc8760a4346"
+        "integrity": "sha256-10dcbd9b6df6253d39071a3a6876dc3ecb63922e53fca60e2d3601eca23b8e54"
       },
       "runtime": {
         "type": "agent",
@@ -43093,7 +43130,7 @@
         "description": "DSH插件市场 / DSH Plugin Marketplace: browse & install plugins from the GitHub topic:dsh-plugin",
         "category": "agent",
         "verified": true,
-        "stars": 140,
+        "stars": 141,
         "rank": 113,
         "repo_url": "https://github.com/bradeGithub/DSH-Plugins-Marketplace",
         "install_cmd": "dsh plugin --profile tools add github:bradeGithub/DSH-Plugins-Marketplace",
@@ -48043,7 +48080,7 @@
         "repo": "ccch1mneyyy/dsh-TUI",
         "ref": "main",
         "commit": "a207330dad42422e70f34f2311006a7b773938a8",
-        "updated_at": "2026-08-25T08:04:13Z",
+        "updated_at": "2026-08-25T09:04:02Z",
         "archive_url": "https://github.com/ccch1mneyyy/dsh-TUI/archive/a207330dad42422e70f34f2311006a7b773938a8.tar.gz"
       },
       "artifact": {
@@ -49937,15 +49974,15 @@
         "provider": "github",
         "repo": "Chang-Tong/dsh-import-agents",
         "ref": "main",
-        "commit": "603b2affbb6c083efa44655977d4ae768c4904b7",
-        "updated_at": "2026-08-21T06:39:39Z",
-        "archive_url": "https://github.com/Chang-Tong/dsh-import-agents/archive/603b2affbb6c083efa44655977d4ae768c4904b7.tar.gz"
+        "commit": "d5095df4d3b16594fb0eddd2d10f92b251d087a0",
+        "updated_at": "2026-08-25T08:49:44Z",
+        "archive_url": "https://github.com/Chang-Tong/dsh-import-agents/archive/d5095df4d3b16594fb0eddd2d10f92b251d087a0.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-210d0ed94e9516f8e5c92507a53eddbd43ad30ec524c8a0eb55944f75b5e19c7"
+        "integrity": "sha256-2c4076bb6db691c64db9e529b93e82936f15bf1abefb485bf71f8b64d64a07f5"
       },
       "runtime": {
         "type": "plugin",
@@ -49960,8 +49997,8 @@
         "description": "Import pi / opencode sessions, chat history, and agents into DeepSeek Harness (dsh): slash commands, session-start migration prompt, and a one-click Sync button in the composer.",
         "category": "coding",
         "verified": true,
-        "stars": 12,
-        "rank": 447,
+        "stars": 13,
+        "rank": 445,
         "repo_url": "https://github.com/Chang-Tong/dsh-import-agents",
         "install_cmd": "dsh plugin --profile tools add github:Chang-Tong/dsh-import-agents",
         "manifest_file": "package.json"
@@ -50011,15 +50048,15 @@
         "provider": "github",
         "repo": "change979666/ox-alpha-dsh",
         "ref": "main",
-        "commit": "538127fc6576ff5e701f6517e82d16deb81c9a42",
-        "updated_at": "2026-08-25T08:24:28Z",
-        "archive_url": "https://github.com/change979666/ox-alpha-dsh/archive/538127fc6576ff5e701f6517e82d16deb81c9a42.tar.gz"
+        "commit": "901e14f7405f1bf625abacde50584336f286cbde",
+        "updated_at": "2026-08-25T09:11:38Z",
+        "archive_url": "https://github.com/change979666/ox-alpha-dsh/archive/901e14f7405f1bf625abacde50584336f286cbde.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-de12cbfa23e8096bee27309511984618db6ed4e99bd4ad4e3e56e50b5d3e86f3"
+        "integrity": "sha256-47623bded3135b1afe01d80819024e6e9e787e939f3d0f7e634adcb8117cebf0"
       },
       "runtime": {
         "type": "plugin",
@@ -55237,7 +55274,7 @@
         "repo": "ChisaAlter/Deepseek-Harness-Desktop",
         "ref": "main",
         "commit": "c8fdbc27388929a02c0e78d35f12e7766c0fbf66",
-        "updated_at": "2026-08-25T08:38:22Z",
+        "updated_at": "2026-08-25T09:15:37Z",
         "archive_url": "https://github.com/ChisaAlter/Deepseek-Harness-Desktop/archive/c8fdbc27388929a02c0e78d35f12e7766c0fbf66.tar.gz"
       },
       "artifact": {
@@ -55532,15 +55569,15 @@
         "provider": "github",
         "repo": "chnjames/dsh-plugin-market",
         "ref": "main",
-        "commit": "0f89c9515021b051da5b72347265d82807c5c3e0",
-        "updated_at": "2026-08-25T07:07:27Z",
-        "archive_url": "https://github.com/chnjames/dsh-plugin-market/archive/0f89c9515021b051da5b72347265d82807c5c3e0.tar.gz"
+        "commit": "fca98444539855d7598a2c1380a76b7a33509129",
+        "updated_at": "2026-08-25T08:59:21Z",
+        "archive_url": "https://github.com/chnjames/dsh-plugin-market/archive/fca98444539855d7598a2c1380a76b7a33509129.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-292312b61f0e8f05fcb713d3ae1137560de083eb5018cb7eb92eab6a4e0d9c60"
+        "integrity": "sha256-311ae5837b8552d2b885b0f2964dee68cae259504059a19791cca053ef5829ef"
       },
       "runtime": {
         "type": "plugin",
@@ -55556,7 +55593,7 @@
         "category": "other",
         "verified": true,
         "stars": 5,
-        "rank": 785,
+        "rank": 835,
         "repo_url": "https://github.com/chnjames/dsh-plugin-market",
         "install_cmd": "dsh plugin --profile tools add github:chnjames/dsh-plugin-market",
         "manifest_file": "package.json"
@@ -57204,15 +57241,15 @@
         "provider": "github",
         "repo": "chuspeeism/dashi-taskboard",
         "ref": "main",
-        "commit": "2db6137e2bc639c518fd76bd2314385a25770831",
-        "updated_at": "2026-08-25T08:36:26Z",
-        "archive_url": "https://github.com/chuspeeism/dashi-taskboard/archive/2db6137e2bc639c518fd76bd2314385a25770831.tar.gz"
+        "commit": "a83c9160eaf16c8025a411e742ec6a54c7618e0c",
+        "updated_at": "2026-08-25T09:14:47Z",
+        "archive_url": "https://github.com/chuspeeism/dashi-taskboard/archive/a83c9160eaf16c8025a411e742ec6a54c7618e0c.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-305496ad9c4162c71044936a2b0f3e7f357821b50fc090019ab6e19b49171a82"
+        "integrity": "sha256-74d73f766e2a33441406f7dedd92e05a452cacdf46b2630bd1ac7eec031f0798"
       },
       "runtime": {
         "type": "skill",
@@ -57228,7 +57265,7 @@
         "description": "",
         "category": "skills",
         "verified": true,
-        "stars": 2540,
+        "stars": 2541,
         "rank": 22,
         "repo_url": "https://github.com/chuspeeism/dashi-taskboard",
         "install_cmd": "dsh plugin --profile tools add github:chuspeeism/dashi-taskboard",
@@ -66855,15 +66892,15 @@
         "provider": "github",
         "repo": "cyanTao/dsh-process-board",
         "ref": "master",
-        "commit": "0d7406a7a51e05ca1d3f9edeba6654b163fee1fc",
-        "updated_at": "2026-08-25T07:41:12Z",
-        "archive_url": "https://github.com/cyanTao/dsh-process-board/archive/0d7406a7a51e05ca1d3f9edeba6654b163fee1fc.tar.gz"
+        "commit": "9949a155bc3715bc706cbf32bc2c6f301f719c51",
+        "updated_at": "2026-08-25T09:16:20Z",
+        "archive_url": "https://github.com/cyanTao/dsh-process-board/archive/9949a155bc3715bc706cbf32bc2c6f301f719c51.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-0396832033b7c260ac7527908730e9203ceb5185efbd600395182632c28224da"
+        "integrity": "sha256-23c75833bd0a9c217518d941e09a0866498f3f15187d73d2694262a42bb2ee36"
       },
       "runtime": {
         "type": "plugin",
@@ -68116,15 +68153,15 @@
         "provider": "github",
         "repo": "daboge-beach/dsh-skin-studio",
         "ref": "main",
-        "commit": "a786cba43b2775aaefd8803c3ca7abed50826fd3",
-        "updated_at": "2026-08-21T03:03:53Z",
-        "archive_url": "https://github.com/daboge-beach/dsh-skin-studio/archive/a786cba43b2775aaefd8803c3ca7abed50826fd3.tar.gz"
+        "commit": "17e36bcb39b94b9dbbd2c68693054f059c686903",
+        "updated_at": "2026-08-25T09:13:23Z",
+        "archive_url": "https://github.com/daboge-beach/dsh-skin-studio/archive/17e36bcb39b94b9dbbd2c68693054f059c686903.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-7296393e385738cf8b7d62f88bce8404925d3d41fe21ea41cdff55615e25fe6b"
+        "integrity": "sha256-2b095403f6505224c4f637cf003aa55f50b60092f3277b2c6adadf06a93e2a57"
       },
       "runtime": {
         "type": "plugin",
@@ -68136,14 +68173,14 @@
       "dependencies": [],
       "metadata": {
         "name": "dsh-skin-studio",
-        "description": "🎨 DeepSeek Harness skin studio — built-in curated skins + a community skin gallery. 皮肤工作室：内置精选皮肤 · 用户上传皮肤中心，让每个 agent 都有专属面孔",
-        "category": "other",
-        "verified": false,
-        "stars": 2,
-        "rank": 0,
+        "description": "DeepSeek Harness 皮肤工作室 — 内置精选皮肤 + 用户上传皮肤中心",
+        "category": "theme",
+        "verified": true,
+        "stars": 3,
+        "rank": 1211,
         "repo_url": "https://github.com/daboge-beach/dsh-skin-studio",
         "install_cmd": "dsh plugin --profile tools add github:daboge-beach/dsh-skin-studio",
-        "manifest_file": null
+        "manifest_file": "package.json"
       }
     },
     {
@@ -68822,15 +68859,15 @@
         "provider": "github",
         "repo": "DamonBao/dsh-dungeon-party",
         "ref": "main",
-        "commit": "418dcd9219d3676b4f844926e46d7b48da36d023",
-        "updated_at": "2026-08-25T08:52:19Z",
-        "archive_url": "https://github.com/DamonBao/dsh-dungeon-party/archive/418dcd9219d3676b4f844926e46d7b48da36d023.tar.gz"
+        "commit": "e28e8050709757f1f05907be6031bade25fc8be8",
+        "updated_at": "2026-08-25T08:54:19Z",
+        "archive_url": "https://github.com/DamonBao/dsh-dungeon-party/archive/e28e8050709757f1f05907be6031bade25fc8be8.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-4df2b8217627981686587f0f85d4aa9d7299781cf5ebe196dd111d624d76b04d"
+        "integrity": "sha256-55513f9275c3bf2ebef6db7f450beda1e2d9773119c27c020b4b6b9608d7c2f7"
       },
       "runtime": {
         "type": "plugin",
@@ -74981,15 +75018,15 @@
         "provider": "github",
         "repo": "Diluka/dsh-agent-plugin-market",
         "ref": "main",
-        "commit": "dcb292dbffa99e8425370e63733bfbbe198db8db",
-        "updated_at": "2026-08-25T08:19:53Z",
-        "archive_url": "https://github.com/Diluka/dsh-agent-plugin-market/archive/dcb292dbffa99e8425370e63733bfbbe198db8db.tar.gz"
+        "commit": "4fd52ce4219b869852b8e7aa2a266c7e24a2c34b",
+        "updated_at": "2026-08-25T09:14:00Z",
+        "archive_url": "https://github.com/Diluka/dsh-agent-plugin-market/archive/4fd52ce4219b869852b8e7aa2a266c7e24a2c34b.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-ae6ba2a1edb9cdb3a26db538066c5d7df5740188dd2f26084f7bffd6905828c6"
+        "integrity": "sha256-464de1b946957dd9aedfba5e79b34f6e4763eff2969b025b613c02821a5bcda4"
       },
       "runtime": {
         "type": "skill",
@@ -75006,7 +75043,7 @@
         "category": "skills",
         "verified": true,
         "stars": 6,
-        "rank": 771,
+        "rank": 752,
         "repo_url": "https://github.com/Diluka/dsh-agent-plugin-market",
         "install_cmd": "dsh plugin --profile tools add github:Diluka/dsh-agent-plugin-market",
         "manifest_file": "package.json"
@@ -75391,7 +75428,7 @@
         "repo": "DingTalk-Real-AI/dsh-dingtalk",
         "ref": "main",
         "commit": "b93594eab764f637ee53b1547ebbfa14c6c7e1bd",
-        "updated_at": "2026-08-24T12:40:28Z",
+        "updated_at": "2026-08-25T09:00:57Z",
         "archive_url": "https://github.com/DingTalk-Real-AI/dsh-dingtalk/archive/b93594eab764f637ee53b1547ebbfa14c6c7e1bd.tar.gz"
       },
       "artifact": {
@@ -75413,8 +75450,8 @@
         "description": "Official DingTalk connector for DeepSeek Harness",
         "category": "other",
         "verified": true,
-        "stars": 2,
-        "rank": 1285,
+        "stars": 3,
+        "rank": 1116,
         "repo_url": "https://github.com/DingTalk-Real-AI/dsh-dingtalk",
         "install_cmd": "dsh plugin --profile tools add github:DingTalk-Real-AI/dsh-dingtalk",
         "manifest_file": "package.json"
@@ -76491,6 +76528,43 @@
         "rank": 0,
         "repo_url": "https://github.com/DM-Odyssey/dsh-session-manager",
         "install_cmd": "dsh plugin --profile tools add github:DM-Odyssey/dsh-session-manager",
+        "manifest_file": null
+      }
+    },
+    {
+      "id": "DM010727-dsh-cline",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "DM010727/dsh-cline",
+        "ref": "main",
+        "commit": "e74ba4015920c9c819b95567f68f7fc1a046f990",
+        "updated_at": "2026-08-25T09:06:45Z",
+        "archive_url": "https://github.com/DM010727/dsh-cline/archive/e74ba4015920c9c819b95567f68f7fc1a046f990.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-a931399642040bf0b7ef985d21bdd8ba9862ab1be41b3cc089d07835b1296821"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "dsh-cline",
+        "description": "Deepseek harness 开源插件 — DSH (DeepSeek Harness) + Cline VS Code ecosystem fusion",
+        "category": "other",
+        "verified": false,
+        "stars": 1,
+        "rank": 0,
+        "repo_url": "https://github.com/DM010727/dsh-cline",
+        "install_cmd": "dsh plugin --profile tools add github:DM010727/dsh-cline",
         "manifest_file": null
       }
     },
@@ -78020,15 +78094,15 @@
         "provider": "github",
         "repo": "dongsheng123132/awesome-dsh-plugins",
         "ref": "main",
-        "commit": "f266f8018e110d2ca735d377065319b6c50da5af",
-        "updated_at": "2026-08-25T07:19:40Z",
-        "archive_url": "https://github.com/dongsheng123132/awesome-dsh-plugins/archive/f266f8018e110d2ca735d377065319b6c50da5af.tar.gz"
+        "commit": "932660d114ef24e5234596d975e2566c5dda0b34",
+        "updated_at": "2026-08-25T09:17:06Z",
+        "archive_url": "https://github.com/dongsheng123132/awesome-dsh-plugins/archive/932660d114ef24e5234596d975e2566c5dda0b34.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-f06d3dd49e06768d4f162046441956106d390ceb3286cfaf81d984faa4c36c8c"
+        "integrity": "sha256-0607b7e6467a4af54b747ca4bed667d0b15aadd6b319595dc514587358405c4e"
       },
       "runtime": {
         "type": "plugin",
@@ -81992,7 +82066,7 @@
         "repo": "dsh-tauri-desk/deepseek-harness-desktop",
         "ref": "main",
         "commit": "03222fe11fd3578267453965d3bf58cbae4eac14",
-        "updated_at": "2026-08-25T08:08:47Z",
+        "updated_at": "2026-08-25T09:02:07Z",
         "archive_url": "https://github.com/dsh-tauri-desk/deepseek-harness-desktop/archive/03222fe11fd3578267453965d3bf58cbae4eac14.tar.gz"
       },
       "artifact": {
@@ -82014,7 +82088,7 @@
         "description": "Desktop application for DeepSeek Harness (dsh) — one-click local install and launch, no Node.js setup required.",
         "category": "desktop",
         "verified": true,
-        "stars": 1140,
+        "stars": 1145,
         "rank": 29,
         "repo_url": "https://github.com/dsh-tauri-desk/deepseek-harness-desktop",
         "install_cmd": "dsh plugin --profile desktop add github:dsh-tauri-desk/deepseek-harness-desktop",
@@ -82622,15 +82696,15 @@
         "provider": "github",
         "repo": "dshplugin/dsh-plugin-hub",
         "ref": "main",
-        "commit": "83dfc9c7627a9cda8fe2baea3c35871391100d18",
-        "updated_at": "2026-08-25T06:02:01Z",
-        "archive_url": "https://github.com/dshplugin/dsh-plugin-hub/archive/83dfc9c7627a9cda8fe2baea3c35871391100d18.tar.gz"
+        "commit": "6accc39b064fa99ece656735417a5104fd3ab1f5",
+        "updated_at": "2026-08-25T09:14:49Z",
+        "archive_url": "https://github.com/dshplugin/dsh-plugin-hub/archive/6accc39b064fa99ece656735417a5104fd3ab1f5.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-d7818adfcb6f02a4d9d913a2243f5e7943ede212a26ba4d9f26ed81c07464e5c"
+        "integrity": "sha256-c9d287a3adaf8cee709d3ce1806a98ffc0bb20e6c5ae5025511b154e9a13e7f3"
       },
       "runtime": {
         "type": "agent",
@@ -82646,8 +82720,8 @@
         "description": "A community plugin marketplace for DeepSeek Harness, built to the official plugin spec — browse, search and install 4000+ human-curated community plugins without leaving the app. · DeepSeek Harness 社区插件市场（遵循官方开发规范）：4000+ 人工精选社区插件，每日更新。",
         "category": "agent",
         "verified": true,
-        "stars": 44,
-        "rank": 219,
+        "stars": 46,
+        "rank": 217,
         "repo_url": "https://github.com/dshplugin/dsh-plugin-hub",
         "install_cmd": "dsh plugin --profile tools add github:dshplugin/dsh-plugin-hub",
         "manifest_file": "package.json"
@@ -85331,15 +85405,15 @@
         "provider": "github",
         "repo": "edison7009/EchoBird",
         "ref": "main",
-        "commit": "2f12dfa58260d22dd6b0ce1093be21383e2236a3",
-        "updated_at": "2026-08-25T07:08:01Z",
-        "archive_url": "https://github.com/edison7009/EchoBird/archive/2f12dfa58260d22dd6b0ce1093be21383e2236a3.tar.gz"
+        "commit": "512d701a3833cf937d0f5fa19a4f9ab6cb8068da",
+        "updated_at": "2026-08-25T08:59:42Z",
+        "archive_url": "https://github.com/edison7009/EchoBird/archive/512d701a3833cf937d0f5fa19a4f9ab6cb8068da.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-10eafd95ac89e77927a0e3b1810ee6b48c7e3bef9333770990275c27c8db099a"
+        "integrity": "sha256-dcc80d6164ffd133112e12ec41e7d89eab990f5eabf70789619038eb70243d92"
       },
       "runtime": {
         "type": "plugin",
@@ -85354,7 +85428,7 @@
         "description": "AI Model & Skill Management Desktop Application",
         "category": "web-ui",
         "verified": true,
-        "stars": 3122,
+        "stars": 3123,
         "rank": 20,
         "repo_url": "https://github.com/edison7009/EchoBird",
         "install_cmd": "dsh plugin --profile web add github:edison7009/EchoBird",
@@ -89598,15 +89672,15 @@
         "provider": "github",
         "repo": "esengine/DeepSeek-Reasonix",
         "ref": "main-v2",
-        "commit": "ecce16e989ef39eb7919ec9c2532140c85e20977",
-        "updated_at": "2026-08-25T08:28:47Z",
-        "archive_url": "https://github.com/esengine/DeepSeek-Reasonix/archive/ecce16e989ef39eb7919ec9c2532140c85e20977.tar.gz"
+        "commit": "e6bb4bae1499b152633fdb17434d896ebe8ab15d",
+        "updated_at": "2026-08-25T09:15:51Z",
+        "archive_url": "https://github.com/esengine/DeepSeek-Reasonix/archive/e6bb4bae1499b152633fdb17434d896ebe8ab15d.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-05d0d8b5526d77740d43a9ff76de379545a303146b64dab72a23533bcd981bb8"
+        "integrity": "sha256-71f7bbcec7cbdc2fb87cd2b9edcc50a36d9726b664896fcd5d29ab372354263c"
       },
       "runtime": {
         "type": "agent",
@@ -89622,8 +89696,8 @@
         "description": "DeepSeek-native AI coding agent for your terminal. Engineered around prefix-cache stability — leave it running.",
         "category": "agent",
         "verified": false,
-        "stars": 35138,
-        "rank": 5514,
+        "stars": 35139,
+        "rank": 5528,
         "repo_url": "https://github.com/esengine/DeepSeek-Reasonix",
         "install_cmd": "dsh plugin --profile tools add github:esengine/DeepSeek-Reasonix",
         "manifest_file": null
@@ -95158,6 +95232,43 @@
       }
     },
     {
+      "id": "fengyungithub-dsh-short-video-studio",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "fengyungithub/dsh-short-video-studio",
+        "ref": "main",
+        "commit": "f088f4068d058320d470550610ae1d83f31f1350",
+        "updated_at": "2026-08-25T09:15:23Z",
+        "archive_url": "https://github.com/fengyungithub/dsh-short-video-studio/archive/f088f4068d058320d470550610ae1d83f31f1350.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-f7275afa61e7df3970a1c1d9077eb0403bfb77ee0b8ffdda5bfaee83fc88c162"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "dsh-short-video-studio",
+        "description": "基于deepseek harness的类MiniMax-Design的AI视频创作工作台",
+        "category": "other",
+        "verified": false,
+        "stars": 1,
+        "rank": 0,
+        "repo_url": "https://github.com/fengyungithub/dsh-short-video-studio",
+        "install_cmd": "dsh plugin --profile tools add github:fengyungithub/dsh-short-video-studio",
+        "manifest_file": null
+      }
+    },
+    {
       "id": "Fengze233-dsh-vscode",
       "version": "0.1.0",
       "source": {
@@ -98724,15 +98835,15 @@
         "provider": "github",
         "repo": "fonlan/dsh-model-router",
         "ref": "main",
-        "commit": "ba768e625db3301bed09924a4f630c4da4de40d5",
-        "updated_at": "2026-08-25T07:58:54Z",
-        "archive_url": "https://github.com/fonlan/dsh-model-router/archive/ba768e625db3301bed09924a4f630c4da4de40d5.tar.gz"
+        "commit": "6203b570ff29191bfb7bf4dff5eff4697934fba9",
+        "updated_at": "2026-08-25T09:19:52Z",
+        "archive_url": "https://github.com/fonlan/dsh-model-router/archive/6203b570ff29191bfb7bf4dff5eff4697934fba9.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-33d8125ce375776b9b2ca785e4978108f33487d2e5104f8ac143efaba3c8f93a"
+        "integrity": "sha256-30c3788331be3b4dfa1ea73f3360a8b2b41e0890b4dc1d774078ff1e56f79033"
       },
       "runtime": {
         "type": "plugin",
@@ -102547,7 +102658,7 @@
         "repo": "fwerkor/local-shell-mcp",
         "ref": "main",
         "commit": "962838deacb556cd8bf207ae320829f85fc74021",
-        "updated_at": "2026-08-25T08:25:31Z",
+        "updated_at": "2026-08-25T09:08:06Z",
         "archive_url": "https://github.com/fwerkor/local-shell-mcp/archive/962838deacb556cd8bf207ae320829f85fc74021.tar.gz"
       },
       "artifact": {
@@ -104734,15 +104845,15 @@
         "provider": "github",
         "repo": "GCWing/BitFun",
         "ref": "main",
-        "commit": "8bf0480d3f5f24933ccc46f8341a9e15be9bdafb",
-        "updated_at": "2026-08-25T07:58:43Z",
-        "archive_url": "https://github.com/GCWing/BitFun/archive/8bf0480d3f5f24933ccc46f8341a9e15be9bdafb.tar.gz"
+        "commit": "04c0a98facd43d7cc4748067592eba0f21b4e016",
+        "updated_at": "2026-08-25T09:08:03Z",
+        "archive_url": "https://github.com/GCWing/BitFun/archive/04c0a98facd43d7cc4748067592eba0f21b4e016.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-1e605f5d69bd94f77459d07986e8dfdd31a6b51519105ca628a840704bb2d67d"
+        "integrity": "sha256-2d02712f2a8056188e8c6e18b508b5bf2b39ea255c83056cf68eddb18e2ff2d0"
       },
       "runtime": {
         "type": "agent",
@@ -105293,7 +105404,7 @@
         "repo": "geml-spec/geml",
         "ref": "main",
         "commit": "8cf3179e605e812ab90420a1242332309ddc3270",
-        "updated_at": "2026-08-25T06:04:36Z",
+        "updated_at": "2026-08-25T09:10:05Z",
         "archive_url": "https://github.com/geml-spec/geml/archive/8cf3179e605e812ab90420a1242332309ddc3270.tar.gz"
       },
       "artifact": {
@@ -105317,7 +105428,7 @@
         "category": "mcp",
         "verified": false,
         "stars": 25,
-        "rank": 5410,
+        "rank": 5641,
         "repo_url": "https://github.com/geml-spec/geml",
         "install_cmd": "dsh plugin --profile tools add github:geml-spec/geml",
         "manifest_file": null
@@ -111905,15 +112016,15 @@
         "provider": "github",
         "repo": "guo6x/dsh-palate",
         "ref": "master",
-        "commit": "01b97171b4b4fb59e30fe1d525e6b360ce0fafe2",
-        "updated_at": "2026-08-25T08:40:47Z",
-        "archive_url": "https://github.com/guo6x/dsh-palate/archive/01b97171b4b4fb59e30fe1d525e6b360ce0fafe2.tar.gz"
+        "commit": "c0f281ac91ce7c5aca5c2f54ea1750bf523752be",
+        "updated_at": "2026-08-25T09:13:16Z",
+        "archive_url": "https://github.com/guo6x/dsh-palate/archive/c0f281ac91ce7c5aca5c2f54ea1750bf523752be.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-17a015540f7173d16c19900f0abe6f3c592c940a447679b4c2f62b6539a43506"
+        "integrity": "sha256-50c92da5e2233b549816e74da50733fd1960c8f1afe158ef0a574b540cb4bfee"
       },
       "runtime": {
         "type": "plugin",
@@ -115538,15 +115649,15 @@
         "provider": "github",
         "repo": "Han-1413141/dsh-cost-meter",
         "ref": "master",
-        "commit": "ce7a25d5451e56773084745cbc4dbfc9d1c38eb3",
-        "updated_at": "2026-08-25T07:53:17Z",
-        "archive_url": "https://github.com/Han-1413141/dsh-cost-meter/archive/ce7a25d5451e56773084745cbc4dbfc9d1c38eb3.tar.gz"
+        "commit": "d211dfa76e1b990afad6a80f571458f111fe4d62",
+        "updated_at": "2026-08-25T08:42:04Z",
+        "archive_url": "https://github.com/Han-1413141/dsh-cost-meter/archive/d211dfa76e1b990afad6a80f571458f111fe4d62.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-a1d2b69988e44ee215bf9eb0450323a830355b79a4301e98f768edb61fab421d"
+        "integrity": "sha256-0bd5c416d2591482829f62d68d1ea5e2b5ac941ff1d1d0e93e3b3dcdaf0f9da2"
       },
       "runtime": {
         "type": "plugin",
@@ -120254,15 +120365,15 @@
         "provider": "github",
         "repo": "heartleo/hn-cli",
         "ref": "main",
-        "commit": "4b1f6e8eec8d5ad699fe00053a137c9e1416e0fe",
-        "updated_at": "2026-08-25T07:43:06Z",
-        "archive_url": "https://github.com/heartleo/hn-cli/archive/4b1f6e8eec8d5ad699fe00053a137c9e1416e0fe.tar.gz"
+        "commit": "f8767ebc1bec00f6a6144b5755937a7c3fefe728",
+        "updated_at": "2026-08-25T09:05:52Z",
+        "archive_url": "https://github.com/heartleo/hn-cli/archive/f8767ebc1bec00f6a6144b5755937a7c3fefe728.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-ff71c50cd9c09712736f9a21cedf5c62449cfb5bc9ec80da11203fbc42653ca9"
+        "integrity": "sha256-fecf7f06057815ec0300bd628a93d64c8a8520bcc2c7d3418caf976cfbfab3d4"
       },
       "runtime": {
         "type": "plugin",
@@ -120278,7 +120389,7 @@
         "category": "terminal",
         "verified": false,
         "stars": 52,
-        "rank": 5486,
+        "rank": 5609,
         "repo_url": "https://github.com/heartleo/hn-cli",
         "install_cmd": "dsh plugin --profile tools add github:heartleo/hn-cli",
         "manifest_file": null
@@ -121923,15 +122034,15 @@
         "provider": "github",
         "repo": "HenryHwong/dsh-ui-turn-rail",
         "ref": "main",
-        "commit": "cf907a4abf4d97fd559d440c1fa8f83b19e8120b",
-        "updated_at": "2026-08-25T08:16:24Z",
-        "archive_url": "https://github.com/HenryHwong/dsh-ui-turn-rail/archive/cf907a4abf4d97fd559d440c1fa8f83b19e8120b.tar.gz"
+        "commit": "61ecf67eb0aa19ca789fe1bb0571b781e7dc1d98",
+        "updated_at": "2026-08-25T09:20:58Z",
+        "archive_url": "https://github.com/HenryHwong/dsh-ui-turn-rail/archive/61ecf67eb0aa19ca789fe1bb0571b781e7dc1d98.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-9f0d4840cbfabef2ad11105717ec3cb1cae72a59015abf54d3d3221c1a4e6eb1"
+        "integrity": "sha256-9dcbf49d3a3cf49c3bb43ca6cf7cc3aed9e1c1ceb7284c5475fb6e7e1b8aa8d9"
       },
       "runtime": {
         "type": "plugin",
@@ -126333,15 +126444,15 @@
         "provider": "github",
         "repo": "hoyyang/dsh-mall",
         "ref": "main",
-        "commit": "f56c37fb22cb6258774850b74a927b3f20a69e63",
-        "updated_at": "2026-08-25T08:53:32Z",
-        "archive_url": "https://github.com/hoyyang/dsh-mall/archive/f56c37fb22cb6258774850b74a927b3f20a69e63.tar.gz"
+        "commit": "f3edb2787abc96519967a3e17c6f16ca533b6326",
+        "updated_at": "2026-08-25T09:30:15Z",
+        "archive_url": "https://github.com/hoyyang/dsh-mall/archive/f3edb2787abc96519967a3e17c6f16ca533b6326.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-49f894324cb19498fa4e1baafaf5d9454fe9d48dbd7a62af4abe0f232c80c6e6"
+        "integrity": "sha256-9041213c7ff13df9cc2b1b65e8a8812b811234d94f2a2899baa5095acbd7fab0"
       },
       "runtime": {
         "type": "plugin",
@@ -126482,15 +126593,15 @@
         "provider": "github",
         "repo": "hrhgit/deepseek-harness-plugin-manager",
         "ref": "main",
-        "commit": "879387590679cdcc60a49c010195eea8e2ec7035",
-        "updated_at": "2026-08-25T01:57:26Z",
-        "archive_url": "https://github.com/hrhgit/deepseek-harness-plugin-manager/archive/879387590679cdcc60a49c010195eea8e2ec7035.tar.gz"
+        "commit": "317f84718c5e32ac80b0bce2b9c92bf55fa5e3b5",
+        "updated_at": "2026-08-25T07:14:10Z",
+        "archive_url": "https://github.com/hrhgit/deepseek-harness-plugin-manager/archive/317f84718c5e32ac80b0bce2b9c92bf55fa5e3b5.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-115fc7fd7ed397297b72a12ee3fd072824fc27c442b58d377b2dfa6e221d0bff"
+        "integrity": "sha256-eb91a7f747474558c63d17c434df8275edd427cdfbde5f43fc8f8808f2441db0"
       },
       "runtime": {
         "type": "plugin",
@@ -126506,7 +126617,7 @@
         "category": "web-ui",
         "verified": true,
         "stars": 3,
-        "rank": 1084,
+        "rank": 1198,
         "repo_url": "https://github.com/hrhgit/deepseek-harness-plugin-manager",
         "install_cmd": "dsh plugin --profile web add github:hrhgit/deepseek-harness-plugin-manager",
         "manifest_file": "package.json"
@@ -129639,15 +129750,15 @@
         "provider": "github",
         "repo": "huiliyi37/dsh-tianshu-tui",
         "ref": "main",
-        "commit": "f62445387a55ba3864df419541f523934ccfc5e0",
-        "updated_at": "2026-08-25T08:04:01Z",
-        "archive_url": "https://github.com/huiliyi37/dsh-tianshu-tui/archive/f62445387a55ba3864df419541f523934ccfc5e0.tar.gz"
+        "commit": "8ba3d75b7c52d26a7622b5ae0ffd29777a191ba9",
+        "updated_at": "2026-08-25T08:43:58Z",
+        "archive_url": "https://github.com/huiliyi37/dsh-tianshu-tui/archive/8ba3d75b7c52d26a7622b5ae0ffd29777a191ba9.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-eb56c187cfe217e115e7a3904e093863e7651d3b245db996765ba1ece468d435"
+        "integrity": "sha256-b8533ea6be359900f384f2fd867f137ae19282172186204284c595caecf08bf1"
       },
       "runtime": {
         "type": "plugin",
@@ -129663,7 +129774,7 @@
         "category": "coding",
         "verified": true,
         "stars": 234,
-        "rank": 88,
+        "rank": 89,
         "repo_url": "https://github.com/huiliyi37/dsh-tianshu-tui",
         "install_cmd": "dsh plugin --profile tools add github:huiliyi37/dsh-tianshu-tui",
         "manifest_file": "package.json"
@@ -132054,15 +132165,15 @@
         "provider": "github",
         "repo": "hzpeng57/dsh-lens-rail",
         "ref": "main",
-        "commit": "38258cbac0d503b4e9e3a6339c9de3139b78d7c0",
-        "updated_at": "2026-08-25T08:48:55Z",
-        "archive_url": "https://github.com/hzpeng57/dsh-lens-rail/archive/38258cbac0d503b4e9e3a6339c9de3139b78d7c0.tar.gz"
+        "commit": "b18349de97278717d89d67b658b865a99691781d",
+        "updated_at": "2026-08-25T09:09:06Z",
+        "archive_url": "https://github.com/hzpeng57/dsh-lens-rail/archive/b18349de97278717d89d67b658b865a99691781d.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-eda8293f8cd2b0efb9a635f44c34fb18b907fcdf9b62be38ad9e0a92084ea7ca"
+        "integrity": "sha256-198fd058afa48a5f3dca1986cad06652fbfe785e0281b332d36e31967773cd84"
       },
       "runtime": {
         "type": "plugin",
@@ -132073,15 +132184,15 @@
       ],
       "dependencies": [],
       "metadata": {
-        "name": "dsh-lens-rail",
-        "description": "",
+        "name": "@hzpeng/dsh-lens-rail",
+        "description": "Codex-style LEFT message navigation rail for DeepSeek Harness: a vertical column of short lines, one per message (user + assistant), with a linear lens hover effect, scroll-spy highlight, and click-to-jump.",
         "category": "other",
-        "verified": false,
+        "verified": true,
         "stars": 0,
-        "rank": 0,
+        "rank": 1980,
         "repo_url": "https://github.com/hzpeng57/dsh-lens-rail",
         "install_cmd": "dsh plugin --profile tools add github:hzpeng57/dsh-lens-rail",
-        "manifest_file": null
+        "manifest_file": "package.json"
       }
     },
     {
@@ -134616,7 +134727,7 @@
         "repo": "imsai-sh/awesome-deepseek-harness-plugins",
         "ref": "main",
         "commit": "1c3817fcd91082e7982a3a5c895512709ef30518",
-        "updated_at": "2026-08-25T08:38:13Z",
+        "updated_at": "2026-08-25T08:41:30Z",
         "archive_url": "https://github.com/imsai-sh/awesome-deepseek-harness-plugins/archive/1c3817fcd91082e7982a3a5c895512709ef30518.tar.gz"
       },
       "artifact": {
@@ -137405,15 +137516,15 @@
         "provider": "github",
         "repo": "Iwctwbh/dsh-flowglass",
         "ref": "main",
-        "commit": "2729c5f873ea7c5e9c99fb01fe3676bc3fdb4a33",
-        "updated_at": "2026-08-24T11:16:48Z",
-        "archive_url": "https://github.com/Iwctwbh/dsh-flowglass/archive/2729c5f873ea7c5e9c99fb01fe3676bc3fdb4a33.tar.gz"
+        "commit": "89d37d2ad56371bbaec08bccd2f7a6087f1b962e",
+        "updated_at": "2026-08-25T08:58:20Z",
+        "archive_url": "https://github.com/Iwctwbh/dsh-flowglass/archive/89d37d2ad56371bbaec08bccd2f7a6087f1b962e.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-04fcf4e6335972810568ed73f651899265509c00252bfc69b1d0b0bce9e53c88"
+        "integrity": "sha256-bb9dad965c0f0a2396436380cc19c72fb8da0fa4a774cab9c0b4b00e6056f7cd"
       },
       "runtime": {
         "type": "plugin",
@@ -137428,8 +137539,8 @@
         "description": "流镜（DSH 原生静态插件）",
         "category": "other",
         "verified": true,
-        "stars": 11,
-        "rank": 472,
+        "stars": 12,
+        "rank": 458,
         "repo_url": "https://github.com/Iwctwbh/dsh-flowglass",
         "install_cmd": "dsh plugin --profile tools add github:Iwctwbh/dsh-flowglass",
         "manifest_file": "package.json"
@@ -153056,6 +153167,43 @@
       }
     },
     {
+      "id": "junjiangao-dsh-web-search-tavily",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "junjiangao/dsh-web-search-tavily",
+        "ref": "main",
+        "commit": "10532569df41d4322dceff52cb940a6939227908",
+        "updated_at": "2026-08-25T09:19:45Z",
+        "archive_url": "https://github.com/junjiangao/dsh-web-search-tavily/archive/10532569df41d4322dceff52cb940a6939227908.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-f5d0f0be3b1939d29f3701b54ff7b6afd493b9450f08d5ed8e93d69dc91f81b7"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "dsh-web-search-tavily",
+        "description": "",
+        "category": "other",
+        "verified": false,
+        "stars": 0,
+        "rank": 0,
+        "repo_url": "https://github.com/junjiangao/dsh-web-search-tavily",
+        "install_cmd": "dsh plugin --profile tools add github:junjiangao/dsh-web-search-tavily",
+        "manifest_file": null
+      }
+    },
+    {
       "id": "Junkrat9527-dsh-autovision",
       "version": "0.1.0",
       "source": {
@@ -153469,15 +153617,15 @@
         "provider": "github",
         "repo": "JustGenius-s/DSH-Plugs",
         "ref": "main",
-        "commit": "dea9e0d63ebd404ff31bc3f1130c81c7875a5b19",
-        "updated_at": "2026-08-25T08:25:22Z",
-        "archive_url": "https://github.com/JustGenius-s/DSH-Plugs/archive/dea9e0d63ebd404ff31bc3f1130c81c7875a5b19.tar.gz"
+        "commit": "c6d2069395a7832d4122772506ac3dbea9e2b9b3",
+        "updated_at": "2026-08-25T09:14:49Z",
+        "archive_url": "https://github.com/JustGenius-s/DSH-Plugs/archive/c6d2069395a7832d4122772506ac3dbea9e2b9b3.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-bc64b8986f163c5936fc4d6982667c0f6668e32dfecc47eeb22dc8050fc57a13"
+        "integrity": "sha256-41ad39ae708f84b37c0313f544343e6d6509e67c4138ce6f02e69c3f695a2bb0"
       },
       "runtime": {
         "type": "plugin",
@@ -153493,7 +153641,7 @@
         "category": "other",
         "verified": true,
         "stars": 7,
-        "rank": 671,
+        "rank": 672,
         "repo_url": "https://github.com/JustGenius-s/DSH-Plugs",
         "install_cmd": "dsh plugin --profile tools add github:JustGenius-s/DSH-Plugs",
         "manifest_file": "package.json"
@@ -154209,15 +154357,15 @@
         "provider": "github",
         "repo": "jypjypjypjyp/dsh-guardrail",
         "ref": "main",
-        "commit": "17b93770024d478725bb451afdd3b55e5f5ad0ad",
-        "updated_at": "2026-08-25T08:20:18Z",
-        "archive_url": "https://github.com/jypjypjypjyp/dsh-guardrail/archive/17b93770024d478725bb451afdd3b55e5f5ad0ad.tar.gz"
+        "commit": "b1e6d34d91b01d1ba2172da333ac5d38ba85e647",
+        "updated_at": "2026-08-25T09:10:55Z",
+        "archive_url": "https://github.com/jypjypjypjyp/dsh-guardrail/archive/b1e6d34d91b01d1ba2172da333ac5d38ba85e647.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-a552149eff700680f6376cbea2d00fbac7d35fcccba4124ba8876af51ebc7b9d"
+        "integrity": "sha256-b0a4567954f5e40f25b7a91033aec1ac059123ecf0f092b58ee1cb8e450f7ac0"
       },
       "runtime": {
         "type": "plugin",
@@ -156732,15 +156880,15 @@
         "provider": "github",
         "repo": "KCNyu/clawock",
         "ref": "master",
-        "commit": "5ab34712664ca0e537a14b9845a53bd5ff80163e",
-        "updated_at": "2026-08-25T08:20:15Z",
-        "archive_url": "https://github.com/KCNyu/clawock/archive/5ab34712664ca0e537a14b9845a53bd5ff80163e.tar.gz"
+        "commit": "34547699a0f2c79907edab3b33fa05c327e15b53",
+        "updated_at": "2026-08-25T09:04:24Z",
+        "archive_url": "https://github.com/KCNyu/clawock/archive/34547699a0f2c79907edab3b33fa05c327e15b53.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-732d11f8c786d25e0a8992033ec07595860d4b53338b99322dba2e6e3d7851c1"
+        "integrity": "sha256-48fc62807726f2994c0527818196abc00a0b6927d674abb3b831017b5e3f83dd"
       },
       "runtime": {
         "type": "skill",
@@ -156757,7 +156905,7 @@
         "category": "skills",
         "verified": false,
         "stars": 13,
-        "rank": 5706,
+        "rank": 5718,
         "repo_url": "https://github.com/KCNyu/clawock",
         "install_cmd": "dsh plugin --profile tools add github:KCNyu/clawock",
         "manifest_file": null
@@ -169019,15 +169167,15 @@
         "provider": "github",
         "repo": "lavapapa/dsh-composer-layout",
         "ref": "main",
-        "commit": "dd6d606bde194b45a18ab67f4a10cce7d5b90774",
-        "updated_at": "2026-08-24T12:57:25Z",
-        "archive_url": "https://github.com/lavapapa/dsh-composer-layout/archive/dd6d606bde194b45a18ab67f4a10cce7d5b90774.tar.gz"
+        "commit": "ebca9faf84f4bec4380982dcdc5bf451919790dc",
+        "updated_at": "2026-08-25T09:09:04Z",
+        "archive_url": "https://github.com/lavapapa/dsh-composer-layout/archive/ebca9faf84f4bec4380982dcdc5bf451919790dc.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-501186a4e373ac2ab9fe2a9c329b5089c1e8932db6ee45e41e80a758f9c40f33"
+        "integrity": "sha256-828412cf384464bc363986c0f94111c07b7c6ac27b82d7723ac5e12d4a4500f8"
       },
       "runtime": {
         "type": "plugin",
@@ -169042,8 +169190,8 @@
         "description": "Keep long answers and detailed prompts side by side with a dockable DSH Composer.",
         "category": "other",
         "verified": true,
-        "stars": 2,
-        "rank": 1302,
+        "stars": 3,
+        "rank": 1147,
         "repo_url": "https://github.com/lavapapa/dsh-composer-layout",
         "install_cmd": "dsh plugin --profile tools add github:lavapapa/dsh-composer-layout",
         "manifest_file": "package.json"
@@ -169835,15 +169983,15 @@
         "provider": "github",
         "repo": "lcsdg/dsh-quick-prompts",
         "ref": "main",
-        "commit": "0205dd2a529ca029a5cabdf63452e728747e3608",
-        "updated_at": "2026-08-25T08:02:10Z",
-        "archive_url": "https://github.com/lcsdg/dsh-quick-prompts/archive/0205dd2a529ca029a5cabdf63452e728747e3608.tar.gz"
+        "commit": "20e8044aeb924487b65d267178434dc816331954",
+        "updated_at": "2026-08-25T09:11:29Z",
+        "archive_url": "https://github.com/lcsdg/dsh-quick-prompts/archive/20e8044aeb924487b65d267178434dc816331954.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-929d07e08b08e42f2934935f0f2fbee4e032336fd8998ef6527d84f43d6a017d"
+        "integrity": "sha256-40b32fe04a5507ae286c79e65f20d059f86ef489dc96905ea07ebb1988747e78"
       },
       "runtime": {
         "type": "plugin",
@@ -169859,7 +170007,7 @@
         "category": "memory",
         "verified": true,
         "stars": 0,
-        "rank": 2308,
+        "rank": 2119,
         "repo_url": "https://github.com/lcsdg/dsh-quick-prompts",
         "install_cmd": "dsh plugin --profile tools add github:lcsdg/dsh-quick-prompts",
         "manifest_file": "package.json"
@@ -173768,15 +173916,15 @@
         "provider": "github",
         "repo": "Letter2025/dsh-approval-llm",
         "ref": "main",
-        "commit": "cd84622eb9308c295e6c5073bfae7792704c9194",
-        "updated_at": "2026-08-18T05:56:34Z",
-        "archive_url": "https://github.com/Letter2025/dsh-approval-llm/archive/cd84622eb9308c295e6c5073bfae7792704c9194.tar.gz"
+        "commit": "7119d42552f26a8d038a30a58b4a06f5f14a4757",
+        "updated_at": "2026-08-25T08:56:34Z",
+        "archive_url": "https://github.com/Letter2025/dsh-approval-llm/archive/7119d42552f26a8d038a30a58b4a06f5f14a4757.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-c4b715f0398fb281a93aa274770ceea06c079bb6112d5aa6d102314636fd2b23"
+        "integrity": "sha256-2a1b91203818e4da8a6aa71a485911622152ac16b1544bee0fff8769974fe13e"
       },
       "runtime": {
         "type": "plugin",
@@ -173791,8 +173939,8 @@
         "description": "Model-based permission approval (approve-for-me) for DeepSeek Harness: an approval/request answerer backed by a separate reviewer model",
         "category": "other",
         "verified": true,
-        "stars": 7,
-        "rank": 636,
+        "stars": 8,
+        "rank": 606,
         "repo_url": "https://github.com/Letter2025/dsh-approval-llm",
         "install_cmd": "dsh plugin --profile tools add github:Letter2025/dsh-approval-llm",
         "manifest_file": "package.json"
@@ -173805,15 +173953,15 @@
         "provider": "github",
         "repo": "Letter2025/dsh-model-failover",
         "ref": "main",
-        "commit": "13b1601fc6f54408398318d34b5280309964464e",
-        "updated_at": "2026-08-18T05:58:08Z",
-        "archive_url": "https://github.com/Letter2025/dsh-model-failover/archive/13b1601fc6f54408398318d34b5280309964464e.tar.gz"
+        "commit": "510676b6b5e61106f9ed6e44607ec7acb7d9604e",
+        "updated_at": "2026-08-25T09:01:55Z",
+        "archive_url": "https://github.com/Letter2025/dsh-model-failover/archive/510676b6b5e61106f9ed6e44607ec7acb7d9604e.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-6ebc3d32fe5257c0aadedab8712e6c7a9a93b3648200d3176ed828f9bf0f88db"
+        "integrity": "sha256-a3587a893117fb79c7f6b03b40270e788fa5a74a0b6ff1d0e701925270b94380"
       },
       "runtime": {
         "type": "plugin",
@@ -177219,15 +177367,15 @@
         "provider": "github",
         "repo": "lihang-lh/dsh-task-panel",
         "ref": "main",
-        "commit": "7a6605e331f088c5be61a55cae7d493dcdc57ee8",
-        "updated_at": "2026-08-21T09:21:19Z",
-        "archive_url": "https://github.com/lihang-lh/dsh-task-panel/archive/7a6605e331f088c5be61a55cae7d493dcdc57ee8.tar.gz"
+        "commit": "c0ff8e79bfe75a844b8f806c27b2cc1676331098",
+        "updated_at": "2026-08-25T09:03:00Z",
+        "archive_url": "https://github.com/lihang-lh/dsh-task-panel/archive/c0ff8e79bfe75a844b8f806c27b2cc1676331098.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-1ddc70b5288ad23d90e5d2bb2e108c613ca0162afcca062da408e39696903cfd"
+        "integrity": "sha256-dcd58444cb8dea5969029fe64bc5feac9141e984ceb6a17338e12114382f9981"
       },
       "runtime": {
         "type": "plugin",
@@ -177242,8 +177390,8 @@
         "description": "老板任务面板：发布任务、蒸馏历史会话、阶段化子代理执行与自动读取、面板验收。",
         "category": "other",
         "verified": true,
-        "stars": 0,
-        "rank": 2946,
+        "stars": 4,
+        "rank": 1007,
         "repo_url": "https://github.com/lihang-lh/dsh-task-panel",
         "install_cmd": "dsh plugin --profile tools add github:lihang-lh/dsh-task-panel",
         "manifest_file": "package.json"
@@ -177738,15 +177886,15 @@
         "provider": "github",
         "repo": "like-study1/Oh-My-DSH",
         "ref": "main",
-        "commit": "522e0fcfa544479d86de86835991bd0d94e4344c",
-        "updated_at": "2026-08-25T04:56:28Z",
-        "archive_url": "https://github.com/like-study1/Oh-My-DSH/archive/522e0fcfa544479d86de86835991bd0d94e4344c.tar.gz"
+        "commit": "6c8719060649eacba00dfaa0e9bde0e10799ab4f",
+        "updated_at": "2026-08-25T09:02:46Z",
+        "archive_url": "https://github.com/like-study1/Oh-My-DSH/archive/6c8719060649eacba00dfaa0e9bde0e10799ab4f.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-783800bfb2b1c89a6dfc64160f6ba0f6c8713ad768104a6f12cad6578d8bedb4"
+        "integrity": "sha256-de0c082e9b7113625d3dad8a663f5c29b219235cdbdbb6ee599061f9902a930b"
       },
       "runtime": {
         "type": "plugin",
@@ -177762,7 +177910,7 @@
         "category": "other",
         "verified": false,
         "stars": 72,
-        "rank": 5181,
+        "rank": 5595,
         "repo_url": "https://github.com/like-study1/Oh-My-DSH",
         "install_cmd": "dsh plugin --profile tools add github:like-study1/Oh-My-DSH",
         "manifest_file": null
@@ -183832,7 +183980,7 @@
         "repo": "lizhiyao/oh-my-knowledge",
         "ref": "main",
         "commit": "4db348419060ac1fb4afdf564d3c35af309f054a",
-        "updated_at": "2026-08-25T08:38:49Z",
+        "updated_at": "2026-08-25T08:55:55Z",
         "archive_url": "https://github.com/lizhiyao/oh-my-knowledge/archive/4db348419060ac1fb4afdf564d3c35af309f054a.tar.gz"
       },
       "artifact": {
@@ -183856,7 +184004,7 @@
         "category": "skills",
         "verified": true,
         "stars": 17,
-        "rank": 694,
+        "rank": 696,
         "repo_url": "https://github.com/lizhiyao/oh-my-knowledge",
         "install_cmd": "dsh plugin --profile tools add github:lizhiyao/oh-my-knowledge",
         "manifest_file": "package.json"
@@ -187168,15 +187316,15 @@
         "provider": "github",
         "repo": "losebird/dsh-plugin-market",
         "ref": "main",
-        "commit": "ba7e6c8149dff788a4350d480372dbad53763890",
-        "updated_at": "2026-08-25T07:56:46Z",
-        "archive_url": "https://github.com/losebird/dsh-plugin-market/archive/ba7e6c8149dff788a4350d480372dbad53763890.tar.gz"
+        "commit": "3fbf286d61ce1a2481c88e34968b36d81d3668a1",
+        "updated_at": "2026-08-25T08:42:55Z",
+        "archive_url": "https://github.com/losebird/dsh-plugin-market/archive/3fbf286d61ce1a2481c88e34968b36d81d3668a1.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-141c950c5c5d30381af99391e810ae0db5ef978552fb27e515b57583906a229c"
+        "integrity": "sha256-a99920753d092c0b69f38222149ca53371b8fb728dc876a8e586c0347c6a21d5"
       },
       "runtime": {
         "type": "plugin",
@@ -187192,7 +187340,7 @@
         "category": "other",
         "verified": true,
         "stars": 5,
-        "rank": 796,
+        "rank": 807,
         "repo_url": "https://github.com/losebird/dsh-plugin-market",
         "install_cmd": "dsh plugin --profile tools add github:losebird/dsh-plugin-market",
         "manifest_file": "package.json"
@@ -187465,15 +187613,15 @@
         "provider": "github",
         "repo": "Lottle7/dsh-quota",
         "ref": "main",
-        "commit": "944abdc0556c0c58df0fdce5e4b19bf731061dfe",
-        "updated_at": "2026-08-25T08:27:30Z",
-        "archive_url": "https://github.com/Lottle7/dsh-quota/archive/944abdc0556c0c58df0fdce5e4b19bf731061dfe.tar.gz"
+        "commit": "05848c748f243a70fa366928ae2d0b30a1730127",
+        "updated_at": "2026-08-25T09:06:55Z",
+        "archive_url": "https://github.com/Lottle7/dsh-quota/archive/05848c748f243a70fa366928ae2d0b30a1730127.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-cbea806f26247dfb3d47cf201756faa95b6c4132bdeabeadbdaea1cbfaeaf5d2"
+        "integrity": "sha256-316301541fc8655ea842b4d370e7bf7bfb79aec640fcc4218a340fd667886289"
       },
       "runtime": {
         "type": "plugin",
@@ -189395,15 +189543,15 @@
         "provider": "github",
         "repo": "Luaphes/dsh-plugins-market",
         "ref": "main",
-        "commit": "98ff4957efac0601c89fe60eb90a8362258b99fb",
-        "updated_at": "2026-08-25T08:33:52Z",
-        "archive_url": "https://github.com/Luaphes/dsh-plugins-market/archive/98ff4957efac0601c89fe60eb90a8362258b99fb.tar.gz"
+        "commit": "1ab6c55621b948173725e1cff7ee9175daf595c0",
+        "updated_at": "2026-08-25T09:13:43Z",
+        "archive_url": "https://github.com/Luaphes/dsh-plugins-market/archive/1ab6c55621b948173725e1cff7ee9175daf595c0.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-921a240df8999683bc43275c939f2fc9e84af6342143a67a04161d48c4a62746"
+        "integrity": "sha256-ddea1ac06c76c2aac7335185b8f5feedcb600b56bf3df2130f0146e026df8c86"
       },
       "runtime": {
         "type": "plugin",
@@ -189419,7 +189567,7 @@
         "category": "other",
         "verified": true,
         "stars": 3,
-        "rank": 1146,
+        "rank": 1169,
         "repo_url": "https://github.com/Luaphes/dsh-plugins-market",
         "install_cmd": "dsh plugin --profile tools add github:Luaphes/dsh-plugins-market",
         "manifest_file": "package.json"
@@ -190657,15 +190805,15 @@
         "provider": "github",
         "repo": "Lum1104/dsh-browser",
         "ref": "main",
-        "commit": "5f8f5ead0eae00b2f25c9ccdf28a16f021937f16",
-        "updated_at": "2026-08-24T06:08:19Z",
-        "archive_url": "https://github.com/Lum1104/dsh-browser/archive/5f8f5ead0eae00b2f25c9ccdf28a16f021937f16.tar.gz"
+        "commit": "9758dcac7b129997ae8da100c3225e426e6e237c",
+        "updated_at": "2026-08-25T09:03:43Z",
+        "archive_url": "https://github.com/Lum1104/dsh-browser/archive/9758dcac7b129997ae8da100c3225e426e6e237c.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-11d94c21ad884788cee2c99a77728acf5d434d35267149c125b7d5fc96f6e56b"
+        "integrity": "sha256-19b2d7b0aec3666253f714651487fabe328bf4c60c7ca287d3675a79b2dfc7cf"
       },
       "runtime": {
         "type": "agent",
@@ -190681,8 +190829,8 @@
         "description": "Standalone dsh browser bridge and controlled-tab Chrome/Firefox extension workspace",
         "category": "agent",
         "verified": true,
-        "stars": 431,
-        "rank": 60,
+        "stars": 443,
+        "rank": 59,
         "repo_url": "https://github.com/Lum1104/dsh-browser",
         "install_cmd": "dsh plugin --profile tools add github:Lum1104/dsh-browser",
         "manifest_file": "package.json"
@@ -201007,7 +201155,7 @@
         "repo": "MemTensor/memmy-agent",
         "ref": "main",
         "commit": "b4c37f78557b1d9a2ed9addf148c53d406ce954a",
-        "updated_at": "2026-08-25T08:35:11Z",
+        "updated_at": "2026-08-25T08:54:04Z",
         "archive_url": "https://github.com/MemTensor/memmy-agent/archive/b4c37f78557b1d9a2ed9addf148c53d406ce954a.tar.gz"
       },
       "artifact": {
@@ -201030,7 +201178,7 @@
         "description": "Local-first agent memory substrate with desktop and CLI surfaces.",
         "category": "mcp",
         "verified": true,
-        "stars": 970,
+        "stars": 973,
         "rank": 38,
         "repo_url": "https://github.com/MemTensor/memmy-agent",
         "install_cmd": "dsh plugin --profile tools add github:MemTensor/memmy-agent",
@@ -203199,15 +203347,15 @@
         "provider": "github",
         "repo": "MicroMilo/upstream-radar",
         "ref": "main",
-        "commit": "e8760fe1d2b3ba208f89715006e3b8139500e999",
-        "updated_at": "2026-08-25T08:37:15Z",
-        "archive_url": "https://github.com/MicroMilo/upstream-radar/archive/e8760fe1d2b3ba208f89715006e3b8139500e999.tar.gz"
+        "commit": "98087a8bc0d32755519d52377ab8aa4d4744d2a3",
+        "updated_at": "2026-08-25T09:01:01Z",
+        "archive_url": "https://github.com/MicroMilo/upstream-radar/archive/98087a8bc0d32755519d52377ab8aa4d4744d2a3.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-4422b2fc31b432b8edc6280e564fa2d7c362c08fa9095722dd47b8f51a7f3db8"
+        "integrity": "sha256-426e3df55df56f2e2b4825586c76557d0c524ce0f5063de9607c6d5eeb96c655"
       },
       "runtime": {
         "type": "plugin",
@@ -203223,7 +203371,7 @@
         "category": "other",
         "verified": true,
         "stars": 8,
-        "rank": 600,
+        "rank": 604,
         "repo_url": "https://github.com/MicroMilo/upstream-radar",
         "install_cmd": "dsh plugin --profile tools add github:MicroMilo/upstream-radar",
         "manifest_file": "package.json"
@@ -211841,15 +211989,15 @@
         "provider": "github",
         "repo": "moxingovo/dsh-bilibili",
         "ref": "main",
-        "commit": "950b0627ae437147fea55a9b5d0059ee6abcf1a6",
-        "updated_at": "2026-08-15T18:39:43Z",
-        "archive_url": "https://github.com/moxingovo/dsh-bilibili/archive/950b0627ae437147fea55a9b5d0059ee6abcf1a6.tar.gz"
+        "commit": "8f8cdca902da7d130f98ada8875efcf0a7fbc6a2",
+        "updated_at": "2026-08-25T08:58:21Z",
+        "archive_url": "https://github.com/moxingovo/dsh-bilibili/archive/8f8cdca902da7d130f98ada8875efcf0a7fbc6a2.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-2fce2b01f7e29ff75ceb2fe1d1e41ef7a7c19d6d873b2cbc719e0c28afc02a41"
+        "integrity": "sha256-ea2e7d7b11fdf703a9ad5c8b5a458b7dc9449c5a00c8d04260ebb66261195b2c"
       },
       "runtime": {
         "type": "plugin",
@@ -218963,15 +219111,15 @@
         "provider": "github",
         "repo": "nexu-io/open-design",
         "ref": "main",
-        "commit": "0944e176ce9769620fe62020dd9f93f425a139e6",
-        "updated_at": "2026-08-25T08:37:18Z",
-        "archive_url": "https://github.com/nexu-io/open-design/archive/0944e176ce9769620fe62020dd9f93f425a139e6.tar.gz"
+        "commit": "2862a47f84aeeed4ce5c1b3fcc8c18a5410b2d30",
+        "updated_at": "2026-08-25T08:51:26Z",
+        "archive_url": "https://github.com/nexu-io/open-design/archive/2862a47f84aeeed4ce5c1b3fcc8c18a5410b2d30.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-c78cfaf8aa01065e8e2dc42685c7272bd5067c008419a696b37156c81e554885"
+        "integrity": "sha256-c00e36352edd6c7d3c723cf8511a57c47fea97413a74e536df90e3b43c2b9d50"
       },
       "runtime": {
         "type": "skill",
@@ -218987,7 +219135,7 @@
         "description": "Local-first design product: detects your installed code-agent CLI, runs design skills + design systems, streams artifacts into a sandboxed preview.",
         "category": "skills",
         "verified": true,
-        "stars": 91239,
+        "stars": 91252,
         "rank": 2,
         "repo_url": "https://github.com/nexu-io/open-design",
         "install_cmd": "dsh plugin --profile tools add github:nexu-io/open-design",
@@ -220777,6 +220925,43 @@
       }
     },
     {
+      "id": "nishuoyang-dsh-wallpaper-bg",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "nishuoyang/dsh-wallpaper-bg",
+        "ref": "main",
+        "commit": "1e0ae8b98660581670bd0b917e6d20ebc420a310",
+        "updated_at": "2026-08-25T09:04:29Z",
+        "archive_url": "https://github.com/nishuoyang/dsh-wallpaper-bg/archive/1e0ae8b98660581670bd0b917e6d20ebc420a310.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-1b1e67ced63ad49b43a01552e793d24e718a75a1ba639479db4937d5f316ca41"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "dsh-wallpaper-bg",
+        "description": "DeepSeek Harness Web UI Standalone Wallpaper Background Plugin: Three sources including built-in wallpapers, custom uploads, and Wallpaper Engine library (read-only). Supports image, video, and scene preview rendering, along with adjustments for overlay, blur, brightness, and safe zoom.",
+        "category": "other",
+        "verified": false,
+        "stars": 0,
+        "rank": 0,
+        "repo_url": "https://github.com/nishuoyang/dsh-wallpaper-bg",
+        "install_cmd": "dsh plugin --profile tools add github:nishuoyang/dsh-wallpaper-bg",
+        "manifest_file": null
+      }
+    },
+    {
       "id": "nitrazepam01-dsh-web-search-tavily",
       "version": "0.1.0",
       "source": {
@@ -221674,7 +221859,7 @@
         "repo": "nocobase/nocobase",
         "ref": "main",
         "commit": "6e17e6a0f845b5844248b1e33729f09445890318",
-        "updated_at": "2026-08-25T08:07:36Z",
+        "updated_at": "2026-08-25T09:02:32Z",
         "archive_url": "https://github.com/nocobase/nocobase/archive/6e17e6a0f845b5844248b1e33729f09445890318.tar.gz"
       },
       "artifact": {
@@ -223902,15 +224087,15 @@
         "provider": "github",
         "repo": "nutshellai-tech/mobius",
         "ref": "main",
-        "commit": "a8665687a0fbb54e4a153ecd88a591dd97224c51",
-        "updated_at": "2026-08-25T03:34:47Z",
-        "archive_url": "https://github.com/nutshellai-tech/mobius/archive/a8665687a0fbb54e4a153ecd88a591dd97224c51.tar.gz"
+        "commit": "1eb8750d2d9012e1f50a18f7c60c2ad040c04889",
+        "updated_at": "2026-08-25T09:14:15Z",
+        "archive_url": "https://github.com/nutshellai-tech/mobius/archive/1eb8750d2d9012e1f50a18f7c60c2ad040c04889.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-2683c1d63205396c947e392d1e8b78966cd7eeb9135f441cc80d1211e578d386"
+        "integrity": "sha256-018ffc577056231f767a5505c2ddbc42e9d8d9f1b755b53246b3647dba7f8406"
       },
       "runtime": {
         "type": "agent",
@@ -223926,8 +224111,8 @@
         "description": "The first self-evolving open-source Agent OS, connecting your team, AI agents, devices, and compute",
         "category": "agent",
         "verified": false,
-        "stars": 285,
-        "rank": 4810,
+        "stars": 286,
+        "rank": 5571,
         "repo_url": "https://github.com/nutshellai-tech/mobius",
         "install_cmd": "dsh plugin --profile tools add github:nutshellai-tech/mobius",
         "manifest_file": null
@@ -232657,6 +232842,43 @@
         "rank": 0,
         "repo_url": "https://github.com/outprintHelloLi/dsh-balance-lite",
         "install_cmd": "dsh plugin --profile tools add github:outprintHelloLi/dsh-balance-lite",
+        "manifest_file": null
+      }
+    },
+    {
+      "id": "outprintHelloLi-dsh-piggy-bank",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "outprintHelloLi/dsh-piggy-bank",
+        "ref": "main",
+        "commit": "04b5600a5c8daff58330c1975f54edd8f88532a6",
+        "updated_at": "2026-08-25T09:26:59Z",
+        "archive_url": "https://github.com/outprintHelloLi/dsh-piggy-bank/archive/04b5600a5c8daff58330c1975f54edd8f88532a6.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-24fa6c33e10db661bd62b73e75ba5bad234443d1de3bd82375de5353ac4e9044"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "dsh-piggy-bank",
+        "description": "dsh插件：DeepSeek 官方余额状态栏（DSH web 插件）",
+        "category": "other",
+        "verified": false,
+        "stars": 0,
+        "rank": 0,
+        "repo_url": "https://github.com/outprintHelloLi/dsh-piggy-bank",
+        "install_cmd": "dsh plugin --profile tools add github:outprintHelloLi/dsh-piggy-bank",
         "manifest_file": null
       }
     },
@@ -242617,7 +242839,7 @@
         "repo": "PM-Shawn/Abu-Cowork",
         "ref": "main",
         "commit": "6c63e321b2752f85de22f470f69e0939bee79450",
-        "updated_at": "2026-08-25T08:13:59Z",
+        "updated_at": "2026-08-25T09:09:58Z",
         "archive_url": "https://github.com/PM-Shawn/Abu-Cowork/archive/6c63e321b2752f85de22f470f69e0939bee79450.tar.gz"
       },
       "artifact": {
@@ -242640,7 +242862,7 @@
         "description": "Abu - AI Desktop Office Assistant",
         "category": "mcp",
         "verified": true,
-        "stars": 348,
+        "stars": 349,
         "rank": 68,
         "repo_url": "https://github.com/PM-Shawn/Abu-Cowork",
         "install_cmd": "dsh plugin --profile tools add github:PM-Shawn/Abu-Cowork",
@@ -243947,6 +244169,43 @@
       }
     },
     {
+      "id": "princeofdream-dsh-codebase-memory-mcp",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "princeofdream/dsh-codebase-memory-mcp",
+        "ref": "main",
+        "commit": "704167c905f8a05f5575211ea75be099e76a6ad6",
+        "updated_at": "2026-08-25T08:55:42Z",
+        "archive_url": "https://github.com/princeofdream/dsh-codebase-memory-mcp/archive/704167c905f8a05f5575211ea75be099e76a6ad6.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-7c8ceda5b28af2d73a9c34e7cc9a1852b0de232cd2808a718e1da35b9e892f89"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "dsh-codebase-memory-mcp",
+        "description": "dsh-codebase-memory-mcp",
+        "category": "other",
+        "verified": false,
+        "stars": 0,
+        "rank": 0,
+        "repo_url": "https://github.com/princeofdream/dsh-codebase-memory-mcp",
+        "install_cmd": "dsh plugin --profile tools add github:princeofdream/dsh-codebase-memory-mcp",
+        "manifest_file": null
+      }
+    },
+    {
       "id": "princepainter-dsh-gpu-cleanup",
       "version": "0.1.0",
       "source": {
@@ -244250,7 +244509,7 @@
         "repo": "pulseaiclub/phi",
         "ref": "main",
         "commit": "d1f138a496ea36fd78810bd6cc58b44525facca4",
-        "updated_at": "2026-08-25T06:15:48Z",
+        "updated_at": "2026-08-25T09:10:33Z",
         "archive_url": "https://github.com/pulseaiclub/phi/archive/d1f138a496ea36fd78810bd6cc58b44525facca4.tar.gz"
       },
       "artifact": {
@@ -244274,7 +244533,7 @@
         "category": "agent",
         "verified": false,
         "stars": 152,
-        "rank": 5354,
+        "rank": 5583,
         "repo_url": "https://github.com/pulseaiclub/phi",
         "install_cmd": "dsh plugin --profile tools add github:pulseaiclub/phi",
         "manifest_file": null
@@ -245847,7 +246106,7 @@
         "repo": "qiaoji1990-alt/aifred-dsh-task-ledger",
         "ref": "main",
         "commit": "a03e12e8f6fc00ca163e41a72185d639a81f564c",
-        "updated_at": "2026-08-25T08:31:00Z",
+        "updated_at": "2026-08-25T08:54:25Z",
         "archive_url": "https://github.com/qiaoji1990-alt/aifred-dsh-task-ledger/archive/a03e12e8f6fc00ca163e41a72185d639a81f564c.tar.gz"
       },
       "artifact": {
@@ -245870,7 +246129,7 @@
         "category": "other",
         "verified": true,
         "stars": 0,
-        "rank": 2338,
+        "rank": 2310,
         "repo_url": "https://github.com/qiaoji1990-alt/aifred-dsh-task-ledger",
         "install_cmd": "dsh plugin --profile tools add github:qiaoji1990-alt/aifred-dsh-task-ledger",
         "manifest_file": "package.json"
@@ -274611,15 +274870,15 @@
         "provider": "github",
         "repo": "sharewiner/dsh-model-management",
         "ref": "main",
-        "commit": "7f37109405f4a170ecff0ba6fefc01ad0e4d9932",
-        "updated_at": "2026-08-25T08:43:19Z",
-        "archive_url": "https://github.com/sharewiner/dsh-model-management/archive/7f37109405f4a170ecff0ba6fefc01ad0e4d9932.tar.gz"
+        "commit": "4aabe251f67f0a3205a2607b7478829a09b79e98",
+        "updated_at": "2026-08-25T09:22:57Z",
+        "archive_url": "https://github.com/sharewiner/dsh-model-management/archive/4aabe251f67f0a3205a2607b7478829a09b79e98.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-af1ff884bf2b0f7351e935a3137b454e77d3d2d06dd3cde1dd7743170255761c"
+        "integrity": "sha256-97c43d62662967bf160f4bb2dd80c830919062c41effffae4a7cd7364e41c6c8"
       },
       "runtime": {
         "type": "plugin",
@@ -277503,15 +277762,15 @@
         "provider": "github",
         "repo": "Shrbuz/dsh-session-buddy",
         "ref": "main",
-        "commit": "b7d16faa90f358932aa0b8d117fbaa63fafd0152",
-        "updated_at": "2026-08-24T13:24:58Z",
-        "archive_url": "https://github.com/Shrbuz/dsh-session-buddy/archive/b7d16faa90f358932aa0b8d117fbaa63fafd0152.tar.gz"
+        "commit": "7b7eb916477a9d33d4765e4b6ca70644e95a0720",
+        "updated_at": "2026-08-25T09:04:27Z",
+        "archive_url": "https://github.com/Shrbuz/dsh-session-buddy/archive/7b7eb916477a9d33d4765e4b6ca70644e95a0720.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-4e338f0a4787e9870caf1048b406aeafe433ad2c98d2cfae4df7d3cdba485243"
+        "integrity": "sha256-51529c25b4e7bc873525cddf9db77ac4dd04c0f0eb0503048e1948b0a04d90ac"
       },
       "runtime": {
         "type": "plugin",
@@ -277526,8 +277785,8 @@
         "description": "Session buddy for the dsh web GUI: notify you when the AI finishes replying, needs your answer, or asks for command approval while the tab is hidden, and provide an in-conversation ladder outline (question index) for quick navigation",
         "category": "web-ui",
         "verified": true,
-        "stars": 3,
-        "rank": 1198,
+        "stars": 4,
+        "rank": 1074,
         "repo_url": "https://github.com/Shrbuz/dsh-session-buddy",
         "install_cmd": "dsh plugin --profile web add github:Shrbuz/dsh-session-buddy",
         "manifest_file": "package.json"
@@ -284359,6 +284618,43 @@
       }
     },
     {
+      "id": "soarGuo-dsh-skin-lab",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "soarGuo/dsh-skin-lab",
+        "ref": "master",
+        "commit": "211d12056b318ec0aea7865c789597e6c3591fa5",
+        "updated_at": "2026-08-25T09:22:38Z",
+        "archive_url": "https://github.com/soarGuo/dsh-skin-lab/archive/211d12056b318ec0aea7865c789597e6c3591fa5.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-7e83da8db913f7d17d0c36a6cdd93b53ff2020042fd455975493cfd26fe62886"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "dsh-skin-lab",
+        "description": "Skin Lab for the DSH Web GUI: token browser, live try-on, theme freeze, spectrum presets with SVG backdrops, custom backdrop upload. Everything is a plugin.",
+        "category": "other",
+        "verified": false,
+        "stars": 0,
+        "rank": 0,
+        "repo_url": "https://github.com/soarGuo/dsh-skin-lab",
+        "install_cmd": "dsh plugin --profile tools add github:soarGuo/dsh-skin-lab",
+        "manifest_file": null
+      }
+    },
+    {
       "id": "sobermh-tokens_DshWebSearch_code",
       "version": "0.1.0",
       "source": {
@@ -289683,15 +289979,15 @@
         "provider": "github",
         "repo": "Starlight-bananice/dsh-zhushou",
         "ref": "main",
-        "commit": "f258ed030dae8137691698c70e8bd204cc3d1b36",
-        "updated_at": "2026-08-25T06:36:08Z",
-        "archive_url": "https://github.com/Starlight-bananice/dsh-zhushou/archive/f258ed030dae8137691698c70e8bd204cc3d1b36.tar.gz"
+        "commit": "b2d89c14b1a9374021771d22d5690ada62b99670",
+        "updated_at": "2026-08-25T07:13:44Z",
+        "archive_url": "https://github.com/Starlight-bananice/dsh-zhushou/archive/b2d89c14b1a9374021771d22d5690ada62b99670.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-f5abe5e13805dc81ea86841e736e432e643d49636620ab0edc66ea3a057ead64"
+        "integrity": "sha256-1cff3fda1fbf0e2d3be56577f00ee681ece453ee6067dc07f884efe5f7da440a"
       },
       "runtime": {
         "type": "plugin",
@@ -289707,7 +290003,7 @@
         "category": "other",
         "verified": true,
         "stars": 0,
-        "rank": 1865,
+        "rank": 2458,
         "repo_url": "https://github.com/Starlight-bananice/dsh-zhushou",
         "install_cmd": "dsh plugin --profile tools add github:Starlight-bananice/dsh-zhushou",
         "manifest_file": "package.json"
@@ -293503,15 +293799,15 @@
         "provider": "github",
         "repo": "sunchaokun/PPT-Design-Skill",
         "ref": "main",
-        "commit": "efe50203b3f371110b14cfeacef571f0d343a330",
-        "updated_at": "2026-08-24T10:56:49Z",
-        "archive_url": "https://github.com/sunchaokun/PPT-Design-Skill/archive/efe50203b3f371110b14cfeacef571f0d343a330.tar.gz"
+        "commit": "7e87d912711336adf5166e6fd64d17186836054d",
+        "updated_at": "2026-08-25T09:10:50Z",
+        "archive_url": "https://github.com/sunchaokun/PPT-Design-Skill/archive/7e87d912711336adf5166e6fd64d17186836054d.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-089a4e0df21eedf6cf5ba47000f593c60156173dc10e52417740d7d3e75b82c0"
+        "integrity": "sha256-880276ee51e481ff15122bf781f979cd87888a26cd38572df81afd79b87bb64a"
       },
       "runtime": {
         "type": "skill",
@@ -293527,8 +293823,8 @@
         "description": "Precision PPT design  skill for OpenCode/Claude Code/Codex, with 40,000+ styles, pixel-perfect build-mode control, and AI image generation",
         "category": "skills",
         "verified": false,
-        "stars": 904,
-        "rank": 4794,
+        "stars": 931,
+        "rank": 5555,
         "repo_url": "https://github.com/sunchaokun/PPT-Design-Skill",
         "install_cmd": "dsh plugin --profile tools add github:sunchaokun/PPT-Design-Skill",
         "manifest_file": null
@@ -294766,7 +295062,7 @@
         "repo": "superdesigndev/treg",
         "ref": "main",
         "commit": "7c605721f490a97320c70cf1afe76331dc8bb34e",
-        "updated_at": "2026-08-25T08:09:18Z",
+        "updated_at": "2026-08-25T09:12:04Z",
         "archive_url": "https://github.com/superdesigndev/treg/archive/7c605721f490a97320c70cf1afe76331dc8bb34e.tar.gz"
       },
       "artifact": {
@@ -299329,15 +299625,15 @@
         "provider": "github",
         "repo": "taptap/instant-games-open-mcp",
         "ref": "main",
-        "commit": "929fbfe30815741b2a2260e38261ea8ad4cf3368",
-        "updated_at": "2026-08-25T06:23:59Z",
-        "archive_url": "https://github.com/taptap/instant-games-open-mcp/archive/929fbfe30815741b2a2260e38261ea8ad4cf3368.tar.gz"
+        "commit": "03320dd54e363a92bee78561fa1f4e841f675294",
+        "updated_at": "2026-08-25T08:46:20Z",
+        "archive_url": "https://github.com/taptap/instant-games-open-mcp/archive/03320dd54e363a92bee78561fa1f4e841f675294.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-160861fa5e474f85c72506f4d22affd2e35e49eab9e9926f8027f6cd775bdfb7"
+        "integrity": "sha256-4dbdf60e05c3c8315fcdd9fefd779537113dd7495c2dec87216cc2f5fba87f5c"
       },
       "runtime": {
         "type": "mcp",
@@ -299354,7 +299650,7 @@
         "category": "mcp",
         "verified": true,
         "stars": 29,
-        "rank": 359,
+        "rank": 361,
         "repo_url": "https://github.com/taptap/instant-games-open-mcp",
         "install_cmd": "dsh plugin --profile tools add github:taptap/instant-games-open-mcp",
         "manifest_file": "package.json"
@@ -300931,15 +301227,15 @@
         "provider": "github",
         "repo": "Tencent/WeKnora",
         "ref": "main",
-        "commit": "b6cfb34be6699696e075e5b4a152c53446acbc5f",
-        "updated_at": "2026-08-25T07:47:48Z",
-        "archive_url": "https://github.com/Tencent/WeKnora/archive/b6cfb34be6699696e075e5b4a152c53446acbc5f.tar.gz"
+        "commit": "0733141251abff6044f8ddf0fb1550a380a54819",
+        "updated_at": "2026-08-25T08:51:24Z",
+        "archive_url": "https://github.com/Tencent/WeKnora/archive/0733141251abff6044f8ddf0fb1550a380a54819.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-5b6bf0916a6f0fd8a295e3dd37dfde0952f2a4369580f457d4bdbabca8ff69a9"
+        "integrity": "sha256-3c849f5e680a1e9395c7b30c4d1558682be241914f74ddc8d3593f30aafca80a"
       },
       "runtime": {
         "type": "agent",
@@ -300955,8 +301251,8 @@
         "description": "Open-source LLM knowledge platform: turn raw documents into a queryable RAG, an autonomous reasoning agent, and a self-maintaining Wiki.",
         "category": "agent",
         "verified": false,
-        "stars": 20572,
-        "rank": 5408,
+        "stars": 20580,
+        "rank": 5531,
         "repo_url": "https://github.com/Tencent/WeKnora",
         "install_cmd": "dsh plugin --profile tools add github:Tencent/WeKnora",
         "manifest_file": null
@@ -305351,7 +305647,7 @@
         "repo": "timwhitez/dsh-self-evolving",
         "ref": "main",
         "commit": "e47c6bf56b4e46c0ba377060b56108ce51c55aa8",
-        "updated_at": "2026-08-25T06:55:56Z",
+        "updated_at": "2026-08-25T09:01:51Z",
         "archive_url": "https://github.com/timwhitez/dsh-self-evolving/archive/e47c6bf56b4e46c0ba377060b56108ce51c55aa8.tar.gz"
       },
       "artifact": {
@@ -305374,7 +305670,7 @@
         "category": "other",
         "verified": true,
         "stars": 5,
-        "rank": 784,
+        "rank": 885,
         "repo_url": "https://github.com/timwhitez/dsh-self-evolving",
         "install_cmd": "dsh plugin --profile tools add github:timwhitez/dsh-self-evolving",
         "manifest_file": "package.json"
@@ -308804,15 +309100,15 @@
         "provider": "github",
         "repo": "TQSY114514/dsh-ui-appearance",
         "ref": "main",
-        "commit": "6776b32b845cad0a996f421385de594aa944fbd6",
-        "updated_at": "2026-08-25T03:41:45Z",
-        "archive_url": "https://github.com/TQSY114514/dsh-ui-appearance/archive/6776b32b845cad0a996f421385de594aa944fbd6.tar.gz"
+        "commit": "3ff13146ed1838ad8fd9338c392a4b4748eb26ad",
+        "updated_at": "2026-08-25T09:05:03Z",
+        "archive_url": "https://github.com/TQSY114514/dsh-ui-appearance/archive/3ff13146ed1838ad8fd9338c392a4b4748eb26ad.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-5c640749ffa653261a7d7f3c87cca49c35ea84bcc007eaaf707325a7e3d69fe3"
+        "integrity": "sha256-f97b34414a03b86596d2acbdfe80d3c624cbafdcecdf241f4705b0e3df84535e"
       },
       "runtime": {
         "type": "plugin",
@@ -308828,7 +309124,7 @@
         "category": "theme",
         "verified": true,
         "stars": 10,
-        "rank": 512,
+        "rank": 516,
         "repo_url": "https://github.com/TQSY114514/dsh-ui-appearance",
         "install_cmd": "dsh plugin --profile tools add github:TQSY114514/dsh-ui-appearance",
         "manifest_file": "package.json"
@@ -310027,15 +310323,15 @@
         "provider": "github",
         "repo": "tsdaer/dsh-desktop",
         "ref": "feat/tauri-shell",
-        "commit": "b3fed2fa7181da43153ad06b098f99f14459a922",
-        "updated_at": "2026-08-25T08:00:56Z",
-        "archive_url": "https://github.com/tsdaer/dsh-desktop/archive/b3fed2fa7181da43153ad06b098f99f14459a922.tar.gz"
+        "commit": "094df9e6ac1da1e50d2b37fe2a320030835f2f88",
+        "updated_at": "2026-08-25T09:01:09Z",
+        "archive_url": "https://github.com/tsdaer/dsh-desktop/archive/094df9e6ac1da1e50d2b37fe2a320030835f2f88.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-f4818184c4d44d1a48cf5380dbaf6789335b68cebcabfd36845d128d6d0eb297"
+        "integrity": "sha256-9fa5f20a0d5ab1d568210abd1d350dcb4e1eff44f68c759ce7f2033667b4cd6d"
       },
       "runtime": {
         "type": "plugin",
@@ -312256,15 +312552,15 @@
         "provider": "github",
         "repo": "Tyan66666/billion-context-dsh",
         "ref": "main",
-        "commit": "6d06f06ba5fd9ae259d8915f3bd6e302ccda77d3",
-        "updated_at": "2026-08-25T08:38:32Z",
-        "archive_url": "https://github.com/Tyan66666/billion-context-dsh/archive/6d06f06ba5fd9ae259d8915f3bd6e302ccda77d3.tar.gz"
+        "commit": "7dad1181bd5f8d24e5bcc02259e002de6efa5a83",
+        "updated_at": "2026-08-25T09:15:11Z",
+        "archive_url": "https://github.com/Tyan66666/billion-context-dsh/archive/7dad1181bd5f8d24e5bcc02259e002de6efa5a83.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-379e07bdb39478b1fb8f9577ea548a391f00a458606b568b8af0a9836c396515"
+        "integrity": "sha256-f17205bfc51ddf560c0665a17ed6dccee10e4f47deb7596a661ea7f3ddf22e2e"
       },
       "runtime": {
         "type": "plugin",
@@ -363919,15 +364215,15 @@
         "provider": "github",
         "repo": "v587d/dsh-opencode-go-usage",
         "ref": "main",
-        "commit": "721dfebbfa6329fb3345cee3fc9e673aad0b2971",
-        "updated_at": "2026-08-19T08:14:10Z",
-        "archive_url": "https://github.com/v587d/dsh-opencode-go-usage/archive/721dfebbfa6329fb3345cee3fc9e673aad0b2971.tar.gz"
+        "commit": "682a7872e6a3bf9313f08b9337319678b8a25895",
+        "updated_at": "2026-08-25T08:40:08Z",
+        "archive_url": "https://github.com/v587d/dsh-opencode-go-usage/archive/682a7872e6a3bf9313f08b9337319678b8a25895.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-4db16a63e21cc5e028b6407f3fdb9a4631d9829659658cddc8f83e2a13d9074f"
+        "integrity": "sha256-bfd0490726c1af1739f4b7f028aaf61abbe3c466c07c6a4db732acbaea48abee"
       },
       "runtime": {
         "type": "plugin",
@@ -363942,8 +364238,8 @@
         "description": "OpenCode Go subscription usage readout for the dsh web GUI: rolling (5h), weekly, and monthly usage windows with reset countdowns in the composer dock.",
         "category": "coding",
         "verified": true,
-        "stars": 9,
-        "rank": 548,
+        "stars": 10,
+        "rank": 536,
         "repo_url": "https://github.com/v587d/dsh-opencode-go-usage",
         "install_cmd": "dsh plugin --profile tools add github:v587d/dsh-opencode-go-usage",
         "manifest_file": "package.json"
@@ -367186,15 +367482,15 @@
         "provider": "github",
         "repo": "vshulcz/deja-vu",
         "ref": "main",
-        "commit": "5cfe5cb74d42c275861e5c586351b25738f7cb63",
-        "updated_at": "2026-08-25T08:37:06Z",
-        "archive_url": "https://github.com/vshulcz/deja-vu/archive/5cfe5cb74d42c275861e5c586351b25738f7cb63.tar.gz"
+        "commit": "0ded4a9b338aa9686cdcb47cdf2e44cc6bf8f957",
+        "updated_at": "2026-08-25T09:15:19Z",
+        "archive_url": "https://github.com/vshulcz/deja-vu/archive/0ded4a9b338aa9686cdcb47cdf2e44cc6bf8f957.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-0748cbf5ed050389652d22e40e56694f0f39430b988fb188372cf3e7bc6b8558"
+        "integrity": "sha256-eb416448b6d886062ed942cdd05b807ca072c7ddcc99ae25e5d80c344f1ee04b"
       },
       "runtime": {
         "type": "mcp",
@@ -367211,7 +367507,7 @@
         "category": "mcp",
         "verified": false,
         "stars": 712,
-        "rank": 5544,
+        "rank": 5558,
         "repo_url": "https://github.com/vshulcz/deja-vu",
         "install_cmd": "dsh plugin --profile tools add github:vshulcz/deja-vu",
         "manifest_file": null
@@ -377280,15 +377576,15 @@
         "provider": "github",
         "repo": "whyihaveyou/dsh-suite",
         "ref": "main",
-        "commit": "acf9d2d960d2b9ac6ae8569a68836a087c2154ee",
-        "updated_at": "2026-08-25T08:01:19Z",
-        "archive_url": "https://github.com/whyihaveyou/dsh-suite/archive/acf9d2d960d2b9ac6ae8569a68836a087c2154ee.tar.gz"
+        "commit": "2e18df02d6e9440bc7141b0d1fca8b0dc32c53be",
+        "updated_at": "2026-08-25T09:03:26Z",
+        "archive_url": "https://github.com/whyihaveyou/dsh-suite/archive/2e18df02d6e9440bc7141b0d1fca8b0dc32c53be.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-8abffe5c9e1b3f258076a650aad2c8928a12cc3cae6c57114b25089862fdb2a6"
+        "integrity": "sha256-8252be3a9ae2ec679815e1cc14ed92099276eaefeaba8de7da13376608756a18"
       },
       "runtime": {
         "type": "plugin",
@@ -377304,7 +377600,7 @@
         "category": "web-ui",
         "verified": true,
         "stars": 48,
-        "rank": 207,
+        "rank": 208,
         "repo_url": "https://github.com/whyihaveyou/dsh-suite",
         "install_cmd": "dsh plugin --profile web add github:whyihaveyou/dsh-suite",
         "manifest_file": "package.json"
@@ -378914,7 +379210,7 @@
         "repo": "wingsky-1/dsh-plugin-hub",
         "ref": "main",
         "commit": "e2ea302c080c213edb1ad00563d509ff677751c4",
-        "updated_at": "2026-08-25T08:33:29Z",
+        "updated_at": "2026-08-25T09:08:41Z",
         "archive_url": "https://github.com/wingsky-1/dsh-plugin-hub/archive/e2ea302c080c213edb1ad00563d509ff677751c4.tar.gz"
       },
       "artifact": {
@@ -379026,15 +379322,15 @@
         "provider": "github",
         "repo": "wink-run/dsh-plugin-store",
         "ref": "main",
-        "commit": "9b399cde98c30a49b0406f21487672162ada5365",
-        "updated_at": "2026-08-25T07:45:10Z",
-        "archive_url": "https://github.com/wink-run/dsh-plugin-store/archive/9b399cde98c30a49b0406f21487672162ada5365.tar.gz"
+        "commit": "93d87f47abc8e9a196094f63dd52558c43a54db7",
+        "updated_at": "2026-08-25T08:39:49Z",
+        "archive_url": "https://github.com/wink-run/dsh-plugin-store/archive/93d87f47abc8e9a196094f63dd52558c43a54db7.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-0a4ee3515b8a773db7d764e15af052555dc2a6faadf602584339f65a5e224390"
+        "integrity": "sha256-0e27db44742ec05292499c14b370a0cd0fb19cfb459d86b9db66697aae9796ae"
       },
       "runtime": {
         "type": "plugin",
@@ -379050,7 +379346,7 @@
         "category": "other",
         "verified": false,
         "stars": 4,
-        "rank": 5574,
+        "rank": 5699,
         "repo_url": "https://github.com/wink-run/dsh-plugin-store",
         "install_cmd": "dsh plugin --profile tools add github:wink-run/dsh-plugin-store",
         "manifest_file": null
@@ -381286,15 +381582,15 @@
         "provider": "github",
         "repo": "Wodexinhaoleng-Kasssa/dsh-reader",
         "ref": "main",
-        "commit": "5facb794ca2efcd8f0546c748a3fcffa200a4b4e",
-        "updated_at": "2026-08-25T08:47:32Z",
-        "archive_url": "https://github.com/Wodexinhaoleng-Kasssa/dsh-reader/archive/5facb794ca2efcd8f0546c748a3fcffa200a4b4e.tar.gz"
+        "commit": "1eb928cc1d5e686016abd16fcbf3f62095742007",
+        "updated_at": "2026-08-25T09:09:28Z",
+        "archive_url": "https://github.com/Wodexinhaoleng-Kasssa/dsh-reader/archive/1eb928cc1d5e686016abd16fcbf3f62095742007.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-bdae6fd03f22e6f238ca2281dae83b3bd42c73fc98df60f6467ab8293959def9"
+        "integrity": "sha256-eb30110ebe7d6200f1a7dbd5fcb46c45b6314e1a2f64064814b6ae4556845a2f"
       },
       "runtime": {
         "type": "plugin",
@@ -382393,6 +382689,43 @@
       }
     },
     {
+      "id": "wpc725562-dotcom-deepfusion",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "wpc725562-dotcom/deepfusion",
+        "ref": "main",
+        "commit": "68fe7a689b5db2d3b6f15f654abe406a389899fc",
+        "updated_at": "2026-08-25T09:28:06Z",
+        "archive_url": "https://github.com/wpc725562-dotcom/deepfusion/archive/68fe7a689b5db2d3b6f15f654abe406a389899fc.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-8292be44e689b459193dc5d7a834d9227e1db127ca44eea1bab98b5a59d2b861"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "deepfusion",
+        "description": "DeepFusion: DSH x Reasonix 融合 Agent 引擎 (DeepSeek-native 编排 + 前缀缓存优化)",
+        "category": "other",
+        "verified": false,
+        "stars": 0,
+        "rank": 0,
+        "repo_url": "https://github.com/wpc725562-dotcom/deepfusion",
+        "install_cmd": "dsh plugin --profile tools add github:wpc725562-dotcom/deepfusion",
+        "manifest_file": null
+      }
+    },
+    {
       "id": "wqty123-dsh-browser",
       "version": "0.1.0",
       "source": {
@@ -382954,15 +383287,15 @@
         "provider": "github",
         "repo": "wssfk12138/dsh-damage-pulse",
         "ref": "master",
-        "commit": "c0495ce21f0535555f3eed40e22922c27c89650a",
-        "updated_at": "2026-08-25T07:51:18Z",
-        "archive_url": "https://github.com/wssfk12138/dsh-damage-pulse/archive/c0495ce21f0535555f3eed40e22922c27c89650a.tar.gz"
+        "commit": "58a15b0036b3b651e0d8ce54ca80f3723b8458a5",
+        "updated_at": "2026-08-25T08:43:18Z",
+        "archive_url": "https://github.com/wssfk12138/dsh-damage-pulse/archive/58a15b0036b3b651e0d8ce54ca80f3723b8458a5.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-fcfcbee5fd36e328ff299099299f469d48c954c7016ae2735701446461b74ee9"
+        "integrity": "sha256-34c8acdb005578258add6fb5d21f07264ff235393e33b4f14eeeefaf76ecdfe2"
       },
       "runtime": {
         "type": "plugin",
@@ -382978,7 +383311,7 @@
         "category": "integration",
         "verified": true,
         "stars": 121,
-        "rank": 125,
+        "rank": 126,
         "repo_url": "https://github.com/wssfk12138/dsh-damage-pulse",
         "install_cmd": "dsh plugin --profile tools add github:wssfk12138/dsh-damage-pulse",
         "manifest_file": "package.json"
@@ -389887,15 +390220,15 @@
         "provider": "github",
         "repo": "xiaosu19/dsh-codex-mode",
         "ref": "main",
-        "commit": "73935e80143e6b0a823e88514e0be340d1cbd5fb",
-        "updated_at": "2026-08-25T08:29:07Z",
-        "archive_url": "https://github.com/xiaosu19/dsh-codex-mode/archive/73935e80143e6b0a823e88514e0be340d1cbd5fb.tar.gz"
+        "commit": "aa25a9faefd731de2cc9fc6fb3b294b68968c27f",
+        "updated_at": "2026-08-25T08:52:59Z",
+        "archive_url": "https://github.com/xiaosu19/dsh-codex-mode/archive/aa25a9faefd731de2cc9fc6fb3b294b68968c27f.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-22ce5bc667a51f82026e1a52b7c7a82680e4636f6a7df69160b91ab1933c3349"
+        "integrity": "sha256-78fca912b51755cc9a9b578be1a22947d210008e6a66fae7e5ada8d11bcc8ad2"
       },
       "runtime": {
         "type": "agent",
@@ -389912,7 +390245,7 @@
         "category": "agent",
         "verified": true,
         "stars": 6,
-        "rank": 747,
+        "rank": 750,
         "repo_url": "https://github.com/xiaosu19/dsh-codex-mode",
         "install_cmd": "dsh plugin --profile tools add github:xiaosu19/dsh-codex-mode",
         "manifest_file": "package.json"
@@ -395007,15 +395340,15 @@
         "provider": "github",
         "repo": "xmanrui/dsh-im",
         "ref": "main",
-        "commit": "aa8fd71b936a0378604bd0f8f277059833ddb8f7",
-        "updated_at": "2026-08-25T07:15:29Z",
-        "archive_url": "https://github.com/xmanrui/dsh-im/archive/aa8fd71b936a0378604bd0f8f277059833ddb8f7.tar.gz"
+        "commit": "d33ae5064359b942cac65847ba3a79981785509e",
+        "updated_at": "2026-08-25T09:15:15Z",
+        "archive_url": "https://github.com/xmanrui/dsh-im/archive/d33ae5064359b942cac65847ba3a79981785509e.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-df7ef9e188fe049c7651af38a717208ff7485fd8aee7b947b59402c60dbbd66b"
+        "integrity": "sha256-2e03a5adbafc291e7edeca61787a3ee443e4f52a2608de64fe906359807860ac"
       },
       "runtime": {
         "type": "plugin",
@@ -395030,8 +395363,8 @@
         "description": "把九种 IM 机器人和公网 AI Office 接入本机 DeepSeek Harness。 Connect nine IM channels and a public AI Office to a local DeepSeek Harness.",
         "category": "coding",
         "verified": true,
-        "stars": 817,
-        "rank": 44,
+        "stars": 823,
+        "rank": 43,
         "repo_url": "https://github.com/xmanrui/dsh-im",
         "install_cmd": "dsh plugin --profile tools add github:xmanrui/dsh-im",
         "manifest_file": "package.json"
@@ -395155,15 +395488,15 @@
         "provider": "github",
         "repo": "XMoon/dsh-pi-tui",
         "ref": "main",
-        "commit": "6e4c86966ab21b31dc36c76d265f782271254ec6",
-        "updated_at": "2026-08-25T08:30:51Z",
-        "archive_url": "https://github.com/XMoon/dsh-pi-tui/archive/6e4c86966ab21b31dc36c76d265f782271254ec6.tar.gz"
+        "commit": "23eb72ec9623518be1bab4ad233e4d5b29a595fc",
+        "updated_at": "2026-08-25T09:09:21Z",
+        "archive_url": "https://github.com/XMoon/dsh-pi-tui/archive/23eb72ec9623518be1bab4ad233e4d5b29a595fc.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-d7997fcdb0723ecc391c44553e2a7b888985a41ea38fe5b2a48d2053ab0fffc7"
+        "integrity": "sha256-cd8b170028bfe484f016b8e3da0436cbcaa54fecb1bc25e7981ab9655fa4dba6"
       },
       "runtime": {
         "type": "plugin",
@@ -395179,7 +395512,7 @@
         "category": "web-ui",
         "verified": true,
         "stars": 11,
-        "rank": 492,
+        "rank": 496,
         "repo_url": "https://github.com/XMoon/dsh-pi-tui",
         "install_cmd": "dsh plugin --profile web add github:XMoon/dsh-pi-tui",
         "manifest_file": "package.json"
@@ -397975,15 +398308,15 @@
         "provider": "github",
         "repo": "xxxyz/DeepSeekHarness-MCP-Manager",
         "ref": "main",
-        "commit": "9cc6ae661797d87a9553d7c7c1991e749e655a06",
-        "updated_at": "2026-08-25T02:57:15Z",
-        "archive_url": "https://github.com/xxxyz/DeepSeekHarness-MCP-Manager/archive/9cc6ae661797d87a9553d7c7c1991e749e655a06.tar.gz"
+        "commit": "ba5ba17b5a0762493aab4ec43061b22085e6cc39",
+        "updated_at": "2026-08-25T09:08:24Z",
+        "archive_url": "https://github.com/xxxyz/DeepSeekHarness-MCP-Manager/archive/ba5ba17b5a0762493aab4ec43061b22085e6cc39.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-fe7edde0e70b07e429618846ec12dc5352fa21e52301421e400466b4f98ebcca"
+        "integrity": "sha256-7cd84fbd3880aca173870f58dcb8a2990fba94fee16a93b2b9c2b00f654a2176"
       },
       "runtime": {
         "type": "mcp",
@@ -397999,8 +398332,8 @@
         "description": "DSH-standard MCP manager plugin: Settings UI + HTTP API + model-facing mcp_manager_* tools. Composed as a loader entry, survives restarts. Install via npx, PowerShell, bash or node.",
         "category": "mcp",
         "verified": true,
-        "stars": 3,
-        "rank": 1121,
+        "stars": 4,
+        "rank": 979,
         "repo_url": "https://github.com/xxxyz/DeepSeekHarness-MCP-Manager",
         "install_cmd": "dsh plugin --profile tools add github:xxxyz/DeepSeekHarness-MCP-Manager",
         "manifest_file": "package.json"
@@ -402724,15 +403057,15 @@
         "provider": "github",
         "repo": "YELEBAI/dsh-plugin-marketplace",
         "ref": "main",
-        "commit": "b6b8bf8b1791c74cd59436ee3012b3657eb3bd44",
-        "updated_at": "2026-08-25T07:19:19Z",
-        "archive_url": "https://github.com/YELEBAI/dsh-plugin-marketplace/archive/b6b8bf8b1791c74cd59436ee3012b3657eb3bd44.tar.gz"
+        "commit": "3520f98c6169c60fbc9ea390db86a7aa705f3331",
+        "updated_at": "2026-08-25T09:11:17Z",
+        "archive_url": "https://github.com/YELEBAI/dsh-plugin-marketplace/archive/3520f98c6169c60fbc9ea390db86a7aa705f3331.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-ee61fa4afc72c753aeb25e7f927c543badefe639fcff76284918101a8ba88e5b"
+        "integrity": "sha256-e7cdd7353d2984a11a7b98616b2dc93452ab7f80b4b6133133b22cfe17fe4539"
       },
       "runtime": {
         "type": "plugin",
@@ -402748,7 +403081,7 @@
         "category": "other",
         "verified": true,
         "stars": 21,
-        "rank": 343,
+        "rank": 344,
         "repo_url": "https://github.com/YELEBAI/dsh-plugin-marketplace",
         "install_cmd": "dsh plugin --profile tools add github:YELEBAI/dsh-plugin-marketplace",
         "manifest_file": "package.json"
@@ -404429,7 +404762,7 @@
         "repo": "Yiipu/dsh-agentmemory",
         "ref": "main",
         "commit": "0581522e8980c5239e7a4bfe70dce64488187716",
-        "updated_at": "2026-08-17T03:59:30Z",
+        "updated_at": "2026-08-25T09:09:15Z",
         "archive_url": "https://github.com/Yiipu/dsh-agentmemory/archive/0581522e8980c5239e7a4bfe70dce64488187716.tar.gz"
       },
       "artifact": {
@@ -404451,7 +404784,7 @@
         "description": "a DSH (DeepSeek Harness) Cordis plugin that bridges a session's activity into agentmemory, a local, self-hosted memory daemon.",
         "category": "other",
         "verified": false,
-        "stars": 1,
+        "stars": 2,
         "rank": 0,
         "repo_url": "https://github.com/Yiipu/dsh-agentmemory",
         "install_cmd": "dsh plugin --profile tools add github:Yiipu/dsh-agentmemory",
@@ -404984,15 +405317,15 @@
         "provider": "github",
         "repo": "yinhcao/yinchao-ai-music-skill",
         "ref": "main",
-        "commit": "3ca991ffd0ed663f7be2adfa0cd163aa809cb178",
-        "updated_at": "2026-08-25T07:08:46Z",
-        "archive_url": "https://github.com/yinhcao/yinchao-ai-music-skill/archive/3ca991ffd0ed663f7be2adfa0cd163aa809cb178.tar.gz"
+        "commit": "eaa333b15f55a7423a676871472ed88dac1d3e68",
+        "updated_at": "2026-08-25T09:09:49Z",
+        "archive_url": "https://github.com/yinhcao/yinchao-ai-music-skill/archive/eaa333b15f55a7423a676871472ed88dac1d3e68.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-717c4f1ce3d5f1e4b804a69a0ce0ba6cc623c5ffdc77cbcc5b73c56e2633ce77"
+        "integrity": "sha256-41f413d8aa0ecd60bab1c9346b031d8b41b5ea615c33254711b7d2e156893036"
       },
       "runtime": {
         "type": "skill",
@@ -405009,7 +405342,7 @@
         "category": "skills",
         "verified": true,
         "stars": 4,
-        "rank": 1064,
+        "rank": 1081,
         "repo_url": "https://github.com/yinhcao/yinchao-ai-music-skill",
         "install_cmd": "dsh plugin --profile tools add github:yinhcao/yinchao-ai-music-skill",
         "manifest_file": "package.json"
@@ -406989,15 +407322,15 @@
         "provider": "github",
         "repo": "yoke233/dsh-ohmytui",
         "ref": "main",
-        "commit": "bea6f50c36954303b419e80b28fd37813da300a2",
-        "updated_at": "2026-08-25T08:02:01Z",
-        "archive_url": "https://github.com/yoke233/dsh-ohmytui/archive/bea6f50c36954303b419e80b28fd37813da300a2.tar.gz"
+        "commit": "07fd340ded4dcb80585475eb4c528d8dc89223e5",
+        "updated_at": "2026-08-25T09:01:06Z",
+        "archive_url": "https://github.com/yoke233/dsh-ohmytui/archive/07fd340ded4dcb80585475eb4c528d8dc89223e5.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-bbd76486d3f1de5fd02dc044cf9c9b79647bef62339232cf21e2acf3798d2444"
+        "integrity": "sha256-ddba8c7f9e689c4ca4cd98a9e161390e6f4247b8e5ff956e44506d21f10dc6b8"
       },
       "runtime": {
         "type": "plugin",
@@ -407100,15 +407433,15 @@
         "provider": "github",
         "repo": "yoke233/dsh-prime-agent",
         "ref": "main",
-        "commit": "fe15696f3b7d116165d3b220c20cd3e05289d131",
-        "updated_at": "2026-08-25T07:06:50Z",
-        "archive_url": "https://github.com/yoke233/dsh-prime-agent/archive/fe15696f3b7d116165d3b220c20cd3e05289d131.tar.gz"
+        "commit": "336e59c533514b2b125fadd669fc7ae3a9cdda07",
+        "updated_at": "2026-08-25T08:53:34Z",
+        "archive_url": "https://github.com/yoke233/dsh-prime-agent/archive/336e59c533514b2b125fadd669fc7ae3a9cdda07.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-d5d06533745d5ff20cc2113e50fd98da64a68ac3e3dcfcfce32177784e8d8278"
+        "integrity": "sha256-546791c575844d68d5aafade8a7446e50b690e83681d0ed368a63f2307085932"
       },
       "runtime": {
         "type": "agent",
@@ -407121,11 +407454,11 @@
       "dependencies": [],
       "metadata": {
         "name": "dsh-prime-agent",
-        "description": "Prime Agent-inspired persistent RLM control plane for DeepSeek Harness Code Mode",
+        "description": "Persistent TypeScript REPL control plane for DeepSeek Harness",
         "category": "agent",
         "verified": true,
         "stars": 4,
-        "rank": 908,
+        "rank": 944,
         "repo_url": "https://github.com/yoke233/dsh-prime-agent",
         "install_cmd": "dsh plugin --profile tools add github:yoke233/dsh-prime-agent",
         "manifest_file": "package.json"
@@ -408508,15 +408841,15 @@
         "provider": "github",
         "repo": "YRN-playmaker/dsh-wallpaper_share",
         "ref": "main",
-        "commit": "095a1d04b5385cda3dafc38c9565196853830703",
-        "updated_at": "2026-08-24T10:54:52Z",
-        "archive_url": "https://github.com/YRN-playmaker/dsh-wallpaper_share/archive/095a1d04b5385cda3dafc38c9565196853830703.tar.gz"
+        "commit": "2e04d9669164c2d02b82656a61253d798fc1f700",
+        "updated_at": "2026-08-25T09:11:44Z",
+        "archive_url": "https://github.com/YRN-playmaker/dsh-wallpaper_share/archive/2e04d9669164c2d02b82656a61253d798fc1f700.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-1a019ab943c4087a0d98f9d9270ca180398a9fa691952b5966f9d8d695999661"
+        "integrity": "sha256-72e898b8b041ff707ffd6dda896e893234080dc0704a15e3404653c079f7a494"
       },
       "runtime": {
         "type": "plugin",
@@ -408531,8 +408864,8 @@
         "description": "Sync active Wallpaper Engine wallpapers(image/video/scence/app)to DeepSeek Harness Web UI as a customizable dynamic background.",
         "category": "web-ui",
         "verified": true,
-        "stars": 10,
-        "rank": 501,
+        "stars": 11,
+        "rank": 488,
         "repo_url": "https://github.com/YRN-playmaker/dsh-wallpaper_share",
         "install_cmd": "dsh plugin --profile web add github:YRN-playmaker/dsh-wallpaper_share",
         "manifest_file": "package.json"
@@ -415300,15 +415633,15 @@
         "provider": "github",
         "repo": "ZASENJC/dsh-plugins-store",
         "ref": "main",
-        "commit": "e09bab596eae12b0d33f4801f8dd281df16e0e46",
-        "updated_at": "2026-08-25T08:08:40Z",
-        "archive_url": "https://github.com/ZASENJC/dsh-plugins-store/archive/e09bab596eae12b0d33f4801f8dd281df16e0e46.tar.gz"
+        "commit": "1396bdc175eb6d66f51f0ae5d70d0167c16bd121",
+        "updated_at": "2026-08-25T09:11:05Z",
+        "archive_url": "https://github.com/ZASENJC/dsh-plugins-store/archive/1396bdc175eb6d66f51f0ae5d70d0167c16bd121.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-3f38e6173b8eaf837363820109ca51257fc202712ef1798d024e312004258067"
+        "integrity": "sha256-eed52696a142a35c82e269f38442516dc0a94ec6f507d8e53c1931e8b15e1bab"
       },
       "runtime": {
         "type": "agent",
@@ -415412,15 +415745,15 @@
         "provider": "github",
         "repo": "zbc0315/dsh-synomega",
         "ref": "main",
-        "commit": "0de37cba64f71d8752bbc3eff3c22c2b2fbebaa6",
-        "updated_at": "2026-08-25T08:21:47Z",
-        "archive_url": "https://github.com/zbc0315/dsh-synomega/archive/0de37cba64f71d8752bbc3eff3c22c2b2fbebaa6.tar.gz"
+        "commit": "8b91d32c6af624870a631395f9fae5de1497b581",
+        "updated_at": "2026-08-25T08:58:24Z",
+        "archive_url": "https://github.com/zbc0315/dsh-synomega/archive/8b91d32c6af624870a631395f9fae5de1497b581.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-9c0c90ba0436e29b851eed2b6d2ae519d5fcd89e01ad12824f977dedafd54dbf"
+        "integrity": "sha256-796c53b95fe8f6cced603da9cd1b5242dd20c33f2f7fa9811ac8ec8fe07042ff"
       },
       "runtime": {
         "type": "plugin",
@@ -415436,7 +415769,7 @@
         "category": "web-ui",
         "verified": true,
         "stars": 0,
-        "rank": 2337,
+        "rank": 2312,
         "repo_url": "https://github.com/zbc0315/dsh-synomega",
         "install_cmd": "dsh plugin --profile web add github:zbc0315/dsh-synomega",
         "manifest_file": "package.json"
@@ -418850,6 +419183,43 @@
         "rank": 0,
         "repo_url": "https://github.com/zhaimingyou/aisync",
         "install_cmd": "dsh plugin --profile tools add github:zhaimingyou/aisync",
+        "manifest_file": null
+      }
+    },
+    {
+      "id": "zhaimingyou-dsh.plus",
+      "version": "0.1.0",
+      "source": {
+        "provider": "github",
+        "repo": "zhaimingyou/dsh.plus",
+        "ref": "main",
+        "commit": "9962d5730b5b3ad96f1c98ec5ea190863476024b",
+        "updated_at": "2026-08-25T09:01:19Z",
+        "archive_url": "https://github.com/zhaimingyou/dsh.plus/archive/9962d5730b5b3ad96f1c98ec5ea190863476024b.tar.gz"
+      },
+      "artifact": {
+        "kind": "git-source",
+        "algorithm": "sha256",
+        "integrity_scope": "source-identity",
+        "integrity": "sha256-09726fa27362d624e9f90146372731fe1961fc15f96bbca661159ac6ee09c730"
+      },
+      "runtime": {
+        "type": "plugin",
+        "activation": "restart-required"
+      },
+      "capabilities": [
+        "plugin"
+      ],
+      "dependencies": [],
+      "metadata": {
+        "name": "dsh.plus",
+        "description": "DSH plugin that shows the dsh.plus curated plugin catalog inside DeepSeek Harness",
+        "category": "other",
+        "verified": false,
+        "stars": 0,
+        "rank": 0,
+        "repo_url": "https://github.com/zhaimingyou/dsh.plus",
+        "install_cmd": "dsh plugin --profile tools add github:zhaimingyou/dsh.plus",
         "manifest_file": null
       }
     },
@@ -423199,15 +423569,15 @@
         "provider": "github",
         "repo": "zhoushoujianwork/easyeda-agent",
         "ref": "main",
-        "commit": "f310fd3a5611c679600fa7428d6e77b9ec22c53f",
-        "updated_at": "2026-08-25T07:11:25Z",
-        "archive_url": "https://github.com/zhoushoujianwork/easyeda-agent/archive/f310fd3a5611c679600fa7428d6e77b9ec22c53f.tar.gz"
+        "commit": "45d93e5861e27cb6ded788e3c9e10b09f60b1b7b",
+        "updated_at": "2026-08-25T09:16:08Z",
+        "archive_url": "https://github.com/zhoushoujianwork/easyeda-agent/archive/45d93e5861e27cb6ded788e3c9e10b09f60b1b7b.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-f9a2369a0312edf7aafe22c71d87370618a81790a49868ae64b27b953280bcf1"
+        "integrity": "sha256-e14c00acd2873c42f8dc865d7b7fe193c0d103639bb6b8497195c772d7cbaeda"
       },
       "runtime": {
         "type": "mcp",
@@ -423223,7 +423593,7 @@
         "description": "EasyEDA Pro (JLC EDA) automation for DeepSeek Harness: MCP bridge + agent skill bundle",
         "category": "mcp",
         "verified": true,
-        "stars": 294,
+        "stars": 297,
         "rank": 74,
         "repo_url": "https://github.com/zhoushoujianwork/easyeda-agent",
         "install_cmd": "dsh plugin --profile tools add github:zhoushoujianwork/easyeda-agent",
@@ -423496,15 +423866,15 @@
         "provider": "github",
         "repo": "zhu1090093659/dsh-web",
         "ref": "dev",
-        "commit": "dab13e5996b3adfc5f22e5bb29661b19529a94f2",
-        "updated_at": "2026-08-25T08:17:03Z",
-        "archive_url": "https://github.com/zhu1090093659/dsh-web/archive/dab13e5996b3adfc5f22e5bb29661b19529a94f2.tar.gz"
+        "commit": "8214ee412ba0ba9f8cf6e01461bd818252869acd",
+        "updated_at": "2026-08-25T08:46:10Z",
+        "archive_url": "https://github.com/zhu1090093659/dsh-web/archive/8214ee412ba0ba9f8cf6e01461bd818252869acd.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-1a32dd71a4873bf31f9065ef78e1e34d7a4e69dd5390f048074422e9190ca3c6"
+        "integrity": "sha256-b6892f403ca71c32cd604ea0253c7ffb26bbb4bf332d966fc9049a328b7421a4"
       },
       "runtime": {
         "type": "plugin",
@@ -423519,7 +423889,7 @@
         "description": "DeepSeek Harness Web GUI 插件全家桶 + 皮肤集合 + Gallery 预览页。皮肤是纯资产目录（packages/skins/skin-center/skins/<id>），由皮肤中心包统一加载。",
         "category": "web-ui",
         "verified": true,
-        "stars": 5999,
+        "stars": 6009,
         "rank": 14,
         "repo_url": "https://github.com/zhu1090093659/dsh-web",
         "install_cmd": "dsh plugin --profile web add github:zhu1090093659/dsh-web",
@@ -428283,15 +428653,15 @@
         "provider": "github",
         "repo": "ZomiCC/ghost-refresh",
         "ref": "main",
-        "commit": "9592740c0ea26ee51d3609a6452222af9e6cb015",
-        "updated_at": "2026-08-25T07:55:46Z",
-        "archive_url": "https://github.com/ZomiCC/ghost-refresh/archive/9592740c0ea26ee51d3609a6452222af9e6cb015.tar.gz"
+        "commit": "44acab882c8c911288ce80362b803c02df03c0ca",
+        "updated_at": "2026-08-25T09:07:16Z",
+        "archive_url": "https://github.com/ZomiCC/ghost-refresh/archive/44acab882c8c911288ce80362b803c02df03c0ca.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-1ea0c8e401335c829f1dfd2335e5acec49f7c12be2ed227848b6cde9b44dc78f"
+        "integrity": "sha256-76b064929576a7e13e462715c759191cc817d923cbc8afb3c2ab4f2ae908d2af"
       },
       "runtime": {
         "type": "plugin",
@@ -429099,15 +429469,15 @@
         "provider": "github",
         "repo": "zp-home/dsh-recommend",
         "ref": "main",
-        "commit": "6638156b66bdbfae9e05f3b2e1bc019cb93a4dd1",
-        "updated_at": "2026-08-25T08:04:26Z",
-        "archive_url": "https://github.com/zp-home/dsh-recommend/archive/6638156b66bdbfae9e05f3b2e1bc019cb93a4dd1.tar.gz"
+        "commit": "61e461b2c2e49b564d15220791635bd70e425cde",
+        "updated_at": "2026-08-25T09:04:46Z",
+        "archive_url": "https://github.com/zp-home/dsh-recommend/archive/61e461b2c2e49b564d15220791635bd70e425cde.tar.gz"
       },
       "artifact": {
         "kind": "git-source",
         "algorithm": "sha256",
         "integrity_scope": "source-identity",
-        "integrity": "sha256-c63f76fa9713b456853190d58fd73de0cc5d6675fe5d4abe399ebc898b391a6b"
+        "integrity": "sha256-87b8560e1894ef548ce0fb59c476ff1d3df18f2c4d2f8eae8e49708ad1169262"
       },
       "runtime": {
         "type": "plugin",
@@ -429123,7 +429493,7 @@
         "category": "other",
         "verified": true,
         "stars": 19,
-        "rank": 367,
+        "rank": 369,
         "repo_url": "https://github.com/zp-home/dsh-recommend",
         "install_cmd": "dsh plugin --profile tools add github:zp-home/dsh-recommend",
         "manifest_file": "package.json"
