@@ -1,5 +1,4 @@
-# Retry with deterministic historical slug ownership
-name: Apply repository lifecycle identity hardening
+name: Apply incremental repository state hardening
 
 on:
   push:
@@ -23,12 +22,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Apply repository lifecycle hardening
+      - name: Apply incremental state hardening
         run: python3 .github/scripts/apply-registry-canonical-migration.py
-      - name: Verify repository lifecycle hardening
+      - name: Verify incremental state hardening
         run: |
           npm ci
-          node --check scripts/repository-identity.mjs
           node --check scripts/sync.mjs
           npm run typecheck
           npm run lint
@@ -38,6 +36,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/repository-identity.mjs scripts/sync.mjs tests/repository-identity.test.ts
-          git commit -m "fix: preserve identity across repository lifecycle changes"
+          git add scripts/sync.mjs tests/sync.test.ts
+          git commit -m "fix: preserve repository state during incremental sync"
           git push
