@@ -57,9 +57,10 @@ function optionValue(args, name) {
 
 async function main() {
   const args = process.argv.slice(2);
-  const file = args.find((arg) => arg.endsWith('.json') && !arg.startsWith('--report=')) || resolve(process.cwd(), 'catalog/plugins.json');
   const strict = args.includes('--strict');
   const reportArg = optionValue(args, '--report');
+  const inputArg = args.find((arg, index) => arg.endsWith('.json') && !arg.startsWith('--report=') && args[index - 1] !== '--report');
+  const file = inputArg ? resolve(process.cwd(), inputArg) : resolve(process.cwd(), 'catalog/plugins.json');
   const reportFile = reportArg ? resolve(process.cwd(), reportArg) : null;
   const data = JSON.parse(await readFile(file, 'utf8'));
   const result = auditCatalogIdentity(data);
