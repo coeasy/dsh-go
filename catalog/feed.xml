@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 25 Aug 2026 14:03:45 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 25 Aug 2026 14:32:01 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -126,6 +126,13 @@
       <description></description>
     </item>
     <item>
+      <title>🆕 dsh-tui-mcp-manager</title>
+      <link>https://github.com/0N3-0/dsh-tui-mcp-manager</link>
+      <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-25T14:24:51Z</guid>
+      <pubDate>Tue, 25 Aug 2026 14:24:51 GMT</pubDate>
+      <description>Native dsh-TUI dialog for managing file-backed MCP Loader rows in the active profile.</description>
+    </item>
+    <item>
       <title>🆕 dsh-agent-messaging</title>
       <link>https://github.com/happyren/dsh-agent-messaging</link>
       <guid isPermaLink="false">happyren/dsh-agent-messaging@2026-08-15T13:05:24Z</guid>
@@ -208,13 +215,6 @@
       <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-08-21T12:35:08Z</guid>
       <pubDate>Fri, 21 Aug 2026 12:35:08 GMT</pubDate>
       <description>DeepSeek Harness English 中文 DeepSeek Harness ( dsh ) is an open source agent harness developed by DeepSeek AI. It uses an architecture where everything is a plugin , and is powered by Cordis, whose de</description>
-    </item>
-    <item>
-      <title>🆕 open-design</title>
-      <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-08-25T13:42:51Z</guid>
-      <pubDate>Tue, 25 Aug 2026 13:42:51 GMT</pubDate>
-      <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
   </channel>
 </rss>
