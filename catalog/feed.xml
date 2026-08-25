@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 25 Aug 2026 17:26:07 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 25 Aug 2026 19:03:43 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -61,6 +61,13 @@
       <guid isPermaLink="false">FEOH333/dsh-delegate@2026-08-24T13:27:49Z</guid>
       <pubDate>Mon, 24 Aug 2026 13:27:49 GMT</pubDate>
       <description>dsh delegate 🐋 模型感知的子代理委派工具包 — 给 DeepSeek Harness 的 subagent / subagent fork 加上：按次选模型、依赖门控、角色人设、任务花名册、审计事件与对话流卡片。 Model aware subagent delegation for DeepSeek Harness: per call models, dependency gat</description>
+    </item>
+    <item>
+      <title>🆕 DSH-ReasonixUI</title>
+      <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-25T17:55:29Z</guid>
+      <pubDate>Tue, 25 Aug 2026 17:55:29 GMT</pubDate>
+      <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
       <title>🆕 dsh-fresh-start</title>
@@ -207,13 +214,6 @@
       <link>https://github.com/FUSU123fusu/dsh-tui-keys</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-keys@2026-08-17T12:52:08Z</guid>
       <pubDate>Mon, 17 Aug 2026 12:52:08 GMT</pubDate>
-      <description></description>
-    </item>
-    <item>
-      <title>🆕 Cron Schedules</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-cron</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-cron@2026-08-17T12:51:55Z</guid>
-      <pubDate>Mon, 17 Aug 2026 12:51:55 GMT</pubDate>
       <description></description>
     </item>
   </channel>

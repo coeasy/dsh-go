@@ -1,11 +1,11 @@
 {
   "last_sync": {
-    "at": "2026-08-25T17:05:44.274Z",
-    "mode": "full",
-    "duration_ms": 239458,
-    "scanned": 4265,
-    "included": 3304,
-    "skipped": 106,
+    "at": "2026-08-25T19:03:43.301Z",
+    "mode": "incremental",
+    "duration_ms": 34085,
+    "scanned": 1300,
+    "included": 1000,
+    "skipped": 43,
     "data_changed": true,
     "errors": []
   },
@@ -209,18 +209,28 @@
       "skipped": 106,
       "data_changed": true,
       "errors": []
+    },
+    {
+      "at": "2026-08-25T19:03:43.301Z",
+      "mode": "incremental",
+      "duration_ms": 34085,
+      "scanned": 1300,
+      "included": 1000,
+      "skipped": 43,
+      "data_changed": true,
+      "errors": []
     }
   ],
   "registry_version": 3,
   "registry": {
     "schema_version": "3.0.0",
     "path": "catalog/registry-v3.json",
-    "count": 11741,
+    "count": 11742,
     "excluded_count": 42,
-    "source_catalog_etag": "078f388a320eed6b",
-    "content_hash": "23e0c2c30a38400e373df42b723594c1924c01d5e31f327054fc08805feef91e",
+    "source_catalog_etag": "66bf4f0c39c90a06",
+    "content_hash": "da1c12c80d2b4c60366734ac4a80b395ef613ba0a7543e52e874bd8f8ea26ee6",
     "schema_hash": "871521a58a5d6ca6e7d0055cfd68275fcd413cc3386e1159954a70de7af8fa1a",
-    "generated_at": "2026-08-25T17:26:08.519Z",
+    "generated_at": "2026-08-25T19:04:00.215Z",
     "discovery_mode": "complete",
     "discovery_transport": "graphql-topic",
     "discovered_count": 11783
@@ -230,11 +240,11 @@
     "verified": true,
     "frozen": true,
     "registry_changed": true,
-    "run_at": "2026-08-25T17:26:09.117Z",
-    "source_catalog_etag": "078f388a320eed6b",
-    "mode": "full",
-    "input_count": 11750,
-    "output_count": 11741,
+    "run_at": "2026-08-25T19:04:00.850Z",
+    "source_catalog_etag": "66bf4f0c39c90a06",
+    "mode": "incremental",
+    "input_count": 11751,
+    "output_count": 11742,
     "excluded_count": 42
   }
 }
