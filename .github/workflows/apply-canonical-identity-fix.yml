@@ -1,3 +1,4 @@
+# Re-run marker: latest-head
 name: Validate ephemeral observation sidecar
 
 on:
