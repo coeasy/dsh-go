@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
 import { DEFAULT_PLUGIN_VERSION, REGISTRY_VERSION, SCHEMA_VERSION, isCommitSha } from './registry-v3-builder.mjs';
-import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, repoNameFromFullName } from './repository-identity.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_FILE = resolve(ROOT, 'catalog/registry-v3.json');
@@ -54,6 +54,9 @@ export function validateRegistry(data) {
     if (metadata.install_cmd && metadata.install_cmd !== makeInstallCmd(repo, metadata.category || 'other')) errors.push(`${id}: metadata.install_cmd source mismatch`);
     if (metadata.verified && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: verified metadata requires dsh-plugin.json`);
     if (metadata.manifest_file && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: unsupported manifest_file ${metadata.manifest_file}`);
+    const overrideFields = normalizeOverrideFields(metadata.override_fields);
+    if (metadata.metadata_source === 'override' && overrideFields.length === 0) errors.push(`${id}: override metadata missing override_fields`);
+    if (Array.isArray(metadata.override_fields) && overrideFields.length !== metadata.override_fields.length) errors.push(`${id}: unsupported override_fields`);
   }
 
   if (data.generated?.count !== data.plugins.length) errors.push(`generated.count (${data.generated?.count}) does not match plugins length (${data.plugins.length})`);

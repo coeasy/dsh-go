@@ -132,6 +132,7 @@ export function buildRegistryPlugin(legacy, normalized, commit) {
     metadata: {
       name: legacy.name || normalized.id, repo_id: legacy.repo_id || null, repo_name: legacy.repo_name || repoNameFromFullName(normalized.repo),
       metadata_source: legacy.metadata_source || (legacy.manifest_file === 'dsh-plugin.json' ? 'dsh-plugin' : 'github'),
+      override_fields: Array.isArray(legacy.override_fields) ? legacy.override_fields : [],
       description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),
       stars: Number(legacy.stars || 0), rank: Number(legacy.rank || 0), repo_url: canonicalRepoUrl(normalized.repo),
       install_cmd: makeInstallCmd(normalized.repo, legacy.category || 'other'), manifest_file: legacy.manifest_file || null,

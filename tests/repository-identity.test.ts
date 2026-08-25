@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const {
-  canonicalRepoKey, canonicalRepoUrl, discoveryTopics, makeInstallCmd,
+  applyPluginOverride, canonicalRepoKey, canonicalRepoUrl, discoveryTopics, makeInstallCmd,
   mergeCatalogPluginsWithDiscovery, normalizePluginCategory, normalizeStoredPlugin,
 } = await import('../scripts/repository-identity.mjs');
 const { discoveryRepoToLegacy } = await import('../scripts/github-discovery.mjs');
@@ -42,7 +42,7 @@ describe('repository identity', () => {
     const existing: any[] = [
       { full_name: 'owner/package-only', name: 'package-name', category: 'tool', manifest_file: 'package.json', verified: true, topics: ['deepseek-harness'] },
       { full_name: 'owner/explicit', name: 'Explicit Brand', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true, topics: ['deepseek-harness'] },
-      { full_name: 'owner/manual', name: 'Manual Brand', category: 'tool', metadata_source: 'override', manifest_file: null, verified: false, topics: [] },
+      { full_name: 'owner/manual', name: 'Manual Brand', category: 'tool', metadata_source: 'override', override_fields: ['name'], manifest_file: null, verified: false, topics: [] },
     ];
     const merged = mergeCatalogPluginsWithDiscovery(existing, []);
     expect(merged.pruned).toBe(1);
@@ -54,7 +54,7 @@ describe('repository identity', () => {
       { full_name: 'owner/stale', repo_id: '1', name: 'Stale', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true },
       { full_name: 'owner/fresh', repo_id: '2', name: 'Fresh', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true },
       { full_name: 'owner/fresh-by-id', repo_id: '3', name: 'Fresh by ID', category: 'tool', manifest_file: 'dsh-plugin.json', verified: true },
-      { full_name: 'owner/manual', name: 'Manual', category: 'tool', metadata_source: 'override' },
+      { full_name: 'owner/manual', name: 'Manual', category: 'tool', metadata_source: 'override', override_fields: ['name'] },
     ];
     const merged = mergeCatalogPluginsWithDiscovery(existing, [], {
       requireObservation: true,
@@ -63,6 +63,40 @@ describe('repository identity', () => {
     });
     expect(merged.pruned).toBe(1);
     expect(merged.plugins.map((p: any) => p.full_name).sort()).toEqual(['owner/fresh', 'owner/fresh-by-id', 'owner/manual']);
+  });
+
+  it('does not let legacy record-wide override flags freeze polluted names', () => {
+    const plugin: any = normalizeStoredPlugin({
+      full_name: 'ruvnet/ruflo', name: 'claude-flow', category: 'agent', metadata_source: 'override',
+    });
+    expect(plugin.name).toBe('ruflo');
+    expect(plugin.metadata_source).toBe('github');
+    expect(plugin.override_fields).toBeUndefined();
+  });
+
+  it('preserves only explicitly overridden fields across repository renames', () => {
+    const current: any = {
+      full_name: 'owner/old-name', repo_id: '42', name: 'stale-package-name', category: 'agent',
+      metadata_source: 'override', override_fields: ['category'], homepage: 'https://old.example/',
+    };
+    const live: any = {
+      full_name: 'owner/new-name', repo_id: '42', name: 'new-name', repo_name: 'new-name', category: 'tool',
+      description: 'live', topics: ['dsh-plugin'], tags: ['dsh-plugin'], homepage: 'https://new.example/', stars: 1,
+    };
+    const merged = mergeCatalogPluginsWithDiscovery([current], [live]).plugins[0] as any;
+    expect(merged.name).toBe('new-name');
+    expect(merged.category).toBe('agent');
+    expect(merged.homepage).toBe('https://new.example/');
+    expect(merged.override_fields).toEqual(['category']);
+  });
+
+  it('keeps explicit name aliases and sanitizes overridden homepage URLs', () => {
+    const base: any = normalizeStoredPlugin({ full_name: 'owner/demo', name: 'demo', category: 'tool' });
+    const aliased: any = applyPluginOverride(base, { name: 'Friendly Name', homepage: 'javascript:alert(1)' });
+    expect(aliased.name).toBe('Friendly Name');
+    expect(aliased.homepage).toBeNull();
+    expect(aliased.metadata_source).toBe('override');
+    expect(aliased.override_fields).toEqual(['homepage', 'name']);
   });
 
   it('deduplicates repository identity case-insensitively', () => {

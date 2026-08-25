@@ -7,6 +7,7 @@ export interface Plugin {
   repo_name?: string;
   repo_id?: string | null;
   metadata_source?: 'github' | 'dsh-plugin' | 'override';
+  override_fields?: string[];
   full_name: string;
   description: string;
   category: string;

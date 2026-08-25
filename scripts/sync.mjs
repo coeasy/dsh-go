@@ -21,7 +21,7 @@ import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canonicalRepoKey, canonicalRepoUrl, discoveryRepoId, makeInstallCmd, normalizeStoredPlugin } from './repository-identity.mjs';
+import { applyPluginOverride, canonicalRepoKey, canonicalRepoUrl, discoveryRepoId, makeInstallCmd, normalizeStoredPlugin } from './repository-identity.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -209,24 +209,22 @@ async function readJSON(file, fallback) {
 // 结构：{ "owner/repo": { "category": "web-ui", "name": "别名", "description": "修正描述", "tags": [...], "hidden": true } }
 async function loadOverrides() {
   const raw = await readJSON(resolve(CATALOG_DIR, 'overrides.json'), {});
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;
-  return {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const normalized = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (key.startsWith('$') || !value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const canonicalKey = canonicalRepoKey(key);
+    if (canonicalKey) normalized[canonicalKey] = value;
+  }
+  return normalized;
 }
 
 function applyOverrides(plugin, overrides) {
-  const o = overrides[plugin.full_name];
+  const o = overrides[canonicalRepoKey(plugin.full_name)];
   if (!o) return plugin;
-  if (o.name) { plugin.name = o.name; plugin.metadata_source = 'override'; }
-  if (o.description) { plugin.description = o.description; plugin.metadata_source = 'override'; }
-  if (o.category) {
-    plugin.category = normalizeCategory(o.category, 'other');
-    plugin.metadata_source = 'override';
-    plugin.install_cmd = makeInstallCmd(plugin.full_name, plugin.category);
-  }
-  if (Array.isArray(o.tags)) plugin.tags = o.tags;
-  if (o.homepage) plugin.homepage = o.homepage;
-  if (o.hidden) plugin.hidden = true;
-  return plugin;
+  const result = applyPluginOverride(plugin, o);
+  if (Object.prototype.hasOwnProperty.call(o, 'hidden')) result.hidden = Boolean(o.hidden);
+  return result;
 }
 
 // ---------- DSH 清单抓取（走 raw 域名，不占 REST 配额） ----------

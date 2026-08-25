@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, repoNameFromFullName } from './repository-identity.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeHttpUrl, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
 
 export function auditCatalogIdentity(data) {
   const errors = [];
@@ -25,6 +25,10 @@ export function auditCatalogIdentity(data) {
     if (plugin.manifest_file && plugin.manifest_file !== 'dsh-plugin.json') errors.push(`${label}: package/non-DSH manifest used (${plugin.manifest_file})`);
     if (plugin.verified && plugin.manifest_file !== 'dsh-plugin.json') errors.push(`${label}: verified without dsh-plugin.json`);
     if (plugin.metadata_source === 'github' && plugin.name !== repoName) errors.push(`${label}: GitHub-sourced name mismatch (${plugin.name})`);
+    const overrideFields = normalizeOverrideFields(plugin.override_fields);
+    if (plugin.metadata_source === 'override' && overrideFields.length === 0) errors.push(`${label}: override source missing field-level provenance`);
+    if (Array.isArray(plugin.override_fields) && overrideFields.length !== plugin.override_fields.length) errors.push(`${label}: unsupported override_fields`);
+    if (plugin.homepage && normalizeHttpUrl(plugin.homepage) !== plugin.homepage) errors.push(`${label}: invalid/non-normalized homepage`);
     if (plugin.repo_url?.startsWith('https://api.github.com/')) errors.push(`${label}: GitHub API URL exposed as repository URL`);
     if (Object.prototype.hasOwnProperty.call(plugin, 'observed_at')) errors.push(`${label}: transient observed_at leaked into persisted catalog`);
   }
