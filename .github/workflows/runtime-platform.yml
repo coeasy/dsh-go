@@ -7,6 +7,7 @@ on:
       - 'tests/runtime-platform/**'
       - 'package.json'
       - 'package-lock.json'
+      - 'site/**'
       - '.github/workflows/runtime-platform.yml'
   workflow_dispatch:
 
@@ -16,17 +17,39 @@ permissions:
 jobs:
   runtime-e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
-      - run: npm ci
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install site dependencies
+        run: cd site && npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Full lint
+        run: npm run lint
       - name: Runtime Platform tests
         run: npm run runtime:test
+      - name: Full tests
+        run: npm test
+      - name: Site check
+        run: cd site && npm run check
       - name: Registry compatibility gate
         run: npm run runtime:check
-      - name: Runtime source lint
-        run: npx eslint runtime tests/runtime-platform
+      - name: Runtime syntax checks
+        run: |
+          node --check runtime/cli.mjs
+          node --check runtime/installer.mjs
+          node --check runtime/loader.mjs
+          node --check runtime/registry.mjs
+          node --check runtime/resolver.mjs
+          node --check runtime/health.mjs
+          node --check runtime/rollback.mjs
+          node --check runtime/mcp-tools.mjs
