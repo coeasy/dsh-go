@@ -33,8 +33,8 @@ replace_once(
 
 replace_once(
     'tests/sync.test.ts',
-    "const { dedupeTags, computeTrendScore, isAuthoritativeManifestFile, normalizeCategory, sanitizeManifest } = await import('../scripts/sync.mjs');",
-    "const { dedupeTags, computeTrendScore, isAuthoritativeManifestFile, normalizeCategory, restRepositoryState, sanitizeManifest } = await import('../scripts/sync.mjs');",
+    "const { dedupeTags, computeTrendScore, detectCategory, isAuthoritativeManifestFile, normalizeCategory, sanitizeManifest } = await import('../scripts/sync.mjs');",
+    "const { dedupeTags, computeTrendScore, detectCategory, isAuthoritativeManifestFile, normalizeCategory, restRepositoryState, sanitizeManifest } = await import('../scripts/sync.mjs');",
 )
 replace_once(
     'tests/sync.test.ts',
