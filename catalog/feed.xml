@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 25 Aug 2026 07:56:30 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 25 Aug 2026 08:23:38 GMT</lastBuildDate>
     <item>
       <title>🆕 @deepseek-ai/dsh-root</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
@@ -16,8 +16,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-08-25T07:54:28Z</guid>
-      <pubDate>Tue, 25 Aug 2026 07:54:28 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-08-25T08:22:08Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:22:08 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -51,8 +51,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-08-25T07:40:20Z</guid>
-      <pubDate>Tue, 25 Aug 2026 07:40:20 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-08-25T08:07:36Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:07:36 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -93,15 +93,15 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-08-25T07:41:37Z</guid>
-      <pubDate>Tue, 25 Aug 2026 07:41:37 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-08-25T08:16:22Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:16:22 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-08-25T06:00:29Z</guid>
-      <pubDate>Tue, 25 Aug 2026 06:00:29 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-08-25T08:17:03Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:17:03 GMT</pubDate>
       <description>dsh web · DeepSeek Harness（DSH）Web GUI 插件聚合生态包 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/dsh web banner.png&quot; alt=&quot;dsh web&quot; width=&quot;100%&quot; &lt;/p &lt;p ali</description>
     </item>
     <item>
@@ -156,15 +156,15 @@
     <item>
       <title>🆕 codex-taskboard</title>
       <link>https://github.com/chuspeeism/dashi-taskboard</link>
-      <guid isPermaLink="false">chuspeeism/dashi-taskboard@2026-08-25T06:46:35Z</guid>
-      <pubDate>Tue, 25 Aug 2026 06:46:35 GMT</pubDate>
+      <guid isPermaLink="false">chuspeeism/dashi-taskboard@2026-08-25T08:17:10Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:17:10 GMT</pubDate>
       <description>English 简体中文 Codex Taskboard A local first issue board that runs in a browser and can be embedded in Codex through the standalone CDP launcher or its injection script. The same HTTP API powers the Rea</description>
     </item>
     <item>
       <title>🆕 @deepseek-harness-tui/dsh-tui</title>
       <link>https://github.com/ccch1mneyyy/dsh-TUI</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-TUI@2026-08-25T07:31:22Z</guid>
-      <pubDate>Tue, 25 Aug 2026 07:31:22 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-TUI@2026-08-25T08:04:13Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:04:13 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/logo.svg&quot; alt=&quot;dsh TUI DeepSeek Harness terminal interface&quot; width=&quot;560&quot; &lt;/p &lt;p align=&quot;center&quot; &lt;</description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 BitFun</title>
       <link>https://github.com/GCWing/BitFun</link>
-      <guid isPermaLink="false">GCWing/BitFun@2026-08-25T07:19:44Z</guid>
-      <pubDate>Tue, 25 Aug 2026 07:19:44 GMT</pubDate>
+      <guid isPermaLink="false">GCWing/BitFun@2026-08-25T07:58:43Z</guid>
+      <pubDate>Tue, 25 Aug 2026 07:58:43 GMT</pubDate>
       <description>English 中文 &lt;div align=&quot;center&quot; A desktop AI agent that turns every task into an app you can open Writes code, produces documents, and drives the desktop — with Mini Apps, a Rust runtime, </description>
     </item>
     <item>
@@ -198,15 +198,15 @@
     <item>
       <title>🆕 browser-skill</title>
       <link>https://github.com/Tencent/BrowserSkill</link>
-      <guid isPermaLink="false">Tencent/BrowserSkill@2026-08-25T04:20:37Z</guid>
-      <pubDate>Tue, 25 Aug 2026 04:20:37 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/BrowserSkill@2026-08-25T08:12:25Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:12:25 GMT</pubDate>
       <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill banner&quot; / &lt;/p &lt;p align=&quot;center&quot; &lt;strong Le</description>
     </item>
     <item>
       <title>🆕 deepseek-harness-desktop</title>
       <link>https://github.com/dsh-tauri-desk/deepseek-harness-desktop</link>
-      <guid isPermaLink="false">dsh-tauri-desk/deepseek-harness-desktop@2026-08-25T06:36:16Z</guid>
-      <pubDate>Tue, 25 Aug 2026 06:36:16 GMT</pubDate>
+      <guid isPermaLink="false">dsh-tauri-desk/deepseek-harness-desktop@2026-08-25T08:08:47Z</guid>
+      <pubDate>Tue, 25 Aug 2026 08:08:47 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://github.com/hairyf/deepseek harness desktop&quot; &lt;img src=&quot;public/favicon.svg&quot; width=&quot;96&quot; alt=&quot;DeepSeek Harness Desk</description>
     </item>
     <item>
