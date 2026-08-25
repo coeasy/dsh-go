@@ -155,6 +155,16 @@ export function dedupeTags(arr) {
   return out;
 }
 
+export function restRepositoryState(repo, previous = {}) {
+  const subscribers = repo?.subscribers_count;
+  const watchers = typeof subscribers === 'number' && Number.isFinite(subscribers)
+    ? subscribers
+    : Number(previous?.watchers || 0);
+  const deprecated = typeof repo?.archived === 'boolean' ? repo.archived : Boolean(previous?.deprecated);
+  const disabled = typeof repo?.disabled === 'boolean' ? repo.disabled : Boolean(previous?.disabled);
+  return { watchers, deprecated, disabled };
+}
+
 export function detectCategory(repo, _manifest) {
   const topics = (repo.topics || []).map((t) => String(t).toLowerCase());
   const words = new Set(`${repo.description || ''} ${repo.name || ''}`.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
@@ -342,6 +352,7 @@ async function buildPlugin(repo, oldPlugins) {
   const detectedCategory = detectCategory(repo, manifest);
   const category = normalizeCategory(manifest?.data?.category, detectedCategory);
   const base = old ? old : {};
+  const repoState = restRepositoryState(repo, base);
   const now = new Date().toISOString();
 
   return normalizeStoredPlugin({
@@ -357,7 +368,7 @@ async function buildPlugin(repo, oldPlugins) {
     tags: dedupeTags([...(manifest?.data?.tags || []), ...(repo.topics || [])]),
     stars: repo.stargazers_count || 0,
     forks: repo.forks_count || 0,
-    watchers: repo.subscribers_count || 0,
+    watchers: repoState.watchers,
     open_issues: repo.open_issues_count || 0,
     created_at: repo.created_at || '',
     updated_at: repo.pushed_at || '',
@@ -368,6 +379,8 @@ async function buildPlugin(repo, oldPlugins) {
     install_cmd: makeInstallCmd(fullName, category),
     repo_url: canonicalRepoUrl(fullName),
     homepage: repo.homepage || null,
+    deprecated: repoState.deprecated,
+    disabled: repoState.disabled,
     verified: Boolean(manifest),
     manifest_file: manifest ? manifest.file : null,
     has_readme: readme.has,

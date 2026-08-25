@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 // 顶层动态 import 走 Node 原生 ESM 加载，避免 vitest 对 .mjs 的 transform 兼容问题
-const { dedupeTags, computeTrendScore, detectCategory, isAuthoritativeManifestFile, normalizeCategory, sanitizeManifest } = await import('../scripts/sync.mjs');
+const { dedupeTags, computeTrendScore, detectCategory, isAuthoritativeManifestFile, normalizeCategory, restRepositoryState, sanitizeManifest } = await import('../scripts/sync.mjs');
 
 describe('manifest authority', () => {
   it('只有 dsh-plugin.json 能作为 DSH manifest', () => {
@@ -24,6 +24,23 @@ describe('category detection', () => {
     expect(detectCategory({ topics: [], description: 'Webhook integration bridge', name: 'Bridge' }, null)).toBe('integration');
     expect(detectCategory({ topics: [], description: 'A codebook formatter', name: 'Codebook' }, null)).toBe('other');
     expect(detectCategory({ topics: ['web-ui'], description: '', name: 'Anything' }, null)).toBe('web-ui');
+  });
+});
+
+describe('REST repository state', () => {
+  it('preserves true watcher counts when search results omit subscribers_count', () => {
+    expect(restRepositoryState({ archived: false, disabled: false }, { watchers: 443 })).toEqual({
+      watchers: 443, deprecated: false, disabled: false,
+    });
+    expect(restRepositoryState({ subscribers_count: 12, archived: true, disabled: true }, { watchers: 443 })).toEqual({
+      watchers: 12, deprecated: true, disabled: true,
+    });
+  });
+
+  it('preserves inactive state if a partial REST record omits lifecycle flags', () => {
+    expect(restRepositoryState({}, { watchers: 9, deprecated: true, disabled: true })).toEqual({
+      watchers: 9, deprecated: true, disabled: true,
+    });
   });
 });
 
