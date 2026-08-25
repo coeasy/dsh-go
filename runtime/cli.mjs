@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { access, rename, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname } from 'node:path';
 import { installPlugin } from './installer.mjs';
 import { loadInstalledPlugin } from './loader.mjs';
 import { loadRegistryFile, parsePluginSpec, resolvePlugin } from './resolver.mjs';
@@ -59,13 +59,17 @@ async function persistInstall(plugin, result) {
   return writeRuntimeRegistry({ ...registry, plugins: [...plugins, recordFor(plugin, result)] });
 }
 
-async function installResolved(plugin, sourceRegistry, options, visiting = new Set()) {
+async function installResolved(plugin, sourceRegistry, options, visiting = new Set(), dependency = false) {
   if (visiting.has(plugin.id)) throw new Error('dependency cycle detected at ' + plugin.id);
+  if (dependency) {
+    const installed = (await readRuntimeRegistry()).plugins.find((item) => item.id === plugin.id);
+    if (installed && installed.version === plugin.version && await pathExists(installed.path || pluginPath(plugin.id))) return installed;
+  }
   visiting.add(plugin.id);
-  for (const dependency of plugin.dependencies || []) {
-    const dependencyId = typeof dependency === 'string' ? dependency : dependency.id;
+  for (const dependencyItem of plugin.dependencies || []) {
+    const dependencyId = typeof dependencyItem === 'string' ? dependencyItem : dependencyItem.id;
     const dependencyPlugin = await loadRuntimePlugin(dependencyId, sourceRegistry);
-    await installResolved(dependencyPlugin, sourceRegistry, options, visiting);
+    await installResolved(dependencyPlugin, sourceRegistry, options, visiting, true);
   }
   visiting.delete(plugin.id);
   const result = await installPlugin(plugin, {
@@ -106,7 +110,7 @@ async function updatePlugin(id, version, options) {
   const sourceRegistry = await loadRegistryFile(options.catalog);
   const targetVersion = version || current.version;
   const plugin = resolvePlugin(sourceRegistry, id, targetVersion);
-  const result = await installResolved(plugin, sourceRegistry, { ...options, force: true });
+  const installRoot = options.root || (current.path ? dirname(current.path) : undefined);\n  const result = await installResolved(plugin, sourceRegistry, { ...options, root: installRoot, force: true });
   print({ ...result, updated: true, rollbackAvailable: await pathExists(result.backup) });
 }
 
