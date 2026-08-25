@@ -1,11 +1,14 @@
 # CI Status
 
-Registry V3 CI workflow has been added.
+Registry V3 CI workflow enabled.
 
-Current workflow:
+Checks:
 
 - npm ci
 - npm run lint
 - npm test
 
-The latest GitHub Actions run is executing before merge.
+Current state:
+
+- Workflow dispatched
+- Waiting for GitHub Actions completion before merge
