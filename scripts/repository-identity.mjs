@@ -1,4 +1,9 @@
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+export const VALID_PLUGIN_CATEGORIES = Object.freeze([
+  'web-ui', 'desktop', 'mcp', 'skills', 'theme', 'terminal', 'coding', 'agent',
+  'vision', 'memory', 'security', 'integration', 'tool', 'other',
+]);
+const CATEGORY_SET = new Set(VALID_PLUGIN_CATEGORIES);
 
 export function canonicalRepoKey(value) {
   return String(value || '').trim().toLowerCase();
@@ -19,9 +24,15 @@ export function canonicalRepoUrl(value) {
   return isValidRepositoryName(repo) ? `https://github.com/${repo}` : '';
 }
 
+export function normalizePluginCategory(value, fallback = 'other') {
+  const category = String(value || '').trim();
+  return CATEGORY_SET.has(category) ? category : fallback;
+}
+
 export function installProfile(category) {
-  if (category === 'web-ui') return 'web';
-  if (category === 'desktop') return 'desktop';
+  const normalized = normalizePluginCategory(category);
+  if (normalized === 'web-ui') return 'web';
+  if (normalized === 'desktop') return 'desktop';
   return 'tools';
 }
 
@@ -58,13 +69,14 @@ export function normalizeStoredPlugin(plugin) {
   const repoName = repoNameFromFullName(fullName);
   const authoritativeManifest = plugin?.manifest_file === 'dsh-plugin.json';
   const manualOverride = plugin?.metadata_source === 'override';
-  const category = plugin?.category || 'other';
+  const category = normalizePluginCategory(plugin?.category, 'other');
   const metadataSource = manualOverride ? 'override' : (authoritativeManifest ? 'dsh-plugin' : 'github');
   return {
     ...plugin,
     full_name: fullName,
     repo_name: repoName,
     repo_url: canonicalRepoUrl(fullName),
+    category,
     install_cmd: makeInstallCmd(fullName, category),
     homepage: normalizeHttpUrl(plugin?.homepage),
     metadata_source: metadataSource,
@@ -109,7 +121,7 @@ export function mergeDiscoveredRepository(current, discovered) {
     merged.metadata_source = manualOverride ? 'override' : 'dsh-plugin';
     merged.manifest_file = manifestAuthoritative ? 'dsh-plugin.json' : null;
     merged.verified = manifestAuthoritative;
-    merged.category = base.category;
+    merged.category = normalizePluginCategory(base.category, 'other');
     merged.tags = Array.isArray(base.tags) ? base.tags : live.tags;
     merged.name = base.name || live.repo_name;
     merged.description = base.description || live.description || '';
@@ -117,7 +129,7 @@ export function mergeDiscoveredRepository(current, discovered) {
     merged.metadata_source = 'github';
     merged.manifest_file = null;
     merged.verified = false;
-    merged.category = live.category;
+    merged.category = normalizePluginCategory(live.category, 'other');
     merged.tags = Array.isArray(live.tags) ? live.tags : [];
     merged.name = live.repo_name;
     merged.description = live.description || '';
@@ -125,9 +137,10 @@ export function mergeDiscoveredRepository(current, discovered) {
   return merged;
 }
 
-export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlugins) {
+export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlugins, options = {}) {
   const byKey = new Map();
   const idToKey = new Map();
+  const freshAfter = Number(options.freshAfter || 0);
   for (const raw of existingPlugins || []) {
     const plugin = normalizeStoredPlugin(raw);
     const key = canonicalRepoKey(plugin.full_name);
@@ -161,13 +174,14 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
     const discovered = discoveredKeys.has(key);
     const manifestAuthoritative = plugin.manifest_file === 'dsh-plugin.json';
     const manualOverride = plugin.metadata_source === 'override';
+    const observedAt = Date.parse(plugin.observed_at || '');
+    const observedThisRun = freshAfter <= 0 || (Number.isFinite(observedAt) && observedAt >= freshAfter);
 
     // Complete topic discovery is authoritative for ordinary GitHub-sourced records.
-    // Historical package.json-only entries from supplementary topics must not survive
-    // forever just because older sync versions retained missing records. Explicit DSH
-    // manifests and manual overrides remain eligible even when they are not in the
-    // primary topic discovery result.
-    if (!discovered && !manifestAuthoritative && !manualOverride) {
+    // Supplementary-source records must have an explicit DSH manifest and must have
+    // been observed during the current full sync. This removes deleted/moved/stale
+    // historical records instead of retaining dead repository URLs forever.
+    if (!discovered && !manualOverride && (!manifestAuthoritative || !observedThisRun)) {
       pruned++;
       continue;
     }
