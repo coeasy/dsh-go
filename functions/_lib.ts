@@ -4,6 +4,9 @@
 export interface Plugin {
   slug: string;
   name: string;
+  repo_name?: string;
+  repo_id?: string | null;
+  metadata_source?: 'github' | 'dsh-plugin' | 'override';
   full_name: string;
   description: string;
   category: string;
@@ -163,6 +166,8 @@ export function filterPlugins(plugins: Plugin[], q: Query): Plugin[] {
     list = list.filter(
       (p) =>
         p.name.toLowerCase().includes(kw) ||
+        p.full_name.toLowerCase().includes(kw) ||
+        (p.repo_name || '').toLowerCase().includes(kw) ||
         p.description.toLowerCase().includes(kw) ||
         p.topics.some((t) => t.includes(kw)) ||
         p.tags.some((t) => t.includes(kw))

@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
 import { DEFAULT_PLUGIN_VERSION, REGISTRY_VERSION, SCHEMA_VERSION, isCommitSha } from './registry-v3-builder.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, repoNameFromFullName } from './repository-identity.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_FILE = resolve(ROOT, 'catalog/registry-v3.json');
@@ -33,8 +34,9 @@ export function validateRegistry(data) {
     if (plugin?.version !== DEFAULT_PLUGIN_VERSION) errors.push(`${id}: version must be ${DEFAULT_PLUGIN_VERSION}`);
     const repo = String(plugin?.source?.repo || '');
     if (!REPO_RE.test(repo)) errors.push(`${id}: invalid source.repo`);
-    if (repos.has(repo)) errors.push(`${id}: duplicate source.repo ${repo}`);
-    repos.add(repo);
+    const repoKey = canonicalRepoKey(repo);
+    if (repos.has(repoKey)) errors.push(`${id}: duplicate source.repo ${repo}`);
+    repos.add(repoKey);
     if (!plugin?.source?.ref) errors.push(`${id}: missing source.ref`);
     if (!isCommitSha(plugin?.source?.commit)) errors.push(`${id}: invalid source.commit`);
 
@@ -46,6 +48,12 @@ export function validateRegistry(data) {
     if (plugin?.runtime?.activation !== 'restart-required') warns.push(`${id}: runtime activation is not restart-required`);
     if (!Array.isArray(plugin?.capabilities) || !plugin.capabilities.includes('plugin')) errors.push(`${id}: capabilities must include plugin`);
     if (!Array.isArray(plugin?.dependencies)) errors.push(`${id}: dependencies must be array`);
+    const metadata = plugin?.metadata || {};
+    if (metadata.repo_name && metadata.repo_name !== repoNameFromFullName(repo)) errors.push(`${id}: metadata.repo_name mismatch`);
+    if (metadata.repo_url && metadata.repo_url !== canonicalRepoUrl(repo)) errors.push(`${id}: metadata.repo_url is not canonical`);
+    if (metadata.install_cmd && metadata.install_cmd !== makeInstallCmd(repo, metadata.category || 'other')) errors.push(`${id}: metadata.install_cmd source mismatch`);
+    if (metadata.verified && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: verified metadata requires dsh-plugin.json`);
+    if (metadata.manifest_file && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: unsupported manifest_file ${metadata.manifest_file}`);
   }
 
   if (data.generated?.count !== data.plugins.length) errors.push(`generated.count (${data.generated?.count}) does not match plugins length (${data.plugins.length})`);

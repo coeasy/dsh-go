@@ -20,6 +20,7 @@
     "runtime:install": "node runtime/cli.mjs install",
     "deploy:gate": "node scripts/deploy-gate-v3.mjs",
     "validate": "node scripts/validate.mjs",
+    "audit:identity": "node scripts/audit-catalog-identity.mjs",
     "readme:update": "node scripts/update-readme.mjs",
     "copy-assets": "node scripts/copy-assets.mjs",
     "site:install": "cd site && npm ci",

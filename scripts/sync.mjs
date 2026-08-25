@@ -21,6 +21,7 @@ import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { canonicalRepoKey, canonicalRepoUrl, discoveryRepoId, makeInstallCmd, normalizeStoredPlugin } from './repository-identity.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -173,11 +174,6 @@ function detectCategory(repo, _manifest) {
   return 'other';
 }
 
-function makeInstallCmd(fullName, category) {
-  const profile = category === 'web-ui' ? 'web' : category === 'desktop' ? 'desktop' : 'tools';
-  return `dsh plugin --profile ${profile} add github:${fullName}`;
-}
-
 // ---------- 数据读取 ----------
 async function readJSON(file, fallback) {
   try { await access(file); return JSON.parse(await readFile(file, 'utf-8')); }
@@ -196,10 +192,11 @@ async function loadOverrides() {
 function applyOverrides(plugin, overrides) {
   const o = overrides[plugin.full_name];
   if (!o) return plugin;
-  if (o.name) plugin.name = o.name;
-  if (o.description) plugin.description = o.description;
+  if (o.name) { plugin.name = o.name; plugin.metadata_source = 'override'; }
+  if (o.description) { plugin.description = o.description; plugin.metadata_source = 'override'; }
   if (o.category) {
     plugin.category = o.category in CATEGORIES ? o.category : 'other';
+    plugin.metadata_source = 'override';
     plugin.install_cmd = makeInstallCmd(plugin.full_name, plugin.category);
   }
   if (Array.isArray(o.tags)) plugin.tags = o.tags;
@@ -268,7 +265,9 @@ async function fetchRange(query, opts = {}) {
 // ---------- 构建插件对象 ----------
 async function buildPlugin(repo, oldPlugins) {
   const fullName = repo.full_name;
-  const old = oldPlugins.find((p) => p.full_name === fullName);
+  const repoId = discoveryRepoId(repo);
+  const repoKey = canonicalRepoKey(fullName);
+  const old = oldPlugins.find((p) => (repoId && String(p.repo_id || '') === repoId) || canonicalRepoKey(p.full_name) === repoKey);
   const manifest = await fetchManifest(fullName, repo.default_branch || 'main');
   const readme = await fetchReadme(fullName, repo.default_branch || 'main');
 
@@ -277,8 +276,9 @@ async function buildPlugin(repo, oldPlugins) {
   const base = old ? old : {};
   const now = new Date().toISOString();
 
-  return {
+  return normalizeStoredPlugin({
     slug: fullName.replace('/', '-'),
+    repo_id: repoId,
     name: manifest?.data?.name || repo.name,
     repo_name: repo.name,
     metadata_source: manifest ? 'dsh-plugin' : 'github',
@@ -289,7 +289,7 @@ async function buildPlugin(repo, oldPlugins) {
     tags: dedupeTags([...(manifest?.data?.tags || []), ...(repo.topics || [])]),
     stars: repo.stargazers_count || 0,
     forks: repo.forks_count || 0,
-    watchers: repo.subscribers_count || repo.watchers_count || 0,
+    watchers: repo.subscribers_count || 0,
     open_issues: repo.open_issues_count || 0,
     created_at: repo.created_at || '',
     updated_at: repo.pushed_at || '',
@@ -298,14 +298,15 @@ async function buildPlugin(repo, oldPlugins) {
     language: repo.language || '',
     license: license || '',
     install_cmd: makeInstallCmd(fullName, category),
-    repo_url: repo.html_url || `https://github.com/${fullName}`,
+    repo_url: canonicalRepoUrl(fullName),
     homepage: repo.homepage || null,
     verified: Boolean(manifest),
     manifest_file: manifest ? manifest.file : null,
     has_readme: readme.has,
     readme_excerpt: readme.excerpt,
     snapshot_commit: repo.default_branch || 'main',
-  };
+    snapshot_ref: repo.default_branch || 'main',
+  });
 }
 
 // ---------- 主流程 ----------
@@ -417,8 +418,9 @@ async function main() {
   // 去重：主源优先——补充主题候选若与主源重复，丢弃补充源条目（保留主源数据）
   const seen = new Set();
   repos = repos.filter((r) => {
-    if (seen.has(r.full_name)) return false;
-    seen.add(r.full_name);
+    const key = String(discoveryRepoId(r) || canonicalRepoKey(r.full_name));
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
     return true;
   });
   const extraCount = repos.filter((r) => r.__extra).length;
@@ -464,10 +466,14 @@ async function main() {
   //  - 增量：窗口内只含"有变更"的仓库，未变更的必须复用旧数据——
   //    否则增量会拿窗口结果整表替换目录（曾导致 3153 → 1000 的数据回退）
   {
-    const currentNames = new Set(plugins.map((p) => p.full_name));
+    const currentKeys = new Set(plugins.map((p) => canonicalRepoKey(p.full_name)));
+    const currentIds = new Set(plugins.map((p) => String(p.repo_id || '')).filter(Boolean));
     let kept = 0;
-    for (const old of oldPlugins) {
-      if (!currentNames.has(old.full_name)) { plugins.push(old); kept++; }
+    for (const oldRaw of oldPlugins) {
+      const old = normalizeStoredPlugin(oldRaw);
+      const oldKey = canonicalRepoKey(old.full_name);
+      const oldId = String(old.repo_id || '');
+      if (!currentKeys.has(oldKey) && (!oldId || !currentIds.has(oldId))) { plugins.push(old); kept++; }
     }
     if (kept > 0) log(`${mode} 合并：保留 ${kept} 个未变更旧插件，共 ${plugins.length} 个`);
   }
@@ -562,7 +568,7 @@ function xmlEscape(s) {
     .replace(/'/g, '&apos;');
 }
 
-function buildFeed(plugins) {
+export function buildFeed(plugins) {
   // 收录 30 天内的插件（首次全量同步时包含所有新收录插件）
   const items = plugins
     .filter((p) => (Date.now() - new Date(p.first_seen).getTime()) < 30 * 864e5)

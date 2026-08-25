@@ -1,3 +1,5 @@
+import { canonicalRepoKey, canonicalRepoUrl, discoveryRepoId, discoveryTopics, makeInstallCmd, normalizeHttpUrl } from './repository-identity.mjs';
+
 const API_BASE = 'https://api.github.com';
 const GRAPHQL_URL = 'https://api.github.com/graphql';
 const SEARCH_DELAY = Number(process.env.REGISTRY_SEARCH_DELAY || (process.env.GITHUB_TOKEN ? 2200 : 6200));
@@ -79,11 +81,17 @@ query TopicRepositories($name: String!, $after: String) {
       totalCount
       pageInfo { hasNextPage endCursor }
       nodes {
+        databaseId
         name
         nameWithOwner
         description
+        isArchived
+        isDisabled
         stargazerCount
         forkCount
+        watchers { totalCount }
+        issues(states: OPEN) { totalCount }
+        repositoryTopics(first: 20) { nodes { topic { name } } }
         createdAt
         updatedAt
         pushedAt
@@ -117,7 +125,7 @@ export async function discoverTopicRepositories(topicName = 'dsh-plugin', option
     if (totalCount === null) totalCount = Number(connection.totalCount || 0);
 
     for (const repo of connection.nodes || []) {
-      if (repo?.nameWithOwner) repositories.set(repo.nameWithOwner, repo);
+      if (repo?.nameWithOwner) repositories.set(String(discoveryRepoId(repo) || canonicalRepoKey(repo.nameWithOwner)), repo);
     }
 
     page += 1;
@@ -208,7 +216,7 @@ export async function discoverAllRepositories(baseQuery = 'topic:dsh-plugin', op
   }
 
   const unique = new Map();
-  for (const repo of items) if (repo?.full_name) unique.set(repo.full_name, repo);
+  for (const repo of items) if (repo?.full_name) unique.set(String(discoveryRepoId(repo) || canonicalRepoKey(repo.full_name)), repo);
   const deficit = first.total - unique.size;
   const tolerance = Math.max(5, Math.ceil(first.total * 0.005));
   if (deficit > tolerance) throw new Error(`Complete discovery deficit too large: expected about ${first.total}, got ${unique.size}`);
@@ -217,7 +225,7 @@ export async function discoverAllRepositories(baseQuery = 'topic:dsh-plugin', op
 
 export function discoveryRepoToLegacy(repo) {
   const fullName = repo.nameWithOwner || repo.full_name || '';
-  const topics = repo.topics || [];
+  const topics = discoveryTopics(repo);
   const topicSet = new Set(topics.map((topic) => String(topic).toLowerCase()));
   let category = 'other';
   if (topicSet.has('mcp') || topicSet.has('model-context-protocol')) category = 'mcp';
@@ -233,6 +241,7 @@ export function discoveryRepoToLegacy(repo) {
   const discoveredCommit = repo.defaultBranchRef?.target?.oid || '';
   return {
     slug: fullName.replace('/', '-'),
+    repo_id: discoveryRepoId(repo),
     name: repo.name,
     repo_name: repo.name,
     metadata_source: 'github',
@@ -243,17 +252,19 @@ export function discoveryRepoToLegacy(repo) {
     tags: topics,
     stars: Number(repo.stargazerCount ?? repo.stargazers_count ?? 0),
     forks: Number(repo.forkCount ?? repo.forks_count ?? 0),
-    watchers: Number(repo.watchers_count || 0),
-    open_issues: Number(repo.open_issues_count || 0),
+    watchers: Number(repo.watchers?.totalCount ?? repo.subscribers_count ?? 0),
+    open_issues: Number(repo.issues?.totalCount ?? repo.open_issues_count ?? 0),
     created_at: repo.createdAt || repo.created_at || '',
     updated_at: repo.pushedAt || repo.pushed_at || repo.updatedAt || repo.updated_at || '',
     first_seen: new Date().toISOString(),
     trend_score: Number(repo.stargazerCount ?? repo.stargazers_count ?? 0),
     language: repo.primaryLanguage?.name || repo.language || '',
     license: repo.licenseInfo?.spdxId || repo.license?.spdx_id || '',
-    install_cmd: `dsh plugin --profile tools add github:${fullName}`,
-    repo_url: repo.url || repo.html_url || `https://github.com/${fullName}`,
-    homepage: repo.homepageUrl || repo.homepage || null,
+    install_cmd: makeInstallCmd(fullName, category),
+    repo_url: canonicalRepoUrl(fullName),
+    homepage: normalizeHttpUrl(repo.homepageUrl || repo.homepage || null),
+    deprecated: Boolean(repo.isArchived ?? repo.archived),
+    disabled: Boolean(repo.isDisabled ?? repo.disabled),
     verified: false,
     manifest_file: null,
     has_readme: false,

@@ -5,6 +5,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { sha256 } from './checksum.mjs';
+import { buildFeed } from './sync.mjs';
+import { mergeCatalogPluginsWithDiscovery } from './repository-identity.mjs';
 import { buildRegistryV3 } from './registry-v3-builder.mjs';
 import { discoverAllRepositories, discoveryRepoToLegacy } from './github-discovery.mjs';
 import { validateRegistry } from './validate-registry-v3.mjs';
@@ -14,6 +16,7 @@ const CATALOG = resolve(ROOT, 'catalog');
 const LEGACY_FILE = resolve(CATALOG, 'plugins.json');
 const REGISTRY_FILE = resolve(CATALOG, 'registry-v3.json');
 const META_FILE = resolve(CATALOG, 'meta.json');
+const FEED_FILE = resolve(CATALOG, 'feed.xml');
 const SCHEMA_FILE = resolve(CATALOG, 'schema-v3.json');
 
 async function readJson(file, fallback = null) { try { return JSON.parse(await readFile(file, 'utf8')); } catch { return fallback; } }
@@ -27,13 +30,34 @@ function runNode(args, env = process.env) {
 async function writeJsonAtomic(file, value) { const temp = `${file}.tmp-${process.pid}`; await writeFile(temp, JSON.stringify(value, null, 2) + '\n', 'utf8'); await rename(temp, file); }
 function parseMode() { if (process.argv.includes('--full')) return 'full'; if (process.argv.includes('--incremental')) return 'incremental'; return process.env.SYNC_MODE === 'full' ? 'full' : 'incremental'; }
 
+function rebuildLegacyCatalog(source, plugins) {
+  const now = Date.now();
+  for (const plugin of plugins) {
+    const updated7 = now - new Date(plugin.updated_at || 0).getTime() < 7 * 864e5 ? 1 : 0;
+    const created30 = now - new Date(plugin.created_at || 0).getTime() < 30 * 864e5 ? 1 : 0;
+    plugin.trend_score = Number(plugin.stars || 0) + 20 * updated7 + 10 * created30;
+  }
+  plugins.sort((a, b) => (a.verified !== b.verified ? (a.verified ? -1 : 1) : Number(b.trend_score || 0) - Number(a.trend_score || 0)));
+  plugins.forEach((plugin, index) => { plugin.rank = index + 1; });
+  const byCategory = {}, byLanguage = {}, byLicense = {};
+  let verified = 0;
+  for (const plugin of plugins) {
+    byCategory[plugin.category || 'other'] = (byCategory[plugin.category || 'other'] || 0) + 1;
+    if (plugin.language) byLanguage[plugin.language] = (byLanguage[plugin.language] || 0) + 1;
+    if (plugin.license) byLicense[plugin.license] = (byLicense[plugin.license] || 0) + 1;
+    if (plugin.verified) verified++;
+  }
+  const etag = sha256(JSON.stringify(plugins)).slice(0, 16);
+  return { ...source, meta: { ...(source.meta || {}), updated_at: new Date().toISOString(), count: plugins.length, etag, stats: { total: plugins.length, verified, by_category: byCategory, by_language: byLanguage, by_license: byLicense } }, plugins };
+}
+
 async function main() {
   const registryOnly = process.argv.includes('--registry-only');
   const mode = parseMode();
   if (!registryOnly) await runNode(['scripts/sync.mjs', mode === 'full' ? '--full' : '--incremental']);
   else await access(LEGACY_FILE);
 
-  const legacy = await readJson(LEGACY_FILE);
+  let legacy = await readJson(LEGACY_FILE);
   if (!legacy?.plugins?.length) throw new Error('legacy catalog is empty; refusing to build Registry V3');
   const existing = await readJson(REGISTRY_FILE, null);
   const needsCompleteDiscovery = mode === 'full' || !existing || existing.generated?.discovery_mode !== 'complete';
@@ -48,20 +72,17 @@ async function main() {
     discoveredCount = discovery.repositories.length;
     discoveryMode = 'complete';
     discoveryTransport = discovery.transport || 'unknown';
-    const byRepo = new Map((legacy.plugins || []).map((plugin) => [plugin.full_name, { ...plugin }]));
-    for (const repo of discovery.repositories) {
-      const discovered = discoveryRepoToLegacy(repo);
-      if (!discovered.full_name) continue;
-      const current = byRepo.get(discovered.full_name);
-      if (current) {
-        if (/^[0-9a-f]{40}$/i.test(discovered.snapshot_commit || '')) current.snapshot_commit = discovered.snapshot_commit;
-        if (discovered.snapshot_ref) current.snapshot_ref = discovered.snapshot_ref;
-        byRepo.set(discovered.full_name, current);
-      } else {
-        byRepo.set(discovered.full_name, discovered);
-      }
+    const discoveredPlugins = discovery.repositories.map(discoveryRepoToLegacy).filter((plugin) => plugin.full_name && !plugin.disabled);
+    const merged = mergeCatalogPluginsWithDiscovery(legacy.plugins || [], discoveredPlugins);
+    const canonicalLegacy = rebuildLegacyCatalog(legacy, merged.plugins);
+    const legacyChanged = JSON.stringify(canonicalLegacy.plugins) !== JSON.stringify(legacy.plugins || []);
+    if (legacyChanged) {
+      await writeJsonAtomic(LEGACY_FILE, canonicalLegacy);
+      await writeFile(FEED_FILE, buildFeed(canonicalLegacy.plugins), 'utf8');
+      console.log(`[sync-v3] canonical legacy catalog repaired: renamed=${merged.renamed} pruned=${merged.pruned} count=${canonicalLegacy.plugins.length}`);
     }
-    registryCatalog = { ...legacy, meta: { ...(legacy.meta || {}), count: byRepo.size }, plugins: [...byRepo.values()] };
+    legacy = canonicalLegacy;
+    registryCatalog = canonicalLegacy;
     console.log(`[sync-v3] complete discovery transport=${discoveryTransport} reported=${discovery.reported_total} unique=${discoveredCount} merged=${registryCatalog.plugins.length}`);
   }
 
