@@ -9,6 +9,9 @@
     "sync": "node scripts/sync.mjs",
     "sync:full": "node scripts/sync.mjs --full",
     "sync:incremental": "node scripts/sync.mjs --incremental",
+    "sync:v3": "node scripts/sync-v3.mjs",
+    "sync:v3:full": "node scripts/sync-v3.mjs --full",
+    "deploy:gate": "node scripts/deploy-gate.mjs",
     "registry:migrate": "node scripts/migration-v3.mjs",
     "registry:verify": "node scripts/validate-registry-v3.mjs",
     "runtime:check": "node runtime/resolver.mjs",
@@ -26,16 +29,5 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run typecheck && npm run lint && cd site && npm run check"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250101.0",
-    "@types/node": "^22.10.0",
-    "@typescript-eslint/eslint-plugin": "^8.18.0",
-    "@typescript-eslint/parser": "^8.18.0",
-    "eslint": "^9.17.0",
-    "prettier": "^3.4.2",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8",
-    "wrangler": "^3.114.0"
   }
 }
