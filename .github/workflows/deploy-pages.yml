@@ -20,7 +20,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 30
     if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
     environment:
       name: github-pages
@@ -28,9 +28,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Check canonical Registry V3
+        id: registry
+        shell: bash
+        run: |
+          if [ -f catalog/registry-v3.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Registry V3 is not committed yet; Sync workflow owns generation, so this deployment is a successful no-op"
+          fi
       - name: Setup Pages
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         uses: actions/configure-pages@v6
       - name: Setup Node.js
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -39,36 +51,39 @@ jobs:
             package-lock.json
             site/package-lock.json
       - name: Install dependencies
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: |
           npm ci
           cd site && npm ci
-      - name: Ensure canonical Registry V3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/sync-v3.mjs --registry-only
       - name: Deploy Gate V3 and tests
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: |
           npm run deploy:gate
           npm run typecheck
           npm test
       - name: Copy catalog into site
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: npm run copy-assets
       - name: Build site for GitHub Pages
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: cd site && npm run build
         env:
           PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
           PUBLIC_SITE_URL: https://${{ github.event.repository.owner.login }}.github.io/${{ github.event.repository.name }}
           PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
       - name: Verify build output
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: |
           test -f site/dist/index.html
           test -f site/dist/catalog/plugins.json
           test -f site/dist/catalog/registry-v3.json
           test -f site/dist/catalog/schema-v3.json
       - name: Upload artifact
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/dist
       - name: Deploy to GitHub Pages
+        if: ${{ steps.registry.outputs.ready == 'true' }}
         id: deployment
         uses: actions/deploy-pages@v4

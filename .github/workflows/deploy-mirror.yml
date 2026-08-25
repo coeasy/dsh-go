@@ -19,12 +19,37 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    if: ${{ (github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]')) && (secrets.GITEE_TOKEN != '' || secrets.GITCODE_TOKEN != '') }}
+    timeout-minutes: 30
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Check canonical Registry V3
+        id: registry
+        shell: bash
+        run: |
+          if [ -f catalog/registry-v3.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Registry V3 is not committed yet; Sync workflow owns generation, so mirror deployment is a successful no-op"
+          fi
+      - name: Detect mirror credentials
+        id: mirrors
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
+        shell: bash
+        run: |
+          GITEE=false
+          GITCODE=false
+          if [ -n "$GITEE_TOKEN" ]; then GITEE=true; fi
+          if [ -n "$GITCODE_TOKEN" ]; then GITCODE=true; fi
+          echo "gitee=$GITEE" >> "$GITHUB_OUTPUT"
+          echo "gitcode=$GITCODE" >> "$GITHUB_OUTPUT"
+          if [ "$GITEE" = true ] || [ "$GITCODE" = true ]; then echo "any=true" >> "$GITHUB_OUTPUT"; else echo "any=false" >> "$GITHUB_OUTPUT"; fi
       - name: Setup Node.js
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.any == 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -33,30 +58,31 @@ jobs:
             package-lock.json
             site/package-lock.json
       - name: Install dependencies
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.any == 'true' }}
         run: |
           npm ci
           cd site && npm ci
-      - name: Ensure canonical Registry V3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/sync-v3.mjs --registry-only
       - name: Deploy Gate V3
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.any == 'true' }}
         run: npm run deploy:gate
       - name: Copy catalog into site
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.any == 'true' }}
         run: npm run copy-assets
       - name: Build mirror site
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.any == 'true' }}
         run: cd site && npm run build
         env:
           PUBLIC_BASE_PATH: /dsh_go
           PUBLIC_SITE_URL: https://easy5277.gitee.io/dsh_go
           PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
       - name: Verify build output
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.any == 'true' }}
         run: |
           test -f site/dist/index.html
           test -f site/dist/catalog/registry-v3.json
           test -f site/dist/catalog/schema-v3.json
       - name: Deploy to Gitee Pages branch
-        if: ${{ secrets.GITEE_TOKEN != '' }}
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.gitee == 'true' }}
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
         run: |
@@ -68,7 +94,7 @@ jobs:
           git commit -q -m "deploy: ${{ github.sha }}"
           git push -f "https://easy5277:${GITEE_TOKEN}@gitee.com/${GITEE_REPO}.git" HEAD:gh-pages
       - name: Deploy to GitCode Pages branch
-        if: ${{ secrets.GITCODE_TOKEN != '' }}
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.gitcode == 'true' }}
         env:
           GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
         run: |
