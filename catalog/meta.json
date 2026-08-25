@@ -1,11 +1,11 @@
 {
   "last_sync": {
-    "at": "2026-08-25T09:46:36.902Z",
+    "at": "2026-08-25T13:05:35.135Z",
     "mode": "full",
-    "duration_ms": 265908,
-    "scanned": 4247,
-    "included": 3269,
-    "skipped": 104,
+    "duration_ms": 325808,
+    "scanned": 4259,
+    "included": 3299,
+    "skipped": 106,
     "data_changed": true,
     "errors": []
   },
@@ -169,32 +169,42 @@
       "skipped": 104,
       "data_changed": true,
       "errors": []
+    },
+    {
+      "at": "2026-08-25T13:05:35.135Z",
+      "mode": "full",
+      "duration_ms": 325808,
+      "scanned": 4259,
+      "included": 3299,
+      "skipped": 106,
+      "data_changed": true,
+      "errors": []
     }
   ],
   "registry_version": 3,
   "registry": {
     "schema_version": "3.0.0",
     "path": "catalog/registry-v3.json",
-    "count": 11667,
+    "count": 11741,
     "excluded_count": 19,
-    "source_catalog_etag": "91ac6be3e59bec81",
-    "content_hash": "968ed5912bb102bbda2f25f9d425e9f2da500fa9ac8f453adbeed984cc430908",
+    "source_catalog_etag": "4e613a9c5f902358",
+    "content_hash": "52a10fe2be9164c0eecfc1dcf5ae9f9882d7a801702c33ebdfb2d8a233844d5e",
     "schema_hash": "871521a58a5d6ca6e7d0055cfd68275fcd413cc3386e1159954a70de7af8fa1a",
-    "generated_at": "2026-08-25T09:59:20.033Z",
+    "generated_at": "2026-08-25T13:18:50.573Z",
     "discovery_mode": "complete",
     "discovery_transport": "graphql-topic",
-    "discovered_count": 11649
+    "discovered_count": 11721
   },
   "pipeline": {
     "stage": "sync-v3",
     "verified": true,
     "frozen": true,
     "registry_changed": true,
-    "run_at": "2026-08-25T09:59:20.509Z",
-    "source_catalog_etag": "91ac6be3e59bec81",
+    "run_at": "2026-08-25T13:18:51.030Z",
+    "source_catalog_etag": "4e613a9c5f902358",
     "mode": "full",
-    "input_count": 11686,
-    "output_count": 11667,
+    "input_count": 11760,
+    "output_count": 11741,
     "excluded_count": 19
   }
 }
