@@ -5,13 +5,13 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 25 Aug 2026 14:32:01 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 25 Aug 2026 17:26:07 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
-      <guid isPermaLink="false">omdsh-dev/dsh-data-agent@2026-08-24T05:48:43Z</guid>
-      <pubDate>Mon, 24 Aug 2026 05:48:43 GMT</pubDate>
-      <description>DSH Data Agent · 用对话分析数据 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;assets/dsh data agent banner.webp&quot; alt=&quot;dsh data agent HERO图&quot; width=&quot;100%&quot; &lt;/p &lt;p al</description>
+      <guid isPermaLink="false">omdsh-dev/dsh-data-agent@2026-08-25T15:10:29Z</guid>
+      <pubDate>Tue, 25 Aug 2026 15:10:29 GMT</pubDate>
+      <description>DSH Data Agent · 用对话分析数据与商业洞察 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;assets/banner.webp&quot; alt=&quot;DSH Data Agent Banner&quot; width=&quot;100%&quot; &lt;/p &lt;p align=&quot</description>
     </item>
     <item>
       <title>🆕 DeepRead</title>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 dsh-lark-bot</title>
       <link>https://github.com/PlutoKeating/dsh-lark-bot</link>
-      <guid isPermaLink="false">PlutoKeating/dsh-lark-bot@2026-08-25T06:45:04Z</guid>
-      <pubDate>Tue, 25 Aug 2026 06:45:04 GMT</pubDate>
+      <guid isPermaLink="false">PlutoKeating/dsh-lark-bot@2026-08-25T15:57:37Z</guid>
+      <pubDate>Tue, 25 Aug 2026 15:57:37 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; dsh lark bot&lt;/h1 &lt;p align=&quot;center&quot; 🌏 &lt;a href=&quot;README EN.md&quot; English&lt;/a · 🌐 官网wiki &lt;a href=&quot;https://dsh lark bot.arr2018.dpdns.</description>
     </item>
     <item>
@@ -128,9 +128,16 @@
     <item>
       <title>🆕 dsh-tui-mcp-manager</title>
       <link>https://github.com/0N3-0/dsh-tui-mcp-manager</link>
-      <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-25T14:24:51Z</guid>
-      <pubDate>Tue, 25 Aug 2026 14:24:51 GMT</pubDate>
+      <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-25T15:15:28Z</guid>
+      <pubDate>Tue, 25 Aug 2026 15:15:28 GMT</pubDate>
       <description>Native dsh-TUI dialog for managing file-backed MCP Loader rows in the active profile.</description>
+    </item>
+    <item>
+      <title>🆕 DSH PPT</title>
+      <link>https://github.com/yejiming/dsh-ppt</link>
+      <guid isPermaLink="false">yejiming/dsh-ppt@2026-08-25T14:57:15Z</guid>
+      <pubDate>Tue, 25 Aug 2026 14:57:15 GMT</pubDate>
+      <description>PPT design preset and editable PPTX production tools for DeepSeek Harness</description>
     </item>
     <item>
       <title>🆕 dsh-agent-messaging</title>
@@ -208,13 +215,6 @@
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-cron@2026-08-17T12:51:55Z</guid>
       <pubDate>Mon, 17 Aug 2026 12:51:55 GMT</pubDate>
       <description></description>
-    </item>
-    <item>
-      <title>🆕 deepseek-harness</title>
-      <link>https://github.com/deepseek-ai/deepseek-harness</link>
-      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-08-21T12:35:08Z</guid>
-      <pubDate>Fri, 21 Aug 2026 12:35:08 GMT</pubDate>
-      <description>DeepSeek Harness English 中文 DeepSeek Harness ( dsh ) is an open source agent harness developed by DeepSeek AI. It uses an architecture where everything is a plugin , and is powered by Cordis, whose de</description>
     </item>
   </channel>
 </rss>
