@@ -1,4 +1,4 @@
-name: Apply complete manifest observation fix
+name: Apply active catalog hardening
 
 on:
   push:
@@ -22,15 +22,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Apply manifest observation hardening
-        run: python3 .github/scripts/apply-manifest-observation.py
-      - name: Verify manifest observation hardening
+      - name: Apply active catalog hardening
+        run: python3 .github/scripts/apply-active-catalog-fix.py
+      - name: Verify active catalog hardening
         run: |
           npm ci
           cd site && npm ci && cd ..
-          node --check scripts/repository-identity.mjs
-          node --check scripts/sync.mjs
-          node --check scripts/sync-v3.mjs
+          node --check scripts/validate.mjs
+          node --check scripts/registry-v3-builder.mjs
+          node --check scripts/copy-assets.mjs
           npm run typecheck
           npm run lint
           npm test
@@ -40,6 +40,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/repository-identity.mjs scripts/sync.mjs scripts/sync-v3.mjs tests/repository-identity.test.ts
-          git commit -m "fix: observe manifests for complete repository discovery"
+          git add functions/_lib.ts site/src/pages/index.astro site/src/pages/plugin/[slug].astro scripts/copy-assets.mjs scripts/registry-v3-builder.mjs scripts/validate.mjs tests/validate.test.ts tests/registry-v3.test.ts tests/catalog-filter.test.ts
+          git commit -m "fix: hide inactive repositories and enforce canonical catalog identity"
           git push
