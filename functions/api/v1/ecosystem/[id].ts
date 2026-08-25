@@ -5,9 +5,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   try {
     const id = String(params.id || '').toLocaleLowerCase();
     const { data, etag } = await loadRegistryV3(env, request.url);
-    if (isNotModified(request, etag)) return notModifiedResponse(etag);
     const matches = data.plugins.filter((plugin) => plugin.id.toLocaleLowerCase() === id);
     if (!matches.length) return error(404, `ecosystem item not found: ${id}`);
+    if (isNotModified(request, etag)) return notModifiedResponse(etag);
     return json({
       item: toEcosystemItem(matches[0]),
       versions: matches.map((plugin) => ({ version: plugin.version, commit: plugin.source.commit })),

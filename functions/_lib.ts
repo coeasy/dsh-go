@@ -160,7 +160,7 @@ export function filterPlugins(plugins: Plugin[], q: Query): Plugin[] {
   if (q.category && q.category !== 'all') {
     list = list.filter((p) => p.category === q.category);
   }
-  if (q.verified === true) list = list.filter((p) => p.verified);
+  if (q.verified !== undefined) list = list.filter((p) => p.verified === q.verified);
   if (q.language) list = list.filter((p) => p.language?.toLowerCase() === q.language!.toLowerCase());
   if (q.license) list = list.filter((p) => p.license?.toLowerCase() === q.license!.toLowerCase());
   if (q.created_after) list = list.filter((p) => p.created_at >= q.created_after!);
