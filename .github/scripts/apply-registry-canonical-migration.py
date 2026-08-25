@@ -10,37 +10,29 @@ def replace_once(path, old, new):
     p.write_text(text.replace(old, new, 1))
 
 
-# Deep-link fallback must copy the exact canonical install command, including profile.
+# main now contains Registry V3 ecosystem MCP tools. Preserve them and apply the same
+# active-catalog semantics to the legacy catalog tools instead of restoring the old endpoint.
 replace_once(
-    'site/src/pages/plugin/[slug].astro',
-    '<button class="qbtn dsh" id="open-dsh" data-full={plugin.full_name} data-slug={plugin.slug} data-i18n="pl_open_dsh">用 DSH 打开</button>',
-    '<button class="qbtn dsh" id="open-dsh" data-full={plugin.full_name} data-slug={plugin.slug} data-cmd={plugin.install_cmd} data-i18n="pl_open_dsh">用 DSH 打开</button>',
+    'functions/api/v1/mcp.ts',
+    "        case 'get_plugin': {\n          const { data } = await loadCatalog(env);\n          result = data.plugins.find((plugin) => plugin.slug === args?.slug) || null;\n          break;\n        }",
+    "        case 'get_plugin': {\n          const { data } = await loadCatalog(env);\n          const requestedSlug = String(args?.slug || '').toLowerCase();\n          result = filterPlugins(data.plugins, {}).find((plugin) => plugin.slug.toLowerCase() === requestedSlug) || null;\n          break;\n        }",
 )
 replace_once(
-    'site/src/pages/plugin/[slug].astro',
-    "        const cmd = `dsh plugin add github:${full}`;\n        if (navigator.clipboard) navigator.clipboard.writeText(cmd).catch(() => {});",
-    "        const cmd = dsh.dataset.cmd || `dsh plugin add github:${full}`;\n        if (navigator.clipboard) navigator.clipboard.writeText(cmd).catch(() => {});",
-)
-
-# Registry ids are public/runtime identifiers; make collision rules match V2 slug rules.
-replace_once(
-    'scripts/registry-v3-builder.mjs',
-    "    if (seenIds.has(normalized.id)) { excluded.push({ repo: normalized.repo, reason: `duplicate id: ${normalized.id}` }); continue; }\n    const repoKey = canonicalRepoKey(normalized.repo);",
-    "    const idKey = normalized.id.toLowerCase();\n    if (seenIds.has(idKey)) { excluded.push({ repo: normalized.repo, reason: `duplicate id after case normalization: ${normalized.id}` }); continue; }\n    const repoKey = canonicalRepoKey(normalized.repo);",
+    'functions/api/v1/mcp.ts',
+    "        case 'list_categories': {\n          const { data } = await loadCatalog(env);\n          result = data.meta.stats.by_category;\n          break;\n        }",
+    "        case 'list_categories': {\n          const { data } = await loadCatalog(env);\n          const counts: Record<string, number> = {};\n          for (const plugin of filterPlugins(data.plugins, {})) counts[plugin.category || 'other'] = (counts[plugin.category || 'other'] || 0) + 1;\n          result = counts;\n          break;\n        }",
 )
 replace_once(
-    'scripts/registry-v3-builder.mjs',
-    "    seenIds.add(normalized.id); seenRepos.add(repoKey); inputs.push({ legacy, normalized });",
-    "    seenIds.add(idKey); seenRepos.add(repoKey); inputs.push({ legacy, normalized });",
-)
-replace_once(
-    'scripts/validate-registry-v3.mjs',
-    "    const id = String(plugin?.id || '');\n    if (!id) errors.push('plugin missing id');\n    if (ids.has(id)) errors.push(`duplicate id: ${id}`);\n    ids.add(id);",
-    "    const id = String(plugin?.id || '');\n    const idKey = id.toLowerCase();\n    if (!id) errors.push('plugin missing id');\n    else if (!/^[A-Za-z0-9_.-]+$/.test(id)) errors.push(`invalid id: ${id}`);\n    if (ids.has(idKey)) errors.push(`duplicate id after case normalization: ${id}`);\n    ids.add(idKey);",
+    'functions/api/v1/mcp.ts',
+    "        case 'search_plugins': {\n          const { data } = await loadCatalog(env);\n          const keyword = (args?.q || '').toLowerCase();\n          const limit = Math.max(1, Math.min(Number(args?.limit) || 10, 100));\n          result = data.plugins\n            .filter((plugin) =>\n              plugin.name.toLowerCase().includes(keyword)\n              || plugin.description.toLowerCase().includes(keyword)\n              || plugin.topics.some((topic) => topic.includes(keyword))\n              || plugin.full_name.toLowerCase().includes(keyword))\n            .sort((left, right) => right.stars - left.stars)\n            .slice(0, limit)\n            .map((plugin) => ({ slug: plugin.slug, name: plugin.name, stars: plugin.stars, description: plugin.description }));\n          break;\n        }",
+    "        case 'search_plugins': {\n          const { data } = await loadCatalog(env);\n          const keyword = (args?.q || '').toLowerCase();\n          const limit = Math.max(1, Math.min(Number(args?.limit) || 10, 100));\n          result = filterPlugins(data.plugins, { search: keyword, sort: 'stars' })\n            .slice(0, limit)\n            .map((plugin) => ({ slug: plugin.slug, name: plugin.name, stars: plugin.stars, description: plugin.description }));\n          break;\n        }",
 )
 
-replace_once(
-    'tests/registry-v3.test.ts',
-    "  it('excludes archived or disabled repositories from the installable registry', async () => {",
-    "  it('deduplicates registry ids case-insensitively during migration', async () => {\n    const commit = '0123456789abcdef0123456789abcdef01234567';\n    const catalog: any = {\n      meta: { etag: 'case-id', count: 2 },\n      plugins: [\n        { slug: 'Owner-Demo', full_name: 'owner/demo-one', name: 'demo-one', category: 'tool', snapshot_commit: commit, snapshot_ref: 'main' },\n        { slug: 'owner-demo', full_name: 'owner/demo-two', name: 'demo-two', category: 'tool', snapshot_commit: commit, snapshot_ref: 'main' },\n      ],\n    };\n    const { registry, stats } = await buildRegistryV3(catalog, null, { discoveryMode: 'complete', discoveredCount: 2 });\n    expect(registry.plugins).toHaveLength(1);\n    expect(stats.excluded.some((x: any) => x.reason.includes('duplicate id after case normalization'))).toBe(true);\n  });\n\n  it('validator rejects unsafe or case-colliding ids', () => {\n    const plugin: any = buildRegistryPlugin(legacy, { id: 'owner-demo', repo: 'owner/demo', ref: 'main' }, commit);\n    const duplicate: any = buildRegistryPlugin({ ...legacy, full_name: 'owner/demo-two' }, { id: 'OWNER-DEMO', repo: 'owner/demo-two', ref: 'main' }, commit);\n    const registry: any = {\n      registry_version: 3, schema_version: '3.0.0', defaults: { plugin_version: '0.1.0' },\n      generated: { at: new Date().toISOString(), source_catalog_etag: 'abc', source_catalog_count: 2, count: 2, excluded_count: 0, discovery_mode: 'complete', discovered_count: 2, content_hash: '' },\n      plugins: [plugin, duplicate],\n    };\n    registry.generated.content_hash = registryContentHash(registry);\n    expect(validateRegistry(registry).errors.some((e: string) => e.includes('duplicate id after case normalization'))).toBe(true);\n    registry.plugins[1].id = '../bad';\n    registry.generated.content_hash = registryContentHash(registry);\n    expect(validateRegistry(registry).errors.some((e: string) => e.includes('invalid id'))).toBe(true);\n  });\n\n  it('excludes archived or disabled repositories from the installable registry', async () => {",
-)
+package = Path('package.json')
+text = package.read_text()
+if '"audit:identity"' not in text:
+    old = '    "validate": "node scripts/validate.mjs",\n'
+    if old not in text:
+        raise SystemExit('package.json: validate script anchor missing')
+    text = text.replace(old, old + '    "audit:identity": "node scripts/audit-catalog-identity.mjs",\n', 1)
+    package.write_text(text)
