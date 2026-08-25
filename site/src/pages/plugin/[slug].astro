@@ -10,7 +10,7 @@ import { fmtK } from '../../lib/format';
 const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
 
 export async function getStaticPaths() {
-  let plugins = [];
+  let plugins: any[] = [];
   try {
     const data = JSON.parse(readFileSync(resolve('..', 'catalog', 'plugins.json'), 'utf-8'));
     plugins = data.plugins || [];
@@ -28,7 +28,7 @@ export async function getStaticPaths() {
   });
 }
 
-const { plugin, related } = Astro.props;
+const { plugin, related } = Astro.props as { plugin: any; related: any[] };
 const CATEGORY_ZH: Record<string, string> = {
   'web-ui': 'Web UI 组件', desktop: '桌面端', mcp: 'MCP 工具', skills: '技能 (Skills)',
   theme: '主题', terminal: '终端工具', coding: '编码辅助', agent: 'Agent 工作流',
@@ -148,7 +148,7 @@ const badgeMd = `[![DSH Go - ${plugin.name}](https://img.shields.io/badge/${enc(
     const btn = document.getElementById('copy');
     if (btn) {
       btn.addEventListener('click', async () => {
-        await navigator.clipboard.writeText(btn.dataset.cmd);
+        await navigator.clipboard.writeText(btn.dataset.cmd || '');
         const g = window as unknown as { __dshI18n?: { getLang: () => string } };
         const lang = (g.__dshI18n && g.__dshI18n.getLang()) || 'zh';
         btn.textContent = lang === 'en' ? 'Copied ✓' : '已复制 ✓';
