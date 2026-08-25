@@ -1,7 +1,7 @@
 # DSH Go
 
 DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。
-
+API调用使用域名：https://dsh-go.pages.dev/
 
 ## 特性
 
