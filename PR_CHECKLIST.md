@@ -6,6 +6,8 @@
 - [x] Bundle/Profile resolver
 - [x] Deploy runtime lifecycle
 - [x] GitHub Actions workflow
-- [x] Initial tests
+- [x] Registry tests
+- [x] Runtime install tests
+- [x] CI started
 - [ ] CI green
 - [ ] Merge to main
