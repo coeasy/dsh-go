@@ -6,9 +6,16 @@ const SEARCH_DELAY = Number(process.env.REGISTRY_SEARCH_DELAY || (process.env.GI
 const GRAPHQL_DELAY = Number(process.env.REGISTRY_GRAPHQL_DELAY || 100);
 const GRAPHQL_PAGE_SIZE = Math.min(100, Math.max(10, Number(process.env.REGISTRY_GRAPHQL_PAGE_SIZE || 50)));
 const EARLIEST = new Date('2008-01-01T00:00:00Z');
+const MAX_REPOSITORY_SIZE_KB = 2147483647;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const dayString = (date) => date.toISOString().slice(0, 10);
+
+export function nextGraphqlPageSize(size) {
+  const current = Math.min(100, Math.max(10, Number(size || 10)));
+  if (current <= 10) return 10;
+  return Math.max(10, Math.floor(current / 2));
+}
 
 async function apiJson(path, token, retries = 4) {
   const headers = {
@@ -51,7 +58,7 @@ async function graphqlJson(query, variables, token, retries = 5) {
           'User-Agent': 'dsh-go-complete-discovery',
         },
         body: JSON.stringify({ query, variables }),
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(60000),
       });
     } catch (error) {
       if (attempt === retries - 1) throw error;
@@ -66,9 +73,16 @@ async function graphqlJson(query, variables, token, retries = 5) {
     }
     if (!response.ok) throw new Error(`GitHub GraphQL HTTP ${response.status}`);
 
-    const payload = await response.json();
+    let payload;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      if (attempt === retries - 1) throw error;
+      await sleep(1000 * (attempt + 1));
+      continue;
+    }
     if (payload.errors?.length) {
-      const retryable = payload.errors.some((error) => /rate limit|secondary rate|timeout|temporar|server/i.test(error.message || ''));
+      const retryable = payload.errors.some((error) => /rate limit|secondary rate|timeout|temporar|server|terminated/i.test(error.message || ''));
       if (retryable && attempt < retries - 1) {
         await sleep(3000 * (attempt + 1));
         continue;
@@ -81,6 +95,8 @@ async function graphqlJson(query, variables, token, retries = 5) {
   throw new Error('GitHub GraphQL retries exhausted');
 }
 
+// Keep complete-discovery payload focused on identity and classification fields.
+// Legacy sync already enriches the observed subset with subscriber/open-issue counts.
 const TOPIC_QUERY = `
 query TopicRepositories($name: String!, $after: String, $pageSize: Int!) {
   topic(name: $name) {
@@ -97,8 +113,6 @@ query TopicRepositories($name: String!, $after: String, $pageSize: Int!) {
         isDisabled
         stargazerCount
         forkCount
-        watchers { totalCount }
-        issues(states: OPEN) { totalCount }
         repositoryTopics(first: 20) { nodes { topic { name } } }
         createdAt
         updatedAt
@@ -120,7 +134,7 @@ query TopicRepositories($name: String!, $after: String, $pageSize: Int!) {
 export async function discoverTopicRepositories(topicName = 'dsh-plugin', options = {}) {
   const token = options.token || process.env.GITHUB_TOKEN || '';
   if (!token) return null;
-  const pageSize = Math.min(100, Math.max(10, Number(options.pageSize || GRAPHQL_PAGE_SIZE)));
+  let pageSize = Math.min(100, Math.max(10, Number(options.pageSize || GRAPHQL_PAGE_SIZE)));
 
   const repositories = new Map();
   let cursor = null;
@@ -128,7 +142,20 @@ export async function discoverTopicRepositories(topicName = 'dsh-plugin', option
   let page = 0;
 
   while (true) {
-    const data = await graphqlJson(TOPIC_QUERY, { name: topicName, after: cursor, pageSize }, token);
+    let data;
+    try {
+      data = await graphqlJson(TOPIC_QUERY, { name: topicName, after: cursor, pageSize }, token);
+    } catch (error) {
+      const smaller = nextGraphqlPageSize(pageSize);
+      if (smaller < pageSize) {
+        console.warn(`[discovery] topic:${topicName} page=${page + 1} failed at page_size=${pageSize} (${error.message}); retrying same cursor with page_size=${smaller}`);
+        pageSize = smaller;
+        await sleep(Math.max(GRAPHQL_DELAY, 250));
+        continue;
+      }
+      throw error;
+    }
+
     const connection = data.topic?.repositories;
     if (!connection) throw new Error(`GitHub topic not found or has no repository connection: ${topicName}`);
     if (totalCount === null) totalCount = Number(connection.totalCount || 0);
@@ -158,44 +185,78 @@ export async function discoverTopicRepositories(topicName = 'dsh-plugin', option
   return { repositories: [...repositories.values()], reported_total: Number(totalCount || repositories.size), transport: 'graphql-topic' };
 }
 
-async function searchPage(query, page, token) {
-  const path = `/search/repositories?q=${encodeURIComponent(query)}&per_page=100&page=${page}&sort=stars&order=desc`;
+async function searchPage(query, page, token, sort = 'stars') {
+  const path = `/search/repositories?q=${encodeURIComponent(query)}&per_page=100&page=${page}&sort=${encodeURIComponent(sort)}&order=desc`;
   const data = await apiJson(path, token);
   return { total: Number(data.total_count || 0), items: data.items || [] };
 }
 
-async function fetchCappedQuery(query, total, token) {
-  const pages = Math.min(10, Math.ceil(total / 100));
-  const items = [];
-  for (let page = 1; page <= pages; page++) {
-    if (page > 1) await sleep(SEARCH_DELAY);
-    const result = await searchPage(query, page, token);
+async function collectSearchPages(query, first, token, sort = 'stars') {
+  const items = [...first.items];
+  const pages = Math.min(10, Math.ceil(first.total / 100));
+  for (let page = 2; page <= pages; page++) {
+    await sleep(SEARCH_DELAY);
+    const result = await searchPage(query, page, token, sort);
     items.push(...result.items);
     if (!result.items.length) break;
   }
   return items;
 }
 
+async function fetchCappedQuery(query, total, token, sort = 'stars') {
+  const first = await searchPage(query, 1, token, sort);
+  if (total > 1000 || first.total > 1000) throw new Error(`fetchCappedQuery received uncapped query: ${query}`);
+  return collectSearchPages(query, first, token, sort);
+}
+
+async function fetchNumericPartition(baseQuery, qualifier, min, max, token, sort, nextDimension, depth = 0) {
+  const query = `${baseQuery} ${qualifier}:${min}..${max}`;
+  const first = await searchPage(query, 1, token, sort);
+  if (first.total <= 1000) return collectSearchPages(query, first, token, sort);
+  if (depth >= 48) throw new Error(`REST fallback numeric partition exceeded recursion limit: ${query} total=${first.total}`);
+
+  if (min < max) {
+    const mid = min + Math.floor((max - min) / 2);
+    const left = await fetchNumericPartition(baseQuery, qualifier, min, mid, token, sort, nextDimension, depth + 1);
+    await sleep(SEARCH_DELAY);
+    const right = await fetchNumericPartition(baseQuery, qualifier, mid + 1, max, token, sort, nextDimension, depth + 1);
+    return [...left, ...right];
+  }
+
+  if (nextDimension === 'forks') return fetchDenseForkPartition(`${baseQuery} ${qualifier}:${min}`, token, depth + 1);
+  if (nextDimension === 'size') return fetchDenseSizePartition(`${baseQuery} ${qualifier}:${min}`, token, depth + 1);
+  throw new Error(`REST fallback cannot enumerate exact dense bucket without truncation: ${query} total=${first.total}`);
+}
+
+async function fetchDenseSizePartition(baseQuery, token, depth = 0) {
+  return fetchNumericPartition(baseQuery, 'size', 0, MAX_REPOSITORY_SIZE_KB, token, 'stars', null, depth);
+}
+
+async function fetchDenseForkPartition(baseQuery, token, depth = 0) {
+  const first = await searchPage(baseQuery, 1, token, 'forks');
+  if (first.total <= 1000) return collectSearchPages(baseQuery, first, token, 'forks');
+  const maxForks = Math.max(0, Number(first.items?.[0]?.forks_count || 0));
+  return fetchNumericPartition(baseQuery, 'forks', 0, maxForks, token, 'forks', 'size', depth);
+}
+
+async function fetchDenseDay(baseQuery, day, token, depth = 0) {
+  const dayQuery = `${baseQuery} created:${day}`;
+  const first = await searchPage(dayQuery, 1, token, 'stars');
+  if (first.total <= 1000) return collectSearchPages(dayQuery, first, token, 'stars');
+  const maxStars = Math.max(0, Number(first.items?.[0]?.stargazers_count || 0));
+  console.warn(`[discovery] dense single-day search bucket ${dayQuery} total=${first.total}; partitioning by stars/forks/size`);
+  return fetchNumericPartition(dayQuery, 'stars', 0, maxStars, token, 'stars', 'forks', depth);
+}
+
 async function fetchCreatedRange(baseQuery, start, end, token, depth = 0) {
   const qualifier = `created:${dayString(start)}..${dayString(end)}`;
   const query = `${baseQuery} ${qualifier}`;
   const first = await searchPage(query, 1, token);
-  if (first.total <= 1000) {
-    const items = [...first.items];
-    const pages = Math.min(10, Math.ceil(first.total / 100));
-    for (let page = 2; page <= pages; page++) {
-      await sleep(SEARCH_DELAY);
-      const result = await searchPage(query, page, token);
-      items.push(...result.items);
-      if (!result.items.length) break;
-    }
-    return items;
-  }
+  if (first.total <= 1000) return collectSearchPages(query, first, token);
 
   const days = Math.floor((end.getTime() - start.getTime()) / 86400000);
-  if (days <= 0 || depth >= 24) {
-    throw new Error(`REST fallback cannot enumerate complete GitHub search range without truncation: ${query} total=${first.total}`);
-  }
+  if (days <= 0) return fetchDenseDay(baseQuery, dayString(start), token, depth + 1);
+  if (depth >= 32) throw new Error(`REST fallback date partition exceeded recursion limit: ${query} total=${first.total}`);
 
   const leftDays = Math.floor(days / 2);
   const mid = new Date(start.getTime() + leftDays * 86400000);
@@ -222,7 +283,7 @@ async function discoverViaRest(baseQuery, token) {
   const deficit = first.total - unique.size;
   const tolerance = Math.max(5, Math.ceil(first.total * 0.005));
   if (deficit > tolerance) throw new Error(`Complete discovery deficit too large: expected about ${first.total}, got ${unique.size}`);
-  return { repositories: [...unique.values()], reported_total: first.total, transport: 'rest-created-range' };
+  return { repositories: [...unique.values()], reported_total: first.total, transport: 'rest-created-dense-range' };
 }
 
 export async function discoverAllRepositories(baseQuery = 'topic:dsh-plugin', options = {}) {
@@ -233,7 +294,7 @@ export async function discoverAllRepositories(baseQuery = 'topic:dsh-plugin', op
       const graph = await discoverTopicRepositories(topicMatch[1], { token, pageSize: options.pageSize });
       if (graph) return graph;
     } catch (error) {
-      console.warn(`[discovery] GraphQL complete discovery failed (${error.message}); falling back to REST created-range enumeration`);
+      console.warn(`[discovery] GraphQL complete discovery failed (${error.message}); falling back to REST dense-range enumeration`);
     }
   }
   return discoverViaRest(baseQuery, token);
