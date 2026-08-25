@@ -158,8 +158,16 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
   const plugins = [];
   let pruned = 0;
   for (const [key, plugin] of byKey) {
-    const mainTopic = (plugin.topics || []).some((topic) => String(topic).toLowerCase() === 'dsh-plugin');
-    if (mainTopic && !discoveredKeys.has(key)) {
+    const discovered = discoveredKeys.has(key);
+    const manifestAuthoritative = plugin.manifest_file === 'dsh-plugin.json';
+    const manualOverride = plugin.metadata_source === 'override';
+
+    // Complete topic discovery is authoritative for ordinary GitHub-sourced records.
+    // Historical package.json-only entries from supplementary topics must not survive
+    // forever just because older sync versions retained missing records. Explicit DSH
+    // manifests and manual overrides remain eligible even when they are not in the
+    // primary topic discovery result.
+    if (!discovered && !manifestAuthoritative && !manualOverride) {
       pruned++;
       continue;
     }
