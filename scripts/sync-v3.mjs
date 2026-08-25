@@ -44,6 +44,9 @@ function rebuildLegacyCatalog(source, plugins) {
     const updated7 = now - new Date(plugin.updated_at || 0).getTime() < 7 * 864e5 ? 1 : 0;
     const created30 = now - new Date(plugin.created_at || 0).getTime() < 30 * 864e5 ? 1 : 0;
     plugin.trend_score = Number(plugin.stars || 0) + 20 * updated7 + 10 * created30;
+    // observed_at is a per-run liveness signal only. Never persist it in the catalog,
+    // otherwise every full sync would create a deploy-worthy content diff.
+    delete plugin.observed_at;
   }
   plugins.sort((a, b) => (a.verified !== b.verified ? (a.verified ? -1 : 1) : Number(b.trend_score || 0) - Number(a.trend_score || 0)));
   plugins.forEach((plugin, index) => { plugin.rank = index + 1; });
