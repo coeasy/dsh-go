@@ -3,15 +3,16 @@ export interface RuntimeRecord {
   type: 'plugin' | 'mcp' | 'skill' | 'agent';
   version: string;
   state: 'installed' | 'enabled' | 'disabled' | 'failed';
+  restartRequired?: boolean;
 }
 
 export interface RuntimeRegistry {
-  version: string;
+  version: '2';
   items: RuntimeRecord[];
 }
 
 export function createRegistry(items: RuntimeRecord[] = []): RuntimeRegistry {
-  return { version: '1', items };
+  return { version: '2', items: [...items] };
 }
 
 export function upsertRegistry(registry: RuntimeRegistry, item: RuntimeRecord): RuntimeRegistry {

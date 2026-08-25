@@ -21,6 +21,8 @@
     "runtime:plugin": "node runtime/cli.mjs plugin",
     "runtime:doctor": "node runtime/cli.mjs plugin doctor",
     "runtime:test": "vitest run tests/runtime-platform",
+    "ecosystem:test": "vitest run tests/ecosystem-v1",
+    "ecosystem:check": "npm run typecheck && npm run lint && npm run ecosystem:test",
     "deploy:gate": "node scripts/deploy-gate-v3.mjs",
     "validate": "node scripts/validate.mjs",
     "readme:update": "node scripts/update-readme.mjs",

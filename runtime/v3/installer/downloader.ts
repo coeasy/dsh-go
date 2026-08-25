@@ -5,12 +5,16 @@ export interface DownloadRequest {
 
 export interface DownloadResult {
   path: string;
-  downloaded: boolean;
+  downloaded: false;
+  planned: boolean;
+  requiresLocalRuntime: true;
 }
 
 export async function downloadPackage(request: DownloadRequest): Promise<DownloadResult> {
   return {
     path: request.destination,
-    downloaded: Boolean(request.source),
+    downloaded: false,
+    planned: Boolean(request.source && request.destination),
+    requiresLocalRuntime: true,
   };
 }

@@ -5,3 +5,9 @@ export interface AgentManifest {
   skills: string[];
   workflow?: string;
 }
+
+export interface AgentWorkflowStep {
+  id?: string;
+  tool: string;
+  input?: unknown;
+}
