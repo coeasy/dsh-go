@@ -37,10 +37,11 @@ export function auditCatalogIdentity(data) {
 }
 
 export function buildAuditReport(data, result = auditCatalogIdentity(data)) {
+  const catalogUpdatedAt = data?.meta?.updated_at || null;
   return {
     schema_version: 1,
-    generated_at: new Date().toISOString(),
-    catalog_updated_at: data?.meta?.updated_at || null,
+    generated_at: catalogUpdatedAt || new Date().toISOString(),
+    catalog_updated_at: catalogUpdatedAt,
     plugin_count: result.count,
     error_count: result.errors.length,
     ok: result.errors.length === 0,
