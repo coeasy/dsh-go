@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DSH Plugin Registry V3",
+  "type": "object",
+  "required": ["registry_version", "plugins"],
+  "properties": {
+    "registry_version": {
+      "type": "integer",
+      "const": 3
+    },
+    "generated": {
+      "type": "object",
+      "properties": {
+        "commit": {"type": "string"},
+        "timestamp": {"type": "string"},
+        "hash": {"type": "string"}
+      }
+    },
+    "plugins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "version", "source"],
+        "properties": {
+          "id": {"type": "string"},
+          "version": {"type": "string"},
+          "source": {
+            "type": "object",
+            "required": ["repo", "commit"],
+            "properties": {
+              "repo": {"type": "string"},
+              "commit": {"type": "string"}
+            }
+          },
+          "artifact": {
+            "type": "object",
+            "properties": {
+              "checksum": {"type": "string"}
+            }
+          },
+          "runtime": {"type": "object"},
+          "capabilities": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}
