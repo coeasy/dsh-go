@@ -1,4 +1,4 @@
-# Final verification: canonical identity + manifest observation + active registry
+# Exact-head final verification after reconciling latest main.
 name: Verify canonical full sync
 
 on:
@@ -31,7 +31,7 @@ jobs:
           SYNC_CONCURRENCY: "32"
           REGISTRY_GRAPHQL_PAGE_SIZE: "100"
           REGISTRY_GRAPHQL_DELAY: "0"
-          REGISTRY_MANIFEST_CONCURRENCY: "48"
+          REGISTRY_MANIFEST_CONCURRENCY: "64"
         run: node scripts/sync-v3.mjs --full
       - name: Run strict data quality gates
         run: |
@@ -53,12 +53,17 @@ jobs:
           const errors = [];
           const repoKeys = new Set();
           const repoIds = new Set();
+          const slugKeys = new Set();
+          const registryIdKeys = new Set();
           const validCategories = new Set(['web-ui','desktop','mcp','skills','theme','terminal','coding','agent','vision','memory','security','integration','tool','other']);
           const installableRepos = new Set((registry.plugins || []).map((p) => String(p.source?.repo || '').toLowerCase()));
           for (const p of plugins) {
             const key = String(p.full_name || '').toLowerCase();
+            const slugKey = String(p.slug || '').toLowerCase();
             if (repoKeys.has(key)) errors.push(`duplicate repo: ${p.full_name}`);
             repoKeys.add(key);
+            if (!slugKey || slugKeys.has(slugKey)) errors.push(`duplicate/empty slug: ${p.slug}`);
+            slugKeys.add(slugKey);
             if (p.repo_id) {
               const id = String(p.repo_id);
               if (repoIds.has(id)) errors.push(`duplicate repo_id: ${id}`);
@@ -68,6 +73,7 @@ jobs:
             if (p.repo_name !== repoName) errors.push(`repo_name mismatch: ${p.full_name}`);
             if (p.repo_url !== `https://github.com/${p.full_name}`) errors.push(`repo_url mismatch: ${p.full_name}`);
             if (p.repo_url?.startsWith('https://api.github.com/')) errors.push(`API URL leaked: ${p.full_name}`);
+            if (p.homepage && !/^https?:\/\//.test(p.homepage)) errors.push(`unsafe homepage: ${p.full_name}`);
             if (p.manifest_file && p.manifest_file !== 'dsh-plugin.json') errors.push(`invalid manifest: ${p.full_name}`);
             if (p.verified && p.manifest_file !== 'dsh-plugin.json') errors.push(`false verified: ${p.full_name}`);
             if (p.metadata_source === 'github' && p.name !== repoName) errors.push(`GitHub name mismatch: ${p.full_name} -> ${p.name}`);
@@ -78,6 +84,11 @@ jobs:
             if (Object.prototype.hasOwnProperty.call(p, '_manifest_observed')) errors.push(`transient manifest marker leaked: ${p.full_name}`);
             if ((p.deprecated || p.disabled) && installableRepos.has(key)) errors.push(`inactive repo leaked into registry: ${p.full_name}`);
           }
+          for (const p of registry.plugins || []) {
+            const idKey = String(p.id || '').toLowerCase();
+            if (!idKey || registryIdKeys.has(idKey)) errors.push(`duplicate/empty registry id: ${p.id}`);
+            registryIdKeys.add(idKey);
+          }
           const ruflo = plugins.find((p) => String(p.full_name).toLowerCase() === 'ruvnet/ruflo');
           if (!ruflo) errors.push('ruvnet/ruflo missing after full sync');
           else {
@@ -87,15 +98,20 @@ jobs:
             if (ruflo.manifest_file !== null) errors.push(`ruflo manifest=${ruflo.manifest_file}`);
             if (ruflo.verified !== false) errors.push(`ruflo verified=${ruflo.verified}`);
           }
+          const verified = plugins.filter((p) => p.verified).length;
+          const manifestSources = plugins.filter((p) => p.metadata_source === 'dsh-plugin').length;
+          if (verified !== manifestSources) errors.push(`verified/source count mismatch: ${verified}/${manifestSources}`);
           console.log(JSON.stringify({
             count: plugins.length,
             active: plugins.filter((p) => !p.deprecated && !p.disabled).length,
             archived_or_disabled: plugins.filter((p) => p.deprecated || p.disabled).length,
-            verified: plugins.filter((p) => p.verified).length,
-            manifest_sources: plugins.filter((p) => p.metadata_source === 'dsh-plugin').length,
+            verified,
+            manifest_sources: manifestSources,
             overrides: plugins.filter((p) => p.metadata_source === 'override').length,
             registry_count: registry.plugins?.length || 0,
             repo_ids: repoIds.size,
+            unique_slugs: slugKeys.size,
+            unique_registry_ids: registryIdKeys.size,
             discovery_transport: meta.registry?.discovery_transport,
             discovered_count: meta.registry?.discovered_count,
             ruflo: {
