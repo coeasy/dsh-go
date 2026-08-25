@@ -50,7 +50,7 @@ jobs:
           if [ "$GITEE" = true ] || [ "$GITCODE" = true ]; then echo "any=true" >> "$GITHUB_OUTPUT"; else echo "any=false" >> "$GITHUB_OUTPUT"; fi
       - name: Setup Node.js
         if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.any == 'true' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
