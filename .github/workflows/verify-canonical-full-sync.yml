@@ -1,0 +1,80 @@
+name: Verify canonical full sync
+
+on:
+  push:
+    branches: ["fix/canonical-repository-identity"]
+    paths:
+      - ".github/workflows/verify-canonical-full-sync.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run real full Registry V3 sync
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SYNC_MODE: full
+          SYNC_CONCURRENCY: "16"
+        run: node scripts/sync-v3.mjs --full
+      - name: Run strict data quality gates
+        run: |
+          npm run validate
+          npm run audit:identity -- --strict
+          npm run registry:verify
+          npm run runtime:check
+          npm run deploy:gate
+      - name: Assert canonical identity invariants
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          const data = JSON.parse(await readFile('catalog/plugins.json', 'utf8'));
+          const plugins = data.plugins || [];
+          const errors = [];
+          const repoKeys = new Set();
+          const repoIds = new Set();
+          const validCategories = new Set(['web-ui','desktop','mcp','skills','theme','terminal','coding','agent','vision','memory','security','integration','tool','other']);
+          for (const p of plugins) {
+            const key = String(p.full_name || '').toLowerCase();
+            if (repoKeys.has(key)) errors.push(`duplicate repo: ${p.full_name}`);
+            repoKeys.add(key);
+            if (p.repo_id) {
+              const id = String(p.repo_id);
+              if (repoIds.has(id)) errors.push(`duplicate repo_id: ${id}`);
+              repoIds.add(id);
+            }
+            const repoName = String(p.full_name || '').split('/').pop();
+            if (p.repo_name !== repoName) errors.push(`repo_name mismatch: ${p.full_name}`);
+            if (p.repo_url !== `https://github.com/${p.full_name}`) errors.push(`repo_url mismatch: ${p.full_name}`);
+            if (p.repo_url?.startsWith('https://api.github.com/')) errors.push(`API URL leaked: ${p.full_name}`);
+            if (p.manifest_file && p.manifest_file !== 'dsh-plugin.json') errors.push(`invalid manifest: ${p.full_name}`);
+            if (p.verified && p.manifest_file !== 'dsh-plugin.json') errors.push(`false verified: ${p.full_name}`);
+            if (p.metadata_source === 'github' && p.name !== repoName) errors.push(`GitHub name mismatch: ${p.full_name} -> ${p.name}`);
+            if (!validCategories.has(p.category)) errors.push(`invalid category: ${p.full_name} -> ${p.category}`);
+            if (!String(p.install_cmd || '').includes(`github:${p.full_name}`)) errors.push(`install source mismatch: ${p.full_name}`);
+          }
+          const ruflo = plugins.find((p) => String(p.full_name).toLowerCase() === 'ruvnet/ruflo');
+          if (!ruflo) errors.push('ruvnet/ruflo missing after full sync');
+          else {
+            if (ruflo.name !== 'ruflo') errors.push(`ruflo name=${ruflo.name}`);
+            if (ruflo.repo_name !== 'ruflo') errors.push(`ruflo repo_name=${ruflo.repo_name}`);
+            if (ruflo.repo_url !== 'https://github.com/ruvnet/ruflo') errors.push(`ruflo repo_url=${ruflo.repo_url}`);
+            if (ruflo.manifest_file !== null) errors.push(`ruflo manifest=${ruflo.manifest_file}`);
+            if (ruflo.verified !== false) errors.push(`ruflo verified=${ruflo.verified}`);
+          }
+          console.log(JSON.stringify({ count: plugins.length, verified: plugins.filter((p) => p.verified).length, repo_ids: repoIds.size, ruflo, errors: errors.slice(0, 100) }, null, 2));
+          if (errors.length) throw new Error(`canonical identity assertions failed: ${errors.length}`);
+          NODE
