@@ -136,7 +136,7 @@ describe('Registry V3', () => {
     const { registry, stats }: any = await buildRegistryV3(
       { meta: { etag: 'incremental', count: 1 }, plugins: [current] },
       existing,
-      { preserveExisting: true, discoveryMode: 'incremental', discoveredCount: 1 },
+      { preserveExisting: true, discoveryMode: 'complete', discoveredCount: 1 },
     );
 
     expect(registry.plugins).toHaveLength(1);
