@@ -1,12 +1,17 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { assertPackageType, safePackageId } from './package-model.mjs';
 import { runtimeRoot } from './registry.mjs';
+import { withFileLock } from './file-lock.mjs';
 
 const UNSAFE_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
 
 export function configPath(type, id) {
   return join(runtimeRoot(), 'config', assertPackageType(type), `${safePackageId(id)}.json`);
+}
+
+export function configLockPath(type, id) {
+  return `${configPath(type, id)}.lock`;
 }
 
 export async function readPackageConfig(type, id) {
@@ -21,14 +26,19 @@ export async function readPackageConfig(type, id) {
   }
 }
 
-export async function writePackageConfig(type, id, value) {
+async function writePackageConfigUnlocked(type, id, value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('package config must be a JSON object');
   const file = configPath(type, id);
   await mkdir(dirname(file), { recursive: true });
   const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
   await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
   await rename(temp, file);
+  try { await chmod(file, 0o600); } catch { /* Windows ACLs are managed by the OS */ }
   return { type: assertPackageType(type), id: safePackageId(id), file, config: value };
+}
+
+export async function writePackageConfig(type, id, value) {
+  return withFileLock(configLockPath(type, id), () => writePackageConfigUnlocked(type, id, value));
 }
 
 function pathParts(path) {
@@ -44,28 +54,32 @@ function parseValue(raw) {
 }
 
 export async function setPackageConfig(type, id, key, rawValue) {
-  const config = structuredClone(await readPackageConfig(type, id));
-  const parts = pathParts(key);
-  let cursor = config;
-  for (const part of parts.slice(0, -1)) {
-    const current = cursor[part];
-    if (!current || typeof current !== 'object' || Array.isArray(current)) cursor[part] = {};
-    cursor = cursor[part];
-  }
-  cursor[parts.at(-1)] = parseValue(rawValue);
-  return writePackageConfig(type, id, config);
+  return withFileLock(configLockPath(type, id), async () => {
+    const config = structuredClone(await readPackageConfig(type, id));
+    const parts = pathParts(key);
+    let cursor = config;
+    for (const part of parts.slice(0, -1)) {
+      const current = cursor[part];
+      if (!current || typeof current !== 'object' || Array.isArray(current)) cursor[part] = {};
+      cursor = cursor[part];
+    }
+    cursor[parts.at(-1)] = parseValue(rawValue);
+    return writePackageConfigUnlocked(type, id, config);
+  });
 }
 
 export async function unsetPackageConfig(type, id, key) {
-  const config = structuredClone(await readPackageConfig(type, id));
-  const parts = pathParts(key);
-  let cursor = config;
-  for (const part of parts.slice(0, -1)) {
-    if (!cursor?.[part] || typeof cursor[part] !== 'object') return writePackageConfig(type, id, config);
-    cursor = cursor[part];
-  }
-  delete cursor[parts.at(-1)];
-  return writePackageConfig(type, id, config);
+  return withFileLock(configLockPath(type, id), async () => {
+    const config = structuredClone(await readPackageConfig(type, id));
+    const parts = pathParts(key);
+    let cursor = config;
+    for (const part of parts.slice(0, -1)) {
+      if (!cursor?.[part] || typeof cursor[part] !== 'object') return writePackageConfigUnlocked(type, id, config);
+      cursor = cursor[part];
+    }
+    delete cursor[parts.at(-1)];
+    return writePackageConfigUnlocked(type, id, config);
+  });
 }
 
 export function redactConfig(value) {
