@@ -156,7 +156,7 @@ async function storeDpapiKey(paths, key, options = {}) {
   const wrapped = await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', DPAPI_PROTECT_SCRIPT], `${key.toString('base64')}\n`, { ...options, platform });
   await atomicWrite(paths.dpapi, `${wrapped.trim()}\n`);
   await writeBackendMarker(paths, { backend: 'dpapi' });
-  return key;
+  return cacheNativeKey(paths, 'dpapi', key);
 }
 
 async function readDpapiKey(paths, options = {}) {
@@ -184,7 +184,7 @@ async function storeSecretServiceKey(paths, key, options = {}) {
     { ...options, platform },
   );
   await writeBackendMarker(paths, { backend: 'secret-service', key_id: keyId });
-  return key;
+  return cacheNativeKey(paths, 'secret-service', key);
 }
 
 async function readSecretServiceKey(paths, marker, options = {}) {
