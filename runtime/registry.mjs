@@ -1,9 +1,10 @@
 import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { createRuntimeRecord, recordRuntimeEvent } from './lifecycle.mjs';
+import { createRuntimePackageRecord, recordRuntimeEvent } from './lifecycle.mjs';
+import { assertPackageType, packageKey, safePackageId } from './package-model.mjs';
 
-export const RUNTIME_REGISTRY_SCHEMA_VERSION = 2;
+export const RUNTIME_REGISTRY_SCHEMA_VERSION = 3;
 
 export function runtimeRoot() {
   return resolve(process.env.DSH_RUNTIME_HOME || join(homedir(), '.dsh'));
@@ -17,17 +18,29 @@ export function pluginRoot() {
   return resolve(process.env.DSH_PLUGIN_HOME || join(runtimeRoot(), 'plugins'));
 }
 
-function safeId(id) {
-  if (!/^[A-Za-z0-9_.-]+$/.test(id)) throw new Error(`unsafe plugin id: ${id}`);
-  return id;
+export function packageRoot(type) {
+  const normalizedType = assertPackageType(type);
+  if (normalizedType === 'plugin') return pluginRoot();
+  const explicit = {
+    mcp: process.env.DSH_MCP_HOME,
+    skill: process.env.DSH_SKILL_HOME,
+    agent: process.env.DSH_AGENT_HOME,
+  }[normalizedType];
+  if (explicit) return resolve(explicit);
+  const base = resolve(process.env.DSH_PACKAGE_HOME || join(runtimeRoot(), 'packages'));
+  return join(base, normalizedType);
 }
 
 function normalizeRecord(item) {
-  const base = createRuntimeRecord(item.id, item.version || '0.1.0');
+  const type = assertPackageType(item?.type || 'plugin');
+  const id = safePackageId(item?.id);
+  const base = createRuntimePackageRecord(type, id, item.version || '0.1.0');
   const state = item.state || 'installed';
   return {
     ...base,
     ...item,
+    id,
+    type,
     state,
     channel: item.channel || 'stable',
     enabled: item.enabled ?? (state !== 'disabled' && state !== 'removed'),
@@ -35,22 +48,61 @@ function normalizeRecord(item) {
     restart_required: item.restart_required ?? item.restartRequired ?? false,
     health: item.health || null,
     rollback: item.rollback || null,
-    dependencies: item.dependencies || [],
-    history: Array.isArray(item.history) ? item.history.slice(-100) : base.history,
+    binding: item.binding || null,
+    dependencies: Array.isArray(item.dependencies) ? item.dependencies : [],
+    history: Array.isArray(item.history) && item.history.length ? item.history.slice(-100) : base.history,
+  };
+}
+
+function withCompatibility(registry) {
+  const packages = (registry.packages || []).map(normalizeRecord);
+  return {
+    ...registry,
+    packages,
+    plugins: packages.filter((item) => item.type === 'plugin'),
   };
 }
 
 export function migrateRuntimeRegistry(data) {
-  if (!data || !Array.isArray(data.plugins)) throw new Error('invalid runtime registry');
-  if (![1, RUNTIME_REGISTRY_SCHEMA_VERSION].includes(data.schema_version)) {
+  if (!data || typeof data !== 'object') throw new Error('invalid runtime registry');
+  if (![1, 2, RUNTIME_REGISTRY_SCHEMA_VERSION].includes(data.schema_version)) {
     throw new Error(`unsupported runtime registry schema: ${data.schema_version}`);
   }
-  return {
+
+  let source;
+  if (data.schema_version === RUNTIME_REGISTRY_SCHEMA_VERSION) {
+    source = Array.isArray(data.packages) ? data.packages : data.plugins;
+  } else {
+    source = data.plugins;
+  }
+  if (!Array.isArray(source)) throw new Error('invalid runtime registry packages');
+
+  const seen = new Set();
+  const packages = source.map((item) => {
+    const normalized = normalizeRecord(item);
+    const key = packageKey(normalized.type, normalized.id);
+    if (seen.has(key)) throw new Error(`duplicate runtime package: ${key}`);
+    seen.add(key);
+    return normalized;
+  });
+
+  if (data.schema_version === RUNTIME_REGISTRY_SCHEMA_VERSION && Array.isArray(data.plugins)) {
+    for (const plugin of data.plugins) {
+      const normalized = normalizeRecord({ ...plugin, type: 'plugin' });
+      const canonical = packages.find((item) => packageKey(item.type, item.id) === packageKey('plugin', normalized.id));
+      if (!canonical) throw new Error(`runtime registry plugin mirror missing canonical package: ${normalized.id}`);
+      if (canonical.version !== normalized.version || canonical.state !== normalized.state) {
+        throw new Error(`runtime registry plugin mirror drift: ${normalized.id}`);
+      }
+    }
+  }
+
+  return withCompatibility({
     schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION,
     updated_at: data.updated_at || new Date().toISOString(),
     generation: Number(data.generation) || 0,
-    plugins: data.plugins.map(normalizeRecord),
-  };
+    packages,
+  });
 }
 
 export async function readRuntimeRegistry(file = registryPath()) {
@@ -58,58 +110,94 @@ export async function readRuntimeRegistry(file = registryPath()) {
     return migrateRuntimeRegistry(JSON.parse(await readFile(file, 'utf8')));
   } catch (error) {
     if (error?.code === 'ENOENT') {
-      return { schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION, generation: 0, plugins: [] };
+      return withCompatibility({ schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION, generation: 0, packages: [] });
     }
     throw error;
   }
 }
 
 export async function writeRuntimeRegistry(registry, file = registryPath()) {
+  const source = Array.isArray(registry.packages) ? registry.packages : registry.plugins || [];
   const seen = new Set();
-  const plugins = [];
-  for (const item of registry.plugins || []) {
-    if (!item?.id || seen.has(item.id)) throw new Error(`duplicate or missing runtime plugin id: ${item?.id || ''}`);
-    seen.add(item.id);
-    plugins.push(normalizeRecord(item));
+  const packages = [];
+  for (const item of source) {
+    const normalized = normalizeRecord(item);
+    const key = packageKey(normalized.type, normalized.id);
+    if (seen.has(key)) throw new Error(`duplicate runtime package: ${key}`);
+    seen.add(key);
+    packages.push(normalized);
   }
+
   const next = {
     schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION,
     generation: (Number(registry.generation) || 0) + 1,
     updated_at: new Date().toISOString(),
-    plugins,
+    packages,
+    plugins: packages.filter((item) => item.type === 'plugin'),
   };
   await mkdir(dirname(file), { recursive: true });
   const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
   await writeFile(temp, JSON.stringify(next, null, 2) + '\n', 'utf8');
   await rename(temp, file);
-  return next;
+  return withCompatibility(next);
 }
 
-export function getRuntimePlugin(registry, id, options = {}) {
-  const item = (registry.plugins || []).find((entry) => entry.id === id);
+export function getRuntimePackage(registry, type, id, options = {}) {
+  const key = packageKey(type, id);
+  const item = (registry.packages || registry.plugins || []).find((entry) => packageKey(entry.type || 'plugin', entry.id) === key);
   if (!item || (!options.includeRemoved && item.state === 'removed')) return null;
-  return item;
+  return normalizeRecord(item);
 }
 
-export function upsertRuntimePlugin(registry, item) {
+export function findRuntimePackage(registry, id, options = {}) {
+  const normalizedId = safePackageId(id).toLowerCase();
+  const matches = (registry.packages || registry.plugins || [])
+    .filter((entry) => String(entry.id || '').toLowerCase() === normalizedId)
+    .filter((entry) => options.includeRemoved || entry.state !== 'removed')
+    .map(normalizeRecord);
+  if (options.type) return matches.find((entry) => entry.type === assertPackageType(options.type)) || null;
+  if (matches.length > 1) throw new Error(`runtime package id is ambiguous; specify type: ${id}`);
+  return matches[0] || null;
+}
+
+export function upsertRuntimePackage(registry, item) {
   const next = normalizeRecord(item);
-  const plugins = (registry.plugins || []).filter((entry) => entry.id !== next.id);
-  return { ...registry, plugins: [...plugins, next] };
+  const key = packageKey(next.type, next.id);
+  const packages = (registry.packages || registry.plugins || [])
+    .map(normalizeRecord)
+    .filter((entry) => packageKey(entry.type, entry.id) !== key);
+  return withCompatibility({ ...registry, packages: [...packages, next] });
 }
 
-export function markRuntimePluginRemoved(registry, id, details = {}) {
-  const current = getRuntimePlugin(registry, id, { includeRemoved: true });
-  if (!current) throw new Error(`plugin is not installed: ${id}`);
+export function markRuntimePackageRemoved(registry, type, id, details = {}) {
+  const current = getRuntimePackage(registry, type, id, { includeRemoved: true });
+  if (!current) throw new Error(`runtime package is not installed: ${type}:${id}`);
   const removed = recordRuntimeEvent(
-    { ...current, state: 'removed', enabled: false, activated: false, restart_required: true, health: null },
+    { ...current, state: 'removed', enabled: false, activated: false, restart_required: true, health: null, binding: null },
     'removed',
     details,
   );
-  return upsertRuntimePlugin(registry, removed);
+  return upsertRuntimePackage(registry, removed);
+}
+
+export function packagePath(type, id, root = packageRoot(type)) {
+  return join(resolve(root), safePackageId(id));
+}
+
+export function getRuntimePlugin(registry, id, options = {}) {
+  return getRuntimePackage(registry, 'plugin', id, options);
+}
+
+export function upsertRuntimePlugin(registry, item) {
+  return upsertRuntimePackage(registry, { ...item, type: 'plugin' });
+}
+
+export function markRuntimePluginRemoved(registry, id, details = {}) {
+  return markRuntimePackageRemoved(registry, 'plugin', id, details);
 }
 
 export function pluginPath(id, root = pluginRoot()) {
-  return join(resolve(root), safeId(id));
+  return packagePath('plugin', id, root);
 }
 
 export async function removePath(path) {

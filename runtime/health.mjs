@@ -1,5 +1,6 @@
-import { access, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { access } from 'node:fs/promises';
+import { discoverPackageManifest } from './bindings.mjs';
+import { assertPackageType, normalizePackageDependency, packageKey } from './package-model.mjs';
 import { readInstallLock, verifyInstalledCommit } from './verifier.mjs';
 
 async function exists(path) {
@@ -11,12 +12,20 @@ async function exists(path) {
   }
 }
 
-export function checkRuntimeRecordHealth(plugin) {
+export function checkRuntimeRecordHealth(pkg) {
+  let type = false;
+  try {
+    assertPackageType(pkg?.type || 'plugin');
+    type = true;
+  } catch {
+    type = false;
+  }
   const checks = {
-    id: Boolean(plugin?.id),
-    version: Boolean(plugin?.version),
-    source: Boolean(plugin?.commit || plugin?.source?.commit),
-    state: Boolean(plugin?.state && plugin.state !== 'removed'),
+    type,
+    id: Boolean(pkg?.id),
+    version: Boolean(pkg?.version),
+    source: Boolean(pkg?.commit || pkg?.source?.commit),
+    state: Boolean(pkg?.state && pkg.state !== 'removed'),
   };
   const failed = Object.entries(checks).filter(([, ok]) => !ok).map(([name]) => name);
   return {
@@ -28,11 +37,12 @@ export function checkRuntimeRecordHealth(plugin) {
   };
 }
 
-export async function checkRuntimeHealth(plugin, options = {}) {
-  const base = checkRuntimeRecordHealth(plugin);
+export async function checkRuntimePackageHealth(pkg, options = {}) {
+  const type = assertPackageType(pkg?.type || 'plugin');
+  const base = checkRuntimeRecordHealth({ ...pkg, type });
   const checks = { ...base.checks };
   const warnings = [];
-  const target = plugin?.path;
+  const target = pkg?.path;
   checks.path = Boolean(target && await exists(target));
 
   let lock = null;
@@ -40,15 +50,18 @@ export async function checkRuntimeHealth(plugin, options = {}) {
     try {
       lock = await readInstallLock(target);
       checks.lock = true;
-      checks.lock_id = lock.id === plugin.id;
-      checks.lock_version = lock.version === plugin.version;
+      checks.lock_type = lock.type === type;
+      checks.lock_id = lock.id === pkg.id;
+      checks.lock_version = lock.version === pkg.version;
     } catch {
       checks.lock = false;
+      checks.lock_type = false;
       checks.lock_id = false;
       checks.lock_version = false;
     }
   } else {
     checks.lock = false;
+    checks.lock_type = false;
     checks.lock_id = false;
     checks.lock_version = false;
   }
@@ -65,26 +78,29 @@ export async function checkRuntimeHealth(plugin, options = {}) {
   }
 
   let manifest = null;
-  for (const file of ['dsh-plugin.json', 'package.json']) {
-    if (!target || !await exists(join(target, file))) continue;
+  if (target) {
     try {
-      manifest = JSON.parse(await readFile(join(target, file), 'utf8'));
-      break;
+      manifest = await discoverPackageManifest(target, type);
     } catch {
-      // Continue to report the manifest check below.
+      manifest = null;
     }
   }
-  checks.manifest = Boolean(manifest);
+  checks.manifest = Boolean(manifest?.file);
   if (!checks.manifest) warnings.push('manifest');
 
-  if (Array.isArray(options.runtimeRegistry?.plugins)) {
-    const dependencies = (plugin.dependencies || []).map((item) => typeof item === 'string' ? item.split('@')[0] : item.id);
-    const missing = dependencies.filter((id) => !options.runtimeRegistry.plugins.some((entry) => entry.id === id && !['removed', 'failed'].includes(entry.state)));
+  const runtimePackages = options.runtimeRegistry?.packages || options.runtimeRegistry?.plugins;
+  if (Array.isArray(runtimePackages)) {
+    const dependencies = (pkg.dependencies || []).map((item) => normalizePackageDependency(item, 'plugin'));
+    const missing = dependencies.filter((dependency) => {
+      const key = packageKey(dependency.type, dependency.id);
+      return !runtimePackages.some((entry) =>
+        packageKey(entry.type || 'plugin', entry.id) === key && !['removed', 'failed'].includes(entry.state));
+    });
     checks.dependencies = missing.length === 0;
-    if (missing.length) warnings.push(...missing.map((id) => `dependency:${id}`));
+    if (missing.length) warnings.push(...missing.map((dependency) => `dependency:${packageKey(dependency.type, dependency.id)}`));
   }
 
-  const critical = ['id', 'version', 'source', 'state', 'path', 'lock', 'lock_id', 'lock_version', 'commit'];
+  const critical = ['type', 'id', 'version', 'source', 'state', 'path', 'lock', 'lock_type', 'lock_id', 'lock_version', 'commit'];
   const failed = critical.filter((name) => checks[name] === false);
   return {
     status: failed.length ? 'failed' : warnings.length ? 'warning' : 'healthy',
@@ -95,6 +111,14 @@ export async function checkRuntimeHealth(plugin, options = {}) {
   };
 }
 
+export async function checkRuntimeHealth(plugin, options = {}) {
+  return checkRuntimePackageHealth({ ...plugin, type: plugin?.type || 'plugin' }, options);
+}
+
 export async function healthSummary(records = [], options = {}) {
-  return Promise.all(records.map(async (record) => ({ id: record.id, health: await checkRuntimeHealth(record, options) })));
+  return Promise.all(records.map(async (record) => ({
+    id: record.id,
+    type: record.type || 'plugin',
+    health: await checkRuntimePackageHealth(record, options),
+  })));
 }

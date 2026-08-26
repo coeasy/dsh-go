@@ -9,7 +9,7 @@ import {
   registerProtocolHandler,
   runtimeArgsForRequest,
 } from '../runtime/host-bridge.mjs';
-import { activatePendingPlugins } from '../runtime/startup.mjs';
+import { activatePendingPackages } from '../runtime/startup.mjs';
 import { checkForRuntimeUpdate, runtimeEnvironment, updateRuntime } from '../runtime/self-update.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -23,21 +23,19 @@ function usage() {
   console.log(`DSH Go CLI
 
 Usage:
-  dsh plugin install <id|owner/repo>[@version] [--channel <name>]
-  dsh plugin list
-  dsh plugin status [id]
-  dsh plugin update <id> [version]
-  dsh plugin rollback <id>
-  dsh plugin remove|uninstall <id>
-  dsh plugin enable|disable <id>
-  dsh plugin doctor [id]
-  dsh plugin repair <id>
-  dsh plugin history <id>
+  dsh package install <type:id|type:owner/repo>[@version]
+  dsh package list [--type plugin|mcp|skill|agent]
+  dsh package status [type:id]
+  dsh plugin install <id|owner/repo>[@version]
+  dsh mcp install <id|owner/repo>[@version]
+  dsh skill install <id|owner/repo>[@version]
+  dsh agent install <id|owner/repo>[@version]
+  dsh <plugin|mcp|skill|agent> list|status|update|rollback|remove|uninstall|enable|disable|doctor|repair|history
   dsh startup activate
   dsh runtime info
   dsh runtime check-update
   dsh runtime update [--dry-run]
-  dsh host uri <plugin-spec> [--channel <name>]
+  dsh host uri <package-spec> [--type <type>] [--channel <name>]
   dsh host parse <dsh://...>
   dsh host handle <dsh://...>
   dsh host registration
@@ -45,12 +43,13 @@ Usage:
   dsh --version
 
 Host bridge contract:
-  Canonical: dsh://plugin/install/<encoded-plugin-spec>
-  Legacy:    dsh://install?plugin=<owner/repo>
+  Plugin compatibility: dsh://plugin/install/<encoded-plugin-spec>
+  Unified packages:     dsh://package/install/<type>/<encoded-package-spec>
+  Legacy marketplace:   dsh://install?plugin=<owner/repo>
 
-Install operations never restart the client automatically. The desktop client
-must call 'dsh startup activate' on its next startup to verify and activate
-pending plugins.`);
+Install/update/repair/rollback/enable/disable operations never restart the client automatically.
+The desktop client must call 'dsh startup activate' on its next startup to verify, bind,
+and activate pending runtime packages.`);
 }
 
 function option(name) {
@@ -74,10 +73,10 @@ async function delegateRuntime(nextArgs) {
 }
 
 function normalizedRuntimeArgs() {
-  if (args[0] !== 'plugin') return args;
+  const command = args[0];
+  if (!['package', 'plugin', 'mcp', 'skill', 'agent'].includes(command)) return args;
   const action = args[1];
-  if (action === 'install' || action === 'add') return ['install', ...args.slice(2)];
-  if (action === 'uninstall') return ['plugin', 'remove', ...args.slice(2)];
+  if (action === 'uninstall') return [command, 'remove', ...args.slice(2)];
   return args;
 }
 
@@ -85,7 +84,7 @@ async function hostCommand() {
   const action = args[1] || 'registration';
   if (action === 'uri') {
     const spec = args[2];
-    console.log(buildInstallUri(spec, { channel: option('--channel') }));
+    console.log(buildInstallUri(spec, { type: option('--type'), channel: option('--channel') }));
     return;
   }
   if (action === 'parse') {
@@ -119,7 +118,7 @@ async function hostCommand() {
 async function startupCommand() {
   const action = args[1] || 'activate';
   if (action !== 'activate') throw new Error(`unknown startup action: ${action}`);
-  const result = await activatePendingPlugins({ registryFile: option('--registry') });
+  const result = await activatePendingPackages({ registryFile: option('--registry') });
   print(result);
   if (!result.healthy) process.exitCode = 1;
 }
@@ -129,7 +128,7 @@ async function runtimeCommand() {
   const current = await packageVersion();
   if (action === 'info' || action === 'doctor') {
     const result = await runtimeEnvironment(current);
-    print(result);
+    print({ ...result, runtime_registry_schema: 3, package_types: ['plugin', 'mcp', 'skill', 'agent'] });
     if (!result.node_supported) process.exitCode = 1;
     return;
   }

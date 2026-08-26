@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
@@ -10,6 +11,11 @@ async function run(args: string[]) {
   return exec(process.execPath, [cli, ...args], { cwd: process.cwd(), encoding: 'utf8' });
 }
 
+async function projectVersion() {
+  const pkg = JSON.parse(await readFile(join(process.cwd(), 'package.json'), 'utf8')) as { version: string };
+  return pkg.version;
+}
+
 describe('Phase 7 dsh executable', () => {
   it('exposes help and version without loading the runtime installer', async () => {
     const help = await run(['--help']);
@@ -18,7 +24,7 @@ describe('Phase 7 dsh executable', () => {
     expect(help.stdout).toContain('never restart the client automatically');
 
     const version = await run(['--version']);
-    expect(version.stdout.trim()).toBe('2.3.0');
+    expect(version.stdout.trim()).toBe(await projectVersion());
   });
 
   it('parses the legacy marketplace URI and builds the canonical URI', async () => {

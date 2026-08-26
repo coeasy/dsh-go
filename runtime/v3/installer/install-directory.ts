@@ -9,14 +9,13 @@ export interface InstallDirectory {
 
 export function getInstallDirectory(home: string): InstallDirectory {
   const root = `${home}/.dsh`;
-
   return {
     root,
     packages: {
       plugin: `${root}/plugins`,
-      mcp: `${root}/mcp`,
-      skill: `${root}/skills`,
-      agent: `${root}/agents`,
+      mcp: `${root}/packages/mcp`,
+      skill: `${root}/packages/skill`,
+      agent: `${root}/packages/agent`,
     },
     registry: `${root}/registry/runtime.json`,
     cache: `${root}/cache`,

@@ -1,9 +1,10 @@
-import { loadInstalledPlugin } from './loader.mjs';
+import { loadInstalledPackage } from './loader.mjs';
 import { recordRuntimeEvent } from './lifecycle.mjs';
+import { packageKey } from './package-model.mjs';
 import {
-  getRuntimePlugin,
+  getRuntimePackage,
   readRuntimeRegistry,
-  upsertRuntimePlugin,
+  upsertRuntimePackage,
   writeRuntimeRegistry,
 } from './registry.mjs';
 
@@ -13,14 +14,15 @@ function isActivationCandidate(record) {
   return record.state === 'installed' || record.restart_required === true || record.activated !== true;
 }
 
-async function markActivationFailed(id, error, registryFile) {
+async function markActivationFailed(type, id, error, registryFile) {
   const registry = await readRuntimeRegistry(registryFile);
-  const current = getRuntimePlugin(registry, id, { includeRemoved: true });
+  const current = getRuntimePackage(registry, type, id, { includeRemoved: true });
   if (!current) return;
   const failed = recordRuntimeEvent({
     ...current,
     state: 'failed',
     activated: false,
+    binding: null,
     restart_required: true,
     health: {
       status: 'failed',
@@ -29,41 +31,49 @@ async function markActivationFailed(id, error, registryFile) {
       checked_at: new Date().toISOString(),
     },
   }, 'activation-failed', { error: error.message });
-  await writeRuntimeRegistry(upsertRuntimePlugin(registry, failed), registryFile);
+  await writeRuntimeRegistry(upsertRuntimePackage(registry, failed), registryFile);
 }
 
-export async function activatePendingPlugins(options = {}) {
+export async function activatePendingPackages(options = {}) {
   const registryFile = options.registryFile;
   const registry = await readRuntimeRegistry(registryFile);
-  const candidates = registry.plugins.filter(isActivationCandidate);
+  const packages = registry.packages || [];
+  const candidates = packages.filter(isActivationCandidate);
   const activated = [];
   const failed = [];
 
   for (const record of candidates) {
     try {
-      const loaded = await loadInstalledPlugin(record.id, {
+      const loaded = await loadInstalledPackage(record.type || 'plugin', record.id, {
         registryFile,
         version: record.version,
       });
       activated.push({
         id: loaded.id,
+        type: loaded.type,
+        key: packageKey(loaded.type, loaded.id),
         version: loaded.version,
         commit: loaded.commit,
         activation: loaded.activation,
+        binding: loaded.binding,
         restart_required: loaded.restart_required,
       });
     } catch (error) {
-      await markActivationFailed(record.id, error, registryFile);
-      failed.push({ id: record.id, error: error.message });
+      await markActivationFailed(record.type || 'plugin', record.id, error, registryFile);
+      failed.push({ type: record.type || 'plugin', id: record.id, key: packageKey(record.type || 'plugin', record.id), error: error.message });
     }
   }
 
   return {
-    scanned: registry.plugins.length,
+    scanned: packages.length,
     pending: candidates.length,
     activated,
     failed,
     healthy: failed.length === 0,
     restart_required: failed.length > 0,
   };
+}
+
+export async function activatePendingPlugins(options = {}) {
+  return activatePendingPackages(options);
 }

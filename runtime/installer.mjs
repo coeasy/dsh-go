@@ -1,38 +1,40 @@
 import { access, mkdir, rm, rename, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import { homedir } from 'node:os';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { verifyInstalledCommit, verifyResolvedPlugin } from './verifier.mjs';
+import { assertPackageType, safePackageId } from './package-model.mjs';
+import { packageRoot, pluginRoot } from './registry.mjs';
+import { verifyInstalledCommit, verifyResolvedPackage } from './verifier.mjs';
 
 const exec = promisify(execFile);
 
 export function defaultPluginHome() {
-  return process.env.DSH_PLUGIN_HOME || join(homedir(), '.dsh', 'plugins');
+  return pluginRoot();
 }
 
-function safeId(id) {
-  if (!/^[A-Za-z0-9_.-]+$/.test(id)) throw new Error('unsafe plugin id: ' + id);
-  return id;
+export function defaultPackageHome(type) {
+  return packageRoot(assertPackageType(type));
 }
 
 async function git(args, cwd) {
   return exec('git', args, { cwd, windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
 }
 
-export async function installPlugin(plugin, options = {}) {
-  const verification = verifyResolvedPlugin(plugin);
-  if (!verification.ok) throw new Error('plugin verification failed: ' + verification.errors.join('; '));
+export async function installPackage(pkg, options = {}) {
+  const type = assertPackageType(pkg?.type || 'plugin');
+  const verification = verifyResolvedPackage({ ...pkg, type });
+  if (!verification.ok) throw new Error('runtime package verification failed: ' + verification.errors.join('; '));
 
-  const root = resolve(options.root || defaultPluginHome());
-  const target = join(root, safeId(plugin.id));
+  const root = resolve(options.root || defaultPackageHome(type));
+  const target = join(root, safePackageId(pkg.id));
   const backup = target + '.backup';
   const plan = {
-    id: plugin.id,
-    version: plugin.version,
-    channel: plugin.channel || 'stable',
-    repo: plugin.repo,
-    commit: plugin.commit,
+    id: pkg.id,
+    type,
+    version: pkg.version,
+    channel: pkg.channel || 'stable',
+    repo: pkg.repo,
+    commit: pkg.commit,
     target,
     backup,
     restart_required: true,
@@ -46,22 +48,24 @@ export async function installPlugin(plugin, options = {}) {
   try {
     await mkdir(temp, { recursive: true });
     await git(['init', '-q'], temp);
-    await git(['remote', 'add', 'origin', options.repositoryUrl || 'https://github.com/' + plugin.repo + '.git'], temp);
-    await git(['fetch', '--depth', '1', 'origin', plugin.commit], temp);
+    await git(['remote', 'add', 'origin', options.repositoryUrl || 'https://github.com/' + pkg.repo + '.git'], temp);
+    await git(['fetch', '--depth', '1', 'origin', pkg.commit], temp);
     await git(['checkout', '--detach', '-q', 'FETCH_HEAD'], temp);
-    await verifyInstalledCommit(temp, plugin.commit);
+    await verifyInstalledCommit(temp, pkg.commit);
 
     const lock = {
       registry_version: 3,
-      runtime_registry_version: 2,
-      id: plugin.id,
-      version: plugin.version,
-      channel: plugin.channel || 'stable',
-      source: plugin.source,
-      artifact: plugin.artifact,
-      runtime: plugin.runtime,
-      capabilities: plugin.capabilities,
-      dependencies: plugin.dependencies || [],
+      runtime_registry_version: 3,
+      id: pkg.id,
+      type,
+      package_type: type,
+      version: pkg.version,
+      channel: pkg.channel || 'stable',
+      source: pkg.source,
+      artifact: pkg.artifact,
+      runtime: pkg.runtime,
+      capabilities: pkg.capabilities || [],
+      dependencies: pkg.dependencies || [],
       installed_at: new Date().toISOString(),
       restart_required: true,
     };
@@ -77,7 +81,7 @@ export async function installPlugin(plugin, options = {}) {
     } else {
       try {
         await access(target);
-        throw new Error('plugin already installed: ' + target + ' (use --force to replace)');
+        throw new Error(`runtime package already installed: ${type}:${pkg.id} (use --force to replace)`);
       } catch (error) {
         if (error?.code !== 'ENOENT') throw error;
       }
@@ -97,4 +101,8 @@ export async function installPlugin(plugin, options = {}) {
     }
     throw error;
   }
+}
+
+export async function installPlugin(plugin, options = {}) {
+  return installPackage({ ...plugin, type: 'plugin' }, options);
 }

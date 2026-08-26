@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.4.0] - 2026-08-26
+
+### Runtime Platform V3
+- 统一 `plugin / mcp / skill / agent` Package Model，使用 `(type,id)` 作为运行时身份，支持同 ID 跨类型共存
+- Runtime Registry 升级为 Schema 3 `packages[]`，自动迁移 Schema 1/2，并保留 `plugins[]` 兼容镜像
+- 跨类型 Resolver、依赖图、不可变 Git commit 安装、integrity 校验、原子更新/回滚/删除统一闭环
+- MCP / Skill / Agent 使用隔离安装根目录；Plugin 保持现有路径与 CLI/API 兼容
+
+### Client Runtime
+- 统一 startup verify / bind / activate 生命周期，单包失败隔离
+- network / filesystem / process 权限默认拒绝，显式授权后才绑定
+- 安装后仅提示需要重启，不自动重启客户端；显式启动后完成激活
+- 新增 `dsh package`、`dsh mcp`、`dsh skill`、`dsh agent`，完整保留 Phase 7 plugin 命令
+- 扩展 `dsh://` Host Bridge typed URI，同时保持旧 plugin URI 完全兼容
+
+### 质量与兼容
+- 新增 Runtime Platform V3 Ubuntu / Windows / macOS 三平台 CI
+- 覆盖真实 Git E2E、跨类型同名包、依赖冲突/循环、Registry 迁移、权限默认拒绝、启动失败隔离与旧 Phase 7 回归
+- 修复 Windows CRLF 环境下动态 import Runtime Resolver 的 shebang 解析问题
+- 平台版本统一升级为 2.4.0；Registry 中插件默认版本策略继续保持 0.1.0，不受平台版本影响
+
 ## [2.3.0] - 2026-08-24
 
 ### 新功能

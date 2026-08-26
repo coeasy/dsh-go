@@ -1,0 +1,43 @@
+name: Phase 8 Runtime Platform V3
+
+on:
+  pull_request:
+    paths:
+      - 'bin/**'
+      - 'runtime/**'
+      - 'tests/runtime-platform/**'
+      - 'docs/PHASE_8_RUNTIME_PLATFORM_V3.md'
+      - 'package.json'
+      - '.github/workflows/phase8-runtime-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-v3:
+    name: Runtime V3 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Phase 8 tests
+        run: npm run phase8:test
+      - name: TypeScript
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint

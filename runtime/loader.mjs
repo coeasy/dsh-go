@@ -1,74 +1,79 @@
-import { access, readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
-import { defaultPluginHome } from './installer.mjs';
-import { activatePlugin } from './platform.mjs';
+import { resolve } from 'node:path';
+import { createRuntimeBinding, discoverPackageManifest, bindingIsSafe } from './bindings.mjs';
+import { assertPackageType, packageKey, safePackageId } from './package-model.mjs';
+import { activatePackage } from './platform.mjs';
 import {
-  getRuntimePlugin,
+  getRuntimePackage,
+  packagePath,
   readRuntimeRegistry,
-  upsertRuntimePlugin,
+  upsertRuntimePackage,
   writeRuntimeRegistry,
 } from './registry.mjs';
 import { readInstallLock, verifyInstalledCommit } from './verifier.mjs';
 
-async function exists(path) {
-  try {
-    await access(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function loadInstalledPlugin(id, options = {}) {
-  if (!/^[A-Za-z0-9_.-]+$/.test(id)) throw new Error(`unsafe plugin id: ${id}`);
+export async function loadInstalledPackage(type, id, options = {}) {
+  const normalizedType = assertPackageType(type);
+  const normalizedId = safePackageId(id);
   const runtimeRegistry = await readRuntimeRegistry(options.registryFile);
-  const runtimeRecord = getRuntimePlugin(runtimeRegistry, id, { includeRemoved: true });
-  if (runtimeRecord?.state === 'removed') throw new Error(`plugin is removed: ${id}`);
-  if (runtimeRecord?.enabled === false || runtimeRecord?.state === 'disabled') throw new Error(`plugin is disabled: ${id}`);
+  const runtimeRecord = getRuntimePackage(runtimeRegistry, normalizedType, normalizedId, { includeRemoved: true });
+  const key = packageKey(normalizedType, normalizedId);
+  if (runtimeRecord?.state === 'removed') throw new Error(`runtime package is removed: ${key}`);
+  if (runtimeRecord?.enabled === false || runtimeRecord?.state === 'disabled') throw new Error(`runtime package is disabled: ${key}`);
 
-  const root = resolve(options.root || defaultPluginHome());
   const target = options.root
-    ? join(root, id)
+    ? packagePath(normalizedType, normalizedId, options.root)
     : runtimeRecord?.path
       ? resolve(runtimeRecord.path)
-      : join(root, id);
+      : packagePath(normalizedType, normalizedId);
   const lock = await readInstallLock(target);
-  if (lock.id !== id) throw new Error(`install lock id mismatch: expected ${id}, got ${lock.id}`);
-  if (options.version && lock.version !== options.version) throw new Error(`installed version mismatch: expected ${options.version}, got ${lock.version}`);
+  if (lock.type !== normalizedType) throw new Error(`install lock type mismatch: expected ${normalizedType}, got ${lock.type}`);
+  if (lock.id !== normalizedId) throw new Error(`install lock id mismatch: expected ${normalizedId}, got ${lock.id}`);
+  if (options.version && lock.version !== options.version) {
+    throw new Error(`installed version mismatch: expected ${options.version}, got ${lock.version}`);
+  }
   await verifyInstalledCommit(target, lock.source.commit);
 
-  let manifest = null;
-  let manifestFile = null;
-  for (const file of ['dsh-plugin.json', 'package.json']) {
-    const path = join(target, file);
-    if (await exists(path)) {
-      manifest = JSON.parse(await readFile(path, 'utf8'));
-      manifestFile = file;
-      break;
-    }
-  }
+  const manifest = await discoverPackageManifest(target, normalizedType);
+  const binding = createRuntimeBinding({
+    type: normalizedType,
+    id: normalizedId,
+    target,
+    lock,
+    manifest,
+  });
+  if (!bindingIsSafe(binding)) throw new Error(`unsafe runtime binding: ${key}`);
 
   let activatedRecord = runtimeRecord;
   if (runtimeRecord) {
-    activatedRecord = activatePlugin(runtimeRecord);
+    activatedRecord = activatePackage(runtimeRecord, binding);
     await writeRuntimeRegistry(
-      upsertRuntimePlugin(runtimeRegistry, activatedRecord),
+      upsertRuntimePackage(runtimeRegistry, activatedRecord),
       options.registryFile,
     );
   }
 
   return {
     id: lock.id,
+    type: normalizedType,
     version: lock.version,
     channel: lock.channel || activatedRecord?.channel || 'stable',
     target,
     commit: lock.source.commit,
     runtime: lock.runtime,
     capabilities: lock.capabilities || [],
-    manifest_file: manifestFile,
-    manifest,
+    manifest_file: manifest.file,
+    manifest: manifest.manifest,
+    binding,
     activation: 'active',
     restart_required: activatedRecord?.restart_required ?? false,
+    message: `Runtime package ${key} is installed, verified, bound locally, and activated by the client startup loader.`,
+  };
+}
+
+export async function loadInstalledPlugin(id, options = {}) {
+  const loaded = await loadInstalledPackage('plugin', id, options);
+  return {
+    ...loaded,
     message: 'Plugin source is installed, verified, and activated by the client startup loader.',
   };
 }
