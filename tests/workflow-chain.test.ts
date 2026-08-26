@@ -36,8 +36,21 @@ describe('authoritative deployment routing', () => {
     expect(router).toContain('scripts/sync*.mjs|scripts/registry-pipeline-v3.mjs|catalog/schema-v3.json|catalog/overrides.json|.github/workflows/sync.yml');
     expect(router).toContain('generated_catalog=$GENERATED_CATALOG');
     expect(router).toContain('Generated catalog files are owned by Sync V3');
-    expect(router).toContain('for workflow in deploy.yml deploy-pages.yml deploy-mirror.yml deploy-edgeone.yml; do');
+    expect(router).toContain('WORKFLOWS="deploy.yml deploy-pages.yml deploy-mirror.yml deploy-edgeone.yml"');
     expect(router).toContain('gh workflow run "$workflow" --ref main -f commit_sha="$SHA"');
+  });
+
+  it('supports selective manual redeploys without changing push fan-out', () => {
+    const router = workflow('deploy-router.yml');
+
+    expect(router).toContain('target:');
+    expect(router).toContain('- cloudflare');
+    expect(router).toContain('- github-pages');
+    expect(router).toContain('- mirrors');
+    expect(router).toContain('- edgeone');
+    expect(router).toContain('WORKFLOWS="deploy-edgeone.yml"');
+    expect(router).toContain('WORKFLOWS="deploy.yml"');
+    expect(router).toContain("group: deploy-router-${{ github.ref }}-${{ inputs.target || 'all' }}");
   });
 
   it('keeps provider workflows dispatch-only and pinned to an explicit revision', () => {
