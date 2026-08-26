@@ -8,7 +8,7 @@
  * build artifacts and intentionally do not live in Git history.
  */
 import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sha256, stableStringify } from './checksum.mjs';
 
@@ -38,7 +38,7 @@ export function distributionShardPrefix(key) {
 }
 
 function semanticEtag(hash) {
-  return `\"sha256-${hash}\"`;
+  return `"sha256-${hash}"`;
 }
 
 function validateRegistryInput(registry) {
