@@ -114,21 +114,31 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).not.toContain('EDGEONE_SITE_URL repository variable is required for production SHA verification');
     expect(edgeone).not.toContain("steps.edgeone-config.outputs.site_url_configured == 'true'");
     expect(edgeone).toContain('PUBLIC_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}');
-    expect(edgeone).toContain('run: node scripts/write-deployment-version.mjs site/dist/version.json');
-    expect(edgeone).toContain('run: node scripts/edgeone-deploy-ci.mjs --check');
-    expect(edgeone).toContain('run: node scripts/edgeone-deploy-ci.mjs');
-    expect(edgeone).toContain('run: node scripts/check-production-sha.mjs');
+    expect(edgeone).toContain('Checkout current deployment control plane');
+    expect(edgeone).toContain('ref: ${{ github.sha }}');
+    expect(edgeone).toContain('path: .ci-control');
+    expect(edgeone).toContain('CONTROL=$(git -C .ci-control rev-parse HEAD)');
+    expect(edgeone).toContain('Deployment control revision mismatch');
+    expect(edgeone).toContain('run: node .ci-control/scripts/write-deployment-version.mjs site/dist/version.json');
+    expect(edgeone).toContain('run: node .ci-control/scripts/edgeone-deploy-ci.mjs --check');
+    expect(edgeone).toContain('run: node .ci-control/scripts/edgeone-deploy-ci.mjs');
+    expect(edgeone).toContain('run: node .ci-control/scripts/check-production-sha.mjs');
     expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.deploy_url }}');
     expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}');
     expect(edgeone).toContain('production target fallback: CLI production deployment URL when EDGEONE_SITE_URL is unset');
     expect(edgeone).toContain('Production Registry V3 convergence gate');
+    expect(edgeone).toContain('control plane SHA: ${GITHUB_SHA}');
     expect(edgeone).not.toContain("<<'NODE'");
-    expect(edgeone.length).toBeLessThan(12_000);
+    expect(edgeone.length).toBeLessThan(14_000);
 
+    expect(edgeoneScript).toContain("'link'");
+    expect(edgeoneScript).toContain("'--name'");
     expect(edgeoneScript).toContain("'-t',");
     expect(edgeoneScript).toContain("'--json'");
-    expect(edgeoneScript).toContain('using per-invocation token auth');
+    expect(edgeoneScript).toContain("cwd: './site'");
+    expect(edgeoneScript).toContain('using linked-project token auth');
     expect(edgeoneScript).toContain('EdgeOne CLI >= 1.6.0 is required');
+    expect(edgeoneScript).toContain("return 'version_state'");
     expect(edgeoneScript).toContain('const healthUrl = env.EDGEONE_SITE_URL || deployUrl;');
     expect(edgeoneScript).toContain("writeOutput('health_url', healthUrl)");
     expect(edgeoneScript).not.toContain('login --token');
@@ -142,11 +152,15 @@ describe('authoritative deployment routing', () => {
   });
 
   it('uses one Registry V3 convergence implementation across static providers', () => {
-    for (const name of ['deploy.yml', 'deploy-pages.yml', 'deploy-edgeone.yml']) {
+    for (const name of ['deploy.yml', 'deploy-pages.yml']) {
       const deploy = workflow(name);
       expect(deploy, name).toContain('run: node scripts/check-deployment-convergence.mjs');
       expect(deploy, name).not.toContain('curl -fsS --max-time 20');
     }
+
+    const edgeone = workflow('deploy-edgeone.yml');
+    expect(edgeone).toContain('run: node .ci-control/scripts/check-deployment-convergence.mjs');
+    expect(edgeone).not.toContain('curl -fsS --max-time 20');
 
     const convergence = script('check-deployment-convergence.mjs');
     expect(convergence).toContain("new URL('catalog/registry-v3.json', base)");

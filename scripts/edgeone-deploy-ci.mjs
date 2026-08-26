@@ -34,6 +34,9 @@ export function sanitizeLog(value, token = '') {
 export function classifyFailure(text, status = 1, timedOut = false) {
   const value = String(text ?? '');
   if (timedOut || status === 124 || status === 137) return 'transport';
+  if (/has finished versions|uploads? are only allowed for the latest version|only latest version can upload/i.test(value)) {
+    return 'version_state';
+  }
   if (/(^|[^0-9])(401|403)([^0-9]|$)|unauthori[sz]ed|forbidden|invalid[ _-]*token|token.*(expired|invalid)|authentication failed|permission denied|not logged in|login required/i.test(value)) {
     return 'authentication';
   }
@@ -122,7 +125,7 @@ function appendBounded(current, chunk) {
   return value.length > MAX_CAPTURE_BYTES ? value.slice(-MAX_CAPTURE_BYTES) : value;
 }
 
-export function runProcess(command, args, { timeoutMs, env = process.env } = {}) {
+export function runProcess(command, args, { timeoutMs, env = process.env, cwd } = {}) {
   return new Promise((resolve) => {
     let stdout = '';
     let stderr = '';
@@ -130,7 +133,7 @@ export function runProcess(command, args, { timeoutMs, env = process.env } = {})
     let settled = false;
     let killTimer;
 
-    const child = spawn(command, args, { env, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(command, args, { env, cwd, stdio: ['ignore', 'pipe', 'pipe'] });
     child.stdout.on('data', (chunk) => {
       stdout = appendBounded(stdout, chunk.toString());
     });
@@ -178,7 +181,41 @@ function tailLines(value, count = 20) {
   return String(value).split(/\r?\n/).slice(-count).join('\n').trim();
 }
 
+function edgeOneProcessEnv(env) {
+  return { ...env, PAGES_SOURCE: env.PAGES_SOURCE || 'skills' };
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function bindProject({ project, token, cliVersion, timeoutSeconds, env, execute }) {
+  console.log(`Binding EdgeOne project "${project}" before artifact upload`);
+  const result = await execute('npx', [
+    '--yes',
+    `edgeone@${cliVersion}`,
+    'makers',
+    'link',
+    '--name',
+    project,
+    '-t',
+    token,
+  ], {
+    timeoutMs: timeoutSeconds * 1_000,
+    env: edgeOneProcessEnv(env),
+    cwd: './site',
+  });
+
+  if (result.code === 0) {
+    console.log('EdgeOne project binding verified');
+    return;
+  }
+
+  const combined = `${result.stdout || ''}\n${result.stderr || ''}`;
+  const safe = sanitizeLog(tailLines(combined) || `EdgeOne CLI link exited with status ${result.code}`, token);
+  const failureClass = classifyFailure(safe, result.code, result.timedOut);
+  writeOutput('failure_class', failureClass);
+  console.error(`::error title=EdgeOne project link failure [${failureClass}]::${annotationValue(safe)}`);
+  throw new Error(`EdgeOne project link failed [${failureClass}]: ${safe}`);
+}
 
 export async function deployEdgeOne({ env = process.env, execute = runProcess, wait = sleep } = {}) {
   const token = env.EDGEONE_API_TOKEN || '';
@@ -190,19 +227,19 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   const timeoutSeconds = parseBoundedInt(env.EDGEONE_ATTEMPT_TIMEOUT_SECONDS, 'EDGEONE_ATTEMPT_TIMEOUT_SECONDS', DEFAULT_TIMEOUT_SECONDS, 30, 300);
 
   console.log(`::add-mask::${token}`);
+  await bindProject({ project, token, cliVersion, timeoutSeconds, env, execute });
+
   let lastError = 'EdgeOne deployment did not start';
   let failureClass = 'api';
 
   for (let attempt = 1; attempt <= retries; attempt += 1) {
-    console.log(`EdgeOne deployment attempt ${attempt}/${retries} using per-invocation token auth`);
+    console.log(`EdgeOne deployment attempt ${attempt}/${retries} using linked-project token auth`);
     const args = [
       '--yes',
       `edgeone@${cliVersion}`,
       'makers',
       'deploy',
-      './site/dist',
-      '-n',
-      project,
+      './dist',
       '-t',
       token,
       '-e',
@@ -211,7 +248,8 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     ];
     const result = await execute('npx', args, {
       timeoutMs: timeoutSeconds * 1_000,
-      env: { ...env, PAGES_SOURCE: env.PAGES_SOURCE || 'skills' },
+      env: edgeOneProcessEnv(env),
+      cwd: './site',
     });
     const combined = `${result.stdout || ''}\n${result.stderr || ''}`;
     const parsed = parseLastJson(combined);
@@ -268,14 +306,16 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
 
 export async function checkCliContract({ env = process.env, execute = runProcess } = {}) {
   const cliVersion = validateCliVersion(env.EDGEONE_CLI_VERSION || DEFAULT_CLI_VERSION);
-  const result = await execute('npx', ['--yes', `edgeone@${cliVersion}`, 'makers', 'deploy', '--help'], {
-    timeoutMs: 120_000,
-    env: { ...env, PAGES_SOURCE: env.PAGES_SOURCE || 'skills' },
-  });
-  if (result.code !== 0) {
-    throw new Error(`EdgeOne CLI contract check failed: ${sanitizeLog(tailLines(`${result.stdout}\n${result.stderr}`), env.EDGEONE_API_TOKEN || '')}`);
+  for (const command of ['link', 'deploy']) {
+    const result = await execute('npx', ['--yes', `edgeone@${cliVersion}`, 'makers', command, '--help'], {
+      timeoutMs: 120_000,
+      env: edgeOneProcessEnv(env),
+    });
+    if (result.code !== 0) {
+      throw new Error(`EdgeOne CLI ${command} contract check failed: ${sanitizeLog(tailLines(`${result.stdout}\n${result.stderr}`), env.EDGEONE_API_TOKEN || '')}`);
+    }
   }
-  console.log(`EdgeOne CLI contract verified: edgeone@${cliVersion}`);
+  console.log(`EdgeOne CLI contract verified: edgeone@${cliVersion} makers link/deploy`);
 }
 
 async function main() {

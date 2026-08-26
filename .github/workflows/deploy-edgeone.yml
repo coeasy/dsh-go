@@ -114,9 +114,26 @@ jobs:
           PUBLIC_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}
           PUBLIC_API_URL: ${{ vars.EDGEONE_SITE_URL }}
 
+      - name: Checkout current deployment control plane
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: .ci-control
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify deployment control revision
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          CONTROL=$(git -C .ci-control rev-parse HEAD)
+          [ "$CONTROL" = "${GITHUB_SHA}" ] || { echo "Deployment control revision mismatch: expected=${GITHUB_SHA} actual=${CONTROL}"; exit 1; }
+
       - name: Stamp exact deployment SHA
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
-        run: node scripts/write-deployment-version.mjs site/dist/version.json
+        run: node .ci-control/scripts/write-deployment-version.mjs site/dist/version.json
 
       - name: Verify build output
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
@@ -132,7 +149,7 @@ jobs:
 
       - name: Verify EdgeOne CLI contract
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
-        run: node scripts/edgeone-deploy-ci.mjs --check
+        run: node .ci-control/scripts/edgeone-deploy-ci.mjs --check
 
       - name: Deploy to Tencent EdgeOne Makers
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
@@ -140,7 +157,7 @@ jobs:
         env:
           EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
           EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}
-        run: node scripts/edgeone-deploy-ci.mjs
+        run: node .ci-control/scripts/edgeone-deploy-ci.mjs
 
       - name: Verify deployment URL SHA
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.deploy_url != '' }}
@@ -150,7 +167,7 @@ jobs:
           DEPLOY_LABEL: Tencent EdgeOne deployment URL
           DEPLOY_SHA_ATTEMPTS: "6"
           DEPLOY_SHA_DELAY_MS: "5000"
-        run: node scripts/check-production-sha.mjs
+        run: node .ci-control/scripts/check-production-sha.mjs
 
       - name: Production target SHA Verify
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.health_url != '' }}
@@ -160,7 +177,7 @@ jobs:
           DEPLOY_LABEL: Tencent EdgeOne production target
           DEPLOY_SHA_ATTEMPTS: "12"
           DEPLOY_SHA_DELAY_MS: "10000"
-        run: node scripts/check-production-sha.mjs
+        run: node .ci-control/scripts/check-production-sha.mjs
 
       - name: Production Registry V3 convergence gate
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.health_url != '' }}
@@ -169,19 +186,20 @@ jobs:
           DEPLOY_LABEL: Tencent EdgeOne production target
           DEPLOY_CONVERGENCE_ATTEMPTS: "12"
           DEPLOY_CONVERGENCE_DELAY_MS: "10000"
-        run: node scripts/check-deployment-convergence.mjs
+        run: node .ci-control/scripts/check-deployment-convergence.mjs
 
       - name: EdgeOne summary
         if: always()
         run: |
           echo "### Tencent EdgeOne Production Deploy Gate" >> "$GITHUB_STEP_SUMMARY"
-          echo "- authoritative SHA: ${DEPLOYMENT_SHA}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- payload SHA: ${DEPLOYMENT_SHA}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- control plane SHA: ${GITHUB_SHA}" >> "$GITHUB_STEP_SUMMARY"
           echo "- token configured: ${{ steps.edgeone-config.outputs.token_configured || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- stable production URL configured: ${{ steps.edgeone-config.outputs.site_url_configured || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- production target fallback: CLI production deployment URL when EDGEONE_SITE_URL is unset" >> "$GITHUB_STEP_SUMMARY"
           echo "- project: ${EDGEONE_PROJECT}" >> "$GITHUB_STEP_SUMMARY"
           echo "- CLI: edgeone@${EDGEONE_CLI_VERSION}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- auth mode: per-invocation token (-t)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- auth mode: explicit project link + per-invocation token (-t)" >> "$GITHUB_STEP_SUMMARY"
           echo "- failure class: ${{ steps.edgeone.outputs.failure_class || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- project id: ${{ steps.edgeone.outputs.project_id || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- console URL: ${{ steps.edgeone.outputs.console_url || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"

@@ -38,6 +38,7 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(classifyFailure('HTTP 401 unauthorized invalid token', 1)).toBe('authentication');
     expect(classifyFailure('HTTP 429 quota exceeded', 1)).toBe('quota');
     expect(classifyFailure('HTTP 409 project already exists', 1)).toBe('project_conflict');
+    expect(classifyFailure('The project dsh has finished versions. Uploads are only allowed for the latest version.', 1)).toBe('version_state');
     expect(classifyFailure('no valid JSON result', 0)).toBe('protocol');
     expect(classifyFailure('unexpected provider error', 1)).toBe('api');
     expect(classifyFailure('', 124, true)).toBe('transport');
