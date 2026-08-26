@@ -11,7 +11,7 @@ describe('runtime child execution environment', () => {
       AWS_SECRET_ACCESS_KEY: 'should-not-leak',
       NODE_OPTIONS: '--require /tmp/inject.js',
     };
-    const env = buildExecutionEnv({}, host);
+    const env = buildExecutionEnv({}, host) as Record<string, string>;
 
     expect(env.PATH).toBe('/usr/bin');
     expect(env.HOME).toBe('/home/tester');
