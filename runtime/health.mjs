@@ -3,6 +3,7 @@ import { discoverPackageManifest } from './bindings.mjs';
 import { assertPackageType, normalizePackageDependency, packageKey } from './package-model.mjs';
 import { readInstallLock, verifyInstalledCommit } from './verifier.mjs';
 import { hasDeclaredSupplyChainEvidence, verifySecurityEvidence } from './supply-chain-verifier.mjs';
+import { verifySupplyChainIdentity } from './supply-chain-identity.mjs';
 
 async function exists(path) {
   try {
@@ -94,12 +95,27 @@ export async function checkRuntimePackageHealth(pkg, options = {}) {
   if (checks.path && hasDeclaredSupplyChainEvidence(security)) {
     try {
       supplyChain = await verifySecurityEvidence(security, { root: target, online: false });
+      const identity = await verifySupplyChainIdentity(security, supplyChain, {
+        root: target,
+        cosignPath: options.cosignPath,
+        cosignRunner: options.cosignRunner,
+        hostEnv: options.hostEnv,
+      });
+      supplyChain.identity = identity;
+      supplyChain.cryptographic_signature_verified = identity.cryptographic_signature_verified === true;
+      supplyChain.slsa_provenance_verified = identity.slsa_provenance_verified === true;
+      supplyChain.valid = supplyChain.valid === true && identity.valid === true;
       checks.supply_chain = supplyChain.valid === true;
       for (const evidence of supplyChain.evidence || []) {
         if (!evidence.declared || evidence.verified) continue;
         if (!['digest-mismatch', 'verification-error'].includes(evidence.status)) {
           warnings.push(`supply-chain:${evidence.kind}:${evidence.status}`);
         }
+      }
+      for (const identityCheck of [identity.sigstore, identity.slsa]) {
+        if (!identityCheck?.declared || identityCheck.verified) continue;
+        if (identityCheck.valid === false) continue;
+        warnings.push(`supply-chain:${identityCheck.kind}:${identityCheck.status}`);
       }
       if (security.signature && !supplyChain.cryptographic_signature_verified) {
         warnings.push('supply-chain:signature:cryptographic-verification-pending');
