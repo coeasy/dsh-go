@@ -60,7 +60,7 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::EDGEONE_API_TOKEN is not configured; EdgeOne deployment will be skipped. Create it in the EdgeOne Makers API Token tab"
+            echo "::warning::EDGEONE_API_TOKEN is not configured; EdgeOne deployment will be skipped"
           fi
       - name: Setup Node.js
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
@@ -101,180 +101,21 @@ jobs:
           node -e "const r=require('./site/dist/catalog/registry-v3.json'); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length) process.exit(1)"
       - name: Verify EdgeOne CLI contract
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          EDGEONE_REQUESTED_VERSION="$EDGEONE_CLI_VERSION" node -e "const m=/^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/.exec(process.env.EDGEONE_REQUESTED_VERSION||'');if(!m)throw new Error('EDGEONE_CLI_VERSION must be a pinned semver');const v=m.slice(1,4).map(Number);const min=[1,6,0];for(let i=0;i<3;i++){if(v[i]>min[i])break;if(v[i]<min[i])throw new Error('EdgeOne CLI >= 1.6.0 is required')}"
-          npx --yes "edgeone@${EDGEONE_CLI_VERSION}" makers deploy --help >/dev/null
+        run: node scripts/edgeone-deploy-ci.mjs --check
       - name: Deploy to Tencent EdgeOne Makers
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
         id: edgeone
-        shell: bash
         env:
           EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
           EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}
-        run: |
-          set -euo pipefail
-          echo "::add-mask::$EDGEONE_API_TOKEN"
-
-          case "$EDGEONE_DEPLOY_RETRIES" in
-            ''|*[!0-9]*) echo "Invalid EDGEONE_DEPLOY_RETRIES: $EDGEONE_DEPLOY_RETRIES"; exit 1 ;;
-          esac
-          case "$EDGEONE_ATTEMPT_TIMEOUT_SECONDS" in
-            ''|*[!0-9]*) echo "Invalid EDGEONE_ATTEMPT_TIMEOUT_SECONDS: $EDGEONE_ATTEMPT_TIMEOUT_SECONDS"; exit 1 ;;
-          esac
-          [ "$EDGEONE_DEPLOY_RETRIES" -ge 1 ] && [ "$EDGEONE_DEPLOY_RETRIES" -le 5 ] || { echo "EDGEONE_DEPLOY_RETRIES must be between 1 and 5"; exit 1; }
-          [ "$EDGEONE_ATTEMPT_TIMEOUT_SECONDS" -ge 30 ] && [ "$EDGEONE_ATTEMPT_TIMEOUT_SECONDS" -le 300 ] || { echo "EDGEONE_ATTEMPT_TIMEOUT_SECONDS must be between 30 and 300"; exit 1; }
-
-          sanitize_log() {
-            EDGEONE_TOKEN="$EDGEONE_API_TOKEN" node - "$1" <<'NODE'
-          const fs = require('node:fs');
-          let value = fs.readFileSync(process.argv[2], 'utf8');
-          const token = process.env.EDGEONE_TOKEN || '';
-          if (token) value = value.split(token).join('***');
-          value = value
-            .replace(/([?&](?:eo_)?token=)[^&\s"'<>]+/gi, '$1***')
-            .replace(/("(?:token|apiToken|accessToken)"\s*:\s*")[^"]+("?)/gi, '$1***$2')
-            .replace(/(authorization\s*:\s*bearer\s+)[^\s]+/gi, '$1***');
-          process.stdout.write(value);
-          NODE
-          }
-
-          classify_failure() {
-            local text="$1"
-            local status="$2"
-            if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
-              echo "transport"
-            elif printf '%s\n' "$text" | grep -Eqi '(^|[^0-9])(401|403)([^0-9]|$)|unauthori[sz]ed|forbidden|invalid[ _-]*token|token.*(expired|invalid)|authentication failed|permission denied|not logged in|login required'; then
-              echo "authentication"
-            elif printf '%s\n' "$text" | grep -Eqi '(^|[^0-9])429([^0-9]|$)|rate[ _-]*limit|quota|exceed(ed|s)? .*limit|project exceeds [0-9]+ limit'; then
-              echo "quota"
-            elif printf '%s\n' "$text" | grep -Eqi '(^|[^0-9])409([^0-9]|$)|already exists|project.*exists|name.*conflict|duplicate project'; then
-              echo "project_conflict"
-            elif [ "$status" -eq 0 ]; then
-              echo "protocol"
-            elif printf '%s\n' "$text" | grep -Eqi 'fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up|network|TLS|certificate|connection reset|connection refused'; then
-              echo "transport"
-            else
-              echo "api"
-            fi
-          }
-
-          DEPLOY_JSON=""
-          LAST_ERROR=""
-          FAILURE_CLASS="none"
-          ATTEMPT_LOG=$(mktemp)
-          trap 'rm -f "$ATTEMPT_LOG"' EXIT
-
-          for attempt in $(seq 1 "$EDGEONE_DEPLOY_RETRIES"); do
-            : > "$ATTEMPT_LOG"
-            echo "EdgeOne deployment attempt ${attempt}/${EDGEONE_DEPLOY_RETRIES} using per-invocation token auth"
-            set +e
-            timeout --signal=TERM --kill-after=10s "${EDGEONE_ATTEMPT_TIMEOUT_SECONDS}s" \
-              npx --yes "edgeone@${EDGEONE_CLI_VERSION}" makers deploy ./site/dist \
-                -n "$EDGEONE_PROJECT" \
-                -t "$EDGEONE_API_TOKEN" \
-                -e production \
-                --json >"$ATTEMPT_LOG" 2>&1
-            STATUS=$?
-            set -e
-
-            LAST_JSON=$(node - "$ATTEMPT_LOG" <<'NODE'
-          const fs = require('node:fs');
-          const lines = fs.readFileSync(process.argv[2], 'utf8').split(/[\r\n]+/);
-          for (let i = lines.length - 1; i >= 0; i--) {
-            const line = lines[i].trim();
-            if (!line.startsWith('{')) continue;
-            try {
-              JSON.parse(line);
-              process.stdout.write(line);
-              break;
-            } catch {}
-          }
-          NODE
-            )
-
-            if [ "$STATUS" -eq 0 ] && [ -n "$LAST_JSON" ]; then
-              if DEPLOY_JSON="$LAST_JSON" node -e "const r=JSON.parse(process.env.DEPLOY_JSON); if(r.status!=='success' || !r.url || !r.projectId) process.exit(1)"; then
-                DEPLOY_JSON="$LAST_JSON"
-                FAILURE_CLASS="none"
-                break
-              fi
-            fi
-
-            SAFE_OUTPUT=$(sanitize_log "$ATTEMPT_LOG")
-            if [ "$STATUS" -eq 124 ]; then
-              LAST_ERROR="EdgeOne CLI attempt exceeded ${EDGEONE_ATTEMPT_TIMEOUT_SECONDS}s timeout"
-            elif [ "$STATUS" -eq 0 ] && [ -z "$LAST_JSON" ]; then
-              LAST_ERROR="EdgeOne CLI exited successfully but returned no valid JSON result"
-              if [ -n "$SAFE_OUTPUT" ]; then LAST_ERROR="$LAST_ERROR
-$(printf '%s\n' "$SAFE_OUTPUT" | tail -n 20)"; fi
-            elif [ -n "$SAFE_OUTPUT" ]; then
-              LAST_ERROR=$(printf '%s\n' "$SAFE_OUTPUT" | tail -n 20)
-            else
-              LAST_ERROR="EdgeOne CLI exited with status ${STATUS} and no output"
-            fi
-
-            FAILURE_CLASS=$(classify_failure "$LAST_ERROR" "$STATUS")
-            echo "Sanitized EdgeOne error output (class=${FAILURE_CLASS}):"
-            printf '%s\n' "$LAST_ERROR"
-            WARNING_TEXT=$(printf '%s' "$LAST_ERROR" | tr '\r\n' '  ' | cut -c1-900 | sed 's/%/%25/g')
-            echo "::warning title=EdgeOne attempt ${attempt} [${FAILURE_CLASS}]::${WARNING_TEXT}"
-
-            if [ "$attempt" -lt "$EDGEONE_DEPLOY_RETRIES" ] && [ "$FAILURE_CLASS" = "transport" ]; then
-              WAIT=$((attempt * 10))
-              echo "Transient EdgeOne transport failure; retrying in ${WAIT}s"
-              sleep "$WAIT"
-              continue
-            fi
-            break
-          done
-
-          if [ -z "$DEPLOY_JSON" ]; then
-            echo "failure_class=$FAILURE_CLASS" >> "$GITHUB_OUTPUT"
-            ERROR_TEXT=$(printf '%s' "$LAST_ERROR" | tr '\r\n' '  ' | cut -c1-900 | sed 's/%/%25/g')
-            echo "::error title=EdgeOne deployment failure [${FAILURE_CLASS}]::${ERROR_TEXT}"
-            echo "EdgeOne deployment failed after retry policy [${FAILURE_CLASS}]:"
-            printf '%s\n' "$LAST_ERROR"
-            exit 1
-          fi
-
-          DEPLOY_URL=$(DEPLOY_JSON="$DEPLOY_JSON" node -e "const r=JSON.parse(process.env.DEPLOY_JSON);process.stdout.write(r.url)")
-          PROJECT_ID=$(DEPLOY_JSON="$DEPLOY_JSON" node -e "const r=JSON.parse(process.env.DEPLOY_JSON);process.stdout.write(String(r.projectId))")
-          CONSOLE_URL=$(DEPLOY_JSON="$DEPLOY_JSON" node -e "const r=JSON.parse(process.env.DEPLOY_JSON);process.stdout.write(r.consoleUrl||'')")
-          HEALTH_URL="${EDGEONE_SITE_URL:-$DEPLOY_URL}"
-
-          echo "::add-mask::$DEPLOY_URL"
-          case "$HEALTH_URL" in *\?*) echo "::add-mask::$HEALTH_URL" ;; esac
-          echo "failure_class=none" >> "$GITHUB_OUTPUT"
-          echo "deploy_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
-          echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
-          echo "console_url=$CONSOLE_URL" >> "$GITHUB_OUTPUT"
-          echo "health_url=$HEALTH_URL" >> "$GITHUB_OUTPUT"
-          echo "EdgeOne deployment accepted: project=${PROJECT_ID}"
+        run: node scripts/edgeone-deploy-ci.mjs
       - name: Post-deploy Registry V3 convergence check
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' && steps.edgeone.outputs.health_url != '' }}
-        shell: bash
         env:
-          EDGEONE_SITE_URL: ${{ steps.edgeone.outputs.health_url }}
-        run: |
-          set -euo pipefail
-          EXPECTED_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
-          EXPECTED_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
-          REGISTRY_URL=$(node -e "const u=new URL(process.env.EDGEONE_SITE_URL);u.pathname='/catalog/registry-v3.json';process.stdout.write(u.toString())")
-          case "$REGISTRY_URL" in *\?*) echo "::add-mask::$REGISTRY_URL" ;; esac
-          for attempt in 1 2 3 4 5 6 7 8 9; do
-            if curl -fsS --max-time 20 "$REGISTRY_URL" -o /tmp/registry-v3.json; then
-              if EXPECTED_HASH="$EXPECTED_HASH" EXPECTED_COUNT="$EXPECTED_COUNT" node -e "const r=require('/tmp/registry-v3.json'); if(r.registry_version!==3 || r.generated?.content_hash!==process.env.EXPECTED_HASH || String(r.plugins?.length)!==process.env.EXPECTED_COUNT) process.exit(1)"; then
-                echo "EdgeOne Registry V3 converged: hash=${EXPECTED_HASH}, count=${EXPECTED_COUNT}"
-                exit 0
-              fi
-            fi
-            echo "Waiting for EdgeOne production convergence (${attempt}/9)"
-            sleep 10
-          done
-          echo "EdgeOne production did not converge to the exact Registry V3 revision"
-          exit 1
+          DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}
+          DEPLOY_LABEL: Tencent EdgeOne
+          DEPLOY_CONVERGENCE_ATTEMPTS: "9"
+        run: node scripts/check-deployment-convergence.mjs
       - name: EdgeOne summary
         if: always()
         run: |
@@ -283,8 +124,6 @@ $(printf '%s\n' "$SAFE_OUTPUT" | tail -n 20)"; fi
           echo "- configured: ${{ steps.edgeone-config.outputs.configured || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- project: ${EDGEONE_PROJECT}" >> "$GITHUB_STEP_SUMMARY"
           echo "- CLI: edgeone@${EDGEONE_CLI_VERSION}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- retry limit: ${EDGEONE_DEPLOY_RETRIES}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- attempt timeout: ${EDGEONE_ATTEMPT_TIMEOUT_SECONDS}s" >> "$GITHUB_STEP_SUMMARY"
           echo "- auth mode: per-invocation token (-t)" >> "$GITHUB_STEP_SUMMARY"
           echo "- failure class: ${{ steps.edgeone.outputs.failure_class || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- project id: ${{ steps.edgeone.outputs.project_id || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
