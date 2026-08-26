@@ -132,28 +132,30 @@ function cachedNativeKey(paths, backend) {
   return nativeMasterKeyCache.get(nativeCacheKey(paths, backend)) || null;
 }
 
-// On Windows PowerShell, ConvertFrom-SecureString without -Key uses DPAPI
-// for the current Windows user. The plaintext base64 master key is supplied
-// only over stdin and is never placed in the process command line.
+// Windows PowerShell does not always preload System.Security on Server 2025.
+// Load it explicitly, then invoke DPAPI CurrentUser directly. The plaintext
+// base64 master key is supplied only over stdin and never appears in argv.
 const DPAPI_PROTECT_SCRIPT = [
+  'Add-Type -AssemblyName System.Security',
   '$value = [Console]::In.ReadToEnd().Trim()',
-  '$secure = ConvertTo-SecureString -String $value -AsPlainText -Force',
-  '$wrapped = ConvertFrom-SecureString -SecureString $secure',
-  '[Console]::Out.Write($wrapped)',
+  '$bytes = [Convert]::FromBase64String($value)',
+  '$protected = [System.Security.Cryptography.ProtectedData]::Protect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
+  '[Console]::Out.Write([Convert]::ToBase64String($protected))',
 ].join('; ');
 
 const DPAPI_UNPROTECT_SCRIPT = [
-  '$wrapped = [Console]::In.ReadToEnd().Trim()',
-  '$secure = ConvertTo-SecureString -String $wrapped',
-  '$bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)',
-  'try { [Console]::Out.Write([System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)) } finally { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }',
+  'Add-Type -AssemblyName System.Security',
+  '$value = [Console]::In.ReadToEnd().Trim()',
+  '$bytes = [Convert]::FromBase64String($value)',
+  '$plain = [System.Security.Cryptography.ProtectedData]::Unprotect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
+  '[Console]::Out.Write([Convert]::ToBase64String($plain))',
 ].join('; ');
 
 async function storeDpapiKey(paths, key, options = {}) {
   const platform = options.platform || process.platform;
   if (platform !== 'win32') throw new Error('DPAPI secret backend is only available on Windows');
   const run = options.runCommand || runSecretBackendCommand;
-  const wrapped = await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', DPAPI_PROTECT_SCRIPT], `${key.toString('base64')}\n`, { ...options, platform });
+  const wrapped = await run('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', DPAPI_PROTECT_SCRIPT], `${key.toString('base64')}\n`, { ...options, platform });
   await atomicWrite(paths.dpapi, `${wrapped.trim()}\n`);
   await writeBackendMarker(paths, { backend: 'dpapi' });
   return cacheNativeKey(paths, 'dpapi', key);
@@ -164,7 +166,7 @@ async function readDpapiKey(paths, options = {}) {
   if (platform !== 'win32') throw new Error('DPAPI secret backend is only available on Windows');
   const run = options.runCommand || runSecretBackendCommand;
   const wrapped = await readFile(paths.dpapi, 'utf8');
-  const plain = await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', DPAPI_UNPROTECT_SCRIPT], wrapped, { ...options, platform });
+  const plain = await run('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', DPAPI_UNPROTECT_SCRIPT], wrapped, { ...options, platform });
   return decodeKey(plain);
 }
 
