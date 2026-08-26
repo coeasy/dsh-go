@@ -146,6 +146,7 @@ export async function installPackage(pkg, options = {}) {
       dependencies: pkg.dependencies || [],
       permissions: pkg.permissions || [],
       permission_policy: pkg.permission_policy || null,
+      permission_manifest: pkg.permission_manifest || null,
       compatibility: pkg.compatibility || {},
       publisher: pkg.publisher || null,
       security: pkg.security || null,

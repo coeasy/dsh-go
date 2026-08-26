@@ -1,6 +1,8 @@
 import { execFile } from 'node:child_process';
-import { rm } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { createReadStream } from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { mcpStatus, startMcp } from './execution.mjs';
 import { safePackageId } from './package-model.mjs';
@@ -10,6 +12,8 @@ const execFileAsync = promisify(execFile);
 const DEFAULT_STOP_TIMEOUT_MS = 5_000;
 const DEFAULT_STOP_POLL_MS = 50;
 const DEFAULT_START_TIME_TOLERANCE_MS = 10_000;
+const SUPERVISOR_START_TIME_TOLERANCE_MS = 1_500;
+const SUPERVISOR_IDENTITY_VERSION = 1;
 
 function executionRoot() {
   return resolve(process.env.DSH_EXECUTION_HOME || join(runtimeRoot(), 'run'));
@@ -83,7 +87,7 @@ async function defaultProcessStartTime(pid, platform = process.platform) {
   const { stdout } = await execFileAsync('ps', ['-p', String(pid), '-o', 'lstart='], {
     encoding: 'utf8',
     timeout: 3_000,
-    env: { ...process.env, LC_ALL: 'C' },
+    env: { PATH: process.env.PATH || '', LC_ALL: 'C' },
   });
   return stdout.trim() || null;
 }
@@ -91,7 +95,9 @@ async function defaultProcessStartTime(pid, platform = process.platform) {
 export async function readProcessStartTime(pid, options = {}) {
   if (!Number.isInteger(pid) || pid <= 0) return null;
   try {
-    const raw = await defaultProcessStartTime(pid, options.platform || process.platform);
+    const raw = options.rawProcessStartTime
+      ? await options.rawProcessStartTime(pid, options)
+      : await defaultProcessStartTime(pid, options.platform || process.platform);
     if (!raw) return null;
     const timestamp = parseStartedAt(raw);
     if (timestamp === null) throw new Error(`unparseable process start time: ${raw}`);
@@ -107,16 +113,100 @@ export async function readProcessStartTime(pid, options = {}) {
   }
 }
 
+function sha256Text(value) {
+  return createHash('sha256').update(String(value)).digest('hex');
+}
+
+export function launchFingerprint(command, args = []) {
+  return sha256Text(JSON.stringify({ command: String(command || ''), args: (Array.isArray(args) ? args : []).map(String) }));
+}
+
+async function hashFile(file) {
+  const hash = createHash('sha256');
+  for await (const chunk of createReadStream(file)) hash.update(chunk);
+  return hash.digest('hex');
+}
+
+async function resolveExecutable(command, options = {}) {
+  const text = String(command || '').trim();
+  if (!text) return null;
+  if (isAbsolute(text)) return text;
+  if (text.includes('/') || text.includes('\\')) return resolve(options.cwd || process.cwd(), text);
+  const platform = options.platform || process.platform;
+  const resolver = platform === 'win32' ? 'where.exe' : 'which';
+  try {
+    const { stdout } = await execFileAsync(resolver, [text], {
+      encoding: 'utf8', windowsHide: true, timeout: 3_000,
+      env: { PATH: process.env.PATH || '', Path: process.env.Path || process.env.PATH || '', SystemRoot: process.env.SystemRoot || process.env.SYSTEMROOT || '' },
+    });
+    return stdout.split(/\r?\n/).map((line) => line.trim()).find(Boolean) || null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeMcpProcessState(id, value) {
+  const file = mcpStatePath(id);
+  await mkdir(dirname(file), { recursive: true });
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+  await rename(temp, file);
+  return value;
+}
+
+export async function captureSupervisorIdentity(state, options = {}) {
+  const pid = Number(state?.pid);
+  if (!Number.isInteger(pid) || pid <= 0) return null;
+  const reader = options.getProcessStartTime || readProcessStartTime;
+  const processStartedAt = await reader(pid, options);
+  if (!processStartedAt) return null;
+  const executablePath = options.resolveExecutable
+    ? await options.resolveExecutable(state.command, options)
+    : await resolveExecutable(state.command, options);
+  let executableSha256 = null;
+  if (executablePath) {
+    try {
+      executableSha256 = options.hashExecutable
+        ? await options.hashExecutable(executablePath, options)
+        : await hashFile(executablePath);
+    } catch {
+      executableSha256 = null;
+    }
+  }
+  return {
+    version: SUPERVISOR_IDENTITY_VERSION,
+    instance_id: randomUUID(),
+    pid,
+    process_started_at: processStartedAt,
+    launch_sha256: launchFingerprint(state.command, state.args),
+    executable_path: executablePath,
+    executable_sha256: executableSha256,
+    captured_at: new Date().toISOString(),
+  };
+}
+
+async function attestManagedState(id, state, options = {}) {
+  if (!state?.managed_process || !Number.isInteger(Number(state.pid)) || Number(state.pid) <= 0) return state;
+  const supervisorIdentity = await captureSupervisorIdentity(state, options);
+  if (!supervisorIdentity) {
+    const error = new Error(`cannot capture supervisor identity for MCP process: ${id}`);
+    error.code = 'DSH_PROCESS_IDENTITY_UNAVAILABLE';
+    error.pid = state.pid;
+    error.state_preserved = true;
+    throw error;
+  }
+  return writeMcpProcessState(id, { ...state, supervisor_identity: supervisorIdentity });
+}
+
 export async function verifyManagedProcessIdentity(state, options = {}) {
   if (!state?.managed_process) return { matched: true, verified: false, managed_process: false };
   const pid = Number(state.pid);
-  if (!Number.isInteger(pid) || pid <= 0) {
-    return { matched: false, verified: false, invalid: true, pid };
-  }
-  const expected = parseStartedAt(state.started_at);
-  if (expected === null) {
-    return { matched: true, verified: false, legacy: true, pid };
-  }
+  if (!Number.isInteger(pid) || pid <= 0) return { matched: false, verified: false, invalid: true, pid };
+
+  const supervisor = state.supervisor_identity;
+  const expectedRaw = supervisor?.process_started_at || state.started_at;
+  const expected = parseStartedAt(expectedRaw);
+  if (expected === null) return { matched: true, verified: false, legacy: true, pid };
 
   const reader = options.getProcessStartTime || readProcessStartTime;
   const observedRaw = await reader(pid, options);
@@ -130,17 +220,46 @@ export async function verifyManagedProcessIdentity(state, options = {}) {
     throw error;
   }
 
-  const toleranceMs = Math.max(1, Number(options.startTimeToleranceMs) || DEFAULT_START_TIME_TOLERANCE_MS);
+  const toleranceMs = Math.max(1, Number(options.startTimeToleranceMs)
+    || (supervisor ? SUPERVISOR_START_TIME_TOLERANCE_MS : DEFAULT_START_TIME_TOLERANCE_MS));
   const deltaMs = observed - expected;
-  return {
+  const result = {
     matched: Math.abs(deltaMs) <= toleranceMs,
     verified: true,
+    supervisor_verified: Boolean(supervisor),
+    legacy: !supervisor,
     pid,
     expected_started_at: new Date(expected).toISOString(),
     observed_started_at: new Date(observed).toISOString(),
     delta_ms: deltaMs,
     tolerance_ms: toleranceMs,
+    instance_id: supervisor?.instance_id || null,
   };
+  if (!result.matched || !supervisor) return result;
+
+  if (Number(supervisor.pid) !== pid) return { ...result, matched: false, reason: 'supervisor pid mismatch' };
+  const expectedLaunch = launchFingerprint(state.command, state.args);
+  if (supervisor.launch_sha256 !== expectedLaunch) {
+    return { ...result, matched: false, reason: 'launch fingerprint mismatch' };
+  }
+  if (supervisor.executable_path && supervisor.executable_sha256) {
+    try {
+      const currentHash = options.hashExecutable
+        ? await options.hashExecutable(supervisor.executable_path, options)
+        : await hashFile(supervisor.executable_path);
+      if (currentHash !== supervisor.executable_sha256) {
+        return { ...result, matched: false, reason: 'executable fingerprint mismatch' };
+      }
+    } catch (cause) {
+      const error = new Error(`cannot verify executable fingerprint for MCP pid ${pid}`);
+      error.code = 'DSH_PROCESS_IDENTITY_UNAVAILABLE';
+      error.pid = pid;
+      error.state_preserved = true;
+      error.cause = cause;
+      throw error;
+    }
+  }
+  return result;
 }
 
 function identityMismatchError(id, identity) {
@@ -173,7 +292,6 @@ export async function waitForProcessExit(pid, options = {}) {
 export async function readMcpProcessState(id) {
   const file = mcpStatePath(id);
   try {
-    const { readFile } = await import('node:fs/promises');
     return JSON.parse(await readFile(file, 'utf8'));
   } catch (error) {
     if (error?.code === 'ENOENT') return null;
@@ -194,26 +312,29 @@ export async function startMcpSafely(id, options = {}) {
           running: true,
           already_running: true,
           identity_verified: identity.verified,
+          supervisor_identity_verified: identity.supervisor_verified === true,
           identity_legacy: identity.legacy === true,
         };
       }
-      if (!identity.exited) {
-        await rm(mcpStatePath(id), { force: true });
-      }
+      if (!identity.exited) await rm(mcpStatePath(id), { force: true });
     }
   }
-  return (options.start || startMcp)(id, options);
+
+  const started = await (options.start || startMcp)(id, options);
+  if (!started?.managed_process) return started;
+  const attested = await attestManagedState(id, started, options);
+  return { ...attested, identity_verified: true, supervisor_identity_verified: true };
 }
 
 export async function mcpStatusSafely(id, options = {}) {
   const status = await (options.status || mcpStatus)(id, options);
   const state = status?.state || await readMcpProcessState(id);
-  if (!state?.managed_process) return { ...status, identity_verified: false };
+  if (!state?.managed_process) return { ...status, identity_verified: false, supervisor_identity_verified: false };
 
   const pid = Number(state.pid);
   const isRunning = options.isRunning || processRunning;
   if (!Number.isInteger(pid) || pid <= 0 || !isRunning(pid)) {
-    return { ...status, running: false, identity_verified: false };
+    return { ...status, running: false, identity_verified: false, supervisor_identity_verified: false };
   }
 
   const identity = await verifyManagedProcessIdentity(state, options);
@@ -224,6 +345,7 @@ export async function mcpStatusSafely(id, options = {}) {
       stale_state: true,
       pid_reused: !identity.exited,
       identity_verified: identity.verified,
+      supervisor_identity_verified: false,
       identity,
     };
   }
@@ -231,7 +353,9 @@ export async function mcpStatusSafely(id, options = {}) {
     ...status,
     running: true,
     identity_verified: identity.verified,
+    supervisor_identity_verified: identity.supervisor_verified === true,
     identity_legacy: identity.legacy === true,
+    supervisor_instance_id: identity.instance_id || null,
   };
 }
 
@@ -272,7 +396,7 @@ export async function stopMcpSafely(id, options = {}) {
         isRunning,
         sleep: options.sleep,
       });
-      if (!exited && state.started_at) {
+      if (!exited && (state.supervisor_identity?.process_started_at || state.started_at)) {
         const after = await verifyManagedProcessIdentity(state, options);
         if (!after.matched) exited = true;
       }
@@ -290,13 +414,14 @@ export async function stopMcpSafely(id, options = {}) {
   return {
     type: 'mcp', id, stopped: true, pid, managed_process: true, exit_confirmed: true,
     identity_verified: identity.verified === true,
+    supervisor_identity_verified: identity.supervisor_verified === true,
+    supervisor_instance_id: identity.instance_id || null,
     identity_legacy: identity.legacy === true,
   };
 }
 
 export async function restartMcpSafely(id, options = {}) {
   const stopped = await stopMcpSafely(id, options);
-  const starter = options.start || startMcp;
-  const started = await starter(id, options);
+  const started = await startMcpSafely(id, options);
   return { ...started, restarted: true, previous: stopped };
 }

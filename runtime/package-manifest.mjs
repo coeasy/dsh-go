@@ -2,6 +2,7 @@ import { access, readFile, writeFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { DSH_DEFAULT_PACKAGE_VERSION, DSH_PACKAGE_MANIFEST_VERSION } from './version.mjs';
 import { KNOWN_PERMISSIONS, inspectPermissions } from './permissions.mjs';
+import { compilePermissionManifest } from './permission-manifest.mjs';
 
 export const DSH_MANIFEST_FILES = Object.freeze([
   'dsh-package.json',
@@ -43,7 +44,7 @@ function objectOrUndefined(value) {
 export function normalizePackageManifest(data, file = 'dsh-package.json') {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
   const type = manifestType(data, file);
-  const permissions = inspectPermissions(data.permissions);
+  const permissionModel = compilePermissionManifest(data.permissions, data.permission_policy);
   const manifest = {
     manifest_version: typeof data.manifest_version === 'string' ? data.manifest_version.trim() : undefined,
     id: typeof data.id === 'string' ? data.id.trim() : undefined,
@@ -55,8 +56,9 @@ export function normalizePackageManifest(data, file = 'dsh-package.json') {
     tags: stringArray(data.tags),
     capabilities: stringArray(data.capabilities),
     dependencies: Array.isArray(data.dependencies) ? data.dependencies.slice(0, 200) : [],
-    permissions: permissions.permissions,
-    permission_policy: objectOrUndefined(data.permission_policy),
+    permissions: permissionModel.permissions,
+    permission_policy: Object.keys(permissionModel.permission_policy).length ? permissionModel.permission_policy : objectOrUndefined(data.permission_policy),
+    permission_manifest: permissionModel.structured ? permissionModel.permission_manifest : undefined,
     compatibility: objectOrUndefined(data.compatibility),
     publisher: objectOrUndefined(data.publisher),
     security: objectOrUndefined(data.security),
@@ -93,6 +95,7 @@ export function validatePackageManifest(data, options = {}) {
   if (manifest.version !== DSH_DEFAULT_PACKAGE_VERSION && options.enforceDefaultVersion) errors.push(`new ecosystem packages must start at ${DSH_DEFAULT_PACKAGE_VERSION}`);
   const permissionReport = inspectPermissions(manifest.permissions);
   if (permissionReport.unknown.length) errors.push(`unknown permissions: ${permissionReport.unknown.join(', ')}`);
+  validatePermissionPolicy(data.permission_policy, errors);
   validatePermissionPolicy(manifest.permission_policy, errors);
   if (manifest.type === 'mcp') {
     const transport = manifest.mcp?.transport;

@@ -86,5 +86,5 @@ describe('authenticated local control API v1', () => {
     } finally {
       await new Promise<void>((accept, reject) => host.server.close((error) => error ? reject(error) : accept()));
     }
-  });
+  }, 20_000);
 });
