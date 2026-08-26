@@ -7,6 +7,7 @@ import { getSecret } from './secret-store.mjs';
 import { assertResourcePolicy } from './permission-policy.mjs';
 import { assertPackageType, packageKey, safePackageId } from './package-model.mjs';
 import { getRuntimePackage, readRuntimeRegistry, runtimeRoot } from './registry.mjs';
+import { buildExecutionEnv } from './execution-env.mjs';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -152,7 +153,7 @@ export async function startMcp(id, options = {}) {
   try {
     child = spawn(String(descriptor.command), descriptor.args, {
       cwd: record.path,
-      env: { ...process.env, ...Object.fromEntries(Object.entries(descriptor.env).map(([key, value]) => [key, String(value)])) },
+      env: buildExecutionEnv(descriptor.env),
       stdio: ['ignore', handle.fd, handle.fd],
       detached: true,
       windowsHide: true,
@@ -274,7 +275,7 @@ async function invokeStdioMcp(record, descriptor, tool, input, timeoutMs) {
   assertProcessExecution(record, descriptor.command);
   const child = spawn(String(descriptor.command), descriptor.args, {
     cwd: record.path,
-    env: { ...process.env, ...Object.fromEntries(Object.entries(descriptor.env).map(([key, value]) => [key, String(value)])) },
+    env: buildExecutionEnv(descriptor.env),
     stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true,
   });
   await waitSpawn(child);
@@ -374,7 +375,7 @@ async function runExecutable(command, args, record, descriptor, input, timeoutMs
   assertProcessExecution(record, command);
   const child = spawn(command, args, {
     cwd: record.path,
-    env: { ...process.env, ...Object.fromEntries(Object.entries(descriptor.env).map(([key, value]) => [key, String(value)])) },
+    env: buildExecutionEnv(descriptor.env),
     stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true,
   });
   await waitSpawn(child);

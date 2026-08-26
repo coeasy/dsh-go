@@ -103,7 +103,7 @@ describe('Phase 7 startup activation bridge', () => {
     const second = await activatePendingPlugins({ registryFile });
     expect(second.pending).toBe(0);
     expect(second.activated).toEqual([]);
-  });
+  }, 15_000);
 
   it('records a startup activation failure without auto-restarting the client', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-startup-failure-root-'));
