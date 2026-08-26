@@ -14,6 +14,11 @@
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=300, s-maxage=3600
 
+# Deployment identity: never cache the production SHA fingerprint
+/version.json
+  Access-Control-Allow-Origin: *
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
 # RSS
 /feed.xml
   Content-Type: application/rss+xml; charset=utf-8
