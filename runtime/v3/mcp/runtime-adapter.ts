@@ -1,18 +1,17 @@
-export const RUNTIME_MCP_TOOL_NAMES = [
-  'plugin.install',
-  'plugin.update',
-  'plugin.status',
-  'plugin.health',
-  'plugin.rollback',
-  'plugin.enable',
-  'plugin.disable',
-  'plugin.repair',
-] as const;
+import type { RuntimePackageType } from '../storage/persistence';
 
-export type RuntimeMCPToolName = (typeof RUNTIME_MCP_TOOL_NAMES)[number];
+const PACKAGE_ACTIONS = ['install', 'update', 'status', 'health', 'rollback', 'enable', 'disable', 'repair'] as const;
+export type RuntimePackageAction = (typeof PACKAGE_ACTIONS)[number];
+export type RuntimeMCPToolName = `package.${RuntimePackageAction}` | `plugin.${RuntimePackageAction}`;
+
+export const RUNTIME_MCP_TOOL_NAMES: RuntimeMCPToolName[] = [
+  ...PACKAGE_ACTIONS.map((action) => `package.${action}` as const),
+  ...PACKAGE_ACTIONS.map((action) => `plugin.${action}` as const),
+];
 
 export interface MCPRuntimeBinding {
   serverId: string;
+  packageType: RuntimePackageType;
   runtime: 'dsh-runtime-v3';
   transport: 'local';
   capabilities: string[];
@@ -20,9 +19,10 @@ export interface MCPRuntimeBinding {
 }
 
 export class MCPRuntimeAdapter {
-  bind(serverId: string, capabilities: string[]): MCPRuntimeBinding {
+  bind(serverId: string, capabilities: string[], packageType: RuntimePackageType = 'mcp'): MCPRuntimeBinding {
     return {
       serverId,
+      packageType,
       runtime: 'dsh-runtime-v3',
       transport: 'local',
       capabilities,

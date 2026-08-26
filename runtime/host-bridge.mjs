@@ -3,17 +3,34 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { homedir, platform as currentPlatform } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
+import { assertPackageType, parsePackageSpec } from './package-model.mjs';
 
 const exec = promisify(execFile);
 const SPEC_PATTERN = /^(?:github:)?[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)?(?:@[A-Za-z0-9*.^~+_-]+)?$/;
 const CHANNEL_PATTERN = /^[A-Za-z0-9._-]+$/;
 
-function safeSpec(value) {
-  const spec = String(value || '').trim();
-  if (!spec || spec.length > 512 || !SPEC_PATTERN.test(spec)) {
-    throw new Error(`invalid plugin spec in dsh URI: ${spec || '<empty>'}`);
+function safeBridgeSpec(value, fallbackType = 'plugin') {
+  let spec = String(value || '').trim();
+  const fallback = assertPackageType(fallbackType);
+  if (!spec || spec.length > 512) {
+    const label = fallback === 'plugin' ? 'plugin' : 'runtime package';
+    throw new Error(`invalid ${label} spec in dsh URI: ${spec || '<empty>'}`);
   }
-  return spec;
+  let type = fallback;
+  const colon = spec.indexOf(':');
+  if (colon > 0) {
+    const prefix = spec.slice(0, colon).toLowerCase();
+    if (['plugin', 'mcp', 'skill', 'agent'].includes(prefix)) {
+      type = assertPackageType(prefix);
+      spec = spec.slice(colon + 1);
+    }
+  }
+  if (!SPEC_PATTERN.test(spec)) {
+    const label = type === 'plugin' ? 'plugin' : 'runtime package';
+    throw new Error(`invalid ${label} spec in dsh URI: ${spec}`);
+  }
+  parsePackageSpec(`${type}:${spec}`, '*', type);
+  return { type, spec };
 }
 
 function safeChannel(value) {
@@ -26,8 +43,13 @@ function safeChannel(value) {
 }
 
 export function buildInstallUri(spec, options = {}) {
-  const encoded = encodeURIComponent(safeSpec(spec));
-  const url = new URL(`dsh://plugin/install/${encoded}`);
+  const parsed = safeBridgeSpec(spec, options.type || 'plugin');
+  const type = options.type ? assertPackageType(options.type) : parsed.type;
+  if (type !== parsed.type) throw new Error(`runtime package type mismatch in dsh URI: ${type} != ${parsed.type}`);
+  const encoded = encodeURIComponent(parsed.spec);
+  const url = type === 'plugin'
+    ? new URL(`dsh://plugin/install/${encoded}`)
+    : new URL(`dsh://package/install/${type}/${encoded}`);
   const channel = safeChannel(options.channel);
   if (channel) url.searchParams.set('channel', channel);
   return url.toString();
@@ -45,8 +67,9 @@ export function parseDshUri(raw) {
 
   const channel = safeChannel(url.searchParams.get('channel'));
   if (url.hostname === 'install') {
-    const spec = safeSpec(url.searchParams.get('plugin') || url.searchParams.get('spec'));
-    return { protocol: 'dsh', kind: 'plugin', action: 'install', spec, channel, legacy: true };
+    const parsed = safeBridgeSpec(url.searchParams.get('plugin') || url.searchParams.get('spec'), 'plugin');
+    if (parsed.type !== 'plugin') throw new Error('legacy dsh install URI only supports plugins');
+    return { protocol: 'dsh', kind: 'plugin', action: 'install', spec: parsed.spec, channel, legacy: true };
   }
 
   if (url.hostname === 'plugin') {
@@ -54,18 +77,44 @@ export function parseDshUri(raw) {
     if (segments.length !== 2 || segments[0] !== 'install') {
       throw new Error(`unsupported dsh plugin action: ${url.pathname || '/'}`);
     }
-    const spec = safeSpec(decodeURIComponent(segments[1]));
-    return { protocol: 'dsh', kind: 'plugin', action: 'install', spec, channel, legacy: false };
+    const parsed = safeBridgeSpec(decodeURIComponent(segments[1]), 'plugin');
+    if (parsed.type !== 'plugin') throw new Error('plugin URI cannot install another package type');
+    return { protocol: 'dsh', kind: 'plugin', action: 'install', spec: parsed.spec, channel, legacy: false };
+  }
+
+  if (url.hostname === 'package') {
+    const segments = url.pathname.split('/').filter(Boolean);
+    if (segments.length !== 3 || segments[0] !== 'install') {
+      throw new Error(`unsupported dsh package action: ${url.pathname || '/'}`);
+    }
+    const type = assertPackageType(segments[1]);
+    const parsed = safeBridgeSpec(decodeURIComponent(segments[2]), type);
+    if (parsed.type !== type) throw new Error(`package URI type mismatch: ${type} != ${parsed.type}`);
+    return { protocol: 'dsh', kind: type, type, action: 'install', spec: parsed.spec, channel, legacy: false };
+  }
+
+  if (['mcp', 'skill', 'agent'].includes(url.hostname)) {
+    const type = assertPackageType(url.hostname);
+    const segments = url.pathname.split('/').filter(Boolean);
+    if (segments.length !== 2 || segments[0] !== 'install') {
+      throw new Error(`unsupported dsh ${type} action: ${url.pathname || '/'}`);
+    }
+    const parsed = safeBridgeSpec(decodeURIComponent(segments[1]), type);
+    return { protocol: 'dsh', kind: type, type, action: 'install', spec: parsed.spec, channel, legacy: false };
   }
 
   throw new Error(`unsupported dsh URI host: ${url.hostname || '<empty>'}`);
 }
 
 export function runtimeArgsForRequest(request) {
-  if (!request || request.kind !== 'plugin' || request.action !== 'install') {
+  if (!request || !['plugin', 'mcp', 'skill', 'agent'].includes(request.kind) || request.action !== 'install') {
     throw new Error('unsupported host bridge request');
   }
-  const args = ['install', safeSpec(request.spec)];
+  const parsed = safeBridgeSpec(request.spec, request.kind);
+  if (parsed.type !== request.kind) throw new Error('host bridge package type mismatch');
+  const args = request.kind === 'plugin'
+    ? ['install', parsed.spec]
+    : [request.kind, 'install', parsed.spec];
   const channel = safeChannel(request.channel);
   if (channel) args.push('--channel', channel);
   return args;

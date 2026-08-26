@@ -1,10 +1,12 @@
 {
   "name": "dsh_go",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "DeepSeek Harness 插件市场导航站（全自动同步 + 真·RESTful API + 中英文）",
   "type": "module",
   "private": true,
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "dsh": "bin/dsh.mjs"
   },
@@ -22,11 +24,13 @@
     "runtime:check": "node runtime/cli.mjs check-registry",
     "runtime:resolve": "node runtime/cli.mjs resolve",
     "runtime:install": "node runtime/cli.mjs install",
+    "runtime:package": "node runtime/cli.mjs package",
     "runtime:plugin": "node runtime/cli.mjs plugin",
     "runtime:doctor": "node runtime/cli.mjs plugin doctor",
     "runtime:startup": "node bin/dsh.mjs startup activate",
     "runtime:test": "vitest run tests/runtime-platform",
     "phase7:test": "vitest run tests/runtime-platform/host-bridge.test.ts tests/runtime-platform/startup-batch.test.ts tests/runtime-platform/bin-cli.test.ts tests/runtime-platform/self-update.test.ts tests/runtime-platform/client-bridge-e2e.test.ts",
+    "phase8:test": "vitest run tests/runtime-platform/package-model-v3.test.ts tests/runtime-platform/registry-v3.test.ts tests/runtime-platform/unified-resolver-v3.test.ts tests/runtime-platform/bindings-v3.test.ts tests/runtime-platform/host-bridge-v3.test.ts tests/runtime-platform/unified-cli-v3.test.ts tests/runtime-platform/unified-runtime-v3-e2e.test.ts tests/runtime-platform/v3-contracts.test.ts tests/runtime-platform/registry.test.ts tests/runtime-platform/resolver.test.ts tests/runtime-platform/activation.test.ts tests/runtime-platform/startup-batch.test.ts tests/runtime-platform/e2e.test.ts tests/runtime-platform/cli.test.ts tests/runtime-platform/bin-cli.test.ts tests/runtime-platform/host-bridge.test.ts tests/runtime-platform/client-bridge-e2e.test.ts",
     "ecosystem:test": "vitest run tests/ecosystem-v1",
     "ecosystem:check": "npm run typecheck && npm run lint && npm run ecosystem:test",
     "deploy:gate": "node scripts/deploy-gate-v3.mjs",

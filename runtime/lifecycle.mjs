@@ -1,3 +1,5 @@
+import { assertPackageType } from './package-model.mjs';
+
 export const LIFECYCLE_STATES = Object.freeze({
   AVAILABLE: 'available',
   INSTALLING: 'installing',
@@ -34,20 +36,20 @@ export function canTransition(from, to) {
   return from === to || Boolean(allowedTransitions[from]?.includes(to));
 }
 
-export function recordRuntimeEvent(plugin, event, details = {}) {
-  const state = plugin.state || LIFECYCLE_STATES.AVAILABLE;
-  const history = [...(plugin.history || []), historyEntry(event, state, details)].slice(-100);
-  return { ...plugin, history, updated_at: timestamp() };
+export function recordRuntimeEvent(pkg, event, details = {}) {
+  const state = pkg.state || LIFECYCLE_STATES.AVAILABLE;
+  const history = [...(pkg.history || []), historyEntry(event, state, details)].slice(-100);
+  return { ...pkg, history, updated_at: timestamp() };
 }
 
-export function transitionPlugin(plugin, nextState, options = {}) {
-  const current = plugin.state || LIFECYCLE_STATES.AVAILABLE;
+export function transitionPackage(pkg, nextState, options = {}) {
+  const current = pkg.state || LIFECYCLE_STATES.AVAILABLE;
   if (!canTransition(current, nextState)) {
     throw new Error(`invalid runtime transition: ${current} -> ${nextState}`);
   }
-  if (current === nextState && !options.event) return plugin;
+  if (current === nextState && !options.event) return pkg;
   const updated = {
-    ...plugin,
+    ...pkg,
     ...options.patch,
     state: nextState,
     updated_at: timestamp(),
@@ -59,11 +61,11 @@ export function transitionPlugin(plugin, nextState, options = {}) {
   });
 }
 
-export function createRuntimeRecord(id, version = '0.1.0', overrides = {}) {
+export function createRuntimePackageRecord(type, id, version = '0.1.0', overrides = {}) {
   const createdAt = timestamp();
   return {
     id,
-    type: 'plugin',
+    type: assertPackageType(type),
     version,
     state: LIFECYCLE_STATES.AVAILABLE,
     channel: 'stable',
@@ -73,9 +75,18 @@ export function createRuntimeRecord(id, version = '0.1.0', overrides = {}) {
     health: null,
     rollback: null,
     dependencies: [],
+    binding: null,
     history: [historyEntry('created', LIFECYCLE_STATES.AVAILABLE)],
     created_at: createdAt,
     updated_at: createdAt,
     ...overrides,
   };
+}
+
+export function transitionPlugin(plugin, nextState, options = {}) {
+  return transitionPackage(plugin, nextState, options);
+}
+
+export function createRuntimeRecord(id, version = '0.1.0', overrides = {}) {
+  return createRuntimePackageRecord('plugin', id, version, overrides);
 }

@@ -1,24 +1,37 @@
 #!/usr/bin/env node
 import { dirname } from 'node:path';
-import { installPlugin } from './installer.mjs';
-import { loadInstalledPlugin } from './loader.mjs';
-import { checkRuntimeHealth } from './health.mjs';
-import { createRuntimeRecord, recordRuntimeEvent } from './lifecycle.mjs';
-import { disablePlugin, enablePlugin } from './platform.mjs';
+import { installPackage } from './installer.mjs';
+import { loadInstalledPackage } from './loader.mjs';
+import { checkRuntimePackageHealth } from './health.mjs';
+import { createRuntimePackageRecord, recordRuntimeEvent } from './lifecycle.mjs';
+import { disablePackage, enablePackage } from './platform.mjs';
 import { rollbackInstalledPath } from './rollback.mjs';
-import { buildDependencyPlan, loadRegistryFile, parsePluginSpec, resolvePlugin } from './resolver.mjs';
-import { readInstallLock, verifyResolvedPlugin } from './verifier.mjs';
+import {
+  buildDependencyPlan,
+  loadRegistryFile,
+  resolvePackage,
+} from './resolver.mjs';
+import {
+  assertPackageType,
+  inferPackageType,
+  packageKey,
+  parsePackageSpec,
+} from './package-model.mjs';
+import { readInstallLock, verifyResolvedPackage } from './verifier.mjs';
 import { validateRegistry } from '../scripts/validate-registry-v3.mjs';
 import {
-  getRuntimePlugin,
-  markRuntimePluginRemoved,
+  findRuntimePackage,
+  getRuntimePackage,
+  markRuntimePackageRemoved,
+  packagePath,
   pathExists,
-  pluginPath,
   readRuntimeRegistry,
   removePath,
-  upsertRuntimePlugin,
+  upsertRuntimePackage,
   writeRuntimeRegistry,
 } from './registry.mjs';
+
+const PACKAGE_TYPES = ['plugin', 'mcp', 'skill', 'agent'];
 
 function option(name, fallback = undefined) {
   const index = process.argv.indexOf(name);
@@ -34,234 +47,305 @@ function print(value) {
   console.log(JSON.stringify(value, null, 2));
 }
 
-async function loadRuntimePlugin(raw, registry, options = {}) {
-  const input = String(raw || '').replace(/^github:/, '');
-  const defaultVersion = options.channel ? '*' : registry.defaults?.plugin_version;
-  const parsed = parsePluginSpec(input, defaultVersion);
+function defaultVersionFor(registry, type, channel) {
+  if (channel) return '*';
+  return registry.defaults?.[`${type}_version`] || registry.defaults?.plugin_version || '0.1.0';
+}
+
+async function loadRuntimePackage(raw, registry, options = {}) {
+  const defaultType = assertPackageType(options.type || 'plugin');
+  const input = String(raw || '').trim();
+  const parsed = parsePackageSpec(input, defaultVersionFor(registry, defaultType, options.channel), defaultType);
   try {
-    return resolvePlugin(registry, parsed.id, parsed.version, { channel: options.channel });
+    return resolvePackage(registry, parsed.type, parsed.id, parsed.version, { channel: options.channel });
   } catch (error) {
-    const at = input.lastIndexOf('@');
-    const repo = at > 0 ? input.slice(0, at) : input;
-    const version = at > 0 ? input.slice(at + 1) : defaultVersion || '0.1.0';
     const match = (registry.plugins || []).find((item) =>
-      item.source?.repo === repo && (!options.channel || (item.channel || item.release_channel || 'stable') === options.channel));
+      inferPackageType(item) === parsed.type
+      && item.source?.repo === parsed.id
+      && (!options.channel || (item.channel || item.release_channel || 'stable') === options.channel));
     if (!match) throw error;
-    return resolvePlugin(registry, match.id, version, { channel: options.channel });
+    return resolvePackage(registry, parsed.type, match.id, parsed.version, { channel: options.channel });
   }
 }
 
-function installedRecord(plugin, result, previous = null, action = 'install') {
-  const base = previous || createRuntimeRecord(plugin.id, plugin.version);
+function installedRecord(pkg, result, previous = null, action = 'install') {
+  const base = previous || createRuntimePackageRecord(pkg.type, pkg.id, pkg.version);
   const rollback = result.backup && previous
     ? { previous_version: previous.version, previous_commit: previous.commit, backup_path: result.backup, created_at: new Date().toISOString() }
     : previous?.rollback || null;
   return recordRuntimeEvent({
     ...base,
-    id: plugin.id,
-    type: 'plugin',
-    version: plugin.version,
+    id: pkg.id,
+    type: pkg.type,
+    version: pkg.version,
     state: 'installed',
-    channel: plugin.channel || 'stable',
+    channel: pkg.channel || 'stable',
     path: result.target,
-    source: plugin.source,
-    commit: plugin.commit,
-    dependencies: plugin.dependencies || [],
+    source: pkg.source,
+    commit: pkg.commit,
+    capabilities: pkg.capabilities || [],
+    dependencies: pkg.dependencies || [],
+    runtime: pkg.runtime || {},
     installed_at: new Date().toISOString(),
     enabled: previous?.enabled ?? true,
     activated: false,
+    binding: null,
     restart_required: true,
     health: null,
     rollback,
-  }, `${action}-complete`, { version: plugin.version, commit: plugin.commit });
+  }, `${action}-complete`, { version: pkg.version, commit: pkg.commit, type: pkg.type });
 }
 
 async function persistRecord(record) {
   const registry = await readRuntimeRegistry();
-  return writeRuntimeRegistry(upsertRuntimePlugin(registry, record));
+  return writeRuntimeRegistry(upsertRuntimePackage(registry, record));
 }
 
-async function markInstalling(plugin, current, action) {
-  const base = current || createRuntimeRecord(plugin.id, plugin.version);
+async function markInstalling(pkg, current, action) {
+  const base = current || createRuntimePackageRecord(pkg.type, pkg.id, pkg.version);
   const pending = recordRuntimeEvent({
     ...base,
     state: 'installing',
-    channel: plugin.channel || current?.channel || 'stable',
+    channel: pkg.channel || current?.channel || 'stable',
     enabled: current?.enabled ?? true,
     activated: false,
+    binding: null,
     restart_required: current?.restart_required ?? false,
-  }, `${action}-start`, { version: plugin.version, commit: plugin.commit });
+  }, `${action}-start`, { version: pkg.version, commit: pkg.commit, type: pkg.type });
   await persistRecord(pending);
   return pending;
 }
 
-async function markFailed(plugin, current, action, error) {
+async function markFailed(pkg, current, action, error) {
   const failed = recordRuntimeEvent({
-    ...(current || createRuntimeRecord(plugin.id, plugin.version)),
+    ...(current || createRuntimePackageRecord(pkg.type, pkg.id, pkg.version)),
     state: 'failed',
     activated: false,
+    binding: null,
     health: { status: 'failed', error: error.message, checked_at: new Date().toISOString() },
-  }, `${action}-failed`, { error: error.message });
+  }, `${action}-failed`, { error: error.message, type: pkg.type });
   await persistRecord(failed);
 }
 
-async function executeInstallPlan(rootPlugin, sourceRegistry, options, action = 'install') {
+async function executeInstallPlan(rootPackage, sourceRegistry, options, action = 'install') {
   const initial = await readRuntimeRegistry();
-  const plan = buildDependencyPlan(sourceRegistry, rootPlugin, {
-    channel: options.channel || rootPlugin.channel || 'stable',
-    installed: initial.plugins,
+  const plan = buildDependencyPlan(sourceRegistry, rootPackage, {
+    channel: options.channel || rootPackage.channel || 'stable',
+    installed: initial.packages,
   });
   const results = [];
 
-  for (const plugin of plan.order) {
+  for (const pkg of plan.order) {
     const runtime = await readRuntimeRegistry();
-    const current = getRuntimePlugin(runtime, plugin.id, { includeRemoved: true });
-    const target = current?.path || pluginPath(plugin.id, options.root);
-    const exact = current && current.state !== 'removed' && current.version === plugin.version && current.commit === plugin.commit && await pathExists(target);
-    const isRoot = plugin.id === rootPlugin.id;
+    const current = getRuntimePackage(runtime, pkg.type, pkg.id, { includeRemoved: true });
+    const packageRootOverride = pkg.type === rootPackage.type ? options.root : undefined;
+    const target = current?.path || packagePath(pkg.type, pkg.id, packageRootOverride);
+    const exact = current && current.state !== 'removed' && current.version === pkg.version && current.commit === pkg.commit && await pathExists(target);
+    const isRoot = packageKey(pkg.type, pkg.id) === packageKey(rootPackage.type, rootPackage.id);
     const shouldReinstallRoot = isRoot && (options.force || options.forceRepair);
     if (exact && !shouldReinstallRoot) {
-      results.push({ id: plugin.id, skipped: true, reason: 'already-current', target });
+      results.push({ id: pkg.id, type: pkg.type, skipped: true, reason: 'already-current', target });
       continue;
     }
 
     const force = isRoot ? options.force || action !== 'install' : Boolean(current && current.state !== 'removed');
-    const pending = options.dryRun ? current : await markInstalling(plugin, current, action);
+    const pending = options.dryRun ? current : await markInstalling(pkg, current, action);
     try {
-      const result = await installPlugin(plugin, { root: options.root, force, dryRun: options.dryRun });
-      if (!options.dryRun) await persistRecord(installedRecord(plugin, result, pending, action));
+      const result = await installPackage(pkg, { root: packageRootOverride, force, dryRun: options.dryRun });
+      if (!options.dryRun) await persistRecord(installedRecord(pkg, result, pending, action));
       results.push(result);
     } catch (error) {
-      if (!options.dryRun) await markFailed(plugin, pending, action, error);
+      if (!options.dryRun) await markFailed(pkg, pending, action, error);
       throw error;
     }
   }
 
   return {
-    id: rootPlugin.id,
-    version: rootPlugin.version,
-    channel: rootPlugin.channel || options.channel || 'stable',
+    id: rootPackage.id,
+    type: rootPackage.type,
+    key: packageKey(rootPackage.type, rootPackage.id),
+    version: rootPackage.version,
+    channel: rootPackage.channel || options.channel || 'stable',
     restart_required: !options.dryRun,
-    dependency_order: plan.order.map((item) => item.id),
+    dependency_order: plan.order.map((item) => item.type === 'plugin' ? item.id : packageKey(item.type, item.id)),
     replacements: plan.replacements,
     results,
   };
 }
 
-async function installFromSpec(raw, options) {
+async function installFromSpec(raw, options = {}) {
   const sourceRegistry = await loadRegistryFile(options.catalog);
-  const plugin = await loadRuntimePlugin(raw, sourceRegistry, options);
-  return executeInstallPlan(plugin, sourceRegistry, options, 'install');
+  const pkg = await loadRuntimePackage(raw, sourceRegistry, options);
+  return executeInstallPlan(pkg, sourceRegistry, options, 'install');
 }
 
-async function listPlugins(includeRemoved = false) {
+async function listPackages(type, includeRemoved = false) {
   const registry = await readRuntimeRegistry();
-  print(registry.plugins.filter((item) => includeRemoved || item.state !== 'removed').sort((a, b) => a.id.localeCompare(b.id)));
+  const packages = registry.packages
+    .filter((item) => !type || item.type === type)
+    .filter((item) => includeRemoved || item.state !== 'removed')
+    .sort((a, b) => packageKey(a.type, a.id).localeCompare(packageKey(b.type, b.id)));
+  print(packages);
 }
 
-async function statusPlugin(id, includeRemoved = false) {
+async function statusPackage(type, id, includeRemoved = false) {
   const registry = await readRuntimeRegistry();
   if (!id) {
-    return print(registry.plugins
+    return print(registry.packages
+      .filter((item) => !type || item.type === type)
       .filter((item) => includeRemoved || item.state !== 'removed')
-      .map(({ id: pluginId, version, state, channel, enabled, activated, restart_required, health }) => ({ id: pluginId, version, state, channel, enabled, activated, restart_required, health: health?.status || null })));
+      .map(({ id: packageId, type: packageType, version, state, channel, enabled, activated, restart_required, health }) => ({
+        id: packageId,
+        type: packageType,
+        key: packageKey(packageType, packageId),
+        version,
+        state,
+        channel,
+        enabled,
+        activated,
+        restart_required,
+        health: health?.status || null,
+      })));
   }
-  const item = getRuntimePlugin(registry, id, { includeRemoved });
-  if (!item) throw new Error('plugin is not installed: ' + id);
+  const item = type
+    ? getRuntimePackage(registry, type, id, { includeRemoved })
+    : findRuntimePackage(registry, id, { includeRemoved });
+  if (!item) throw new Error(`runtime package is not installed: ${type ? `${type}:` : ''}${id}`);
   print(item);
 }
 
-async function removePlugin(id) {
+async function removePackage(type, id) {
   const registry = await readRuntimeRegistry();
-  const item = getRuntimePlugin(registry, id);
-  if (!item) throw new Error('plugin is not installed: ' + id);
-  const target = item.path || pluginPath(id);
+  const item = getRuntimePackage(registry, type, id);
+  if (!item) throw new Error(`runtime package is not installed: ${type}:${id}`);
+  const target = item.path || packagePath(type, id);
   await removePath(target);
   await removePath(target + '.backup');
-  const next = markRuntimePluginRemoved(registry, id, { path: target });
+  const next = markRuntimePackageRemoved(registry, type, id, { path: target });
   await writeRuntimeRegistry(next);
-  print({ id, removed: true, path: target, restart_required: true });
+  print({ id, type, key: packageKey(type, id), removed: true, path: target, restart_required: true });
 }
 
-async function updatePlugin(id, version, options) {
+async function updatePackage(type, id, version, options) {
   const runtime = await readRuntimeRegistry();
-  const current = getRuntimePlugin(runtime, id);
-  if (!current) throw new Error('plugin is not installed: ' + id);
+  const current = getRuntimePackage(runtime, type, id);
+  if (!current) throw new Error(`runtime package is not installed: ${type}:${id}`);
   const sourceRegistry = await loadRegistryFile(options.catalog);
   const channel = options.channel || current.channel || 'stable';
-  const plugin = resolvePlugin(sourceRegistry, id, version || '*', { channel });
-  if (!options.forceRepair && current.version === plugin.version && current.commit === plugin.commit && await pathExists(current.path || pluginPath(id))) {
-    return print({ id, version: current.version, commit: current.commit, up_to_date: true });
+  const pkg = resolvePackage(sourceRegistry, type, id, version || '*', { channel });
+  if (!options.forceRepair && current.version === pkg.version && current.commit === pkg.commit && await pathExists(current.path || packagePath(type, id))) {
+    return print({ id, type, version: current.version, commit: current.commit, up_to_date: true });
   }
   const installRoot = options.root || (current.path ? dirname(current.path) : undefined);
-  const result = await executeInstallPlan(plugin, sourceRegistry, { ...options, root: installRoot, force: true }, options.forceRepair ? 'repair' : 'update');
+  const result = await executeInstallPlan(pkg, sourceRegistry, { ...options, root: installRoot, force: true }, options.forceRepair ? 'repair' : 'update');
   print({ ...result, updated: !options.forceRepair, repaired: Boolean(options.forceRepair) });
 }
 
-async function rollbackPlugin(id) {
+async function rollbackPackage(type, id) {
   const registry = await readRuntimeRegistry();
-  const item = getRuntimePlugin(registry, id);
-  if (!item) throw new Error('plugin is not installed: ' + id);
-  const target = item.path || pluginPath(id);
+  const item = getRuntimePackage(registry, type, id);
+  if (!item) throw new Error(`runtime package is not installed: ${type}:${id}`);
+  const target = item.path || packagePath(type, id);
   const { lock } = await rollbackInstalledPath(target);
+  if (lock.type !== type || lock.id !== id) throw new Error(`rollback lock identity mismatch for ${type}:${id}`);
   const next = recordRuntimeEvent({
     ...item,
+    type,
     version: lock.version,
     source: lock.source,
     commit: lock.source.commit,
     channel: lock.channel || item.channel || 'stable',
     state: 'installed',
     activated: false,
+    binding: null,
     restart_required: true,
     health: null,
     rollback: null,
     restored_at: new Date().toISOString(),
-  }, 'rollback-complete', { version: lock.version, commit: lock.source.commit });
-  await writeRuntimeRegistry(upsertRuntimePlugin(registry, next));
-  print({ id, rolled_back: true, version: lock.version, commit: lock.source.commit, restart_required: true });
+  }, 'rollback-complete', { version: lock.version, commit: lock.source.commit, type });
+  await writeRuntimeRegistry(upsertRuntimePackage(registry, next));
+  print({ id, type, rolled_back: true, version: lock.version, commit: lock.source.commit, restart_required: true });
 }
 
-async function setPluginEnabled(id, enabled) {
+async function setPackageEnabled(type, id, enabled) {
   const registry = await readRuntimeRegistry();
-  const item = getRuntimePlugin(registry, id);
-  if (!item) throw new Error('plugin is not installed: ' + id);
-  const next = enabled ? enablePlugin(item) : disablePlugin(item);
-  await writeRuntimeRegistry(upsertRuntimePlugin(registry, next));
-  print({ id, enabled: next.enabled, state: next.state, restart_required: true });
+  const item = getRuntimePackage(registry, type, id);
+  if (!item) throw new Error(`runtime package is not installed: ${type}:${id}`);
+  const next = enabled ? enablePackage(item) : disablePackage(item);
+  await writeRuntimeRegistry(upsertRuntimePackage(registry, next));
+  print({ id, type, enabled: next.enabled, state: next.state, restart_required: true });
 }
 
-async function healthPlugins(id, options = {}) {
+async function healthPackages(type, id, options = {}) {
   const registry = await readRuntimeRegistry();
-  const records = id ? [getRuntimePlugin(registry, id)].filter(Boolean) : registry.plugins.filter((item) => item.state !== 'removed');
-  if (id && records.length === 0) throw new Error('plugin is not installed: ' + id);
+  const records = id
+    ? [getRuntimePackage(registry, type, id)].filter(Boolean)
+    : registry.packages.filter((item) => (!type || item.type === type) && item.state !== 'removed');
+  if (id && records.length === 0) throw new Error(`runtime package is not installed: ${type}:${id}`);
   const results = [];
   let next = registry;
   for (const record of records) {
-    const health = await checkRuntimeHealth(record, { runtimeRegistry: registry });
-    results.push({ id: record.id, health });
-    next = upsertRuntimePlugin(next, { ...record, health });
+    const health = await checkRuntimePackageHealth(record, { runtimeRegistry: registry });
+    results.push({ id: record.id, type: record.type, health });
+    next = upsertRuntimePackage(next, { ...record, health });
   }
   if (records.length) await writeRuntimeRegistry(next);
-  const payload = { healthy: results.every((item) => item.health.status === 'healthy'), plugins: results };
+  const payload = { healthy: results.every((item) => item.health.status === 'healthy'), packages: results };
+  if (type === 'plugin') payload.plugins = results;
   print(id ? results[0] : payload);
   if (!options.noExitCode && results.some((item) => item.health.status === 'failed')) process.exitCode = 1;
   return payload;
 }
 
-async function repairPlugin(id, options) {
+async function repairPackage(type, id, options) {
   const registry = await readRuntimeRegistry();
-  const current = getRuntimePlugin(registry, id);
-  if (!current) throw new Error('plugin is not installed: ' + id);
-  const health = await checkRuntimeHealth(current, { runtimeRegistry: registry });
-  if (health.status === 'healthy') return print({ id, repaired: false, reason: 'healthy' });
-  return updatePlugin(id, current.version, { ...options, channel: options.channel || current.channel, forceRepair: true });
+  const current = getRuntimePackage(registry, type, id);
+  if (!current) throw new Error(`runtime package is not installed: ${type}:${id}`);
+  const health = await checkRuntimePackageHealth(current, { runtimeRegistry: registry });
+  if (health.status === 'healthy') return print({ id, type, repaired: false, reason: 'healthy' });
+  return updatePackage(type, id, current.version, { ...options, channel: options.channel || current.channel, forceRepair: true });
 }
 
-async function historyPlugin(id) {
+async function historyPackage(type, id) {
   const registry = await readRuntimeRegistry();
-  const item = getRuntimePlugin(registry, id, { includeRemoved: true });
-  if (!item) throw new Error('plugin has no runtime history: ' + id);
-  print({ id, history: item.history || [] });
+  const item = getRuntimePackage(registry, type, id, { includeRemoved: true });
+  if (!item) throw new Error(`runtime package has no history: ${type}:${id}`);
+  print({ id, type, history: item.history || [] });
+}
+
+function typedSpec(raw, defaultType) {
+  return parsePackageSpec(raw, '0.1.0', defaultType);
+}
+
+async function packageCommand(command, options, includeRemoved) {
+  const typed = PACKAGE_TYPES.includes(command);
+  const type = typed ? command : option('--type');
+  const normalizedType = type ? assertPackageType(type) : null;
+  const action = process.argv[3] || 'list';
+  const raw = positional(4);
+
+  if (action === 'list') return listPackages(normalizedType, includeRemoved);
+  if (action === 'status') {
+    if (!raw) return statusPackage(normalizedType, undefined, includeRemoved);
+    const parsed = typedSpec(raw, normalizedType || 'plugin');
+    return statusPackage(parsed.type, parsed.id, includeRemoved);
+  }
+  if (action === 'add' || action === 'install') return print(await installFromSpec(raw, { ...options, type: normalizedType || 'plugin' }));
+  if (action === 'health' || action === 'doctor') {
+    if (!raw) return healthPackages(normalizedType, undefined);
+    const parsed = typedSpec(raw, normalizedType || 'plugin');
+    return healthPackages(parsed.type, parsed.id);
+  }
+  if (!raw) throw new Error(`runtime package id is required for ${action}`);
+  const parsed = typedSpec(raw, normalizedType || 'plugin');
+  if (action === 'remove' || action === 'uninstall') return removePackage(parsed.type, parsed.id);
+  if (action === 'update') return updatePackage(parsed.type, parsed.id, positional(5), options);
+  if (action === 'rollback') return rollbackPackage(parsed.type, parsed.id);
+  if (action === 'repair') return repairPackage(parsed.type, parsed.id, options);
+  if (action === 'enable') return setPackageEnabled(parsed.type, parsed.id, true);
+  if (action === 'disable') return setPackageEnabled(parsed.type, parsed.id, false);
+  if (action === 'history') return historyPackage(parsed.type, parsed.id);
+  throw new Error(`unknown ${command} action: ${action}`);
 }
 
 async function main() {
@@ -274,59 +358,51 @@ async function main() {
   const includeRemoved = process.argv.includes('--all');
   const options = { catalog, root, channel, dryRun, force };
 
-  if (command === 'plugin') {
-    const action = process.argv[3] || 'list';
-    const id = positional(4);
-    if (action === 'list') return listPlugins(includeRemoved);
-    if (action === 'status') return statusPlugin(id, includeRemoved);
-    if (action === 'add' || action === 'install') return print(await installFromSpec(id, options));
-    if (action === 'remove') return removePlugin(id);
-    if (action === 'update') return updatePlugin(id, positional(5), options);
-    if (action === 'rollback') return rollbackPlugin(id);
-    if (action === 'health' || action === 'doctor') return healthPlugins(id);
-    if (action === 'repair') return repairPlugin(id, options);
-    if (action === 'enable') return setPluginEnabled(id, true);
-    if (action === 'disable') return setPluginEnabled(id, false);
-    if (action === 'history') return historyPlugin(id);
-    throw new Error('unknown plugin action: ' + action);
+  if (command === 'package' || PACKAGE_TYPES.includes(command)) {
+    return packageCommand(command, options, includeRemoved);
   }
 
   if (command === 'check-registry') {
     const registry = await loadRegistryFile(catalog);
     const result = validateRegistry(registry);
     if (result.errors.length) throw new Error(result.errors.join('; '));
-    if (registry.plugins.length) {
-      const first = resolvePlugin(registry, registry.plugins[0].id, registry.plugins[0].version);
-      const verification = verifyResolvedPlugin(first);
+    const seenTypes = new Set();
+    for (const item of registry.plugins || []) {
+      const type = inferPackageType(item);
+      if (seenTypes.has(type)) continue;
+      const resolved = resolvePackage(registry, type, item.id, item.version, { channel: item.channel || item.release_channel || 'stable' });
+      const verification = verifyResolvedPackage(resolved);
       if (!verification.ok) throw new Error(verification.errors.join('; '));
+      seenTypes.add(type);
     }
-    console.log('Runtime registry check passed: ' + registry.plugins.length + ' plugins');
+    console.log(`Runtime registry check passed: ${(registry.plugins || []).length} catalog records, ${seenTypes.size} package type(s)`);
     return;
   }
 
   if (command === 'resolve') {
     const registry = await loadRegistryFile(catalog);
-    const spec = parsePluginSpec(process.argv[3], channel ? '*' : registry.defaults?.plugin_version);
-    print(resolvePlugin(registry, spec.id, spec.version, { channel }));
+    const parsed = parsePackageSpec(process.argv[3], channel ? '*' : registry.defaults?.plugin_version, option('--type', 'plugin'));
+    print(resolvePackage(registry, parsed.type, parsed.id, parsed.version, { channel }));
     return;
   }
 
   if (command === 'install') {
-    const result = await installFromSpec(process.argv[3], options);
+    const parsed = parsePackageSpec(process.argv[3], undefined, option('--type', 'plugin'));
+    const result = await installFromSpec(process.argv[3], { ...options, type: parsed.type });
     print(result);
-    if (!dryRun) console.log('Install verified. Restart the client to activate the plugin.');
+    if (!dryRun) console.log('Install verified. Restart the client to activate the runtime package.');
     return;
   }
 
   if (command === 'load') {
-    const spec = parsePluginSpec(process.argv[3]);
-    print(await loadInstalledPlugin(spec.id, { root, version: spec.version }));
+    const spec = parsePackageSpec(process.argv[3], '0.1.0', option('--type', 'plugin'));
+    print(await loadInstalledPackage(spec.type, spec.id, { root, version: spec.version }));
     return;
   }
 
   if (command === 'lock') {
-    const spec = parsePluginSpec(process.argv[3]);
-    print(await readInstallLock(pluginPath(spec.id, root)));
+    const spec = parsePackageSpec(process.argv[3], '0.1.0', option('--type', 'plugin'));
+    print(await readInstallLock(packagePath(spec.type, spec.id, root || undefined)));
     return;
   }
 

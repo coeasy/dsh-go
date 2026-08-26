@@ -1,122 +1,154 @@
-#!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { compareVersions, satisfiesVersion } from './semver.mjs';
+import {
+  assertPackageType,
+  inferPackageType,
+  normalizePackageDependency,
+  packageKey,
+  parsePackageSpec,
+} from './package-model.mjs';
 
 export function parsePluginSpec(spec, defaultVersion = '0.1.0') {
-  const raw = String(spec || '').trim();
-  if (!raw) throw new Error('plugin spec is required');
-  const at = raw.lastIndexOf('@');
-  if (at > 0) return { id: raw.slice(0, at), version: raw.slice(at + 1) || defaultVersion };
-  return { id: raw, version: defaultVersion };
+  const parsed = parsePackageSpec(spec, defaultVersion, 'plugin');
+  return { id: parsed.id, version: parsed.version };
 }
 
-function releaseChannel(plugin) {
-  return plugin.channel || plugin.release_channel || 'stable';
+function releaseChannel(pkg) {
+  return pkg.channel || pkg.release_channel || 'stable';
 }
 
-export function resolvePlugin(registry, id, version = registry?.defaults?.plugin_version || '0.1.0', options = {}) {
+function defaultRegistryVersion(registry, type) {
+  return registry?.defaults?.[`${type}_version`] || registry?.defaults?.plugin_version || '0.1.0';
+}
+
+export function resolvePackage(registry, type, id, version, options = {}) {
   if (registry?.registry_version !== 3) throw new Error('Registry V3 is required');
-  const range = version || '*';
+  const normalizedType = assertPackageType(type);
+  const range = version || defaultRegistryVersion(registry, normalizedType) || '*';
   const channel = options.channel || 'stable';
   const idKey = String(id || '').toLowerCase();
   const candidates = (registry.plugins || [])
+    .filter((item) => inferPackageType(item) === normalizedType)
     .filter((item) => String(item.id || '').toLowerCase() === idKey)
     .filter((item) => releaseChannel(item) === channel)
     .filter((item) => satisfiesVersion(item.version, range))
     .sort((a, b) => compareVersions(b.version, a.version));
-  const plugin = candidates[0];
-  if (!plugin) throw new Error(`Plugin not found: ${id}@${range} [${channel}]`);
+  const pkg = candidates[0];
+  if (!pkg) throw new Error(`Runtime package not found: ${normalizedType}:${id}@${range} [${channel}]`);
 
   return {
-    id: plugin.id,
-    version: plugin.version,
-    channel: releaseChannel(plugin),
-    repo: plugin.source.repo,
-    ref: plugin.source.ref,
-    commit: plugin.source.commit,
-    archive_url: plugin.source.archive_url,
-    integrity: plugin.artifact.integrity,
-    runtime: plugin.runtime,
-    capabilities: plugin.capabilities || [],
-    dependencies: plugin.dependencies || [],
-    metadata: plugin.metadata || {},
-    source: plugin.source,
-    artifact: plugin.artifact,
+    id: pkg.id,
+    type: normalizedType,
+    version: pkg.version,
+    channel: releaseChannel(pkg),
+    repo: pkg.source.repo,
+    ref: pkg.source.ref,
+    commit: pkg.source.commit,
+    archive_url: pkg.source.archive_url,
+    integrity: pkg.artifact.integrity,
+    runtime: pkg.runtime,
+    capabilities: pkg.capabilities || [],
+    dependencies: pkg.dependencies || [],
+    metadata: pkg.metadata || {},
+    source: pkg.source,
+    artifact: pkg.artifact,
   };
 }
 
-export function normalizeDependency(dependency) {
-  if (typeof dependency === 'string') {
-    const at = dependency.lastIndexOf('@');
-    return at > 0
-      ? { id: dependency.slice(0, at), range: dependency.slice(at + 1) || '*', optional: false }
-      : { id: dependency, range: '*', optional: false };
-  }
-  if (!dependency?.id) throw new Error('dependency id is required');
-  return {
-    id: dependency.id,
-    range: dependency.range || dependency.version || '*',
-    optional: dependency.optional === true,
-  };
+export function resolvePlugin(registry, id, version = registry?.defaults?.plugin_version || '0.1.0', options = {}) {
+  return resolvePackage(registry, 'plugin', id, version, options);
 }
 
-export function buildDependencyPlan(registry, rootPlugin, options = {}) {
+export function normalizeDependency(dependency, defaultType = 'plugin') {
+  return normalizePackageDependency(dependency, defaultType);
+}
+
+function graphKey(pkg) {
+  return pkg.type === 'plugin' ? pkg.id : packageKey(pkg.type, pkg.id);
+}
+
+function resolveDependency(registry, dependency, options) {
+  return resolvePackage(registry, dependency.type, dependency.id, dependency.range, options);
+}
+
+export function buildDependencyPlan(registry, rootPackage, options = {}) {
   const selected = new Map();
   const constraints = new Map();
   const graph = {};
   const order = [];
   const visiting = [];
 
-  function visit(plugin, requestedRange = plugin.version) {
-    const cycleIndex = visiting.indexOf(plugin.id);
-    if (cycleIndex >= 0) throw new Error(`dependency cycle detected: ${[...visiting.slice(cycleIndex), plugin.id].join(' -> ')}`);
+  function visit(pkg, requestedRange = pkg.version) {
+    const key = packageKey(pkg.type || 'plugin', pkg.id);
+    const cycleIndex = visiting.indexOf(key);
+    if (cycleIndex >= 0) {
+      throw new Error(`dependency cycle detected: ${[...visiting.slice(cycleIndex), key].join(' -> ')}`);
+    }
 
-    const existing = selected.get(plugin.id);
+    const existing = selected.get(key);
     if (existing) {
       if (!satisfiesVersion(existing.version, requestedRange)) {
-        throw new Error(`dependency conflict: ${plugin.id}@${existing.version} does not satisfy ${requestedRange}`);
+        throw new Error(`dependency conflict: ${key}@${existing.version} does not satisfy ${requestedRange}`);
       }
       return existing;
     }
 
-    selected.set(plugin.id, plugin);
-    constraints.set(plugin.id, requestedRange);
-    visiting.push(plugin.id);
-    graph[plugin.id] = [];
+    selected.set(key, pkg);
+    constraints.set(key, requestedRange);
+    visiting.push(key);
+    const outputKey = graphKey(pkg);
+    graph[outputKey] = [];
 
-    for (const rawDependency of plugin.dependencies || []) {
-      const dependency = normalizeDependency(rawDependency);
+    for (const rawDependency of pkg.dependencies || []) {
+      const dependency = normalizeDependency(rawDependency, 'plugin');
       let resolved;
       try {
-        resolved = resolvePlugin(registry, dependency.id, dependency.range, { channel: options.channel || plugin.channel || 'stable' });
+        resolved = resolveDependency(registry, dependency, {
+          channel: options.channel || pkg.channel || 'stable',
+        });
       } catch (error) {
         if (dependency.optional) continue;
         throw error;
       }
-      const previousConstraint = constraints.get(resolved.id);
+      const dependencyKey = packageKey(resolved.type, resolved.id);
+      const previousConstraint = constraints.get(dependencyKey);
       if (previousConstraint && !satisfiesVersion(resolved.version, previousConstraint)) {
-        throw new Error(`dependency conflict: ${dependency.id} cannot satisfy ${previousConstraint} and ${dependency.range}`);
+        throw new Error(`dependency conflict: ${dependencyKey} cannot satisfy ${previousConstraint} and ${dependency.range}`);
       }
-      graph[plugin.id].push({ id: dependency.id, range: dependency.range, version: resolved.version, optional: dependency.optional });
+      graph[outputKey].push({
+        type: resolved.type,
+        id: dependency.id,
+        range: dependency.range,
+        version: resolved.version,
+        optional: dependency.optional,
+      });
       visit(resolved, dependency.range);
     }
 
     visiting.pop();
-    order.push(plugin);
-    return plugin;
+    order.push(pkg);
+    return pkg;
   }
 
-  visit(rootPlugin);
+  visit({ ...rootPackage, type: assertPackageType(rootPackage.type || 'plugin') });
   const installed = options.installed || [];
   const replacements = order
-    .filter((plugin) => {
-      const pluginKey = String(plugin.id || '').toLowerCase();
-      const current = installed.find((item) => String(item.id || '').toLowerCase() === pluginKey && item.state !== 'removed');
-      return current && (current.version !== plugin.version || current.commit !== plugin.commit);
+    .filter((pkg) => {
+      const key = packageKey(pkg.type, pkg.id);
+      const current = installed.find((item) => packageKey(item.type || 'plugin', item.id) === key && item.state !== 'removed');
+      return current && (current.version !== pkg.version || current.commit !== pkg.commit);
     })
-    .map((plugin) => plugin.id);
-  return { root: rootPlugin.id, channel: options.channel || rootPlugin.channel || 'stable', order, graph, replacements };
+    .map((pkg) => pkg.type === 'plugin' ? pkg.id : packageKey(pkg.type, pkg.id));
+
+  return {
+    root: rootPackage.type === 'plugin' || !rootPackage.type ? rootPackage.id : packageKey(rootPackage.type, rootPackage.id),
+    root_type: assertPackageType(rootPackage.type || 'plugin'),
+    channel: options.channel || rootPackage.channel || 'stable',
+    order,
+    graph,
+    replacements,
+  };
 }
 
 export async function loadRegistryFile(file = 'catalog/registry-v3.json') {
