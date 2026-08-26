@@ -1,13 +1,22 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { runtimeRoot } from './registry.mjs';
+import { withFileLock } from './file-lock.mjs';
 
 const NAME_RE = /^[A-Za-z0-9_.-]{1,160}$/;
 
 export function secretStorePaths() {
   const base = join(runtimeRoot(), 'secrets');
-  return { base, key: join(base, 'master.key'), data: join(base, 'secrets.json.enc') };
+  const key = join(base, 'master.key');
+  const data = join(base, 'secrets.json.enc');
+  return {
+    base,
+    key,
+    data,
+    key_lock: `${key}.lock`,
+    data_lock: `${data}.lock`,
+  };
 }
 
 function assertSecretName(name) {
@@ -16,22 +25,36 @@ function assertSecretName(name) {
   return normalized;
 }
 
+async function readMasterKey(paths) {
+  const raw = await readFile(paths.key, 'utf8');
+  const key = Buffer.from(raw.trim(), 'base64');
+  if (key.byteLength !== 32) throw new Error('invalid DSH secret master key');
+  return key;
+}
+
 async function masterKey() {
   const paths = secretStorePaths();
   try {
-    const raw = await readFile(paths.key, 'utf8');
-    const key = Buffer.from(raw.trim(), 'base64');
-    if (key.byteLength !== 32) throw new Error('invalid DSH secret master key');
-    return key;
+    return await readMasterKey(paths);
   } catch (error) {
     if (error?.code !== 'ENOENT') throw error;
+  }
+
+  return withFileLock(paths.key_lock, async () => {
+    try {
+      return await readMasterKey(paths);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+
     await mkdir(paths.base, { recursive: true });
     const key = randomBytes(32);
     const temp = `${paths.key}.tmp-${process.pid}-${Date.now()}`;
     await writeFile(temp, `${key.toString('base64')}\n`, { encoding: 'utf8', mode: 0o600 });
     await rename(temp, paths.key);
+    try { await chmod(paths.key, 0o600); } catch { /* Windows ACLs are managed by the OS */ }
     return key;
-  }
+  });
 }
 
 async function readSecrets() {
@@ -71,6 +94,7 @@ async function writeSecrets(value) {
   const temp = `${paths.data}.tmp-${process.pid}-${Date.now()}`;
   await writeFile(temp, `${JSON.stringify(payload)}\n`, { encoding: 'utf8', mode: 0o600 });
   await rename(temp, paths.data);
+  try { await chmod(paths.data, 0o600); } catch { /* Windows ACLs are managed by the OS */ }
 }
 
 export async function listSecrets() {
@@ -87,17 +111,23 @@ export async function setSecret(name, value) {
   const normalized = assertSecretName(name);
   const text = String(value ?? '');
   if (!text) throw new Error('secret value cannot be empty');
-  const values = await readSecrets();
-  values[normalized] = text;
-  await writeSecrets(values);
-  return { name: normalized, stored: true };
+  const paths = secretStorePaths();
+  return withFileLock(paths.data_lock, async () => {
+    const values = await readSecrets();
+    values[normalized] = text;
+    await writeSecrets(values);
+    return { name: normalized, stored: true };
+  });
 }
 
 export async function deleteSecret(name) {
   const normalized = assertSecretName(name);
-  const values = await readSecrets();
-  const existed = Object.prototype.hasOwnProperty.call(values, normalized);
-  delete values[normalized];
-  if (existed) await writeSecrets(values);
-  return { name: normalized, deleted: existed };
+  const paths = secretStorePaths();
+  return withFileLock(paths.data_lock, async () => {
+    const values = await readSecrets();
+    const existed = Object.prototype.hasOwnProperty.call(values, normalized);
+    delete values[normalized];
+    if (existed) await writeSecrets(values);
+    return { name: normalized, deleted: existed };
+  });
 }
