@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 26 Aug 2026 09:35:43 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 26 Aug 2026 13:29:12 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 DSH-ReasonixUI</title>
       <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-26T08:04:17Z</guid>
-      <pubDate>Wed, 26 Aug 2026 08:04:17 GMT</pubDate>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-26T10:02:40Z</guid>
+      <pubDate>Wed, 26 Aug 2026 10:02:40 GMT</pubDate>
       <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
@@ -96,6 +96,13 @@
       <guid isPermaLink="false">dsh-tui-ecosystem/dsh-code-memory@2026-08-24T20:50:34Z</guid>
       <pubDate>Mon, 24 Aug 2026 20:50:34 GMT</pubDate>
       <description></description>
+    </item>
+    <item>
+      <title>🆕 dsh-tui-mcp-manager</title>
+      <link>https://github.com/0N3-0/dsh-tui-mcp-manager</link>
+      <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-26T12:26:12Z</guid>
+      <pubDate>Wed, 26 Aug 2026 12:26:12 GMT</pubDate>
+      <description>dsh tui mcp manager 面向 dsh TUI 的原生 MCP Server 管理插件。输入 /mcp manager 后，管理器通过宿主提供的 managed dialog 显示为聊天界面上的浮窗，并直接编辑当前 profile 的 cordis.patch.yml 。 功能 浮窗即时显示服务器状态；连接中的工具数显示为 ... ，可用 ↻ 刷新 获取最新数量。 添加、复制、编辑、</description>
     </item>
     <item>
       <title>🆕 dsh-pro-vision-std</title>
@@ -138,13 +145,6 @@
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-herdr@2026-08-21T11:25:39Z</guid>
       <pubDate>Fri, 21 Aug 2026 11:25:39 GMT</pubDate>
       <description></description>
-    </item>
-    <item>
-      <title>🆕 dsh-tui-mcp-manager</title>
-      <link>https://github.com/0N3-0/dsh-tui-mcp-manager</link>
-      <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-25T15:15:28Z</guid>
-      <pubDate>Tue, 25 Aug 2026 15:15:28 GMT</pubDate>
-      <description>Native dsh-TUI dialog for managing file-backed MCP Loader rows in the active profile.</description>
     </item>
     <item>
       <title>🆕 DSH PPT</title>
