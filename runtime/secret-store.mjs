@@ -220,19 +220,11 @@ async function existingMasterKey(paths) {
 
 async function createMasterKey(paths, backend) {
   const key = randomBytes(32);
-  if (backend === 'file') return { key: await writeFileMasterKey(paths, key), backend: 'file' };
-  if (backend === 'dpapi') return { key: await storeDpapiKey(paths, key), backend: 'dpapi' };
-  if (backend === 'secret-service') return { key: await storeSecretServiceKey(paths, key), backend: 'secret-service' };
-
-  if (backend === 'auto') {
-    if (process.platform === 'win32') {
-      try { return { key: await storeDpapiKey(paths, key), backend: 'dpapi' }; } catch { /* fall back below */ }
-    }
-    if (process.platform === 'linux') {
-      try { return { key: await storeSecretServiceKey(paths, key), backend: 'secret-service' }; } catch { /* fall back below */ }
-    }
+  if (backend === 'file' || backend === 'auto') {
     return { key: await writeFileMasterKey(paths, key), backend: 'file' };
   }
+  if (backend === 'dpapi') return { key: await storeDpapiKey(paths, key), backend: 'dpapi' };
+  if (backend === 'secret-service') return { key: await storeSecretServiceKey(paths, key), backend: 'secret-service' };
   throw new Error(`unsupported DSH secret key backend: ${backend}`);
 }
 
@@ -263,10 +255,13 @@ export async function secretStoreStatus() {
   const marker = await readBackendMarker(paths);
   let active = marker?.backend || null;
   if (!active && await exists(paths.key)) active = 'file';
+  const native = process.platform === 'win32' ? 'dpapi' : process.platform === 'linux' ? 'secret-service' : null;
   return {
     configured_backend: configured,
     active_backend: active || 'uninitialized',
     native_backend: active === 'dpapi' || active === 'secret-service',
+    native_backend_available: native,
+    native_backend_opt_in: Boolean(native) && configured === 'auto' && !marker,
     encrypted_data_present: await exists(paths.data),
     legacy_file_key: active === 'file',
   };
