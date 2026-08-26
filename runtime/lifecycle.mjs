@@ -19,7 +19,7 @@ const allowedTransitions = Object.freeze({
   verifying: ['active', 'failed', 'disabled'],
   active: ['installing', 'verifying', 'disabled', 'rollback', 'removed', 'failed'],
   disabled: ['installed', 'installing', 'removed'],
-  failed: ['installing', 'rollback', 'removed'],
+  failed: ['installing', 'verifying', 'rollback', 'removed'],
   rollback: ['installed', 'verifying', 'failed'],
   removed: ['installing'],
 });

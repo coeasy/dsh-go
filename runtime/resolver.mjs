@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { ensureRegistryCache, resolveRegistrySource } from './catalog.mjs';
 import { compareVersions, satisfiesVersion } from './semver.mjs';
 import {
   assertPackageType,
@@ -189,6 +189,18 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
   };
 }
 
+async function readRegistrySourceFile(source) {
+  const file = await ensureRegistryCache(source);
+  return JSON.parse(await readFile(file, 'utf8'));
+}
+
 export async function loadRegistryFile(file = 'catalog/registry-v3.json') {
-  return JSON.parse(await readFile(resolve(process.cwd(), file), 'utf8'));
+  try {
+    const source = await resolveRegistrySource(file);
+    return await readRegistrySourceFile(source);
+  } catch (error) {
+    if (error?.code !== 'ENOENT' || file !== 'catalog/registry-v3.json') throw error;
+    const fallback = await resolveRegistrySource();
+    return readRegistrySourceFile(fallback);
+  }
 }

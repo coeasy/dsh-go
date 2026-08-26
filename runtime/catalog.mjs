@@ -43,16 +43,21 @@ export async function ensureRegistryCache(source, options = {}) {
   if (!/^https?:\/\//i.test(resolvedSource)) return resolve(resolvedSource);
   const file = resolve(options.cacheFile || registryCacheFile());
   await mkdir(dirname(file), { recursive: true });
-  const response = await fetch(resolvedSource, {
-    headers: { Accept: 'application/json', 'User-Agent': 'dsh-runtime-v3' },
-    signal: AbortSignal.timeout(options.timeout || 30000),
-  });
-  if (!response.ok) throw new Error(`registry fetch failed: HTTP ${response.status}`);
-  const text = await response.text();
-  const parsed = JSON.parse(text);
-  if (parsed?.registry_version !== 3 || !Array.isArray(parsed?.plugins)) throw new Error('remote registry is not Registry V3');
-  const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
-  await writeFile(temp, text.endsWith('\n') ? text : `${text}\n`, 'utf8');
-  await rename(temp, file);
-  return file;
+  try {
+    const response = await fetch(resolvedSource, {
+      headers: { Accept: 'application/json', 'User-Agent': 'dsh-runtime-v3' },
+      signal: AbortSignal.timeout(options.timeout || 30000),
+    });
+    if (!response.ok) throw new Error(`registry fetch failed: HTTP ${response.status}`);
+    const text = await response.text();
+    const parsed = JSON.parse(text);
+    if (parsed?.registry_version !== 3 || !Array.isArray(parsed?.plugins)) throw new Error('remote registry is not Registry V3');
+    const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
+    await writeFile(temp, text.endsWith('\n') ? text : `${text}\n`, 'utf8');
+    await rename(temp, file);
+    return file;
+  } catch (error) {
+    if (options.allowStale !== false && await exists(file)) return file;
+    throw error;
+  }
 }

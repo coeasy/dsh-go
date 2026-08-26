@@ -25,9 +25,11 @@ export function disablePackage(pkg) {
 export function activatePackage(pkg, binding = pkg.binding || null) {
   if (!pkg.enabled) throw new Error(`cannot activate disabled runtime package: ${label(pkg)}`);
   let next = pkg;
-  if (next.state === 'installed') next = transitionPackage(next, 'verifying', { event: 'activation-verify' });
+  if (next.state === 'installed' || next.state === 'failed') {
+    next = transitionPackage(next, 'verifying', { event: 'activation-verify' });
+  }
   next = transitionPackage(next, 'active', { event: 'activated' });
-  return { ...next, activated: true, restart_required: false, binding };
+  return { ...next, activated: true, restart_required: false, health: null, binding };
 }
 
 export function deactivatePackage(pkg) {

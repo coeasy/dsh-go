@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { createRuntimePackageRecord, recordRuntimeEvent } from './lifecycle.mjs';
 import { assertPackageType, packageKey, safePackageId } from './package-model.mjs';
+import { readInstallLock } from './verifier.mjs';
 
 export const RUNTIME_REGISTRY_SCHEMA_VERSION = 3;
 
@@ -49,7 +50,16 @@ function normalizeRecord(item) {
     health: item.health || null,
     rollback: item.rollback || null,
     binding: item.binding || null,
+    capabilities: Array.isArray(item.capabilities) ? item.capabilities : [],
     dependencies: Array.isArray(item.dependencies) ? item.dependencies : [],
+    permissions: Array.isArray(item.permissions) ? item.permissions : [],
+    compatibility: item.compatibility && typeof item.compatibility === 'object' ? item.compatibility : {},
+    conflicts: Array.isArray(item.conflicts) ? item.conflicts : [],
+    replaces: Array.isArray(item.replaces) ? item.replaces : [],
+    provides: Array.isArray(item.provides) ? item.provides : [],
+    publisher: item.publisher || null,
+    security: item.security || null,
+    type_config: item.type_config || null,
     history: Array.isArray(item.history) && item.history.length ? item.history.slice(-100) : base.history,
   };
 }
@@ -61,6 +71,47 @@ function withCompatibility(registry) {
     packages,
     plugins: packages.filter((item) => item.type === 'plugin'),
   };
+}
+
+async function hydrateRecordFromInstallLock(item) {
+  if (!item?.path || item.state === 'removed') return item;
+  try {
+    const lock = await readInstallLock(resolve(item.path));
+    const type = assertPackageType(item.type || 'plugin');
+    const id = safePackageId(item.id);
+    if (lock.type !== type || lock.id !== id) return item;
+    if (item.version && lock.version !== item.version) return item;
+    if (item.commit && String(lock.source.commit).toLowerCase() !== String(item.commit).toLowerCase()) return item;
+    return {
+      ...item,
+      version: lock.version,
+      channel: lock.channel || item.channel || 'stable',
+      source: lock.source || item.source,
+      commit: lock.source.commit,
+      runtime: lock.runtime || {},
+      capabilities: lock.capabilities || [],
+      dependencies: lock.dependencies || [],
+      permissions: lock.permissions || [],
+      compatibility: lock.compatibility || {},
+      publisher: lock.publisher || null,
+      security: lock.security || null,
+      conflicts: lock.conflicts || [],
+      replaces: lock.replaces || [],
+      provides: lock.provides || [],
+      type_config: lock.type_config || null,
+      installed_at: lock.installed_at || item.installed_at,
+    };
+  } catch {
+    return item;
+  }
+}
+
+async function hydrateRegistry(registry) {
+  const packages = [];
+  for (const item of registry.packages || []) {
+    packages.push(normalizeRecord(await hydrateRecordFromInstallLock(item)));
+  }
+  return withCompatibility({ ...registry, packages });
 }
 
 export function migrateRuntimeRegistry(data) {
@@ -107,7 +158,7 @@ export function migrateRuntimeRegistry(data) {
 
 export async function readRuntimeRegistry(file = registryPath()) {
   try {
-    return migrateRuntimeRegistry(JSON.parse(await readFile(file, 'utf8')));
+    return hydrateRegistry(migrateRuntimeRegistry(JSON.parse(await readFile(file, 'utf8'))));
   } catch (error) {
     if (error?.code === 'ENOENT') {
       return withCompatibility({ schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION, generation: 0, packages: [] });
@@ -121,7 +172,7 @@ export async function writeRuntimeRegistry(registry, file = registryPath()) {
   const seen = new Set();
   const packages = [];
   for (const item of source) {
-    const normalized = normalizeRecord(item);
+    const normalized = normalizeRecord(await hydrateRecordFromInstallLock(item));
     const key = packageKey(normalized.type, normalized.id);
     if (seen.has(key)) throw new Error(`duplicate runtime package: ${key}`);
     seen.add(key);
