@@ -132,18 +132,21 @@ function cachedNativeKey(paths, backend) {
   return nativeMasterKeyCache.get(nativeCacheKey(paths, backend)) || null;
 }
 
+// On Windows PowerShell, ConvertFrom-SecureString without -Key uses DPAPI
+// for the current Windows user. The plaintext base64 master key is supplied
+// only over stdin and is never placed in the process command line.
 const DPAPI_PROTECT_SCRIPT = [
   '$value = [Console]::In.ReadToEnd().Trim()',
-  '$bytes = [Convert]::FromBase64String($value)',
-  '$protected = [System.Security.Cryptography.ProtectedData]::Protect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
-  '[Console]::Out.Write([Convert]::ToBase64String($protected))',
+  '$secure = ConvertTo-SecureString -String $value -AsPlainText -Force',
+  '$wrapped = ConvertFrom-SecureString -SecureString $secure',
+  '[Console]::Out.Write($wrapped)',
 ].join('; ');
 
 const DPAPI_UNPROTECT_SCRIPT = [
-  '$value = [Console]::In.ReadToEnd().Trim()',
-  '$bytes = [Convert]::FromBase64String($value)',
-  '$plain = [System.Security.Cryptography.ProtectedData]::Unprotect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
-  '[Console]::Out.Write([Convert]::ToBase64String($plain))',
+  '$wrapped = [Console]::In.ReadToEnd().Trim()',
+  '$secure = ConvertTo-SecureString -String $wrapped',
+  '$bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)',
+  'try { [Console]::Out.Write([System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)) } finally { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }',
 ].join('; ');
 
 async function storeDpapiKey(paths, key, options = {}) {
