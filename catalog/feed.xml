@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 26 Aug 2026 03:47:07 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 26 Aug 2026 06:16:46 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -96,6 +96,20 @@
       <guid isPermaLink="false">dsh-tui-ecosystem/dsh-code-memory@2026-08-24T20:50:34Z</guid>
       <pubDate>Mon, 24 Aug 2026 20:50:34 GMT</pubDate>
       <description></description>
+    </item>
+    <item>
+      <title>🆕 dsh-pro-vision-std</title>
+      <link>https://github.com/lasdrder0705/dsh-pro-vision-std</link>
+      <guid isPermaLink="false">lasdrder0705/dsh-pro-vision-std@2026-08-26T06:01:06Z</guid>
+      <pubDate>Wed, 26 Aug 2026 06:01:06 GMT</pubDate>
+      <description>dsh pro vision std 中文 · English Compatible with dsh std Community v0.15. A dsh std rewrite of dsh pro vision. Separate repository: the original Cordis llm/stream interceptor is not replaced. This pack</description>
+    </item>
+    <item>
+      <title>🆕 dsh-chat-zone-std</title>
+      <link>https://github.com/lasdrder0705/dsh-chat-zone-std</link>
+      <guid isPermaLink="false">lasdrder0705/dsh-chat-zone-std@2026-08-26T06:00:55Z</guid>
+      <pubDate>Wed, 26 Aug 2026 06:00:55 GMT</pubDate>
+      <description>dsh chat zone std 中文 · English Compatible with dsh std Community v0.15. A dsh std rewrite of dsh chat zone. Separate repository: the original Cordis sidebar plugin is not replaced. This package declar</description>
     </item>
     <item>
       <title>🆕 DSH Music Player (TUI)</title>
@@ -201,20 +215,6 @@
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-subagents@2026-08-17T12:50:52Z</guid>
       <pubDate>Mon, 17 Aug 2026 12:50:52 GMT</pubDate>
       <description>dsh tui subagents dsh TUI 的子 agent 会话视图： /subagents 列出当前会话的子 agent，Enter 进入全屏轨迹视图， 实时 跟着子 agent 的思考、工具调用和回复滚动；对 可续（continuable） 子 agent 可以直接发消息纠偏、中断当前轮。对应上游 issue dsh TUI 223。 English below. 用法 轨迹视图按键</description>
-    </item>
-    <item>
-      <title>🆕 Checkpoints</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-checkpoints</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-checkpoints@2026-08-17T12:51:20Z</guid>
-      <pubDate>Mon, 17 Aug 2026 12:51:20 GMT</pubDate>
-      <description></description>
-    </item>
-    <item>
-      <title>🆕 Keybindings Cheatsheet</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-keys</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-keys@2026-08-17T12:52:08Z</guid>
-      <pubDate>Mon, 17 Aug 2026 12:52:08 GMT</pubDate>
-      <description></description>
     </item>
   </channel>
 </rss>
