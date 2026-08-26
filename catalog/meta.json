@@ -1,11 +1,11 @@
 {
   "last_sync": {
-    "at": "2026-08-26T00:35:21.914Z",
+    "at": "2026-08-26T01:57:05.323Z",
     "mode": "full",
-    "duration_ms": 193757,
-    "scanned": 4255,
-    "included": 3300,
-    "skipped": 105,
+    "duration_ms": 327693,
+    "scanned": 4389,
+    "included": 3303,
+    "skipped": 200,
     "data_changed": true,
     "errors": []
   },
@@ -229,32 +229,42 @@
       "skipped": 105,
       "data_changed": true,
       "errors": []
+    },
+    {
+      "at": "2026-08-26T01:57:05.323Z",
+      "mode": "full",
+      "duration_ms": 327693,
+      "scanned": 4389,
+      "included": 3303,
+      "skipped": 200,
+      "data_changed": true,
+      "errors": []
     }
   ],
   "registry_version": 3,
   "registry": {
     "schema_version": "3.0.0",
     "path": "catalog/registry-v3.json",
-    "count": 11793,
-    "excluded_count": 42,
-    "source_catalog_etag": "cd32acd62b50decc",
-    "content_hash": "beb4802ce6dd447c2a582e74dd77e1640d5a603afd446a83dbc9fdc79d356958",
-    "schema_hash": "871521a58a5d6ca6e7d0055cfd68275fcd413cc3386e1159954a70de7af8fa1a",
-    "generated_at": "2026-08-26T00:53:31.213Z",
+    "count": 11812,
+    "excluded_count": 43,
+    "source_catalog_etag": "d97b42f66aa75673",
+    "content_hash": "598429ab132700919f228fcbc38d59c077f99ae934d10392cb1c216816f6acb2",
+    "schema_hash": "5ee00d307b6cd601c243c3ab9d3bbb076cd2235cd392c745b9b53dbe133c9842",
+    "generated_at": "2026-08-26T02:18:02.501Z",
     "discovery_mode": "complete",
     "discovery_transport": "graphql-topic",
-    "discovered_count": 11835
+    "discovered_count": 11855
   },
   "pipeline": {
     "stage": "sync-v3",
     "verified": true,
     "frozen": true,
     "registry_changed": true,
-    "run_at": "2026-08-26T00:53:31.861Z",
-    "source_catalog_etag": "cd32acd62b50decc",
+    "run_at": "2026-08-26T02:18:03.078Z",
+    "source_catalog_etag": "d97b42f66aa75673",
     "mode": "full",
-    "input_count": 11802,
-    "output_count": 11793,
-    "excluded_count": 42
+    "input_count": 11821,
+    "output_count": 11812,
+    "excluded_count": 43
   }
 }

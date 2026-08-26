@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 26 Aug 2026 00:53:30 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 26 Aug 2026 02:18:01 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -47,13 +47,6 @@
       <guid isPermaLink="false">fakechris/dsh-track@2026-08-20T23:52:37Z</guid>
       <pubDate>Thu, 20 Aug 2026 23:52:37 GMT</pubDate>
       <description>dsh track · Track Bridge English 中文 DeepSeek Harness 的嵌入式任务管理引擎 —— 把「念头、决策、任务」变成结构化、可追溯、可折叠的数据。 捕获零摩擦，决策留痕迹，任务有生命周期。数据全部在 harness 内部（session 事件 + storage KV），零外部依赖。 状态 Active · 测试 240 passing · 构建 pnp</description>
-    </item>
-    <item>
-      <title>🆕 dsh-pdf-edit</title>
-      <link>https://github.com/Whatsmore-nf/dsh-pdf-edit</link>
-      <guid isPermaLink="false">Whatsmore-nf/dsh-pdf-edit@2026-08-25T07:34:31Z</guid>
-      <pubDate>Tue, 25 Aug 2026 07:34:31 GMT</pubDate>
-      <description>dsh pdf edit 🚨 暂停维护公告 本项目将暂停维护一段 较长的时间 。在此期间，不会进行更新，插件可能在一段时间内仍可正常使用，但请自行承担使用风险。恢复维护的时间待定，敬请谅解。 English 中文 🧩 已接入 dsh std 生态（Community v0.15） ：本插件随包提供 dsh plugin.json 静态清单与标准 FacetModule 入口 （ dist/st</description>
     </item>
     <item>
       <title>🆕 dsh-delegate</title>
@@ -165,7 +158,7 @@
       <link>https://github.com/Thanksgiver233/deepseek-harness-win-desktop</link>
       <guid isPermaLink="false">Thanksgiver233/deepseek-harness-win-desktop@2026-08-16T02:43:04Z</guid>
       <pubDate>Sun, 16 Aug 2026 02:43:04 GMT</pubDate>
-      <description>DeepSeek Harness Windows Desktop Plugin — 零依赖安装，点击进入桌面版</description>
+      <description>@deepseek ai/dsh win desktop DeepSeek Harness Windows Desktop Plugin — A zero dependency DSH plugin that bridges Windows desktop sessions via a local HTTP API. Install with a single node command, no p</description>
     </item>
     <item>
       <title>🆕 Web Bridge</title>
@@ -214,6 +207,13 @@
       <link>https://github.com/FUSU123fusu/dsh-tui-checkpoints</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-checkpoints@2026-08-17T12:51:20Z</guid>
       <pubDate>Mon, 17 Aug 2026 12:51:20 GMT</pubDate>
+      <description></description>
+    </item>
+    <item>
+      <title>🆕 Keybindings Cheatsheet</title>
+      <link>https://github.com/FUSU123fusu/dsh-tui-keys</link>
+      <guid isPermaLink="false">FUSU123fusu/dsh-tui-keys@2026-08-17T12:52:08Z</guid>
+      <pubDate>Mon, 17 Aug 2026 12:52:08 GMT</pubDate>
       <description></description>
     </item>
   </channel>
