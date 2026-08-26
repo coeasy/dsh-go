@@ -6,6 +6,7 @@ import { startMcp } from '../../runtime/execution.mjs';
 import {
   mcpStatePath,
   mcpStatusSafely,
+  parseWindowsWmicCreationDate,
   processRunning,
   readMcpProcessState,
   restartMcpSafely,
@@ -57,6 +58,12 @@ function activeMcp(id: string, packageDir: string, server: string) {
 }
 
 describe('managed MCP process lifecycle', () => {
+  it('parses WMIC creation timestamps with timezone offsets', () => {
+    expect(parseWindowsWmicCreationDate('CreationDate=20260825223015.123456-420')).toBe('2026-08-26T05:30:15.123Z');
+    expect(parseWindowsWmicCreationDate('CreationDate=20260826053015.987654+000')).toBe('2026-08-26T05:30:15.987Z');
+    expect(parseWindowsWmicCreationDate('No Instance(s) Available.')).toBeNull();
+  });
+
   it('preserves state and blocks restart when SIGTERM does not lead to exit', async () => {
     const file = await writeManagedState('stubborn');
     let started = false;
