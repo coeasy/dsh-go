@@ -8,6 +8,7 @@ import { withFileLock } from './file-lock.mjs';
 const NAME_RE = /^[A-Za-z0-9_.-]{1,160}$/;
 const BACKENDS = new Set(['auto', 'file', 'dpapi', 'secret-service']);
 const COMMAND_TIMEOUT_MS = 5_000;
+const nativeMasterKeyCache = new Map();
 
 export function secretStorePaths() {
   const base = join(runtimeRoot(), 'secrets');
@@ -63,21 +64,26 @@ function runCommand(command, args, input = '') {
     });
     const stdout = [];
     const stderr = [];
+    let settled = false;
+    const finish = (callback) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      callback();
+    };
     const timer = setTimeout(() => {
       child.kill();
-      const error = new Error(`${command} timed out`);
-      error.code = 'DSH_SECRET_BACKEND_TIMEOUT';
-      reject(error);
+      finish(() => {
+        const error = new Error(`${command} timed out`);
+        error.code = 'DSH_SECRET_BACKEND_TIMEOUT';
+        reject(error);
+      });
     }, COMMAND_TIMEOUT_MS);
 
     child.stdout.on('data', (chunk) => stdout.push(Buffer.from(chunk)));
     child.stderr.on('data', (chunk) => stderr.push(Buffer.from(chunk)));
-    child.once('error', (error) => {
-      clearTimeout(timer);
-      reject(error);
-    });
-    child.once('close', (code) => {
-      clearTimeout(timer);
+    child.once('error', (error) => finish(() => reject(error)));
+    child.once('close', (code) => finish(() => {
       if (code === 0) {
         resolvePromise(Buffer.concat(stdout).toString('utf8'));
         return;
@@ -86,7 +92,7 @@ function runCommand(command, args, input = '') {
       const error = new Error(`${command} exited with code ${code}${detail ? `: ${detail}` : ''}`);
       error.code = 'DSH_SECRET_BACKEND_UNAVAILABLE';
       reject(error);
-    });
+    }));
     child.stdin.end(input);
   });
 }
@@ -121,6 +127,21 @@ async function readBackendMarker(paths) {
 
 async function writeBackendMarker(paths, marker) {
   await atomicWrite(paths.backend, `${JSON.stringify({ version: 1, ...marker }, null, 2)}\n`);
+}
+
+function nativeCacheKey(paths, backend) {
+  return `${backend}:${paths.base}`;
+}
+
+function cacheNativeKey(paths, backend, key) {
+  if (backend === 'dpapi' || backend === 'secret-service') {
+    nativeMasterKeyCache.set(nativeCacheKey(paths, backend), key);
+  }
+  return key;
+}
+
+function cachedNativeKey(paths, backend) {
+  return nativeMasterKeyCache.get(nativeCacheKey(paths, backend)) || null;
 }
 
 const DPAPI_PROTECT_SCRIPT = [
@@ -183,7 +204,12 @@ async function readBackendKey(paths, marker) {
 
 async function existingMasterKey(paths) {
   const marker = await readBackendMarker(paths);
-  if (marker) return { key: await readBackendKey(paths, marker), backend: marker.backend };
+  if (marker) {
+    const cached = cachedNativeKey(paths, marker.backend);
+    if (cached) return { key: cached, backend: marker.backend };
+    const key = await readBackendKey(paths, marker);
+    return { key: cacheNativeKey(paths, marker.backend, key), backend: marker.backend };
+  }
   try {
     return { key: await readFileMasterKey(paths), backend: 'file' };
   } catch (error) {
@@ -226,7 +252,8 @@ async function masterKey() {
     }
 
     await mkdir(paths.base, { recursive: true });
-    return (await createMasterKey(paths, configuredBackend())).key;
+    const created = await createMasterKey(paths, configuredBackend());
+    return cacheNativeKey(paths, created.backend, created.key);
   });
 }
 
