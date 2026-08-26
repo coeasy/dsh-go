@@ -135,13 +135,14 @@ function cachedNativeKey(paths, backend) {
   return nativeMasterKeyCache.get(nativeCacheKey(paths, backend)) || null;
 }
 
-function dpapiLockPath() {
-  // Windows TEMP is user-scoped. A single lock prevents many DSH processes
-  // from cold-starting Windows PowerShell simultaneously for CurrentUser DPAPI.
-  return join(tmpdir(), 'dsh-go-dpapi-current-user.lock');
+function dpapiLockPath(paths) {
+  // Serialize DPAPI helper cold starts only for processes sharing one Secret
+  // Store. Independent DSH_RUNTIME_HOME values must not block each other.
+  const scope = createHash('sha256').update(String(paths.base || '')).digest('hex').slice(0, 20);
+  return join(tmpdir(), `dsh-go-dpapi-${scope}.lock`);
 }
 
-async function runDpapiCommand(run, script, input, options = {}) {
+async function runDpapiCommand(paths, run, script, input, options = {}) {
   const invoke = () => run(
     'powershell.exe',
     ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
@@ -150,12 +151,11 @@ async function runDpapiCommand(run, script, input, options = {}) {
   );
 
   // An injected command transport is a deterministic test seam, not the real
-  // Windows OS adapter. It must not compete with live DPAPI helpers running in
-  // other Vitest workers for the user-scoped semaphore.
+  // Windows OS adapter. It must not compete with live DPAPI helpers.
   if (typeof options.runCommand === 'function') return invoke();
 
   try {
-    return await withFileLock(dpapiLockPath(), invoke, {
+    return await withFileLock(dpapiLockPath(paths), invoke, {
       timeoutMs: Number(options.lockTimeoutMs) || DPAPI_LOCK_TIMEOUT_MS,
       staleMs: Math.max(60_000, Number(options.lockStaleMs) || 0),
       retryMs: 25,
@@ -171,30 +171,28 @@ async function runDpapiCommand(run, script, input, options = {}) {
   }
 }
 
-// Windows PowerShell does not always preload System.Security on Server 2025.
-// Load it explicitly, then invoke DPAPI CurrentUser directly. The plaintext
-// base64 master key is supplied only over stdin and never appears in argv.
+// Windows PowerShell's SecureString serialization without -Key is backed by
+// DPAPI for CurrentUser. The base64 master key is supplied only over stdin and
+// never appears in argv. This avoids dynamic Add-Type assembly startup costs.
 const DPAPI_PROTECT_SCRIPT = [
-  'Add-Type -AssemblyName System.Security',
   '$value = [Console]::In.ReadToEnd().Trim()',
-  '$bytes = [Convert]::FromBase64String($value)',
-  '$protected = [System.Security.Cryptography.ProtectedData]::Protect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
-  '[Console]::Out.Write([Convert]::ToBase64String($protected))',
+  '$secure = ConvertTo-SecureString -String $value -AsPlainText -Force',
+  '$wrapped = ConvertFrom-SecureString -SecureString $secure',
+  '[Console]::Out.Write($wrapped)',
 ].join('; ');
 
 const DPAPI_UNPROTECT_SCRIPT = [
-  'Add-Type -AssemblyName System.Security',
-  '$value = [Console]::In.ReadToEnd().Trim()',
-  '$bytes = [Convert]::FromBase64String($value)',
-  '$plain = [System.Security.Cryptography.ProtectedData]::Unprotect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
-  '[Console]::Out.Write([Convert]::ToBase64String($plain))',
+  '$wrapped = [Console]::In.ReadToEnd().Trim()',
+  '$secure = ConvertTo-SecureString -String $wrapped',
+  '$bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)',
+  'try { [Console]::Out.Write([System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)) } finally { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }',
 ].join('; ');
 
 async function storeDpapiKey(paths, key, options = {}) {
   const platform = options.platform || process.platform;
   if (platform !== 'win32') throw new Error('DPAPI secret backend is only available on Windows');
   const run = options.runCommand || runSecretBackendCommand;
-  const wrapped = await runDpapiCommand(run, DPAPI_PROTECT_SCRIPT, `${key.toString('base64')}\n`, options);
+  const wrapped = await runDpapiCommand(paths, run, DPAPI_PROTECT_SCRIPT, `${key.toString('base64')}\n`, options);
   await atomicWrite(paths.dpapi, `${wrapped.trim()}\n`);
   await writeBackendMarker(paths, { backend: 'dpapi' });
   return cacheNativeKey(paths, 'dpapi', key);
@@ -205,7 +203,7 @@ async function readDpapiKey(paths, options = {}) {
   if (platform !== 'win32') throw new Error('DPAPI secret backend is only available on Windows');
   const run = options.runCommand || runSecretBackendCommand;
   const wrapped = await readFile(paths.dpapi, 'utf8');
-  const plain = await runDpapiCommand(run, DPAPI_UNPROTECT_SCRIPT, wrapped, options);
+  const plain = await runDpapiCommand(paths, run, DPAPI_UNPROTECT_SCRIPT, wrapped, options);
   return decodeKey(plain);
 }
 
