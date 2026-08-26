@@ -37,7 +37,7 @@ function parseStartedAt(value) {
 async function defaultProcessStartTime(pid, platform = process.platform) {
   if (platform === 'win32') {
     const script = [
-      `$p = Get-CimInstance Win32_Process -Filter \"ProcessId = ${pid}\"`,
+      `$p = Get-CimInstance Win32_Process -Filter "ProcessId = ${pid}"`,
       'if ($null -eq $p) { exit 3 }',
       '$p.CreationDate.ToUniversalTime().ToString("o")',
     ].join('; ');
