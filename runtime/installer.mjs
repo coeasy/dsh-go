@@ -78,6 +78,7 @@ export async function installPackage(pkg, options = {}) {
       capabilities: pkg.capabilities || [],
       dependencies: pkg.dependencies || [],
       permissions: pkg.permissions || [],
+      permission_policy: pkg.permission_policy || null,
       compatibility: pkg.compatibility || {},
       publisher: pkg.publisher || null,
       security: pkg.security || null,

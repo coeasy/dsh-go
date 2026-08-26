@@ -1,7 +1,7 @@
 {
   "name": "dsh_go",
-  "version": "2.4.0",
-  "description": "DeepSeek Harness 插件市场导航站（全自动同步 + 真·RESTful API + 中英文）",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness Plugin / MCP / Skill / Agent ecosystem runtime and marketplace",
   "type": "module",
   "private": false,
   "engines": {
@@ -41,10 +41,13 @@
     "runtime:plugin": "node runtime/cli.mjs plugin",
     "runtime:doctor": "node runtime/cli.mjs plugin doctor",
     "runtime:startup": "node bin/dsh.mjs startup activate",
+    "runtime:control": "node runtime/control-cli.mjs",
     "runtime:test": "vitest run tests/runtime-platform",
     "phase7:test": "vitest run tests/runtime-platform/host-bridge.test.ts tests/runtime-platform/startup-batch.test.ts tests/runtime-platform/bin-cli.test.ts tests/runtime-platform/self-update.test.ts tests/runtime-platform/client-bridge-e2e.test.ts",
     "phase8:test": "vitest run tests/runtime-platform/package-model-v3.test.ts tests/runtime-platform/registry-v3.test.ts tests/runtime-platform/unified-resolver-v3.test.ts tests/runtime-platform/bindings-v3.test.ts tests/runtime-platform/host-bridge-v3.test.ts tests/runtime-platform/unified-cli-v3.test.ts tests/runtime-platform/unified-runtime-v3-e2e.test.ts tests/runtime-platform/v3-contracts.test.ts tests/runtime-platform/registry.test.ts tests/runtime-platform/resolver.test.ts tests/runtime-platform/activation.test.ts tests/runtime-platform/startup-batch.test.ts tests/runtime-platform/e2e.test.ts tests/runtime-platform/cli.test.ts tests/runtime-platform/bin-cli.test.ts tests/runtime-platform/host-bridge.test.ts tests/runtime-platform/client-bridge-e2e.test.ts",
     "test:production-v2": "vitest run tests/production-v2 tests/e2e",
+    "completion:test": "vitest run tests/completion",
+    "contract:check": "node scripts/check-contract.mjs",
     "ecosystem:test": "vitest run tests/ecosystem-v1",
     "ecosystem:check": "npm run typecheck && npm run lint && npm run ecosystem:test",
     "deploy:gate": "node scripts/deploy-gate-v3.mjs",
@@ -58,6 +61,7 @@
     "package:validate": "node runtime/dsh.mjs package validate",
     "package:audit": "node runtime/dsh.mjs package audit",
     "package:sbom": "node runtime/dsh.mjs package sbom",
+    "package:verify": "node scripts/verify-package-evidence.mjs",
     "site:install": "cd site && npm ci",
     "site:dev": "cd site && npm run dev",
     "site:build": "node scripts/copy-assets.mjs && cd site && npm run build",
@@ -68,7 +72,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run typecheck && npm run lint && npm test && cd site && npm run check"
+    "check": "npm run contract:check && npm run typecheck && npm run lint && npm test && cd site && npm run check"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",

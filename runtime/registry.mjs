@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { access, mkdir, open, readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { createRuntimePackageRecord, recordRuntimeEvent } from './lifecycle.mjs';
@@ -6,6 +6,8 @@ import { assertPackageType, packageKey, safePackageId } from './package-model.mj
 import { readInstallLock } from './verifier.mjs';
 
 export const RUNTIME_REGISTRY_SCHEMA_VERSION = 3;
+const REGISTRY_LOCK_STALE_MS = 30_000;
+const REGISTRY_LOCK_TIMEOUT_MS = 5_000;
 
 export function runtimeRoot() {
   return resolve(process.env.DSH_RUNTIME_HOME || join(homedir(), '.dsh'));
@@ -13,6 +15,10 @@ export function runtimeRoot() {
 
 export function registryPath() {
   return resolve(process.env.DSH_REGISTRY || join(runtimeRoot(), 'registry', 'runtime.json'));
+}
+
+export function registryLockPath(file = registryPath()) {
+  return `${resolve(file)}.lock`;
 }
 
 export function pluginRoot() {
@@ -53,6 +59,7 @@ function normalizeRecord(item) {
     capabilities: Array.isArray(item.capabilities) ? item.capabilities : [],
     dependencies: Array.isArray(item.dependencies) ? item.dependencies : [],
     permissions: Array.isArray(item.permissions) ? item.permissions : [],
+    permission_policy: item.permission_policy && typeof item.permission_policy === 'object' ? item.permission_policy : null,
     compatibility: item.compatibility && typeof item.compatibility === 'object' ? item.compatibility : {},
     conflicts: Array.isArray(item.conflicts) ? item.conflicts : [],
     replaces: Array.isArray(item.replaces) ? item.replaces : [],
@@ -92,6 +99,7 @@ async function hydrateRecordFromInstallLock(item) {
       capabilities: lock.capabilities || [],
       dependencies: lock.dependencies || [],
       permissions: lock.permissions || [],
+      permission_policy: lock.permission_policy || null,
       compatibility: lock.compatibility || {},
       publisher: lock.publisher || null,
       security: lock.security || null,
@@ -121,11 +129,8 @@ export function migrateRuntimeRegistry(data) {
   }
 
   let source;
-  if (data.schema_version === RUNTIME_REGISTRY_SCHEMA_VERSION) {
-    source = Array.isArray(data.packages) ? data.packages : data.plugins;
-  } else {
-    source = data.plugins;
-  }
+  if (data.schema_version === RUNTIME_REGISTRY_SCHEMA_VERSION) source = Array.isArray(data.packages) ? data.packages : data.plugins;
+  else source = data.plugins;
   if (!Array.isArray(source)) throw new Error('invalid runtime registry packages');
 
   const seen = new Set();
@@ -167,30 +172,91 @@ export async function readRuntimeRegistry(file = registryPath()) {
   }
 }
 
-export async function writeRuntimeRegistry(registry, file = registryPath()) {
-  const source = Array.isArray(registry.packages) ? registry.packages : registry.plugins || [];
-  const seen = new Set();
-  const packages = [];
-  for (const item of source) {
-    const normalized = normalizeRecord(await hydrateRecordFromInstallLock(item));
-    const key = packageKey(normalized.type, normalized.id);
-    if (seen.has(key)) throw new Error(`duplicate runtime package: ${key}`);
-    seen.add(key);
-    packages.push(normalized);
+async function diskGeneration(file) {
+  try {
+    const data = JSON.parse(await readFile(file, 'utf8'));
+    return Number(data.generation) || 0;
+  } catch (error) {
+    if (error?.code === 'ENOENT') return 0;
+    throw error;
   }
+}
 
-  const next = {
-    schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION,
-    generation: (Number(registry.generation) || 0) + 1,
-    updated_at: new Date().toISOString(),
-    packages,
-    plugins: packages.filter((item) => item.type === 'plugin'),
-  };
-  await mkdir(dirname(file), { recursive: true });
-  const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
-  await writeFile(temp, JSON.stringify(next, null, 2) + '\n', 'utf8');
-  await rename(temp, file);
-  return withCompatibility(next);
+async function acquireRegistryLock(file, options = {}) {
+  const lockFile = registryLockPath(file);
+  const timeout = Number(options.timeoutMs) || REGISTRY_LOCK_TIMEOUT_MS;
+  const deadline = Date.now() + timeout;
+  await mkdir(dirname(lockFile), { recursive: true });
+
+  while (true) {
+    try {
+      const handle = await open(lockFile, 'wx', 0o600);
+      await handle.writeFile(`${JSON.stringify({ pid: process.pid, created_at: new Date().toISOString() })}\n`);
+      return async () => {
+        try { await handle.close(); } finally { await unlink(lockFile).catch(() => {}); }
+      };
+    } catch (error) {
+      if (error?.code !== 'EEXIST') throw error;
+      try {
+        const info = await stat(lockFile);
+        if (Date.now() - info.mtimeMs > REGISTRY_LOCK_STALE_MS) {
+          await unlink(lockFile);
+          continue;
+        }
+      } catch (inspectError) {
+        if (inspectError?.code === 'ENOENT') continue;
+        throw inspectError;
+      }
+      if (Date.now() >= deadline) {
+        const busy = new Error(`runtime registry is busy: ${file}`);
+        busy.code = 'DSH_REGISTRY_BUSY';
+        throw busy;
+      }
+      await new Promise((accept) => setTimeout(accept, 50));
+    }
+  }
+}
+
+export async function writeRuntimeRegistry(registry, file = registryPath(), options = {}) {
+  const targetFile = resolve(file);
+  const release = await acquireRegistryLock(targetFile, options);
+  try {
+    const currentGeneration = await diskGeneration(targetFile);
+    const expectedGeneration = Number(registry.generation);
+    if (!options.force && Number.isFinite(expectedGeneration) && expectedGeneration !== currentGeneration) {
+      const conflict = new Error(`runtime registry generation conflict: expected ${expectedGeneration}, current ${currentGeneration}`);
+      conflict.code = 'DSH_REGISTRY_CONFLICT';
+      conflict.expected_generation = expectedGeneration;
+      conflict.current_generation = currentGeneration;
+      throw conflict;
+    }
+
+    const source = Array.isArray(registry.packages) ? registry.packages : registry.plugins || [];
+    const seen = new Set();
+    const packages = [];
+    for (const item of source) {
+      const normalized = normalizeRecord(await hydrateRecordFromInstallLock(item));
+      const key = packageKey(normalized.type, normalized.id);
+      if (seen.has(key)) throw new Error(`duplicate runtime package: ${key}`);
+      seen.add(key);
+      packages.push(normalized);
+    }
+
+    const next = {
+      schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION,
+      generation: currentGeneration + 1,
+      updated_at: new Date().toISOString(),
+      packages,
+      plugins: packages.filter((item) => item.type === 'plugin'),
+    };
+    await mkdir(dirname(targetFile), { recursive: true });
+    const temp = `${targetFile}.tmp-${process.pid}-${Date.now()}`;
+    await writeFile(temp, JSON.stringify(next, null, 2) + '\n', 'utf8');
+    await rename(temp, targetFile);
+    return withCompatibility(next);
+  } finally {
+    await release();
+  }
 }
 
 export function getRuntimePackage(registry, type, id, options = {}) {
@@ -252,7 +318,6 @@ export function pluginPath(id, root = pluginRoot()) {
 }
 
 export async function removePath(path) {
-  const { rm } = await import('node:fs/promises');
   await rm(path, { recursive: true, force: true });
 }
 

@@ -15,7 +15,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -34,6 +34,9 @@ jobs:
           npm ci
           cd site && npm ci
 
+      - name: Stable contract
+        run: npm run contract:check
+
       - name: Typecheck, lint, tests
         run: |
           npm run typecheck
@@ -41,12 +44,21 @@ jobs:
           npm test
           cd site && npm run check
 
-      - name: Syntax check V3 runtime scripts
+      - name: Syntax check runtime scripts
         run: |
           node --check scripts/sync-v3.mjs
           node --check scripts/registry-v3-builder.mjs
           node --check scripts/validate-registry-v3.mjs
           node --check scripts/deploy-gate-v3.mjs
+          node --check scripts/check-contract.mjs
+          node --check scripts/verify-package-evidence.mjs
+          node --check bin/dsh.mjs
           node --check runtime/cli.mjs
+          node --check runtime/dsh.mjs
+          node --check runtime/control-cli.mjs
           node --check runtime/installer.mjs
           node --check runtime/loader.mjs
+          node --check runtime/registry.mjs
+          node --check runtime/execution.mjs
+          node --check runtime/transaction.mjs
+          node --check runtime/supply-chain-verifier.mjs

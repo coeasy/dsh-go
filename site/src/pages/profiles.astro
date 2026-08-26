@@ -3,12 +3,12 @@ import Layout from '../layouts/Layout.astro';
 const ecosystemHref = `${import.meta.env.BASE_URL || '/'}ecosystem`;
 ---
 
-<Layout title="Profiles & Bundles · DSH Go" description="用一份声明批量规划并安装 Plugin、MCP、Skill 与 Agent">
+<Layout title="Profiles & Bundles · DSH Go" description="用一份声明事务化安装 Plugin、MCP、Skill 与 Agent">
   <main class="profiles-page">
     <header>
-      <span>Runtime Platform V3</span>
+      <span>DSH 0.1.0 · Registry V3 · API v1</span>
       <h1>Profiles & Bundles</h1>
-      <p>把多个生态包组合成可审计、可预检、可重复执行的安装计划。每个条目和它的完整依赖图都会经过 Registry 固定 commit、兼容性、冲突和权限检查。</p>
+      <p>把多个生态包组合成可审计、可预检、可重复执行的事务计划。完整依赖图会先完成 Registry 固定 commit、兼容性、冲突和权限检查，再统一提交 Runtime Registry。</p>
     </header>
 
     <div class="grid">
@@ -42,11 +42,14 @@ const ecosystemHref = `${import.meta.env.BASE_URL || '/'}ecosystem`;
     </div>
 
     <section class="rules">
-      <h2>执行规则</h2>
+      <h2>事务执行规则</h2>
       <ul>
         <li>先对所有 package 和依赖进行 Registry resolve、OS/Arch/Node/Runtime/Client preflight。</li>
         <li>检测 dependencies、conflicts、replaces、provides 和危险权限，并在执行前一次性展示。</li>
         <li><code>--dry-run</code> 只输出完整依赖计划，不修改本机。</li>
+        <li>正式执行先把全部 package 安装到 transaction staging 并验证固定 commit，全部成功后再统一切换。</li>
+        <li>Runtime Registry 采用 generation CAS 和本地锁，只在事务提交阶段写入一次。</li>
+        <li>任何预提交失败都会恢复原目录；崩溃后的未完成事务由下一次 Startup Loader 自动恢复。</li>
         <li>实际安装不会自动重启客户端；完成后统一提示手动重启。</li>
       </ul>
       <a href={ecosystemHref}>浏览 Ecosystem →</a>

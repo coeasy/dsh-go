@@ -15,38 +15,97 @@
     "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "capabilities": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "dependencies": { "type": "array" },
-    "permissions": { "type": "array", "uniqueItems": true, "items": { "enum": ["filesystem.read", "filesystem.write", "network", "network.unrestricted", "shell", "secrets.read", "mcp.tools", "process.spawn"] } },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["filesystem.read", "filesystem.write", "network", "network.unrestricted", "shell", "secrets.read", "mcp.tools", "process.spawn"] }
+    },
+    "permission_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filesystem.read": { "$ref": "#/$defs/resourcePolicy" },
+        "filesystem.write": { "$ref": "#/$defs/resourcePolicy" },
+        "network": { "$ref": "#/$defs/resourcePolicy" },
+        "network.unrestricted": { "$ref": "#/$defs/resourcePolicy" },
+        "shell": { "$ref": "#/$defs/resourcePolicy" },
+        "secrets.read": { "$ref": "#/$defs/resourcePolicy" },
+        "mcp.tools": { "$ref": "#/$defs/resourcePolicy" },
+        "process.spawn": { "$ref": "#/$defs/resourcePolicy" }
+      }
+    },
     "compatibility": {
       "type": "object",
       "additionalProperties": true,
       "properties": {
         "os": { "type": "array", "items": { "enum": ["linux", "darwin", "win32"] }, "uniqueItems": true },
         "arch": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-        "node": { "type": "string" }, "runtime": { "type": "string" }, "client": { "type": "string" },
+        "node": { "type": "string" },
+        "runtime": { "type": "string" },
+        "client": { "type": "string" },
         "capabilities": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
       }
     },
     "publisher": {
-      "type": "object", "required": ["provider", "id"],
+      "type": "object",
+      "required": ["provider", "id"],
       "properties": {
-        "provider": { "type": "string" }, "id": { "type": "string" },
-        "repository_ownership": { "enum": ["required", "declared", "unverified"] }, "verified_at": { "type": "string" }
+        "provider": { "type": "string" },
+        "id": { "type": "string" },
+        "repository_ownership": { "enum": ["required", "declared", "unverified"] },
+        "verified_at": { "type": "string" }
       }
     },
     "security": {
-      "type": "object", "additionalProperties": true,
+      "type": "object",
+      "additionalProperties": true,
       "properties": {
-        "provenance": { "type": ["object", "null"] }, "signature": { "type": ["object", "null"] },
-        "sbom": { "type": ["object", "null"] }, "license": { "type": "string" },
-        "advisories": { "type": "array" }, "yanked": { "type": "boolean" }, "deprecated": { "type": "boolean" }
+        "provenance": { "type": ["object", "null"] },
+        "signature": { "type": ["object", "null"] },
+        "sbom": { "type": ["object", "null"] },
+        "license": { "type": "string" },
+        "advisories": { "type": "array" },
+        "yanked": { "type": "boolean" },
+        "deprecated": { "type": "boolean" }
       }
     },
     "conflicts": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "replaces": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "provides": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "plugin": { "type": "object" },
-    "mcp": { "type": "object", "properties": { "transport": { "enum": ["stdio", "sse", "streamable-http"] }, "command": { "type": "string" }, "args": { "type": "array", "items": { "type": "string" } }, "url": { "type": "string" }, "tools": { "type": "array", "items": { "type": "string" } } } },
-    "skill": { "type": "object" },
+    "mcp": {
+      "type": "object",
+      "properties": {
+        "transport": { "enum": ["stdio", "sse", "streamable-http"] },
+        "command": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "url": { "type": "string" },
+        "tools": { "type": "array", "items": { "type": "string" } },
+        "env": { "type": "object" },
+        "headers": { "type": "object" }
+      }
+    },
+    "skill": {
+      "type": "object",
+      "properties": {
+        "executor": { "enum": ["node", "python", "python3"] },
+        "entrypoint": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "env": { "type": "object" },
+        "input_schema": {},
+        "output_schema": {}
+      }
+    },
     "agent": { "type": "object" }
+  },
+  "$defs": {
+    "resourcePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "deny": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { loadInstalledPackage } from './loader.mjs';
 import { recordRuntimeEvent } from './lifecycle.mjs';
 import { packageKey } from './package-model.mjs';
+import { recoverPackageTransactions } from './transaction.mjs';
 import {
   getRuntimePackage,
   readRuntimeRegistry,
@@ -36,6 +37,7 @@ async function markActivationFailed(type, id, error, registryFile) {
 
 export async function activatePendingPackages(options = {}) {
   const registryFile = options.registryFile;
+  const recovery = await recoverPackageTransactions({ registryFile });
   const registry = await readRuntimeRegistry(registryFile);
   const packages = registry.packages || [];
   const candidates = packages.filter(isActivationCandidate);
@@ -65,11 +67,12 @@ export async function activatePendingPackages(options = {}) {
   }
 
   return {
+    recovered_transactions: recovery.recovered,
     scanned: packages.length,
     pending: candidates.length,
     activated,
     failed,
-    healthy: failed.length === 0,
+    healthy: failed.length === 0 && recovery.recovered.every((item) => !item.error),
     restart_required: failed.length > 0,
   };
 }

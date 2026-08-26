@@ -19,13 +19,21 @@ import { assertPackageType, parsePackageSpec } from '../runtime/package-model.mj
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const DEV_PACKAGE_ACTIONS = new Set(['init', 'validate', 'audit', 'sbom', 'publish-check']);
+const PRODUCTION_COMMANDS = new Set(['ecosystem', 'preflight', 'bridge']);
+const CONTROL_TOP_LEVEL = new Set(['profile', 'bundle', 'secret', 'transaction']);
+const CONTROL_ACTIONS = Object.freeze({
+  plugin: new Set(['config', 'remove', 'uninstall']),
+  mcp: new Set(['config', 'start', 'stop', 'restart', 'logs', 'probe', 'invoke', 'process-status', 'remove', 'uninstall']),
+  skill: new Set(['config', 'load', 'unload', 'inspect', 'invoke', 'remove', 'uninstall']),
+  agent: new Set(['config', 'remove', 'uninstall']),
+});
 
 function print(value) {
   console.log(JSON.stringify(value, null, 2));
 }
 
 function usage() {
-  console.log(`DSH Go CLI
+  console.log(`DSH Go CLI 0.1.0
 
 Usage:
   dsh package install <type:id|type:owner/repo>[@version]
@@ -37,6 +45,13 @@ Usage:
   dsh skill install <id|owner/repo>[@version]
   dsh agent install <id|owner/repo>[@version]
   dsh <plugin|mcp|skill|agent> list|status|update|rollback|remove|uninstall|enable|disable|doctor|repair|history
+  dsh <plugin|mcp|skill|agent> config get|set|unset ...
+  dsh mcp start|stop|restart|process-status|logs|probe|invoke ...
+  dsh skill load|unload|inspect|invoke ...
+  dsh profile apply <profile.json> [--yes|--dry-run]
+  dsh bundle install <bundle.json> [--yes|--dry-run]
+  dsh secret set|get|list|delete ...
+  dsh transaction recover
   dsh startup activate
   dsh runtime info
   dsh runtime check-update
@@ -48,6 +63,7 @@ Usage:
   dsh host register
   dsh --version
 
+Public release version remains 0.1.0 and canonical remote APIs remain under /api/v1.
 Dangerous or unknown permissions require explicit --yes approval before any dependency is installed.
 Dry-run is always non-mutating and never requires approval.
 Host/deep-link mutation never executes without explicit local approval.
@@ -80,18 +96,26 @@ async function version() {
   console.log(await packageVersion());
 }
 
+async function delegateScript(relativePath, nextArgs, options = {}) {
+  const script = join(root, ...relativePath.split('/'));
+  if (options.permissionAware) {
+    if (nextArgs.includes('--yes')) process.env.DSH_PERMISSION_APPROVED = '1';
+    else delete process.env.DSH_PERMISSION_APPROVED;
+  }
+  process.argv = [process.execPath, script, ...nextArgs];
+  await import(pathToFileURL(script).href);
+}
+
 async function delegateRuntime(nextArgs) {
-  const runtimeCli = join(root, 'runtime', 'cli.mjs');
-  if (nextArgs.includes('--yes')) process.env.DSH_PERMISSION_APPROVED = '1';
-  else delete process.env.DSH_PERMISSION_APPROVED;
-  process.argv = [process.execPath, runtimeCli, ...nextArgs];
-  await import(pathToFileURL(runtimeCli).href);
+  return delegateScript('runtime/cli.mjs', nextArgs, { permissionAware: true });
 }
 
 async function delegateProduction(nextArgs) {
-  const productionCli = join(root, 'runtime', 'dsh.mjs');
-  process.argv = [process.execPath, productionCli, ...nextArgs];
-  await import(pathToFileURL(productionCli).href);
+  return delegateScript('runtime/dsh.mjs', nextArgs, { permissionAware: true });
+}
+
+async function delegateControl(nextArgs) {
+  return delegateScript('runtime/control-cli.mjs', nextArgs, { permissionAware: true });
 }
 
 function normalizedRuntimeArgs() {
@@ -100,6 +124,12 @@ function normalizedRuntimeArgs() {
   const action = args[1];
   if (action === 'uninstall') return [command, 'remove', ...args.slice(2)];
   return args;
+}
+
+function isControlCommand(values) {
+  const command = values[0];
+  if (CONTROL_TOP_LEVEL.has(command)) return true;
+  return Boolean(CONTROL_ACTIONS[command]?.has(values[1]));
 }
 
 async function mutationRequest(nextArgs) {
@@ -225,7 +255,7 @@ async function runtimeCommand() {
   const current = await packageVersion();
   if (action === 'info' || action === 'doctor') {
     const result = await runtimeEnvironment(current);
-    print({ ...result, runtime_registry_schema: 3, package_types: ['plugin', 'mcp', 'skill', 'agent'] });
+    print({ ...result, runtime_registry_schema: 3, package_types: ['plugin', 'mcp', 'skill', 'agent'], api_version: 'v1' });
     if (!result.node_supported) process.exitCode = 1;
     return;
   }
@@ -249,6 +279,8 @@ async function main() {
   if (args[0] === 'host') return hostCommand();
   if (args[0] === 'startup') return startupCommand();
   if (args[0] === 'runtime') return runtimeCommand();
+  if (isControlCommand(args)) return delegateControl(args);
+  if (PRODUCTION_COMMANDS.has(args[0])) return delegateProduction(args);
   if (args[0] === 'package' && DEV_PACKAGE_ACTIONS.has(args[1])) return delegateProduction(args);
   const nextArgs = normalizedRuntimeArgs();
   await authorizeMutation(nextArgs);
@@ -259,5 +291,6 @@ main().catch((error) => {
   console.error('[dsh] ' + (error.stack || error.message));
   if (error.permissionReport) console.error(JSON.stringify(error.permissionReport, null, 2));
   if (error.compatibilityReport) console.error(JSON.stringify(error.compatibilityReport, null, 2));
+  if (error.dependents) console.error(JSON.stringify({ dependents: error.dependents }, null, 2));
   process.exit(1);
 });

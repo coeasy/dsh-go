@@ -9,28 +9,28 @@ import { ensureRegistryCache, loadRegistrySource, resolveRegistrySource } from '
 import { buildInstallDeepLink, deepLinkInstallPlan, parseDshUrl, registerProtocolHandler } from './client-bridge.mjs';
 import { findPackageManifest, writeManifestTemplate } from './package-manifest.mjs';
 import { preflightPackage } from './preflight.mjs';
-import { parsePluginSpec } from './resolver.mjs';
-import { readRuntimeRegistry } from './registry.mjs';
+import { assertPackageType, parsePackageSpec } from './package-model.mjs';
+import { findRuntimePackage, readRuntimeRegistry } from './registry.mjs';
 import { versionInfo } from './version.mjs';
 import { startClientHost } from './client-host.mjs';
+import { executePackageTransaction } from './transaction.mjs';
 import { auditPackageSecurity } from '../scripts/package-security-audit.mjs';
 import { generateSbom } from '../scripts/generate-sbom.mjs';
 
 const LEGACY_CLI = fileURLToPath(new URL('./cli.mjs', import.meta.url));
 const ECOSYSTEM_TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
-const LOCAL_LIFECYCLE = new Set(['list', 'status', 'remove', 'rollback', 'health', 'doctor', 'enable', 'disable', 'history']);
+const MUTATING_ACTIONS = new Set(['install', 'add', 'update', 'repair']);
 
 function option(args, name, fallback = undefined) {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : fallback;
 }
-
 function has(args, name) { return args.includes(name); }
 function stripFlag(args, name) { return args.filter((value) => value !== name); }
 function print(value) { console.log(JSON.stringify(value, null, 2)); }
 
 function help() {
-  console.log(`DSH CLI - local runtime and ecosystem manager
+  console.log(`DSH CLI 0.1.0 - local runtime and ecosystem manager
 
 Usage:
   dsh version
@@ -43,14 +43,11 @@ Usage:
   dsh bridge register [--dry-run]
   dsh bridge handle <dsh://...> [--yes]
   dsh bridge serve [--port 43731]
-  dsh package init [--type plugin|mcp|skill|agent] [--id ID] [--name NAME]
-  dsh package validate [directory]
-  dsh package audit [directory]
-  dsh package sbom [directory] [output]
-  dsh package publish-check [directory]
-  dsh profile apply <profile.json> [--yes] [--dry-run]
-  dsh bundle install <bundle.json> [--yes] [--dry-run]
+  dsh package init|validate|audit|sbom|publish-check ...
+  dsh profile apply <profile.json> [--yes|--dry-run]
+  dsh bundle install <bundle.json> [--yes|--dry-run]
 
+Public release version remains 0.1.0 and remote APIs remain under /api/v1.
 Install/update never restarts the client automatically. Successful changes are activated by the startup loader after a manual restart.`);
 }
 
@@ -60,10 +57,6 @@ async function registryContext(args) {
   const registry = await loadRegistrySource(source);
   const file = await ensureRegistryCache(source);
   return { registry, file, source };
-}
-
-function recordType(record) {
-  return record?.type || record?.runtime?.type || 'plugin';
 }
 
 async function confirm(message) {
@@ -93,8 +86,8 @@ async function approvedPreflight(type, spec, args) {
   const ctx = await registryContext(args);
   const channel = option(args, '--channel');
   const runtimeRegistry = await readRuntimeRegistry();
-  const preflight = preflightPackage(ctx.registry, spec, { type, channel, installed: runtimeRegistry.plugins });
-  if (!preflight.allowed) throw new Error(`preflight blocked installation: ${preflight.reasons.join('; ')}`);
+  const preflight = preflightPackage(ctx.registry, spec, { type, channel, installed: runtimeRegistry.packages });
+  if (!preflight.allowed) throw new Error(`preflight blocked operation: ${preflight.reasons.join('; ')}`);
   if (has(args, '--dry-run')) return { ctx, preflight, approved: false };
   let approved = has(args, '--yes');
   const escalated = preflight.permission_diff.added.filter((permission) => preflight.permissions.dangerous.includes(permission) || preflight.permissions.unknown.includes(permission));
@@ -102,8 +95,9 @@ async function approvedPreflight(type, spec, args) {
     const packageCount = preflight.dependency_plan?.order?.length || 1;
     approved = await confirm(`${packageCount} package(s) request ${preflight.permissions.permissions.join(', ') || 'no special permissions'}. Continue?`);
     if (!approved) {
-      const error = new Error('installation cancelled: explicit permission consent is required');
+      const error = new Error('operation cancelled: explicit permission consent is required');
       error.code = 'DSH_PERMISSION_CONSENT_REQUIRED';
+      error.permissionReport = preflight.permissions;
       throw error;
     }
   }
@@ -112,21 +106,35 @@ async function approvedPreflight(type, spec, args) {
 
 async function installOrUpdate(type, action, spec, args) {
   if (!spec) throw new Error(`${action} requires a package id`);
-  const { ctx, preflight, approved } = await approvedPreflight(type, spec, args);
+  const normalizedType = assertPackageType(type);
+  const { ctx, preflight, approved } = await approvedPreflight(normalizedType, spec, args);
   if (has(args, '--dry-run')) {
     print({ ...preflight, deep_link: buildInstallDeepLink({ id: preflight.id, version: preflight.version, channel: preflight.channel, type: preflight.type }) });
     return;
   }
-  const forwardedFlags = stripFlag(args.slice(3), '--yes');
-  let legacyArgs;
-  if (action === 'update') {
-    const parsed = parsePluginSpec(spec, '*');
-    legacyArgs = ['plugin', 'update', parsed.id, parsed.version, ...forwardedFlags];
-  } else {
-    legacyArgs = ['plugin', 'install', spec, ...forwardedFlags];
-  }
-  await runLegacy(legacyArgs, ctx.file, approved);
+
+  const parsed = parsePackageSpec(spec, action === 'update' ? '*' : preflight.version, normalizedType);
+  const flags = [];
+  const channel = option(args, '--channel');
+  if (channel) flags.push('--channel', channel);
+  if (has(args, '--force')) flags.push('--force');
+  let runtimeArgs;
+  if (action === 'update') runtimeArgs = [normalizedType, 'update', parsed.id, parsed.version || preflight.version, ...flags];
+  else runtimeArgs = [normalizedType, 'install', `${parsed.id}@${preflight.version}`, ...flags];
+  await runLegacy(runtimeArgs, ctx.file, approved);
   console.log('Install/update completed. Restart the client manually to activate changes.');
+}
+
+async function repairPackage(type, id, args) {
+  if (!id) throw new Error('repair requires a package id');
+  const normalizedType = assertPackageType(type);
+  const runtime = await readRuntimeRegistry();
+  const current = findRuntimePackage(runtime, id, { type: normalizedType });
+  if (!current) throw new Error(`${normalizedType} is not installed: ${id}`);
+  const spec = `${normalizedType}:${id}@${current.version}`;
+  const { ctx, approved } = await approvedPreflight(normalizedType, spec, args);
+  if (has(args, '--dry-run')) return;
+  return runLegacy([normalizedType, 'repair', id], ctx.file, approved);
 }
 
 async function packageCommand(action, args) {
@@ -179,34 +187,14 @@ async function packageCommand(action, args) {
 }
 
 async function applyPackagePlan(kind, file, args) {
-  const document = JSON.parse(await readFile(resolve(file), 'utf8'));
-  const packages = document.packages || document.items || document.plugins || [];
-  if (!Array.isArray(packages) || packages.length === 0) throw new Error(`${kind} has no packages`);
-  const ctx = await registryContext(args);
-  const runtimeRegistry = await readRuntimeRegistry();
-  const simulatedInstalled = [...runtimeRegistry.plugins];
-  const results = [];
-  for (const entry of packages) {
-    const request = typeof entry === 'string' ? { id: entry, version: '*', type: 'plugin' } : entry;
-    const spec = `${request.id}@${request.version || '*'}`;
-    const preflight = preflightPackage(ctx.registry, spec, { type: request.type || 'plugin', channel: request.channel, installed: simulatedInstalled });
-    results.push(preflight);
-    if (!preflight.allowed) throw new Error(`${kind} preflight failed for ${request.id}: ${preflight.reasons.join('; ')}`);
-    for (const planned of preflight.package_checks || []) {
-      if (!simulatedInstalled.some((record) => record.id === planned.id && record.state !== 'removed')) {
-        simulatedInstalled.push({ id: planned.id, type: planned.type, version: planned.version, state: 'planned', provides: planned.provides || [], permissions: planned.permissions?.permissions || [] });
-      }
-    }
-  }
-  if (!has(args, '--dry-run')) {
-    for (const preflight of results) {
-      const synthetic = [preflight.type, 'install', `${preflight.id}@${preflight.version}`];
-      if (preflight.channel) synthetic.push('--channel', preflight.channel);
-      if (has(args, '--yes')) synthetic.push('--yes');
-      await installOrUpdate(preflight.type, 'install', `${preflight.id}@${preflight.version}`, synthetic);
-    }
-  }
-  print({ kind, file: resolve(file), dry_run: has(args, '--dry-run'), restart_required: !has(args, '--dry-run'), packages: results });
+  if (!file) throw new Error(`${kind} requires a JSON file`);
+  const result = await executePackageTransaction(file, {
+    kind,
+    catalog: option(args, '--registry', 'catalog/registry-v3.json'),
+    approved: has(args, '--yes'),
+    dryRun: has(args, '--dry-run'),
+  });
+  print(result);
 }
 
 async function bridgeCommand(action, args) {
@@ -218,71 +206,40 @@ async function bridgeCommand(action, args) {
     return;
   }
   if (action === 'link') {
-    const spec = parsePluginSpec(args[2], '*');
-    return console.log(buildInstallDeepLink({ id: spec.id, version: spec.version, channel: option(args, '--channel'), type: option(args, '--type', 'plugin'), registry: option(args, '--registry') }));
+    const type = assertPackageType(option(args, '--type', 'plugin'));
+    const spec = parsePackageSpec(args[2], '*', type);
+    return console.log(buildInstallDeepLink({ id: spec.id, version: spec.version, channel: option(args, '--channel'), type: spec.type, registry: option(args, '--registry') }));
   }
   if (action === 'handle') {
     const plan = deepLinkInstallPlan(args[2]);
     if (!has(args, '--yes')) {
-      const approved = await confirm(`DSH Marketplace requests ${plan.request.action} of ${plan.request.id}@${plan.request.version}. Continue?`);
+      const approved = await confirm(`DSH Marketplace requests ${plan.request.action} of ${plan.request.type || 'plugin'}:${plan.request.id}@${plan.request.version}. Continue?`);
       if (!approved) return print({ ...plan, executed: false, reason: 'confirmation-required' });
+      args = [...args, '--yes'];
     }
-    const synthetic = [plan.request.type || 'plugin', plan.request.action === 'update' ? 'update' : 'install', `${plan.request.id}@${plan.request.version}`, '--yes'];
+    const type = plan.request.type || 'plugin';
+    const synthetic = [type, plan.request.action === 'update' ? 'update' : 'install', `${plan.request.id}@${plan.request.version}`, '--yes'];
     if (plan.request.channel) synthetic.push('--channel', plan.request.channel);
     if (plan.request.registry) synthetic.push('--registry', plan.request.registry);
-    await installOrUpdate(plan.request.type || 'plugin', plan.request.action === 'update' ? 'update' : 'install', `${plan.request.id}@${plan.request.version}`, synthetic);
+    await installOrUpdate(type, plan.request.action === 'update' ? 'update' : 'install', `${plan.request.id}@${plan.request.version}`, synthetic);
     return;
   }
   throw new Error(`unknown bridge action: ${action}`);
 }
 
-async function localRecords(type, action, id, includeRemoved) {
-  const registry = await readRuntimeRegistry();
-  const records = registry.plugins.filter((entry) => (includeRemoved || entry.state !== 'removed') && (type === 'ecosystem' || recordType(entry) === type));
-  if (action === 'list') return print(records.sort((a, b) => a.id.localeCompare(b.id)));
-  if (action === 'status') {
-    if (!id) return print(records.map(({ id: packageId, version, state, channel, enabled, activated, restart_required, health, type: packageType }) => ({ id: packageId, type: packageType || 'plugin', version, state, channel, enabled, activated, restart_required, health: health?.status || null })));
-    const record = records.find((entry) => entry.id === id);
-    if (!record) throw new Error(`${type} is not installed: ${id}`);
-    return print(record);
-  }
-}
-
-async function installedRecord(id) {
-  const registry = await readRuntimeRegistry();
-  return { registry, record: registry.plugins.find((entry) => entry.id === id && entry.state !== 'removed') };
-}
-
-async function assertInstalledType(type, id) {
-  if (!id || type === 'plugin' || type === 'ecosystem') return;
-  const { record } = await installedRecord(id);
-  if (!record) throw new Error(`${type} is not installed: ${id}`);
-  if (recordType(record) !== type) throw new Error(`package type mismatch: ${id} is ${recordType(record)}, not ${type}`);
-}
-
-async function repairPackage(type, id, args) {
-  if (!id) throw new Error('repair requires a package id');
-  await assertInstalledType(type, id);
-  const { registry: runtimeRegistry, record } = await installedRecord(id);
-  if (!record) throw new Error(`${type} is not installed: ${id}`);
-  const ctx = await registryContext(args);
-  const spec = `${id}@${record.version || '*'}`;
-  const preflight = preflightPackage(ctx.registry, spec, { type, channel: record.channel, installed: runtimeRegistry.plugins });
-  if (!preflight.allowed) throw new Error(`repair preflight failed: ${preflight.reasons.join('; ')}`);
-  let approved = has(args, '--yes');
-  if (preflight.permissions.requires_consent && !approved) approved = await confirm(`Repair may execute permissions ${preflight.permissions.permissions.join(', ')}. Continue?`);
-  if (preflight.permissions.requires_consent && !approved) throw new Error('repair cancelled: explicit permission consent is required');
-  return runLegacy(['plugin', 'repair', id, ...stripFlag(args.slice(3), '--yes')], ctx.file, approved);
-}
-
 async function ecosystemLifecycle(type, action, spec, args) {
-  if (['install', 'add', 'update'].includes(action)) return installOrUpdate(type, action === 'add' ? 'install' : action, spec, args);
-  if (action === 'list' || action === 'status') return localRecords(type, action, spec, has(args, '--all'));
-  if (type === 'ecosystem') throw new Error(`ecosystem ${action} requires an explicit package type`);
-  if (action === 'repair') return repairPackage(type, spec, args);
-  if (!LOCAL_LIFECYCLE.has(action)) throw new Error(`unknown ${type} action: ${action}`);
-  await assertInstalledType(type, spec);
-  return runLegacy(['plugin', action, ...args.slice(2)]);
+  if (type === 'ecosystem') {
+    if (!['list', 'status'].includes(action)) throw new Error(`ecosystem ${action} requires an explicit package type`);
+    const runtimeArgs = ['package', action];
+    if (spec) runtimeArgs.push(spec);
+    if (has(args, '--all')) runtimeArgs.push('--all');
+    return runLegacy(runtimeArgs);
+  }
+  const normalizedType = assertPackageType(type);
+  if (action === 'install' || action === 'add' || action === 'update') return installOrUpdate(normalizedType, action === 'add' ? 'install' : action, spec, args);
+  if (action === 'repair') return repairPackage(normalizedType, spec, args);
+  const runtimeArgs = [normalizedType, action, ...stripFlag(args.slice(2), '--yes')];
+  return runLegacy(runtimeArgs, undefined, has(args, '--yes'));
 }
 
 async function main() {
@@ -293,7 +250,7 @@ async function main() {
   if (command === 'preflight') {
     const ctx = await registryContext(args);
     const runtimeRegistry = await readRuntimeRegistry();
-    return print(preflightPackage(ctx.registry, args[1], { type: option(args, '--type'), channel: option(args, '--channel'), installed: runtimeRegistry.plugins }));
+    return print(preflightPackage(ctx.registry, args[1], { type: option(args, '--type'), channel: option(args, '--channel'), installed: runtimeRegistry.packages }));
   }
   if (command === 'bridge') return bridgeCommand(args[1] || 'parse', args);
   if (command === 'package') return packageCommand(args[1] || 'validate', args);
@@ -301,6 +258,7 @@ async function main() {
   if (command === 'bundle' && args[1] === 'install') return applyPackagePlan('bundle', args[2], args);
   if (ECOSYSTEM_TYPES.has(command) || command === 'ecosystem') return ecosystemLifecycle(command, args[1] || 'list', args[2], args);
   if (command === 'install') return installOrUpdate('plugin', 'install', args[1], ['plugin', 'install', ...args.slice(1)]);
+  if (MUTATING_ACTIONS.has(command)) throw new Error(`unsupported top-level mutation: ${command}`);
   return runLegacy(args);
 }
 

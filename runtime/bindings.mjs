@@ -28,12 +28,12 @@ export async function discoverPackageManifest(target, type) {
 }
 
 function runtimePermissions(lock) {
-  const permissions = lock?.runtime?.permissions;
-  if (!permissions || typeof permissions !== 'object') return { network: false, filesystem: false, process: false };
+  const legacy = lock?.runtime?.permissions;
+  const declared = new Set(Array.isArray(lock?.permissions) ? lock.permissions : []);
   return {
-    network: permissions.network === true,
-    filesystem: permissions.filesystem === true,
-    process: permissions.process === true,
+    network: legacy?.network === true || declared.has('network') || declared.has('network.unrestricted'),
+    filesystem: legacy?.filesystem === true || declared.has('filesystem.read') || declared.has('filesystem.write'),
+    process: legacy?.process === true || declared.has('process.spawn') || declared.has('shell'),
   };
 }
 
@@ -46,6 +46,8 @@ export function createRuntimeBinding({ type, id, target, lock, manifest }) {
     transport: 'local',
     capabilities: [...(lock?.capabilities || [])],
     permissions: runtimePermissions(lock),
+    declared_permissions: [...(lock?.permissions || [])],
+    permission_policy: lock?.permission_policy || null,
     manifest_file: manifest?.file || null,
     manifest_format: manifest?.format || null,
   };
@@ -58,7 +60,7 @@ export function createRuntimeBinding({ type, id, target, lock, manifest }) {
       ...base,
       kind: 'mcp',
       entrypoint: manifest?.file || null,
-      transport_config: lock?.runtime?.mcp || lock?.runtime?.transport || null,
+      transport_config: manifest?.manifest?.mcp || lock?.type_config || lock?.runtime?.mcp || lock?.runtime?.transport || null,
       manifest: manifest?.manifest || null,
     };
   }
@@ -66,15 +68,16 @@ export function createRuntimeBinding({ type, id, target, lock, manifest }) {
     return {
       ...base,
       kind: 'skill',
-      entrypoint: manifest?.file || 'SKILL.md',
+      entrypoint: manifest?.manifest?.skill?.entrypoint || manifest?.file || 'SKILL.md',
+      executor: manifest?.manifest?.skill?.executor || lock?.type_config?.executor || null,
       manifest: manifest?.manifest || null,
     };
   }
   return {
     ...base,
     kind: 'agent',
-    entrypoint: manifest?.file || null,
-    workflow: lock?.runtime?.agent || null,
+    entrypoint: manifest?.manifest?.agent?.entrypoint || manifest?.file || null,
+    workflow: manifest?.manifest?.agent?.workflow || lock?.type_config?.workflow || lock?.runtime?.agent || null,
     manifest: manifest?.manifest || null,
   };
 }
