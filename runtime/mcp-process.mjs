@@ -37,14 +37,13 @@ function parseStartedAt(value) {
 async function defaultProcessStartTime(pid, platform = process.platform) {
   if (platform === 'win32') {
     const script = [
-      `$p = Get-CimInstance Win32_Process -Filter "ProcessId = ${pid}"`,
-      'if ($null -eq $p) { exit 3 }',
-      '$p.CreationDate.ToUniversalTime().ToString("o")',
+      `$p = Get-Process -Id ${pid} -ErrorAction Stop`,
+      '$p.StartTime.ToUniversalTime().ToString("o")',
     ].join('; ');
     const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
       encoding: 'utf8',
       windowsHide: true,
-      timeout: 3_000,
+      timeout: 5_000,
     });
     return stdout.trim() || null;
   }
