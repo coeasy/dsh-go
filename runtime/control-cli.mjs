@@ -5,15 +5,13 @@ import {
   invokeMcp,
   invokeSkill,
   loadSkill,
-  mcpStatus,
   probeMcp,
   readMcpLogs,
-  startMcp,
   unloadSkill,
 } from './execution.mjs';
-import { restartMcpSafely, stopMcpSafely } from './mcp-process.mjs';
+import { mcpStatusSafely, restartMcpSafely, startMcpSafely, stopMcpSafely } from './mcp-process.mjs';
 import { readPackageConfig, redactConfig, setPackageConfig, unsetPackageConfig } from './config-store.mjs';
-import { deleteSecret, getSecret, listSecrets, setSecret } from './secret-store.mjs';
+import { deleteSecret, getSecret, listSecrets, secretStoreStatus, setSecret } from './secret-store.mjs';
 import { planRuntimeRemoval, removeRuntimePackageSafe } from './dependency-guard.mjs';
 import { executePackageTransaction, recoverPackageTransactions } from './transaction.mjs';
 import { assertPackageType } from './package-model.mjs';
@@ -54,6 +52,7 @@ async function configCommand(type) {
 async function secretCommand() {
   const action = args[1] || 'list';
   if (action === 'list') return print({ secrets: await listSecrets() });
+  if (action === 'status') return print(await secretStoreStatus());
   const name = args[2];
   if (!name) throw new Error(`secret ${action} requires name`);
   if (action === 'set') {
@@ -75,10 +74,10 @@ async function mcpCommand() {
   if (action === 'config') return configCommand('mcp');
   if (!id) throw new Error(`mcp ${action || '<action>'} requires id`);
   const options = { timeoutMs: Number(option('--timeout')) || undefined, maxBytes: Number(option('--max-bytes')) || undefined };
-  if (action === 'start') return print(await startMcp(id, options));
+  if (action === 'start') return print(await startMcpSafely(id, options));
   if (action === 'stop') return print(await stopMcpSafely(id, options));
   if (action === 'restart') return print(await restartMcpSafely(id, options));
-  if (action === 'status' || action === 'process-status') return print(await mcpStatus(id, options));
+  if (action === 'status' || action === 'process-status') return print(await mcpStatusSafely(id, options));
   if (action === 'logs') return print(await readMcpLogs(id, options));
   if (action === 'probe') return print(await probeMcp(id, options));
   if (action === 'invoke') {

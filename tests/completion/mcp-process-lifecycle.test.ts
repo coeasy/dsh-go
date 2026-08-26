@@ -5,10 +5,14 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { startMcp } from '../../runtime/execution.mjs';
 import {
   mcpStatePath,
+  mcpStatusSafely,
+  parseWindowsWmicCreationDate,
   processRunning,
   readMcpProcessState,
   restartMcpSafely,
+  startMcpSafely,
   stopMcpSafely,
+  verifyManagedProcessIdentity,
 } from '../../runtime/mcp-process.mjs';
 import { writeRuntimeRegistry } from '../../runtime/registry.mjs';
 
@@ -33,10 +37,10 @@ afterEach(() => {
   }
 });
 
-async function writeManagedState(id: string, pid = 4242) {
+async function writeManagedState(id: string, pid = 4242, extra: Record<string, unknown> = {}) {
   const file = mcpStatePath(id);
   await mkdir(dirname(file), { recursive: true });
-  await writeFile(file, `${JSON.stringify({ type: 'mcp', id, transport: 'stdio', managed_process: true, running: true, pid })}\n`);
+  await writeFile(file, `${JSON.stringify({ type: 'mcp', id, transport: 'stdio', managed_process: true, running: true, pid, ...extra })}\n`);
   return file;
 }
 
@@ -54,6 +58,12 @@ function activeMcp(id: string, packageDir: string, server: string) {
 }
 
 describe('managed MCP process lifecycle', () => {
+  it('parses WMIC creation timestamps with timezone offsets', () => {
+    expect(parseWindowsWmicCreationDate('CreationDate=20260825223015.123456-420')).toBe('2026-08-26T05:30:15.123Z');
+    expect(parseWindowsWmicCreationDate('CreationDate=20260826053015.987654+000')).toBe('2026-08-26T05:30:15.987Z');
+    expect(parseWindowsWmicCreationDate('No Instance(s) Available.')).toBeNull();
+  });
+
   it('preserves state and blocks restart when SIGTERM does not lead to exit', async () => {
     const file = await writeManagedState('stubborn');
     let started = false;
@@ -81,6 +91,68 @@ describe('managed MCP process lifecycle', () => {
     await expect(access(file)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
+  it('refuses to signal a reused PID and preserves the state for diagnosis', async () => {
+    const startedAt = '2026-08-26T00:00:00.000Z';
+    const file = await writeManagedState('reused-stop', 6262, { started_at: startedAt });
+    let signals = 0;
+
+    await expect(stopMcpSafely('reused-stop', {
+      isRunning: () => true,
+      getProcessStartTime: async () => '2026-08-26T00:05:00.000Z',
+      signal: () => { signals += 1; },
+    })).rejects.toMatchObject({
+      code: 'DSH_PROCESS_IDENTITY_MISMATCH',
+      pid: 6262,
+      state_preserved: true,
+    });
+
+    expect(signals).toBe(0);
+    await expect(access(file)).resolves.toBeUndefined();
+    expect((await readMcpProcessState('reused-stop'))?.started_at).toBe(startedAt);
+  });
+
+  it('removes a reused-PID stale state before starting a replacement process', async () => {
+    const file = await writeManagedState('reused-start', 7373, { started_at: '2026-08-26T00:00:00.000Z' });
+    let starts = 0;
+    const result = await startMcpSafely('reused-start', {
+      isRunning: () => true,
+      getProcessStartTime: async () => '2026-08-26T00:10:00.000Z',
+      start: async () => {
+        starts += 1;
+        return { type: 'mcp', id: 'reused-start', pid: 8484, running: true };
+      },
+    });
+
+    expect(starts).toBe(1);
+    expect(result).toMatchObject({ id: 'reused-start', pid: 8484, running: true });
+    expect(result.already_running).not.toBe(true);
+    await expect(access(file)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('reports a reused PID as stale instead of claiming the MCP is running', async () => {
+    const state = {
+      type: 'mcp', id: 'reused-status', transport: 'stdio', managed_process: true, running: true,
+      pid: 9595, started_at: '2026-08-26T00:00:00.000Z',
+    };
+    const result = await mcpStatusSafely('reused-status', {
+      isRunning: () => true,
+      getProcessStartTime: async () => '2026-08-26T00:20:00.000Z',
+      status: async () => ({ type: 'mcp', id: 'reused-status', running: true, pid: 9595, state }),
+    });
+
+    expect(result).toMatchObject({
+      running: false,
+      stale_state: true,
+      pid_reused: true,
+      identity_verified: true,
+    });
+  });
+
+  it('accepts legacy managed state without start identity for backward compatibility', async () => {
+    const identity = await verifyManagedProcessIdentity({ managed_process: true, pid: 1010 });
+    expect(identity).toMatchObject({ matched: true, verified: false, legacy: true, pid: 1010 });
+  });
+
   it('waits for a real child process to exit before removing its state', async () => {
     const packageDir = join(root, 'mcp-package');
     const server = join(packageDir, 'server.mjs');
@@ -96,7 +168,7 @@ describe('managed MCP process lifecycle', () => {
     expect(processRunning(started.pid)).toBe(true);
 
     const stopped = await stopMcpSafely('managed', { timeoutMs: 5000 });
-    expect(stopped).toMatchObject({ stopped: true, pid: started.pid, exit_confirmed: true });
+    expect(stopped).toMatchObject({ stopped: true, pid: started.pid, exit_confirmed: true, identity_verified: true });
     expect(processRunning(started.pid)).toBe(false);
     expect(await readMcpProcessState('managed')).toBeNull();
   }, 15_000);

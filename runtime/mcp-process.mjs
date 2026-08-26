@@ -1,11 +1,15 @@
+import { execFile } from 'node:child_process';
 import { rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { startMcp } from './execution.mjs';
+import { promisify } from 'node:util';
+import { mcpStatus, startMcp } from './execution.mjs';
 import { safePackageId } from './package-model.mjs';
 import { runtimeRoot } from './registry.mjs';
 
+const execFileAsync = promisify(execFile);
 const DEFAULT_STOP_TIMEOUT_MS = 5_000;
 const DEFAULT_STOP_POLL_MS = 50;
+const DEFAULT_START_TIME_TOLERANCE_MS = 10_000;
 
 function executionRoot() {
   return resolve(process.env.DSH_EXECUTION_HOME || join(runtimeRoot(), 'run'));
@@ -23,6 +27,129 @@ export function processRunning(pid) {
   } catch {
     return false;
   }
+}
+
+function parseStartedAt(value) {
+  const timestamp = value instanceof Date ? value.getTime() : Date.parse(String(value || ''));
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+export function parseWindowsWmicCreationDate(value) {
+  const match = String(value || '').match(/CreationDate=(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\.(\d{1,6})([+-])(\d{3})/i);
+  if (!match) return null;
+  const [, year, month, day, hour, minute, second, micros, sign, offset] = match;
+  const milliseconds = Number(micros.padEnd(6, '0').slice(0, 3));
+  const local = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second), milliseconds);
+  const offsetMinutes = Number(offset) * (sign === '+' ? 1 : -1);
+  const timestamp = local - offsetMinutes * 60_000;
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+}
+
+async function windowsProcessStartTime(pid) {
+  const windir = process.env.WINDIR || 'C:\\Windows';
+  const wmic = join(windir, 'System32', 'wbem', 'WMIC.exe');
+  try {
+    const { stdout } = await execFileAsync(wmic, ['process', 'where', `ProcessId=${pid}`, 'get', 'CreationDate', '/value'], {
+      encoding: 'utf8', windowsHide: true, timeout: 3_000,
+    });
+    const parsed = parseWindowsWmicCreationDate(stdout);
+    if (parsed) return parsed;
+  } catch {
+    // WMIC is optional on newer Windows images. Fall through to PowerShell.
+  }
+
+  const script = [
+    `$p = Get-Process -Id ${pid} -ErrorAction Stop`,
+    '$p.StartTime.ToUniversalTime().ToString("o")',
+  ].join('; ');
+  try {
+    const { stdout } = await execFileAsync('pwsh.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+      encoding: 'utf8', windowsHide: true, timeout: 5_000,
+    });
+    return stdout.trim() || null;
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+
+  const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+    encoding: 'utf8', windowsHide: true, timeout: 5_000,
+  });
+  return stdout.trim() || null;
+}
+
+async function defaultProcessStartTime(pid, platform = process.platform) {
+  if (platform === 'win32') return windowsProcessStartTime(pid);
+
+  const { stdout } = await execFileAsync('ps', ['-p', String(pid), '-o', 'lstart='], {
+    encoding: 'utf8',
+    timeout: 3_000,
+    env: { ...process.env, LC_ALL: 'C' },
+  });
+  return stdout.trim() || null;
+}
+
+export async function readProcessStartTime(pid, options = {}) {
+  if (!Number.isInteger(pid) || pid <= 0) return null;
+  try {
+    const raw = await defaultProcessStartTime(pid, options.platform || process.platform);
+    if (!raw) return null;
+    const timestamp = parseStartedAt(raw);
+    if (timestamp === null) throw new Error(`unparseable process start time: ${raw}`);
+    return new Date(timestamp).toISOString();
+  } catch (cause) {
+    if (!processRunning(pid)) return null;
+    const error = new Error(`cannot verify MCP process identity for pid ${pid}`);
+    error.code = 'DSH_PROCESS_IDENTITY_UNAVAILABLE';
+    error.pid = pid;
+    error.state_preserved = true;
+    error.cause = cause;
+    throw error;
+  }
+}
+
+export async function verifyManagedProcessIdentity(state, options = {}) {
+  if (!state?.managed_process) return { matched: true, verified: false, managed_process: false };
+  const pid = Number(state.pid);
+  if (!Number.isInteger(pid) || pid <= 0) {
+    return { matched: false, verified: false, invalid: true, pid };
+  }
+  const expected = parseStartedAt(state.started_at);
+  if (expected === null) {
+    return { matched: true, verified: false, legacy: true, pid };
+  }
+
+  const reader = options.getProcessStartTime || readProcessStartTime;
+  const observedRaw = await reader(pid, options);
+  if (!observedRaw) return { matched: false, verified: false, exited: true, pid };
+  const observed = parseStartedAt(observedRaw);
+  if (observed === null) {
+    const error = new Error(`cannot parse MCP process identity for pid ${pid}`);
+    error.code = 'DSH_PROCESS_IDENTITY_INVALID';
+    error.pid = pid;
+    error.state_preserved = true;
+    throw error;
+  }
+
+  const toleranceMs = Math.max(1, Number(options.startTimeToleranceMs) || DEFAULT_START_TIME_TOLERANCE_MS);
+  const deltaMs = observed - expected;
+  return {
+    matched: Math.abs(deltaMs) <= toleranceMs,
+    verified: true,
+    pid,
+    expected_started_at: new Date(expected).toISOString(),
+    observed_started_at: new Date(observed).toISOString(),
+    delta_ms: deltaMs,
+    tolerance_ms: toleranceMs,
+  };
+}
+
+function identityMismatchError(id, identity) {
+  const error = new Error(`MCP process identity mismatch; refusing to signal pid ${identity.pid}: ${id}`);
+  error.code = 'DSH_PROCESS_IDENTITY_MISMATCH';
+  error.pid = identity.pid;
+  error.state_preserved = true;
+  error.identity = identity;
+  return error;
 }
 
 function sleep(ms) {
@@ -54,6 +181,60 @@ export async function readMcpProcessState(id) {
   }
 }
 
+export async function startMcpSafely(id, options = {}) {
+  const state = await readMcpProcessState(id);
+  if (state?.managed_process) {
+    const pid = Number(state.pid);
+    const isRunning = options.isRunning || processRunning;
+    if (Number.isInteger(pid) && pid > 0 && isRunning(pid)) {
+      const identity = await verifyManagedProcessIdentity(state, options);
+      if (identity.matched) {
+        return {
+          ...state,
+          running: true,
+          already_running: true,
+          identity_verified: identity.verified,
+          identity_legacy: identity.legacy === true,
+        };
+      }
+      if (!identity.exited) {
+        await rm(mcpStatePath(id), { force: true });
+      }
+    }
+  }
+  return (options.start || startMcp)(id, options);
+}
+
+export async function mcpStatusSafely(id, options = {}) {
+  const status = await (options.status || mcpStatus)(id, options);
+  const state = status?.state || await readMcpProcessState(id);
+  if (!state?.managed_process) return { ...status, identity_verified: false };
+
+  const pid = Number(state.pid);
+  const isRunning = options.isRunning || processRunning;
+  if (!Number.isInteger(pid) || pid <= 0 || !isRunning(pid)) {
+    return { ...status, running: false, identity_verified: false };
+  }
+
+  const identity = await verifyManagedProcessIdentity(state, options);
+  if (!identity.matched) {
+    return {
+      ...status,
+      running: false,
+      stale_state: true,
+      pid_reused: !identity.exited,
+      identity_verified: identity.verified,
+      identity,
+    };
+  }
+  return {
+    ...status,
+    running: true,
+    identity_verified: identity.verified,
+    identity_legacy: identity.legacy === true,
+  };
+}
+
 export async function stopMcpSafely(id, options = {}) {
   const state = await readMcpProcessState(id);
   if (!state) return { type: 'mcp', id, stopped: false, reason: 'not-started' };
@@ -73,30 +254,44 @@ export async function stopMcpSafely(id, options = {}) {
     throw error;
   }
 
+  let identity = { matched: true, verified: false, legacy: true, pid };
   if (isRunning(pid)) {
-    try {
-      signal(pid);
-    } catch (error) {
-      if (isRunning(pid)) throw error;
-    }
+    identity = await verifyManagedProcessIdentity(state, options);
+    if (!identity.matched && !identity.exited) throw identityMismatchError(id, identity);
 
-    const exited = await waitForProcessExit(pid, {
-      timeoutMs: Number(options.stopTimeoutMs ?? options.timeoutMs) || DEFAULT_STOP_TIMEOUT_MS,
-      pollMs: options.pollMs,
-      isRunning,
-      sleep: options.sleep,
-    });
-    if (!exited) {
-      const error = new Error(`MCP process did not exit after SIGTERM: ${id} (pid ${pid})`);
-      error.code = 'DSH_PROCESS_STOP_TIMEOUT';
-      error.pid = pid;
-      error.state_preserved = true;
-      throw error;
+    if (!identity.exited && isRunning(pid)) {
+      try {
+        signal(pid);
+      } catch (error) {
+        if (isRunning(pid)) throw error;
+      }
+
+      let exited = await waitForProcessExit(pid, {
+        timeoutMs: Number(options.stopTimeoutMs ?? options.timeoutMs) || DEFAULT_STOP_TIMEOUT_MS,
+        pollMs: options.pollMs,
+        isRunning,
+        sleep: options.sleep,
+      });
+      if (!exited && state.started_at) {
+        const after = await verifyManagedProcessIdentity(state, options);
+        if (!after.matched) exited = true;
+      }
+      if (!exited) {
+        const error = new Error(`MCP process did not exit after SIGTERM: ${id} (pid ${pid})`);
+        error.code = 'DSH_PROCESS_STOP_TIMEOUT';
+        error.pid = pid;
+        error.state_preserved = true;
+        throw error;
+      }
     }
   }
 
   await rm(mcpStatePath(id), { force: true });
-  return { type: 'mcp', id, stopped: true, pid, managed_process: true, exit_confirmed: true };
+  return {
+    type: 'mcp', id, stopped: true, pid, managed_process: true, exit_confirmed: true,
+    identity_verified: identity.verified === true,
+    identity_legacy: identity.legacy === true,
+  };
 }
 
 export async function restartMcpSafely(id, options = {}) {
