@@ -18,8 +18,27 @@ export interface PublisherDeclaration {
 }
 
 export interface SupplyChainDeclaration {
-  provenance?: { provider?: string; uri?: string; digest?: string } | null;
-  signature?: { provider?: string; bundle?: string; identity?: string } | null;
+  provenance?: {
+    provider?: string;
+    uri?: string;
+    digest?: string;
+    required?: boolean;
+    predicate_type?: string;
+    builder_id?: string;
+    build_type?: string;
+    source_repository?: string;
+  } | null;
+  signature?: {
+    provider?: string;
+    bundle?: string;
+    uri?: string;
+    digest?: string;
+    identity?: string;
+    issuer?: string;
+    oidc_issuer?: string;
+    signed?: 'provenance' | 'sbom';
+    required?: boolean;
+  } | null;
   sbom?: { format?: string; uri?: string; digest?: string } | null;
   license?: string;
   advisories?: Array<{ id: string; severity?: string; url?: string }>;
