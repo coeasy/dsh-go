@@ -101,6 +101,7 @@ export async function stopMcpSafely(id, options = {}) {
 
 export async function restartMcpSafely(id, options = {}) {
   const stopped = await stopMcpSafely(id, options);
-  const started = await startMcp(id, options);
+  const starter = options.start || startMcp;
+  const started = await starter(id, options);
   return { ...started, restarted: true, previous: stopped };
 }
