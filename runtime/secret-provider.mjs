@@ -1,11 +1,14 @@
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import { access, chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { withFileLock } from './file-lock.mjs';
 
 export const SECRET_KEY_BACKENDS = Object.freeze(['auto', 'file', 'dpapi', 'secret-service']);
 const BACKENDS = new Set(SECRET_KEY_BACKENDS);
-const COMMAND_TIMEOUT_MS = 5_000;
+const COMMAND_TIMEOUT_MS = 15_000;
+const DPAPI_LOCK_TIMEOUT_MS = 30_000;
 const nativeMasterKeyCache = new Map();
 
 function commandEnv(platform = process.platform) {
@@ -132,6 +135,35 @@ function cachedNativeKey(paths, backend) {
   return nativeMasterKeyCache.get(nativeCacheKey(paths, backend)) || null;
 }
 
+function dpapiLockPath() {
+  // Windows TEMP is user-scoped. A single lock prevents many DSH processes
+  // from cold-starting Windows PowerShell simultaneously for CurrentUser DPAPI.
+  return join(tmpdir(), 'dsh-go-dpapi-current-user.lock');
+}
+
+async function runDpapiCommand(run, script, input, options = {}) {
+  try {
+    return await withFileLock(dpapiLockPath(), () => run(
+      'powershell.exe',
+      ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
+      input,
+      { ...options, platform: 'win32', timeoutMs: Number(options.timeoutMs) || COMMAND_TIMEOUT_MS },
+    ), {
+      timeoutMs: Number(options.lockTimeoutMs) || DPAPI_LOCK_TIMEOUT_MS,
+      staleMs: Math.max(60_000, Number(options.lockStaleMs) || 0),
+      retryMs: 25,
+    });
+  } catch (error) {
+    if (error?.code === 'DSH_STATE_BUSY') {
+      const busy = new Error('Windows DPAPI backend is busy');
+      busy.code = 'DSH_SECRET_BACKEND_BUSY';
+      busy.cause = error;
+      throw busy;
+    }
+    throw error;
+  }
+}
+
 // Windows PowerShell does not always preload System.Security on Server 2025.
 // Load it explicitly, then invoke DPAPI CurrentUser directly. The plaintext
 // base64 master key is supplied only over stdin and never appears in argv.
@@ -155,7 +187,7 @@ async function storeDpapiKey(paths, key, options = {}) {
   const platform = options.platform || process.platform;
   if (platform !== 'win32') throw new Error('DPAPI secret backend is only available on Windows');
   const run = options.runCommand || runSecretBackendCommand;
-  const wrapped = await run('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', DPAPI_PROTECT_SCRIPT], `${key.toString('base64')}\n`, { ...options, platform });
+  const wrapped = await runDpapiCommand(run, DPAPI_PROTECT_SCRIPT, `${key.toString('base64')}\n`, options);
   await atomicWrite(paths.dpapi, `${wrapped.trim()}\n`);
   await writeBackendMarker(paths, { backend: 'dpapi' });
   return cacheNativeKey(paths, 'dpapi', key);
@@ -166,7 +198,7 @@ async function readDpapiKey(paths, options = {}) {
   if (platform !== 'win32') throw new Error('DPAPI secret backend is only available on Windows');
   const run = options.runCommand || runSecretBackendCommand;
   const wrapped = await readFile(paths.dpapi, 'utf8');
-  const plain = await run('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', DPAPI_UNPROTECT_SCRIPT], wrapped, { ...options, platform });
+  const plain = await runDpapiCommand(run, DPAPI_UNPROTECT_SCRIPT, wrapped, options);
   return decodeKey(plain);
 }
 
