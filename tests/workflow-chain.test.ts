@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const workflow = (name: string) => readFileSync(resolve(root, '.github/workflows', name), 'utf8');
 const script = (name: string) => readFileSync(resolve(root, 'scripts', name), 'utf8');
-const deployTargets = ['deploy.yml', 'deploy-pages.yml', 'deploy-mirror.yml', 'deploy-edgeone.yml'];
+const deployTargets = ['deploy.yml', 'deploy-pages.yml', 'deploy-edgeone.yml'];
 const registryOwnedScripts = [
   'scripts/registry-pipeline-v3.mjs',
   'scripts/registry-v3-builder.mjs',
@@ -35,7 +35,9 @@ describe('authoritative deployment routing', () => {
     expect(sync).toContain('commit_sha=$(git rev-parse HEAD)');
     expect(sync).toContain("if: github.event_name == 'push' || (steps.publish.outputs.pushed == 'true' && steps.diff.outputs.data_changed == 'true')");
     expect(sync).toContain('DEPLOY_REVISION: ${{ steps.publish.outputs.commit_sha }}');
-    expect(sync).toContain('DEPLOY_WORKFLOWS: deploy.yml deploy-pages.yml deploy-mirror.yml deploy-edgeone.yml');
+    expect(sync).toContain('DEPLOY_WORKFLOWS: deploy.yml deploy-pages.yml deploy-edgeone.yml');
+    expect(sync).not.toContain('deploy-mirror.yml');
+    expect(sync).not.toContain('CN Mirrors');
     expect(sync).toContain('run: node scripts/dispatch-deployments.mjs');
     expect(sync).toContain("steps.dispatch.outputs.dispatch_failures || 'none'");
   });
@@ -51,7 +53,9 @@ describe('authoritative deployment routing', () => {
     expect(router).toContain('.github/workflows/sync.yml');
     expect(router).toContain('generated_catalog=$GENERATED_CATALOG');
     expect(router).toContain('Generated catalog files are owned by Sync V3');
-    expect(router).toContain('WORKFLOWS="deploy.yml deploy-pages.yml deploy-mirror.yml deploy-edgeone.yml"');
+    expect(router).toContain('WORKFLOWS="deploy.yml deploy-pages.yml deploy-edgeone.yml"');
+    expect(router).not.toContain('deploy-mirror.yml');
+    expect(router).not.toContain('CN Mirrors');
     expect(router).toContain('SHA=$(git rev-parse HEAD)');
     expect(router).toContain('DEPLOY_REVISION: ${{ steps.changes.outputs.revision }}');
     expect(router).toContain('run: node scripts/dispatch-deployments.mjs');
@@ -63,8 +67,8 @@ describe('authoritative deployment routing', () => {
     expect(router).toContain('target:');
     expect(router).toContain('- cloudflare');
     expect(router).toContain('- github-pages');
-    expect(router).toContain('- mirrors');
     expect(router).toContain('- edgeone');
+    expect(router).not.toContain('- mirrors');
     expect(router).toContain('WORKFLOWS="deploy-edgeone.yml"');
     expect(router).toContain('WORKFLOWS="deploy.yml"');
     expect(router).toContain("group: deploy-router-${{ github.ref }}-${{ inputs.target || 'all' }}");

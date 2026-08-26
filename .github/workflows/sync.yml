@@ -117,8 +117,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEPLOY_REVISION: ${{ steps.publish.outputs.commit_sha }}
-          DEPLOY_WORKFLOWS: deploy.yml deploy-pages.yml deploy-mirror.yml deploy-edgeone.yml
-          DEPLOY_LABEL: Cloudflare Pages, GitHub Pages, CN Mirrors, Tencent EdgeOne
+          DEPLOY_WORKFLOWS: deploy.yml deploy-pages.yml deploy-edgeone.yml
+          DEPLOY_LABEL: Cloudflare Pages, GitHub Pages, Tencent EdgeOne
           DEPLOY_DISPATCH_RETRIES: "5"
           DEPLOY_DISPATCH_RETRY_DELAY_MS: "5000"
         run: node scripts/dispatch-deployments.mjs
