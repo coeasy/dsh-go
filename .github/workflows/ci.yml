@@ -56,6 +56,10 @@ jobs:
           node --check scripts/validate-registry-v3.mjs
           node --check scripts/deploy-gate-v3.mjs
           node --check scripts/check-contract.mjs
+          node --check scripts/check-deployment-convergence.mjs
+          node --check scripts/check-production-sha.mjs
+          node --check scripts/edgeone-deploy-ci.mjs
+          node --check scripts/write-deployment-version.mjs
           node --check scripts/verify-package-evidence.mjs
           node --check bin/dsh.mjs
           node --check runtime/cli.mjs

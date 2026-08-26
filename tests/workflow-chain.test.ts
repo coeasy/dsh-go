@@ -76,7 +76,12 @@ describe('authoritative deployment routing', () => {
       expect(deploy, name).toContain('workflow_dispatch:');
       expect(deploy, name).not.toMatch(/on:\n\s+push:/);
       expect(deploy, name).toContain('commit_sha:');
-      expect(deploy, name).toContain('ref: ${{ inputs.commit_sha || github.sha }}');
+      if (name === 'deploy-edgeone.yml') {
+        expect(deploy, name).toContain('DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}');
+        expect(deploy, name).toContain('ref: ${{ env.DEPLOYMENT_SHA }}');
+      } else {
+        expect(deploy, name).toContain('ref: ${{ inputs.commit_sha || github.sha }}');
+      }
       expect(deploy, name).toContain('Deployment revision mismatch');
     }
   });
@@ -90,15 +95,26 @@ describe('authoritative deployment routing', () => {
     expect(deploy).not.toContain('cloudflare/pages-action@v1');
   });
 
-  it('keeps the EdgeOne workflow indexer-friendly by moving deployment logic into a tested script', () => {
+  it('keeps the EdgeOne workflow indexer-friendly and fails closed until production reaches the exact SHA', () => {
     const edgeone = workflow('deploy-edgeone.yml');
     const edgeoneScript = script('edgeone-deploy-ci.mjs');
+    const shaGate = script('check-production-sha.mjs');
+    const versionWriter = script('write-deployment-version.mjs');
 
     expect(edgeone).toContain("EDGEONE_CLI_VERSION: ${{ vars.EDGEONE_CLI_VERSION || '1.6.28' }}");
+    expect(edgeone).toContain('DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}');
     expect(edgeone).toContain('secrets.EDGEONE_API_TOKEN');
-    expect(edgeone).toContain('configured=false');
+    expect(edgeone).toContain('token_configured=false');
+    expect(edgeone).toContain('site_url_configured=false');
+    expect(edgeone).toContain('EDGEONE_API_TOKEN secret is required for production deployment');
+    expect(edgeone).toContain('EDGEONE_SITE_URL repository variable is required for production SHA verification');
+    expect(edgeone).toContain('PUBLIC_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}');
+    expect(edgeone).toContain('run: node scripts/write-deployment-version.mjs site/dist/version.json');
     expect(edgeone).toContain('run: node scripts/edgeone-deploy-ci.mjs --check');
     expect(edgeone).toContain('run: node scripts/edgeone-deploy-ci.mjs');
+    expect(edgeone).toContain('run: node scripts/check-production-sha.mjs');
+    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ vars.EDGEONE_SITE_URL }}');
+    expect(edgeone).toContain('Production Registry V3 convergence gate');
     expect(edgeone).not.toContain("<<'NODE'");
     expect(edgeone.length).toBeLessThan(12_000);
 
@@ -108,6 +124,12 @@ describe('authoritative deployment routing', () => {
     expect(edgeoneScript).toContain('EdgeOne CLI >= 1.6.0 is required');
     expect(edgeoneScript).not.toContain('login --token');
     expect(edgeoneScript).not.toContain('whoami');
+
+    expect(shaGate).toContain("new URL('version.json', base)");
+    expect(shaGate).toContain("'cache-control': 'no-cache, no-store, max-age=0'");
+    expect(shaGate).toContain('did not converge to commit');
+    expect(versionWriter).toContain('DEPLOYMENT_SHA || env.GITHUB_SHA');
+    expect(versionWriter).toContain('git_sha: gitSha');
   });
 
   it('uses one Registry V3 convergence implementation across static providers', () => {
