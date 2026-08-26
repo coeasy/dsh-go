@@ -47,10 +47,10 @@ describe('production SHA deployment gate', () => {
       attempts: 3,
       delayMs: 0,
       timeoutMs: 1_000,
-      nonceFactory: (attempt) => `test-${attempt}`,
-      fetchImpl: async (url) => {
+      nonceFactory: (attempt: number) => `test-${attempt}`,
+      fetchImpl: async (url: URL | string) => {
         requested.push(new URL(String(url)));
-        const body = responses.shift();
+        const body = responses.shift() ?? {};
         return new Response(JSON.stringify(body), {
           status: 200,
           headers: { 'content-type': 'application/json' },
@@ -76,7 +76,7 @@ describe('production SHA deployment gate', () => {
       attempts: 2,
       delayMs: 0,
       timeoutMs: 1_000,
-      nonceFactory: (attempt) => `test-${attempt}`,
+      nonceFactory: (attempt: number) => `test-${attempt}`,
       fetchImpl: async () => new Response(JSON.stringify({ git_sha: 'f'.repeat(40) }), { status: 200 }),
       log: () => undefined,
       wait: async () => undefined,
