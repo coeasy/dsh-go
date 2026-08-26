@@ -48,7 +48,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          SHA="${{ inputs.commit_sha || github.sha }}"
+          SHA=$(git rev-parse HEAD)
           SYNC_OWNED=false
           GENERATED_CATALOG=false
 
@@ -127,17 +127,13 @@ jobs:
           echo "workflows=$WORKFLOWS" >> "$GITHUB_OUTPUT"
           echo "label=$LABEL" >> "$GITHUB_OUTPUT"
       - name: Dispatch deployment workflows
+        id: dispatch
         if: ${{ steps.targets.outputs.workflows != '' }}
-        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          SHA="${{ steps.changes.outputs.revision }}"
-          for workflow in ${{ steps.targets.outputs.workflows }}; do
-            echo "Dispatching ${workflow} at ${SHA}"
-            gh workflow run "$workflow" --ref main -f commit_sha="$SHA"
-          done
-          echo "### Deployment routed" >> "$GITHUB_STEP_SUMMARY"
-          echo "- authoritative revision: ${SHA}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- targets: ${{ steps.targets.outputs.label }}" >> "$GITHUB_STEP_SUMMARY"
+          DEPLOY_REVISION: ${{ steps.changes.outputs.revision }}
+          DEPLOY_WORKFLOWS: ${{ steps.targets.outputs.workflows }}
+          DEPLOY_LABEL: ${{ steps.targets.outputs.label }}
+          DEPLOY_DISPATCH_RETRIES: "5"
+          DEPLOY_DISPATCH_RETRY_DELAY_MS: "5000"
+        run: node scripts/dispatch-deployments.mjs
