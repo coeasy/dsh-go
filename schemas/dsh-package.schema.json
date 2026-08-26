@@ -39,7 +39,7 @@
       "additionalProperties": true,
       "properties": {
         "os": { "type": "array", "items": { "enum": ["linux", "darwin", "win32"] }, "uniqueItems": true },
-        "arch": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "arch": { "type": "array", "items": { "type": "string" },
         "node": { "type": "string" },
         "runtime": { "type": "string" },
         "client": { "type": "string" },
@@ -60,9 +60,9 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "provenance": { "type": ["object", "null"] },
-        "signature": { "type": ["object", "null"] },
-        "sbom": { "type": ["object", "null"] },
+        "provenance": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/provenanceEvidence" }] },
+        "signature": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/signatureEvidence" }] },
+        "sbom": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sbomEvidence" }] },
         "license": { "type": "string" },
         "advisories": { "type": "array" },
         "yanked": { "type": "boolean" },
@@ -105,6 +105,44 @@
       "properties": {
         "allow": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "deny": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "provenanceEvidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "provider": { "type": "string" },
+        "uri": { "type": "string" },
+        "digest": { "type": "string" },
+        "required": { "type": "boolean" },
+        "predicate_type": { "type": "string" },
+        "builder_id": { "type": "string" },
+        "build_type": { "type": "string" },
+        "source_repository": { "type": "string" }
+      }
+    },
+    "signatureEvidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "provider": { "type": "string" },
+        "bundle": { "type": "string" },
+        "uri": { "type": "string" },
+        "digest": { "type": "string" },
+        "identity": { "type": "string" },
+        "issuer": { "type": "string" },
+        "oidc_issuer": { "type": "string" },
+        "signed": { "enum": ["provenance", "sbom"] },
+        "required": { "type": "boolean" }
+      }
+    },
+    "sbomEvidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "format": { "type": "string" },
+        "uri": { "type": "string" },
+        "digest": { "type": "string" }
       }
     }
   }

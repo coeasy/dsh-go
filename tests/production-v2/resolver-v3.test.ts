@@ -23,6 +23,8 @@ const registry = {
     item('sql-provider', { provides: ['cap.sql'] }),
     item('consumer', { dependencies: [{ id: 'cap.sql', range: '*' }], replaces: ['legacy-consumer'] }),
     item('exclusive', { conflicts: ['cap.sql'] }),
+    item('yanked-provider', { provides: ['cap.yanked'], security: { yanked: true } }),
+    item('needs-yanked', { dependencies: [{ id: 'yanked-provider', range: '*' }] }),
   ],
 };
 
@@ -37,5 +39,15 @@ describe('resolver v3 ecosystem semantics', () => {
   it('blocks conflicts against installed providers', () => {
     const root = resolvePlugin(registry, 'exclusive', '*');
     expect(() => buildDependencyPlan(registry, root, { installed: [{ id: 'sql-provider', provides: ['cap.sql'], state: 'active' }] })).toThrow(/package conflict/);
+  });
+
+  it('blocks yanked direct packages, virtual providers, and transitive dependencies by default', () => {
+    expect(() => resolvePlugin(registry, 'yanked-provider', '*')).toThrow(/yanked/);
+    expect(() => resolvePlugin(registry, 'cap.yanked', '*')).toThrow(/yanked/);
+    expect(() => buildDependencyPlan(registry, resolvePlugin(registry, 'needs-yanked', '*'))).toThrow(/yanked/);
+    expect(resolvePlugin(registry, 'yanked-provider', '*', { allowYanked: true })).toMatchObject({
+      id: 'yanked-provider',
+      security: { yanked: true },
+    });
   });
 });
