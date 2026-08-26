@@ -106,19 +106,22 @@ jobs:
           git push || { echo "Push raced with another commit; rebasing once"; git pull --rebase; git push; }
           echo "pushed=true" >> "$GITHUB_OUTPUT"
           echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: Dispatch deploy workflows for synced data
-        if: steps.publish.outputs.pushed == 'true' && steps.diff.outputs.data_changed == 'true'
+      - name: Dispatch deployment workflows for authoritative revision
+        id: dispatch
+        if: github.event_name == 'push' || (steps.publish.outputs.pushed == 'true' && steps.diff.outputs.data_changed == 'true')
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           SHA="${{ steps.publish.outputs.commit_sha }}"
-          echo "Registry data committed at ${SHA}; dispatching deploy workflows from main"
-          for workflow in deploy.yml deploy-pages.yml deploy-mirror.yml; do
-            echo "Dispatching ${workflow}"
-            gh workflow run "$workflow" --ref main
+          test -n "$SHA"
+          echo "Authoritative deployment revision: ${SHA}"
+          for workflow in deploy.yml deploy-pages.yml deploy-mirror.yml deploy-edgeone.yml; do
+            echo "Dispatching ${workflow} at ${SHA}"
+            gh workflow run "$workflow" --ref main -f commit_sha="$SHA"
           done
+          echo "dispatched=true" >> "$GITHUB_OUTPUT"
       - name: Summary
         if: always()
         run: |
@@ -128,6 +131,7 @@ jobs:
           fi
           echo "- generated commit pushed: ${{ steps.publish.outputs.pushed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- deploy-worthy data changed: ${{ steps.diff.outputs.data_changed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${{ steps.publish.outputs.pushed }}" = "true" ]; then
-            echo "- generated commit: ${{ steps.publish.outputs.commit_sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- deployment workflows dispatched: ${{ steps.dispatch.outputs.dispatched || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ steps.publish.outputs.commit_sha }}" ]; then
+            echo "- authoritative revision: ${{ steps.publish.outputs.commit_sha }}" >> "$GITHUB_STEP_SUMMARY"
           fi

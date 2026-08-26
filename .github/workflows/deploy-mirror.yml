@@ -1,12 +1,12 @@
 name: Deploy CN Mirrors (Gitee/GitCode)
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "**.md"
-      - "LICENSE"
   workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "Exact commit SHA to deploy"
+        required: false
+        type: string
 
 concurrency:
   group: mirror-deploy
@@ -20,10 +20,18 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
     steps:
-      - name: Checkout
+      - name: Checkout exact deployment revision
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit_sha || github.sha }}
+          fetch-depth: 1
+      - name: Verify deployment revision
+        shell: bash
+        run: |
+          EXPECTED="${{ inputs.commit_sha || github.sha }}"
+          ACTUAL=$(git rev-parse HEAD)
+          [ "$ACTUAL" = "$EXPECTED" ] || { echo "Deployment revision mismatch: expected=$EXPECTED actual=$ACTUAL"; exit 1; }
       - name: Check canonical Registry V3
         id: registry
         shell: bash
@@ -32,7 +40,7 @@ jobs:
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "Registry V3 is not committed yet; Sync workflow owns generation, so mirror deployment is a successful no-op"
+            echo "Registry V3 is not committed yet; mirror deployment is a successful no-op"
           fi
       - name: Detect mirror credentials
         id: mirrors
@@ -91,7 +99,7 @@ jobs:
           git config user.name "dsh-go CI"
           git config user.email "ci@local"
           git add -A
-          git commit -q -m "deploy: ${{ github.sha }}"
+          git commit -q -m "deploy: ${{ inputs.commit_sha || github.sha }}"
           git push -f "https://easy5277:${GITEE_TOKEN}@gitee.com/${GITEE_REPO}.git" HEAD:gh-pages
       - name: Deploy to GitCode Pages branch
         if: ${{ steps.registry.outputs.ready == 'true' && steps.mirrors.outputs.gitcode == 'true' }}
@@ -103,5 +111,12 @@ jobs:
           git config user.name "dsh-go CI"
           git config user.email "ci@local"
           git add -A
-          git commit -q -m "deploy: ${{ github.sha }}"
+          git commit -q -m "deploy: ${{ inputs.commit_sha || github.sha }}"
           git push -f "https://oauth2:${GITCODE_TOKEN}@gitcode.com/${GITCODE_REPO}.git" HEAD:gh-pages
+      - name: Mirror summary
+        if: always()
+        run: |
+          echo "### CN Mirrors" >> "$GITHUB_STEP_SUMMARY"
+          echo "- revision: ${{ inputs.commit_sha || github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Gitee configured: ${{ steps.mirrors.outputs.gitee || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- GitCode configured: ${{ steps.mirrors.outputs.gitcode || 'false' }}" >> "$GITHUB_STEP_SUMMARY"

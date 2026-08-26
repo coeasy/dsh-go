@@ -11,7 +11,7 @@ permissions:
 jobs:
   health-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Checkout main registry
         uses: actions/checkout@v7
@@ -56,4 +56,45 @@ jobs:
             sleep 10
           done
           echo "Deployed Registry V3 did not converge to main within the monitor retry window"
+          exit 1
+      - name: Check GitHub Pages registry convergence
+        env:
+          GITHUB_PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          MAIN_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
+          MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 20 "${GITHUB_PAGES_URL}/catalog/registry-v3.json" -o /tmp/github-pages-registry.json; then
+              if MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" node -e "const r=require('/tmp/github-pages-registry.json'); if(r.generated?.content_hash!==process.env.MAIN_HASH || String(r.plugins?.length)!==process.env.MAIN_COUNT) process.exit(1)"; then
+                echo "GitHub Pages converged with main"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "GitHub Pages Registry V3 did not converge to main"
+          exit 1
+      - name: Check optional EdgeOne registry convergence
+        env:
+          EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "$EDGEONE_SITE_URL" ]; then
+            echo "EDGEONE_SITE_URL is not configured; skipping scheduled EdgeOne health check"
+            exit 0
+          fi
+          MAIN_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
+          MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
+          BASE_URL="${EDGEONE_SITE_URL%/}"
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 20 "${BASE_URL}/catalog/registry-v3.json" -o /tmp/edgeone-registry.json; then
+              if MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" node -e "const r=require('/tmp/edgeone-registry.json'); if(r.generated?.content_hash!==process.env.MAIN_HASH || String(r.plugins?.length)!==process.env.MAIN_COUNT) process.exit(1)"; then
+                echo "EdgeOne converged with main"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "EdgeOne Registry V3 did not converge to main"
           exit 1

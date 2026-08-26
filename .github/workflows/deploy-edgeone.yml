@@ -1,0 +1,150 @@
+name: Deploy Tencent EdgeOne
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "Exact commit SHA to deploy"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: edgeone-deploy
+  cancel-in-progress: true
+
+env:
+  EDGEONE_PROJECT: ${{ vars.EDGEONE_PROJECT || 'dsh-go' }}
+  EDGEONE_CLI_VERSION: ${{ vars.EDGEONE_CLI_VERSION || '1.6.28' }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact deployment revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit_sha || github.sha }}
+          fetch-depth: 1
+      - name: Verify deployment revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED="${{ inputs.commit_sha || github.sha }}"
+          ACTUAL=$(git rev-parse HEAD)
+          [ "$ACTUAL" = "$EXPECTED" ] || { echo "Deployment revision mismatch: expected=$EXPECTED actual=$ACTUAL"; exit 1; }
+      - name: Check canonical Registry V3
+        id: registry
+        shell: bash
+        run: |
+          if [ -f catalog/registry-v3.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Registry V3 is not committed yet; EdgeOne deployment is a successful no-op"
+          fi
+      - name: Detect EdgeOne configuration
+        id: edgeone-config
+        shell: bash
+        env:
+          EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
+        run: |
+          if [ -n "$EDGEONE_API_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::EDGEONE_API_TOKEN is not configured; EdgeOne deployment will be skipped. Create it at https://console.cloud.tencent.com/edgeone/pages?tab=api"
+          fi
+      - name: Setup Node.js
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+      - name: Install dependencies
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
+        run: |
+          npm ci
+          cd site && npm ci
+      - name: Deploy Gate V3 and tests
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
+        run: |
+          npm run deploy:gate
+          npm run typecheck
+          npm test
+      - name: Copy catalog into site
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
+        run: npm run copy-assets
+      - name: Build static EdgeOne site
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
+        run: cd site && npm run build
+        env:
+          PUBLIC_SITE_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
+          PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
+      - name: Verify build output
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
+        run: |
+          test -f site/dist/index.html
+          test -f site/dist/catalog/plugins.json
+          test -f site/dist/catalog/registry-v3.json
+          test -f site/dist/catalog/schema-v3.json
+          node -e "const r=require('./site/dist/catalog/registry-v3.json'); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length) process.exit(1)"
+      - name: Verify EdgeOne CLI namespace
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
+        run: npx --yes "edgeone@${EDGEONE_CLI_VERSION}" makers deploy --help >/dev/null
+      - name: Deploy to Tencent EdgeOne Makers
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
+        id: edgeone
+        shell: bash
+        env:
+          EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
+          EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}
+        run: |
+          set -euo pipefail
+          LOG=$(mktemp)
+          npx --yes "edgeone@${EDGEONE_CLI_VERSION}" makers deploy ./site/dist \
+            -n "$EDGEONE_PROJECT" \
+            -t "$EDGEONE_API_TOKEN" \
+            -e production 2>&1 | tee "$LOG"
+          DEPLOY_URL=$(grep -Eo 'EDGEONE_DEPLOY_URL=https?://[^[:space:]]+' "$LOG" | tail -n 1 | cut -d= -f2- || true)
+          PROJECT_ID=$(grep -Eo 'EDGEONE_PROJECT_ID=[^[:space:]]+' "$LOG" | tail -n 1 | cut -d= -f2- || true)
+          HEALTH_URL="${EDGEONE_SITE_URL:-$DEPLOY_URL}"
+          echo "deploy_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
+          echo "health_url=$HEALTH_URL" >> "$GITHUB_OUTPUT"
+      - name: Post-deploy Registry V3 convergence check
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' && steps.edgeone.outputs.health_url != '' }}
+        shell: bash
+        env:
+          EDGEONE_SITE_URL: ${{ steps.edgeone.outputs.health_url }}
+        run: |
+          set -euo pipefail
+          EXPECTED_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
+          EXPECTED_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
+          BASE_URL="${EDGEONE_SITE_URL%/}"
+          for attempt in 1 2 3 4 5 6 7 8 9; do
+            if curl -fsS --max-time 20 "${BASE_URL}/catalog/registry-v3.json" -o /tmp/registry-v3.json; then
+              if EXPECTED_HASH="$EXPECTED_HASH" EXPECTED_COUNT="$EXPECTED_COUNT" node -e "const r=require('/tmp/registry-v3.json'); if(r.generated?.content_hash!==process.env.EXPECTED_HASH || String(r.plugins?.length)!==process.env.EXPECTED_COUNT) process.exit(1)"; then
+                echo "EdgeOne Registry V3 converged: hash=${EXPECTED_HASH}, count=${EXPECTED_COUNT}"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "EdgeOne production did not converge to the exact Registry V3 revision"
+          exit 1
+      - name: EdgeOne summary
+        if: always()
+        run: |
+          echo "### Tencent EdgeOne Makers" >> "$GITHUB_STEP_SUMMARY"
+          echo "- revision: ${{ inputs.commit_sha || github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- configured: ${{ steps.edgeone-config.outputs.configured || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- project: ${EDGEONE_PROJECT}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- CLI: edgeone@${EDGEONE_CLI_VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- deployment URL: ${{ steps.edgeone.outputs.deploy_url || vars.EDGEONE_SITE_URL || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
