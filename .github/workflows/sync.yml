@@ -6,6 +6,11 @@ on:
     paths:
       - "scripts/sync*.mjs"
       - "scripts/registry-pipeline-v3.mjs"
+      - "scripts/registry-v3-builder.mjs"
+      - "scripts/repository-identity.mjs"
+      - "scripts/github-discovery.mjs"
+      - "scripts/checksum.mjs"
+      - "scripts/validate-registry-v3.mjs"
       - "catalog/schema-v3.json"
       - "catalog/overrides.json"
       - ".github/workflows/sync.yml"
