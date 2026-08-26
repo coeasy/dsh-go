@@ -16,6 +16,7 @@ import {
   writeRuntimeRegistry,
 } from './registry.mjs';
 import { preflightPackage } from './preflight.mjs';
+import { readInstallLock } from './verifier.mjs';
 
 export function transactionsRoot() {
   return resolve(process.env.DSH_TRANSACTION_HOME || join(runtimeRoot(), 'transactions'));
@@ -145,18 +146,135 @@ function installedRecord(pkg, result, previous, transactionId) {
   }, 'transaction-install-complete', { transaction_id: transactionId, version: pkg.version, commit: pkg.commit });
 }
 
-async function restoreMoves(moves) {
-  for (const move of [...moves].reverse()) {
-    await rm(move.final_target, { recursive: true, force: true });
-    const restoreFrom = move.backup_target && await pathExists(move.backup_target)
-      ? move.backup_target
-      : move.rollback_path && await pathExists(move.rollback_path)
-        ? move.rollback_path
-        : null;
-    if (restoreFrom) {
-      await mkdir(dirname(move.final_target), { recursive: true });
-      await rename(restoreFrom, move.final_target);
+function identity(record) {
+  if (!record) return null;
+  return {
+    type: record.type || record.package_type || 'plugin',
+    id: record.id,
+    version: record.version,
+    commit: record.commit || record.source?.commit,
+  };
+}
+
+function sameIdentity(left, right) {
+  if (!left || !right) return false;
+  return left.type === right.type
+    && left.id === right.id
+    && left.version === right.version
+    && String(left.commit || '').toLowerCase() === String(right.commit || '').toLowerCase();
+}
+
+async function installedIdentity(path) {
+  if (!await pathExists(path)) return null;
+  return identity(await readInstallLock(path));
+}
+
+function movePhase(move) {
+  return move.phase || 'done';
+}
+
+function transactionCandidate(journal, move) {
+  return (journal.order || []).find((candidate) => candidate.type === move.type && candidate.id === move.id) || null;
+}
+
+function originalCandidate(journal, move) {
+  if (!move.had_previous && move.had_previous !== undefined) return null;
+  const snapshot = journal.registry_snapshot;
+  if (!snapshot) return null;
+  return identity(getRuntimePackage(snapshot, move.type, move.id, { includeRemoved: true }));
+}
+
+function recoveryConflict(message, details = {}) {
+  const error = new Error(message);
+  error.code = 'DSH_TRANSACTION_RECOVERY_CONFLICT';
+  Object.assign(error, details);
+  return error;
+}
+
+async function inspectRecoveryMove(move, journal) {
+  const phase = movePhase(move);
+  const target = transactionCandidate(journal, move);
+  if (!target) throw recoveryConflict(`transaction journal is missing package identity for ${move.type}:${move.id}`);
+  const original = originalCandidate(journal, move);
+  const hadPrevious = move.had_previous ?? Boolean(original);
+  const finalIdentity = await installedIdentity(move.final_target);
+  const backupIdentity = move.backup_target ? await installedIdentity(move.backup_target) : null;
+  const rollbackIdentity = move.rollback_path ? await installedIdentity(move.rollback_path) : null;
+  const finalIsTransaction = sameIdentity(finalIdentity, target);
+  const finalIsOriginal = hadPrevious && sameIdentity(finalIdentity, original);
+
+  if (phase === 'backup-move') {
+    if (finalIdentity && !backupIdentity) {
+      if (!finalIsOriginal) throw recoveryConflict(`transaction recovery found unexpected final package for ${move.type}:${move.id}`, { phase });
+      return { move, action: 'none' };
     }
+    if (!finalIdentity && backupIdentity) {
+      if (!sameIdentity(backupIdentity, original)) throw recoveryConflict(`transaction backup identity mismatch for ${move.type}:${move.id}`, { phase });
+      return { move, action: 'restore', restore_from: move.backup_target };
+    }
+    throw recoveryConflict(`transaction backup phase is ambiguous for ${move.type}:${move.id}`, { phase });
+  }
+
+  if (phase === 'stage-move') {
+    if (hadPrevious) {
+      if (!backupIdentity || !sameIdentity(backupIdentity, original)) {
+        throw recoveryConflict(`transaction backup is missing or invalid for ${move.type}:${move.id}`, { phase });
+      }
+      if (finalIdentity && !finalIsTransaction) {
+        throw recoveryConflict(`transaction staged package identity mismatch for ${move.type}:${move.id}`, { phase });
+      }
+      return { move, action: 'restore', restore_from: move.backup_target, remove_final: Boolean(finalIdentity) };
+    }
+    if (finalIdentity && !finalIsTransaction) {
+      throw recoveryConflict(`transaction staged package identity mismatch for ${move.type}:${move.id}`, { phase });
+    }
+    return { move, action: finalIdentity ? 'remove' : 'none' };
+  }
+
+  if (!['rollback-move', 'done'].includes(phase)) {
+    throw recoveryConflict(`unsupported transaction recovery phase ${phase} for ${move.type}:${move.id}`, { phase });
+  }
+
+  if (!hadPrevious) {
+    if (finalIdentity && !finalIsTransaction) {
+      throw recoveryConflict(`transaction final package identity mismatch for ${move.type}:${move.id}`, { phase });
+    }
+    return { move, action: finalIdentity ? 'remove' : 'none' };
+  }
+
+  if (finalIsOriginal) return { move, action: 'none' };
+  if (finalIdentity && !finalIsTransaction) {
+    throw recoveryConflict(`transaction final package identity mismatch for ${move.type}:${move.id}`, { phase });
+  }
+
+  if (backupIdentity) {
+    if (!sameIdentity(backupIdentity, original)) throw recoveryConflict(`transaction backup identity mismatch for ${move.type}:${move.id}`, { phase });
+    return { move, action: 'restore', restore_from: move.backup_target, remove_final: Boolean(finalIdentity) };
+  }
+  if (rollbackIdentity) {
+    if (!sameIdentity(rollbackIdentity, original)) throw recoveryConflict(`transaction rollback identity mismatch for ${move.type}:${move.id}`, { phase });
+    return { move, action: 'restore', restore_from: move.rollback_path, remove_final: Boolean(finalIdentity) };
+  }
+  throw recoveryConflict(`transaction original package cannot be recovered for ${move.type}:${move.id}`, { phase });
+}
+
+async function restoreMoves(moves, journal) {
+  const inspections = [];
+  for (const move of moves || []) inspections.push(await inspectRecoveryMove(move, journal));
+
+  for (const item of inspections.reverse()) {
+    const { move } = item;
+    if (item.action === 'none') continue;
+    if (item.action === 'remove') {
+      await rm(move.final_target, { recursive: true, force: true });
+      continue;
+    }
+    if (item.remove_final) await rm(move.final_target, { recursive: true, force: true });
+    if (!item.restore_from || !await pathExists(item.restore_from)) {
+      throw recoveryConflict(`transaction restore source disappeared for ${move.type}:${move.id}`);
+    }
+    await mkdir(dirname(move.final_target), { recursive: true });
+    await rename(item.restore_from, move.final_target);
   }
 }
 
@@ -164,9 +282,22 @@ function transactionRecorded(registry, journal) {
   if (!journal?.id || !Array.isArray(journal.order) || journal.order.length === 0) return false;
   return journal.order.every((candidate) => {
     const record = getRuntimePackage(registry, candidate.type, candidate.id, { includeRemoved: true });
-    if (!record || record.version !== candidate.version || record.commit !== candidate.commit) return false;
-    return (record.history || []).some((entry) => entry.transaction_id === journal.id && entry.event === 'transaction-install-complete');
+    return Boolean(record && (record.history || []).some((entry) => entry.transaction_id === journal.id && entry.event === 'transaction-install-complete'));
   });
+}
+
+function journalPayload(transaction, moves, state = 'committing', extra = {}) {
+  return {
+    id: transaction.id,
+    state,
+    kind: transaction.kind,
+    registry_file: extra.registry_file ?? null,
+    registry_snapshot: transaction.runtimeRegistry,
+    expected_generation: transaction.runtimeRegistry.generation,
+    order: transaction.order,
+    moves,
+    ...extra,
+  };
 }
 
 export async function executePackageTransaction(file, options = {}) {
@@ -195,16 +326,7 @@ export async function executePackageTransaction(file, options = {}) {
   const moves = [];
   let nextRegistry = transaction.runtimeRegistry;
   let registryCommitted = false;
-  await writeJournal(root, {
-    id: transaction.id,
-    state: 'staging',
-    kind: transaction.kind,
-    registry_file: options.registryFile || null,
-    registry_snapshot: transaction.runtimeRegistry,
-    expected_generation: transaction.runtimeRegistry.generation,
-    order: transaction.order,
-    moves,
-  });
+  await writeJournal(root, journalPayload(transaction, moves, 'staging', { registry_file: options.registryFile || null }));
 
   try {
     for (const pkg of transaction.packages) {
@@ -221,16 +343,7 @@ export async function executePackageTransaction(file, options = {}) {
       throw error;
     }
 
-    await writeJournal(root, {
-      id: transaction.id,
-      state: 'committing',
-      kind: transaction.kind,
-      registry_file: options.registryFile || null,
-      registry_snapshot: transaction.runtimeRegistry,
-      expected_generation: transaction.runtimeRegistry.generation,
-      order: transaction.order,
-      moves,
-    });
+    await writeJournal(root, journalPayload(transaction, moves, 'committing', { registry_file: options.registryFile || null }));
 
     for (const item of staged) {
       const { pkg, staged_target: stagedTarget } = item;
@@ -238,29 +351,39 @@ export async function executePackageTransaction(file, options = {}) {
       const finalTarget = current?.path || packagePath(pkg.type, pkg.id);
       const backupTarget = join(root, 'backup', pkg.type, safePackageId(pkg.id));
       const rollbackPath = `${finalTarget}.backup`;
+      const hadPrevious = await pathExists(finalTarget);
+      const move = {
+        type: pkg.type,
+        id: pkg.id,
+        final_target: finalTarget,
+        backup_target: backupTarget,
+        rollback_path: hadPrevious ? rollbackPath : null,
+        had_previous: hadPrevious,
+        phase: hadPrevious ? 'backup-move' : 'stage-move',
+      };
+      moves.push(move);
+      await writeJournal(root, journalPayload(transaction, moves, 'committing', { registry_file: options.registryFile || null }));
+
       await mkdir(dirname(finalTarget), { recursive: true });
       await mkdir(dirname(backupTarget), { recursive: true });
-      if (await pathExists(finalTarget)) await rename(finalTarget, backupTarget);
+      if (hadPrevious) await rename(finalTarget, backupTarget);
+
+      move.phase = 'stage-move';
+      await writeJournal(root, journalPayload(transaction, moves, 'committing', { registry_file: options.registryFile || null }));
       await rename(stagedTarget, finalTarget);
-      if (await pathExists(backupTarget)) {
+
+      if (hadPrevious) {
+        move.phase = 'rollback-move';
+        await writeJournal(root, journalPayload(transaction, moves, 'committing', { registry_file: options.registryFile || null }));
         await rm(rollbackPath, { recursive: true, force: true });
         await rename(backupTarget, rollbackPath);
       }
-      const move = { type: pkg.type, id: pkg.id, final_target: finalTarget, backup_target: backupTarget, rollback_path: current ? rollbackPath : null };
-      moves.push(move);
+
+      move.phase = 'done';
+      await writeJournal(root, journalPayload(transaction, moves, 'committing', { registry_file: options.registryFile || null }));
       item.plan.final_target = finalTarget;
-      item.plan.rollback_path = current ? rollbackPath : null;
+      item.plan.rollback_path = hadPrevious ? rollbackPath : null;
       nextRegistry = upsertRuntimePackage(nextRegistry, installedRecord(pkg, item.plan, current?.state === 'removed' ? null : current, transaction.id));
-      await writeJournal(root, {
-        id: transaction.id,
-        state: 'committing',
-        kind: transaction.kind,
-        registry_file: options.registryFile || null,
-        registry_snapshot: transaction.runtimeRegistry,
-        expected_generation: transaction.runtimeRegistry.generation,
-        order: transaction.order,
-        moves,
-      });
     }
 
     const written = await writeRuntimeRegistry(nextRegistry, options.registryFile);
@@ -277,8 +400,19 @@ export async function executePackageTransaction(file, options = {}) {
       restart_required: true,
     };
   } catch (error) {
-    if (!registryCommitted) await restoreMoves(moves).catch(() => {});
-    if (!registryCommitted) await rm(root, { recursive: true, force: true }).catch(() => {});
+    if (!registryCommitted) {
+      try {
+        await restoreMoves(moves, journalPayload(transaction, moves, 'recovery-required', { registry_file: options.registryFile || null }));
+        await rm(root, { recursive: true, force: true });
+      } catch (recoveryError) {
+        error.recovery_error = recoveryError.message;
+        await writeJournal(root, journalPayload(transaction, moves, 'recovery-required', {
+          registry_file: options.registryFile || null,
+          error: error.message,
+          recovery_error: recoveryError.message,
+        })).catch(() => {});
+      }
+    }
     throw error;
   }
 }
@@ -300,20 +434,42 @@ export async function recoverPackageTransactions(options = {}) {
         await rm(root, { recursive: true, force: true });
         continue;
       }
-      const currentRegistry = await readRuntimeRegistry(journal.registry_file || options.registryFile);
+      const registryFile = journal.registry_file || options.registryFile;
+      const currentRegistry = await readRuntimeRegistry(registryFile);
       if (transactionRecorded(currentRegistry, journal)) {
         await rm(root, { recursive: true, force: true });
-        recovered.push({ id: journal.id || entry.name, state: 'committed-detected' });
+        recovered.push({ id: journal.id || entry.name, state: 'committed-detected', generation: currentRegistry.generation });
         continue;
       }
-      await restoreMoves(journal.moves || []);
-      if (journal.registry_snapshot) {
-        await writeRuntimeRegistry(journal.registry_snapshot, journal.registry_file || options.registryFile, { force: true });
+
+      const expectedGeneration = Number(journal.expected_generation);
+      if (!Number.isFinite(expectedGeneration)) {
+        throw recoveryConflict(`transaction journal has no valid expected generation: ${journal.id || entry.name}`);
       }
+      if (currentRegistry.generation !== expectedGeneration) {
+        throw recoveryConflict(
+          `runtime registry advanced after transaction crash: expected generation ${expectedGeneration}, current ${currentRegistry.generation}`,
+          { expected_generation: expectedGeneration, current_generation: currentRegistry.generation },
+        );
+      }
+
+      await restoreMoves(journal.moves || [], journal);
       await rm(root, { recursive: true, force: true });
-      recovered.push({ id: journal.id || entry.name, state: journal.state || 'unknown' });
+      recovered.push({
+        id: journal.id || entry.name,
+        state: 'rolled-back',
+        interrupted_state: journal.state || 'unknown',
+        generation: currentRegistry.generation,
+      });
     } catch (error) {
-      recovered.push({ id: entry.name, error: error.message });
+      recovered.push({
+        id: entry.name,
+        state: 'conflict',
+        error: error.message,
+        code: error.code || null,
+        expected_generation: error.expected_generation ?? null,
+        current_generation: error.current_generation ?? null,
+      });
     }
   }
   return { recovered };
