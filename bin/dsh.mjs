@@ -15,6 +15,7 @@ import { loadRegistryFile } from '../runtime/resolver.mjs';
 import { preflightPackage } from '../runtime/preflight.mjs';
 import { findRuntimePackage, readRuntimeRegistry } from '../runtime/registry.mjs';
 import { assertPackageType, parsePackageSpec } from '../runtime/package-model.mjs';
+import { runDoctor } from '../runtime/doctor.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -48,12 +49,14 @@ Usage:
   dsh <plugin|mcp|skill|agent> config get|set|unset ...
   dsh mcp start|stop|restart|process-status|logs|probe|invoke ...
   dsh skill load|unload|inspect|invoke ...
+  dsh doctor [package-id] [--type plugin|mcp|skill|agent] [--quick]
   dsh profile apply <profile.json> [--yes|--dry-run]
   dsh bundle install <bundle.json> [--yes|--dry-run]
   dsh secret set|get|list|delete ...
   dsh transaction recover
   dsh startup activate
   dsh runtime info
+  dsh runtime doctor [package-id] [--type plugin|mcp|skill|agent] [--quick]
   dsh runtime check-update
   dsh runtime update [--dry-run]
   dsh host uri <package-spec> [--type <type>] [--channel <name>]
@@ -250,10 +253,22 @@ async function startupCommand() {
   if (!result.healthy) process.exitCode = 1;
 }
 
+async function doctorCommand(positionalIndex) {
+  const result = await runDoctor(await packageVersion(), {
+    id: positional(args, positionalIndex),
+    type: option('--type'),
+    quick: args.includes('--quick'),
+    includeRemoved: args.includes('--all'),
+  });
+  print(result);
+  if (result.status === 'failed') process.exitCode = 1;
+}
+
 async function runtimeCommand() {
   const action = args[1] || 'info';
   const current = await packageVersion();
-  if (action === 'info' || action === 'doctor') {
+  if (action === 'doctor') return doctorCommand(2);
+  if (action === 'info') {
     const result = await runtimeEnvironment(current);
     print({ ...result, runtime_registry_schema: 3, package_types: ['plugin', 'mcp', 'skill', 'agent'], api_version: 'v1' });
     if (!result.node_supported) process.exitCode = 1;
@@ -276,6 +291,7 @@ async function main() {
     return;
   }
   if (args[0] === '--version' || args[0] === '-v' || args[0] === 'version') return version();
+  if (args[0] === 'doctor') return doctorCommand(1);
   if (args[0] === 'host') return hostCommand();
   if (args[0] === 'startup') return startupCommand();
   if (args[0] === 'runtime') return runtimeCommand();
