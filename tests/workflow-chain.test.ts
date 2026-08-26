@@ -7,13 +7,21 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const workflow = (name: string) => readFileSync(resolve(root, '.github/workflows', name), 'utf8');
 const script = (name: string) => readFileSync(resolve(root, 'scripts', name), 'utf8');
 const deployTargets = ['deploy.yml', 'deploy-pages.yml', 'deploy-mirror.yml', 'deploy-edgeone.yml'];
+const registryOwnedScripts = [
+  'scripts/registry-pipeline-v3.mjs',
+  'scripts/registry-v3-builder.mjs',
+  'scripts/repository-identity.mjs',
+  'scripts/github-discovery.mjs',
+  'scripts/checksum.mjs',
+  'scripts/validate-registry-v3.mjs',
+];
 
 describe('authoritative deployment routing', () => {
-  it('keeps Registry Sync narrow and incremental on code pushes', () => {
+  it('keeps Registry Sync narrow, incremental, and complete over Registry-producing code', () => {
     const sync = workflow('sync.yml');
 
     expect(sync).toContain('- "scripts/sync*.mjs"');
-    expect(sync).toContain('- "scripts/registry-pipeline-v3.mjs"');
+    for (const path of registryOwnedScripts) expect(sync, path).toContain(`- "${path}"`);
     expect(sync).toContain('- "catalog/schema-v3.json"');
     expect(sync).toContain('- "catalog/overrides.json"');
     expect(sync).toContain('- ".github/workflows/sync.yml"');
@@ -32,11 +40,15 @@ describe('authoritative deployment routing', () => {
     expect(sync).toContain("steps.dispatch.outputs.dispatch_failures || 'none'");
   });
 
-  it('routes ordinary pushes directly but defers Sync-owned paths', () => {
+  it('routes ordinary pushes directly but defers every Registry-owned producer path', () => {
     const router = workflow('deploy-router.yml');
 
     expect(router).toContain('push:');
-    expect(router).toContain('scripts/sync*.mjs|scripts/registry-pipeline-v3.mjs|catalog/schema-v3.json|catalog/overrides.json|.github/workflows/sync.yml');
+    expect(router).toContain('scripts/sync*.mjs');
+    for (const path of registryOwnedScripts) expect(router, path).toContain(path);
+    expect(router).toContain('catalog/schema-v3.json');
+    expect(router).toContain('catalog/overrides.json');
+    expect(router).toContain('.github/workflows/sync.yml');
     expect(router).toContain('generated_catalog=$GENERATED_CATALOG');
     expect(router).toContain('Generated catalog files are owned by Sync V3');
     expect(router).toContain('WORKFLOWS="deploy.yml deploy-pages.yml deploy-mirror.yml deploy-edgeone.yml"');
