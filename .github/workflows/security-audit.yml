@@ -52,3 +52,47 @@ jobs:
         run: npm ci
       - name: Block high and critical vulnerabilities
         run: npm audit --audit-level=high
+
+  repair-lockfiles:
+    name: Repair audited lockfiles
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'fix/dependency-security-gate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout controlled repair branch
+        uses: actions/checkout@v7
+        with:
+          ref: fix/dependency-security-gate
+          fetch-depth: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+      - name: Generate lockfile remediation without lifecycle scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm audit fix --force --package-lock-only --ignore-scripts || true
+          (cd site && npm audit fix --package-lock-only --ignore-scripts) || true
+      - name: Commit dependency-only remediation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- package.json package-lock.json site/package.json site/package-lock.json; then
+            echo "No dependency remediation changes generated"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- package.json package-lock.json site/package.json site/package-lock.json
+          git commit -m "fix(deps): remediate npm audit advisories"
+          git push origin HEAD:fix/dependency-security-gate
