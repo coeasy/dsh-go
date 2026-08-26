@@ -52,8 +52,9 @@ describe('runtime execution environment integration', () => {
     }] }, registryFile);
 
     const result = await invokeSkill('env-fixture', {}, { timeoutMs: 5000 });
-    expect(result.output.hostSecret).toBeNull();
-    expect(result.output.explicit).toBe('allowed');
-    expect(result.output.hasPath).toBe(true);
+    const output = result.output as unknown as { hostSecret: string | null; explicit: string | null; hasPath: boolean };
+    expect(output.hostSecret).toBeNull();
+    expect(output.explicit).toBe('allowed');
+    expect(output.hasPath).toBe(true);
   });
 });
