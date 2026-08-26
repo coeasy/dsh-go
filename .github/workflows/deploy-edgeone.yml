@@ -57,7 +57,7 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::EDGEONE_API_TOKEN is not configured; EdgeOne deployment will be skipped. Create it at https://console.cloud.tencent.com/edgeone/pages?tab=api"
+            echo "::warning::EDGEONE_API_TOKEN is not configured; EdgeOne deployment will be skipped. Create it in the EdgeOne Makers API Token tab"
           fi
       - name: Setup Node.js
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
@@ -99,6 +99,43 @@ jobs:
       - name: Verify EdgeOne CLI namespace
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
         run: npx --yes "edgeone@${EDGEONE_CLI_VERSION}" makers deploy --help >/dev/null
+      - name: Authenticate EdgeOne runner session
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
+        shell: bash
+        env:
+          EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          AUTHENTICATED=false
+          LAST_AUTH_ERROR=""
+          for attempt in $(seq 1 "$EDGEONE_DEPLOY_RETRIES"); do
+            echo "EdgeOne token authentication attempt ${attempt}/${EDGEONE_DEPLOY_RETRIES}"
+            set +e
+            AUTH_OUTPUT=$(npx --yes "edgeone@${EDGEONE_CLI_VERSION}" login --token "$EDGEONE_API_TOKEN" 2>&1)
+            AUTH_STATUS=$?
+            set -e
+            SAFE_AUTH_OUTPUT=${AUTH_OUTPUT//"$EDGEONE_API_TOKEN"/***}
+            if [ "$AUTH_STATUS" -eq 0 ]; then
+              if npx --yes "edgeone@${EDGEONE_CLI_VERSION}" whoami >/dev/null 2>&1; then
+                AUTHENTICATED=true
+                echo "EdgeOne token accepted; temporary runner session is active"
+                break
+              fi
+              LAST_AUTH_ERROR="login succeeded but whoami verification failed"
+            else
+              LAST_AUTH_ERROR=$(printf '%s\n' "$SAFE_AUTH_OUTPUT" | tail -n 20)
+            fi
+
+            echo "::warning::EdgeOne token authentication attempt ${attempt} failed: ${LAST_AUTH_ERROR}"
+            if [ "$attempt" -lt "$EDGEONE_DEPLOY_RETRIES" ] && printf '%s\n' "$SAFE_AUTH_OUTPUT" | grep -Eqi 'fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up|network'; then
+              WAIT=$((attempt * 10))
+              echo "Transient EdgeOne authentication/API failure; retrying in ${WAIT}s"
+              sleep "$WAIT"
+              continue
+            fi
+            break
+          done
+          [ "$AUTHENTICATED" = true ] || { echo "EdgeOne token/session authentication failed: ${LAST_AUTH_ERROR}"; exit 1; }
       - name: Deploy to Tencent EdgeOne Makers
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' }}
         id: edgeone
@@ -116,11 +153,10 @@ jobs:
           DEPLOY_JSON=""
           LAST_ERROR=""
           for attempt in $(seq 1 "$EDGEONE_DEPLOY_RETRIES"); do
-            echo "EdgeOne deployment attempt ${attempt}/${EDGEONE_DEPLOY_RETRIES}"
+            echo "EdgeOne deployment attempt ${attempt}/${EDGEONE_DEPLOY_RETRIES} using authenticated runner session"
             set +e
             OUTPUT=$(npx --yes "edgeone@${EDGEONE_CLI_VERSION}" makers deploy ./site/dist \
               -n "$EDGEONE_PROJECT" \
-              -t "$EDGEONE_API_TOKEN" \
               -e production \
               --json 2>&1)
             STATUS=$?
@@ -195,6 +231,7 @@ jobs:
           echo "- project: ${EDGEONE_PROJECT}" >> "$GITHUB_STEP_SUMMARY"
           echo "- CLI: edgeone@${EDGEONE_CLI_VERSION}" >> "$GITHUB_STEP_SUMMARY"
           echo "- retry limit: ${EDGEONE_DEPLOY_RETRIES}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- auth mode: temporary runner session" >> "$GITHUB_STEP_SUMMARY"
           echo "- project id: ${{ steps.edgeone.outputs.project_id || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- console URL: ${{ steps.edgeone.outputs.console_url || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
           if [ -n "${{ vars.EDGEONE_SITE_URL }}" ]; then

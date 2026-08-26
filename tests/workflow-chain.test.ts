@@ -83,6 +83,17 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).toContain('configured=false');
   });
 
+  it('authenticates an ephemeral EdgeOne runner session before project API calls', () => {
+    const edgeone = workflow('deploy-edgeone.yml');
+
+    expect(edgeone).toContain('Authenticate EdgeOne runner session');
+    expect(edgeone).toContain('login --token "$EDGEONE_API_TOKEN"');
+    expect(edgeone).toContain('whoami >/dev/null 2>&1');
+    expect(edgeone).toContain('temporary runner session is active');
+    expect(edgeone).toContain('using authenticated runner session');
+    expect(edgeone).not.toContain('-t "$EDGEONE_API_TOKEN" \\\n              -e production');
+  });
+
   it('uses structured EdgeOne CI output and retries only transient transport failures', () => {
     const edgeone = workflow('deploy-edgeone.yml');
 
