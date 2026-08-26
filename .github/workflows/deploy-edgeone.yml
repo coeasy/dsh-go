@@ -18,6 +18,7 @@ concurrency:
 env:
   EDGEONE_PROJECT: ${{ vars.EDGEONE_PROJECT || 'dsh-go' }}
   EDGEONE_CLI_VERSION: ${{ vars.EDGEONE_CLI_VERSION || '1.6.28' }}
+  EDGEONE_DEPLOY_RETRIES: ${{ vars.EDGEONE_DEPLOY_RETRIES || '3' }}
 
 jobs:
   deploy:
@@ -107,17 +108,62 @@ jobs:
           EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}
         run: |
           set -euo pipefail
-          LOG=$(mktemp)
-          npx --yes "edgeone@${EDGEONE_CLI_VERSION}" makers deploy ./site/dist \
-            -n "$EDGEONE_PROJECT" \
-            -t "$EDGEONE_API_TOKEN" \
-            -e production 2>&1 | tee "$LOG"
-          DEPLOY_URL=$(grep -Eo 'EDGEONE_DEPLOY_URL=https?://[^[:space:]]+' "$LOG" | tail -n 1 | cut -d= -f2- || true)
-          PROJECT_ID=$(grep -Eo 'EDGEONE_PROJECT_ID=[^[:space:]]+' "$LOG" | tail -n 1 | cut -d= -f2- || true)
+          case "$EDGEONE_DEPLOY_RETRIES" in
+            ''|*[!0-9]*) echo "Invalid EDGEONE_DEPLOY_RETRIES: $EDGEONE_DEPLOY_RETRIES"; exit 1 ;;
+          esac
+          [ "$EDGEONE_DEPLOY_RETRIES" -ge 1 ] || { echo "EDGEONE_DEPLOY_RETRIES must be >= 1"; exit 1; }
+
+          DEPLOY_JSON=""
+          LAST_ERROR=""
+          for attempt in $(seq 1 "$EDGEONE_DEPLOY_RETRIES"); do
+            echo "EdgeOne deployment attempt ${attempt}/${EDGEONE_DEPLOY_RETRIES}"
+            set +e
+            OUTPUT=$(npx --yes "edgeone@${EDGEONE_CLI_VERSION}" makers deploy ./site/dist \
+              -n "$EDGEONE_PROJECT" \
+              -t "$EDGEONE_API_TOKEN" \
+              -e production \
+              --json 2>&1)
+            STATUS=$?
+            set -e
+
+            LAST_JSON=$(printf '%s\n' "$OUTPUT" | awk '/^\{.*\}$/{line=$0} END{print line}')
+            if [ "$STATUS" -eq 0 ] && [ -n "$LAST_JSON" ]; then
+              if DEPLOY_JSON="$LAST_JSON" node -e "const r=JSON.parse(process.env.DEPLOY_JSON); if(r.status!=='success' || !r.url || !r.projectId) process.exit(1)"; then
+                DEPLOY_JSON="$LAST_JSON"
+                break
+              fi
+            fi
+
+            if [ -n "$LAST_JSON" ]; then
+              LAST_ERROR=$(DEPLOY_JSON="$LAST_JSON" node -e "try{const r=JSON.parse(process.env.DEPLOY_JSON);process.stdout.write(String(r.error||r.message||'unknown EdgeOne error'))}catch{process.stdout.write('invalid EdgeOne JSON response')}" || true)
+            else
+              SAFE_OUTPUT=${OUTPUT//"$EDGEONE_API_TOKEN"/***}
+              LAST_ERROR=$(printf '%s\n' "$SAFE_OUTPUT" | tail -n 20)
+            fi
+            echo "::warning::EdgeOne deployment attempt ${attempt} failed: ${LAST_ERROR}"
+
+            if [ "$attempt" -lt "$EDGEONE_DEPLOY_RETRIES" ] && printf '%s\n' "$OUTPUT" | grep -Eqi 'fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up|network'; then
+              WAIT=$((attempt * 10))
+              echo "Transient EdgeOne network/API failure; retrying in ${WAIT}s"
+              sleep "$WAIT"
+              continue
+            fi
+            break
+          done
+
+          [ -n "$DEPLOY_JSON" ] || { echo "EdgeOne deployment failed after retry policy: ${LAST_ERROR}"; exit 1; }
+
+          DEPLOY_URL=$(DEPLOY_JSON="$DEPLOY_JSON" node -e "const r=JSON.parse(process.env.DEPLOY_JSON);process.stdout.write(r.url)")
+          PROJECT_ID=$(DEPLOY_JSON="$DEPLOY_JSON" node -e "const r=JSON.parse(process.env.DEPLOY_JSON);process.stdout.write(r.projectId)")
+          CONSOLE_URL=$(DEPLOY_JSON="$DEPLOY_JSON" node -e "const r=JSON.parse(process.env.DEPLOY_JSON);process.stdout.write(r.consoleUrl||'')")
           HEALTH_URL="${EDGEONE_SITE_URL:-$DEPLOY_URL}"
+
+          echo "::add-mask::$DEPLOY_URL"
           echo "deploy_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
           echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
+          echo "console_url=$CONSOLE_URL" >> "$GITHUB_OUTPUT"
           echo "health_url=$HEALTH_URL" >> "$GITHUB_OUTPUT"
+          echo "EdgeOne deployment accepted: project=${PROJECT_ID}"
       - name: Post-deploy Registry V3 convergence check
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.configured == 'true' && steps.edgeone.outputs.health_url != '' }}
         shell: bash
@@ -127,14 +173,15 @@ jobs:
           set -euo pipefail
           EXPECTED_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
           EXPECTED_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
-          BASE_URL="${EDGEONE_SITE_URL%/}"
+          REGISTRY_URL=$(node -e "const u=new URL(process.env.EDGEONE_SITE_URL);u.pathname='/catalog/registry-v3.json';process.stdout.write(u.toString())")
           for attempt in 1 2 3 4 5 6 7 8 9; do
-            if curl -fsS --max-time 20 "${BASE_URL}/catalog/registry-v3.json" -o /tmp/registry-v3.json; then
+            if curl -fsS --max-time 20 "$REGISTRY_URL" -o /tmp/registry-v3.json; then
               if EXPECTED_HASH="$EXPECTED_HASH" EXPECTED_COUNT="$EXPECTED_COUNT" node -e "const r=require('/tmp/registry-v3.json'); if(r.generated?.content_hash!==process.env.EXPECTED_HASH || String(r.plugins?.length)!==process.env.EXPECTED_COUNT) process.exit(1)"; then
                 echo "EdgeOne Registry V3 converged: hash=${EXPECTED_HASH}, count=${EXPECTED_COUNT}"
                 exit 0
               fi
             fi
+            echo "Waiting for EdgeOne production convergence (${attempt}/9)"
             sleep 10
           done
           echo "EdgeOne production did not converge to the exact Registry V3 revision"
@@ -147,4 +194,11 @@ jobs:
           echo "- configured: ${{ steps.edgeone-config.outputs.configured || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- project: ${EDGEONE_PROJECT}" >> "$GITHUB_STEP_SUMMARY"
           echo "- CLI: edgeone@${EDGEONE_CLI_VERSION}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- deployment URL: ${{ steps.edgeone.outputs.deploy_url || vars.EDGEONE_SITE_URL || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- retry limit: ${EDGEONE_DEPLOY_RETRIES}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- project id: ${{ steps.edgeone.outputs.project_id || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- console URL: ${{ steps.edgeone.outputs.console_url || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ vars.EDGEONE_SITE_URL }}" ]; then
+            echo "- stable site URL: ${{ vars.EDGEONE_SITE_URL }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- deployment URL: generated by EdgeOne and masked in Actions logs" >> "$GITHUB_STEP_SUMMARY"
+          fi
