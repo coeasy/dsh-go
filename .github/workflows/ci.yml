@@ -34,6 +34,11 @@ jobs:
           npm ci
           cd site && npm ci
 
+      - name: Dependency security audit
+        run: |
+          npm audit --audit-level=high
+          cd site && npm audit --audit-level=high
+
       - name: Stable contract
         run: npm run contract:check
 
