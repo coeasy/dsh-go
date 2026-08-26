@@ -68,7 +68,7 @@ jobs:
 
           while IFS= read -r path; do
             case "$path" in
-              scripts/sync*.mjs|scripts/registry-pipeline-v3.mjs|catalog/schema-v3.json|catalog/overrides.json|.github/workflows/sync.yml)
+              scripts/sync*.mjs|scripts/registry-pipeline-v3.mjs|scripts/registry-v3-builder.mjs|scripts/repository-identity.mjs|scripts/github-discovery.mjs|scripts/checksum.mjs|scripts/validate-registry-v3.mjs|catalog/schema-v3.json|catalog/overrides.json|.github/workflows/sync.yml)
                 SYNC_OWNED=true
                 ;;
               catalog/plugins.json|catalog/feed.xml|catalog/meta.json|catalog/registry-v3.json|catalog/audit-report.json)
