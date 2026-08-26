@@ -1,14 +1,16 @@
-import { spawn } from 'node:child_process';
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { access, chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { runtimeRoot } from './registry.mjs';
 import { withFileLock } from './file-lock.mjs';
+import {
+  configuredSecretKeyBackend,
+  createSecretMasterKey,
+  readExistingSecretMasterKey,
+  secretProviderStatus,
+} from './secret-provider.mjs';
 
 const NAME_RE = /^[A-Za-z0-9_.-]{1,160}$/;
-const BACKENDS = new Set(['auto', 'file', 'dpapi', 'secret-service']);
-const COMMAND_TIMEOUT_MS = 5_000;
-const nativeMasterKeyCache = new Map();
 
 export function secretStorePaths() {
   const base = join(runtimeRoot(), 'secrets');
@@ -31,12 +33,6 @@ function assertSecretName(name) {
   return normalized;
 }
 
-function configuredBackend() {
-  const backend = String(process.env.DSH_SECRET_KEY_BACKEND || 'auto').trim().toLowerCase();
-  if (!BACKENDS.has(backend)) throw new Error(`unsupported DSH secret key backend: ${backend}`);
-  return backend;
-}
-
 async function exists(path) {
   try {
     await access(path);
@@ -55,186 +51,13 @@ async function atomicWrite(path, content, mode = 0o600) {
   try { await chmod(path, mode); } catch { /* Windows ACLs are managed by the OS */ }
 }
 
-function runCommand(command, args, input = '') {
-  return new Promise((resolvePromise, reject) => {
-    const child = spawn(command, args, {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      windowsHide: true,
-      env: process.env,
-    });
-    const stdout = [];
-    const stderr = [];
-    let settled = false;
-    const finish = (callback) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      callback();
-    };
-    const timer = setTimeout(() => {
-      child.kill();
-      finish(() => {
-        const error = new Error(`${command} timed out`);
-        error.code = 'DSH_SECRET_BACKEND_TIMEOUT';
-        reject(error);
-      });
-    }, COMMAND_TIMEOUT_MS);
-
-    child.stdout.on('data', (chunk) => stdout.push(Buffer.from(chunk)));
-    child.stderr.on('data', (chunk) => stderr.push(Buffer.from(chunk)));
-    child.once('error', (error) => finish(() => reject(error)));
-    child.once('close', (code) => finish(() => {
-      if (code === 0) {
-        resolvePromise(Buffer.concat(stdout).toString('utf8'));
-        return;
-      }
-      const detail = Buffer.concat(stderr).toString('utf8').trim();
-      const error = new Error(`${command} exited with code ${code}${detail ? `: ${detail}` : ''}`);
-      error.code = 'DSH_SECRET_BACKEND_UNAVAILABLE';
-      reject(error);
-    }));
-    child.stdin.end(input);
-  });
-}
-
-function decodeKey(raw) {
-  const key = Buffer.from(String(raw || '').trim(), 'base64');
-  if (key.byteLength !== 32) throw new Error('invalid DSH secret master key');
-  return key;
-}
-
-async function readFileMasterKey(paths) {
-  return decodeKey(await readFile(paths.key, 'utf8'));
-}
-
-async function writeFileMasterKey(paths, key) {
-  await atomicWrite(paths.key, `${key.toString('base64')}\n`);
-  return key;
-}
-
-async function readBackendMarker(paths) {
-  try {
-    const marker = JSON.parse(await readFile(paths.backend, 'utf8'));
-    if (!marker || marker.version !== 1 || !['dpapi', 'secret-service'].includes(marker.backend)) {
-      throw new Error('invalid DSH secret backend metadata');
-    }
-    return marker;
-  } catch (error) {
-    if (error?.code === 'ENOENT') return null;
-    throw error;
-  }
-}
-
-async function writeBackendMarker(paths, marker) {
-  await atomicWrite(paths.backend, `${JSON.stringify({ version: 1, ...marker }, null, 2)}\n`);
-}
-
-function nativeCacheKey(paths, backend) {
-  return `${backend}:${paths.base}`;
-}
-
-function cacheNativeKey(paths, backend, key) {
-  if (backend === 'dpapi' || backend === 'secret-service') {
-    nativeMasterKeyCache.set(nativeCacheKey(paths, backend), key);
-  }
-  return key;
-}
-
-function cachedNativeKey(paths, backend) {
-  return nativeMasterKeyCache.get(nativeCacheKey(paths, backend)) || null;
-}
-
-const DPAPI_PROTECT_SCRIPT = [
-  '$value = [Console]::In.ReadToEnd().Trim()',
-  '$bytes = [Convert]::FromBase64String($value)',
-  '$protected = [Security.Cryptography.ProtectedData]::Protect($bytes, $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)',
-  '[Console]::Out.Write([Convert]::ToBase64String($protected))',
-].join('; ');
-
-const DPAPI_UNPROTECT_SCRIPT = [
-  '$value = [Console]::In.ReadToEnd().Trim()',
-  '$bytes = [Convert]::FromBase64String($value)',
-  '$plain = [Security.Cryptography.ProtectedData]::Unprotect($bytes, $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)',
-  '[Console]::Out.Write([Convert]::ToBase64String($plain))',
-].join('; ');
-
-async function storeDpapiKey(paths, key) {
-  if (process.platform !== 'win32') throw new Error('DPAPI secret backend is only available on Windows');
-  const wrapped = await runCommand('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', DPAPI_PROTECT_SCRIPT], `${key.toString('base64')}\n`);
-  await atomicWrite(paths.dpapi, `${wrapped.trim()}\n`);
-  await writeBackendMarker(paths, { backend: 'dpapi' });
-  return key;
-}
-
-async function readDpapiKey(paths) {
-  if (process.platform !== 'win32') throw new Error('DPAPI secret backend is only available on Windows');
-  const wrapped = await readFile(paths.dpapi, 'utf8');
-  const plain = await runCommand('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', DPAPI_UNPROTECT_SCRIPT], wrapped);
-  return decodeKey(plain);
-}
-
-function secretServiceKeyId(paths) {
-  return createHash('sha256').update(paths.base).digest('hex').slice(0, 32);
-}
-
-async function storeSecretServiceKey(paths, key) {
-  if (process.platform !== 'linux') throw new Error('Secret Service backend is only available on Linux');
-  const keyId = secretServiceKeyId(paths);
-  await runCommand(
-    'secret-tool',
-    ['store', '--label=DSH secret master key', 'application', 'dsh-go', 'store', keyId],
-    `${key.toString('base64')}\n`,
-  );
-  await writeBackendMarker(paths, { backend: 'secret-service', key_id: keyId });
-  return key;
-}
-
-async function readSecretServiceKey(paths, marker) {
-  if (process.platform !== 'linux') throw new Error('Secret Service backend is only available on Linux');
-  const keyId = marker.key_id || secretServiceKeyId(paths);
-  const raw = await runCommand('secret-tool', ['lookup', 'application', 'dsh-go', 'store', keyId]);
-  return decodeKey(raw);
-}
-
-async function readBackendKey(paths, marker) {
-  if (marker.backend === 'dpapi') return readDpapiKey(paths);
-  if (marker.backend === 'secret-service') return readSecretServiceKey(paths, marker);
-  throw new Error(`unsupported DSH secret backend metadata: ${marker.backend}`);
-}
-
-async function existingMasterKey(paths) {
-  const marker = await readBackendMarker(paths);
-  if (marker) {
-    const cached = cachedNativeKey(paths, marker.backend);
-    if (cached) return { key: cached, backend: marker.backend };
-    const key = await readBackendKey(paths, marker);
-    return { key: cacheNativeKey(paths, marker.backend, key), backend: marker.backend };
-  }
-  try {
-    return { key: await readFileMasterKey(paths), backend: 'file' };
-  } catch (error) {
-    if (error?.code !== 'ENOENT') throw error;
-    return null;
-  }
-}
-
-async function createMasterKey(paths, backend) {
-  const key = randomBytes(32);
-  if (backend === 'file' || backend === 'auto') {
-    return { key: await writeFileMasterKey(paths, key), backend: 'file' };
-  }
-  if (backend === 'dpapi') return { key: await storeDpapiKey(paths, key), backend: 'dpapi' };
-  if (backend === 'secret-service') return { key: await storeSecretServiceKey(paths, key), backend: 'secret-service' };
-  throw new Error(`unsupported DSH secret key backend: ${backend}`);
-}
-
 async function masterKey() {
   const paths = secretStorePaths();
-  const existing = await existingMasterKey(paths);
+  const existing = await readExistingSecretMasterKey(paths);
   if (existing) return existing.key;
 
   return withFileLock(paths.key_lock, async () => {
-    const current = await existingMasterKey(paths);
+    const current = await readExistingSecretMasterKey(paths);
     if (current) return current.key;
 
     if (await exists(paths.data)) {
@@ -244,26 +67,17 @@ async function masterKey() {
     }
 
     await mkdir(paths.base, { recursive: true });
-    const created = await createMasterKey(paths, configuredBackend());
-    return cacheNativeKey(paths, created.backend, created.key);
+    const created = await createSecretMasterKey(paths, configuredSecretKeyBackend());
+    return created.key;
   });
 }
 
 export async function secretStoreStatus() {
   const paths = secretStorePaths();
-  const configured = configuredBackend();
-  const marker = await readBackendMarker(paths);
-  let active = marker?.backend || null;
-  if (!active && await exists(paths.key)) active = 'file';
-  const native = process.platform === 'win32' ? 'dpapi' : process.platform === 'linux' ? 'secret-service' : null;
+  const status = await secretProviderStatus(paths, configuredSecretKeyBackend());
   return {
-    configured_backend: configured,
-    active_backend: active || 'uninitialized',
-    native_backend: active === 'dpapi' || active === 'secret-service',
-    native_backend_available: native,
-    native_backend_opt_in: Boolean(native) && configured === 'auto' && !marker,
+    ...status,
     encrypted_data_present: await exists(paths.data),
-    legacy_file_key: active === 'file',
   };
 }
 
