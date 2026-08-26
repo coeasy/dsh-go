@@ -5,7 +5,7 @@ const TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,199}$/;
 
 function stableStringify(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
   const object = value as Record<string, unknown>;
   return `{${Object.keys(object).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(object[key])}`).join(',')}}`;
@@ -45,9 +45,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     const indexResponse = await env.ASSETS.fetch(new URL('/catalog/distribution-v1/index.json', request.url));
     if (!indexResponse.ok) throw new Error(`distribution index unavailable: ${indexResponse.status}`);
     const index: any = await indexResponse.json();
-    if (index?.format !== FORMAT || index?.distribution_version !== 1 || index?.registry_version !== 3 || !Array.isArray(index?.shards)) {
-      throw new Error('invalid distribution index');
-    }
+    if (index?.format !== FORMAT || index?.distribution_version !== 1 || index?.registry_version !== 3 || !Array.isArray(index?.shards)) throw new Error('invalid distribution index');
     const descriptor = index.packages?.[key];
     if (!descriptor) return response({ error: { code: 404, message: `package not found: ${key}` } }, 404);
     const expectedPrefix = (await sha256(key)).slice(0, 2);
@@ -58,9 +56,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     const shardResponse = await env.ASSETS.fetch(new URL(`/catalog/distribution-v1/shards/${descriptor.prefix}.json`, request.url));
     if (!shardResponse.ok) throw new Error(`distribution shard unavailable: ${shardResponse.status}`);
     const shard: any = await shardResponse.json();
-    if (shard?.format !== FORMAT || shard?.distribution_version !== 1 || shard?.registry_version !== 3 || shard?.prefix !== descriptor.prefix || !Array.isArray(shard?.entries)) {
-      throw new Error('invalid distribution shard');
-    }
+    if (shard?.format !== FORMAT || shard?.distribution_version !== 1 || shard?.registry_version !== 3 || shard?.prefix !== descriptor.prefix || !Array.isArray(shard?.entries)) throw new Error('invalid distribution shard');
     const shardHash = await sha256(stableStringify(shard.entries));
     if (shardHash !== shardDescriptor.content_hash || shard.content_hash !== shardDescriptor.content_hash) throw new Error('distribution shard integrity mismatch');
 
@@ -72,18 +68,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     const ifNoneMatch = request.headers.get('If-None-Match');
     if (ifNoneMatch === etag || ifNoneMatch === '*') return response(null, 304, etag);
 
-    return response({
-      format: FORMAT,
-      distribution_version: 1,
-      registry_version: 3,
-      key,
-      type,
-      id: entries[0].package.id,
-      count: entries.length,
-      content_hash: contentHash,
-      etag,
-      entries,
-    }, 200, etag);
+    return response({ format: FORMAT, distribution_version: 1, registry_version: 3, key, type, id: entries[0].package.id, count: entries.length, content_hash: contentHash, etag, entries }, 200, etag);
   } catch (error) {
     console.error('[registry-package] projection failed:', error);
     return response({ error: { code: 500, message: 'internal server error' } }, 500);
