@@ -66,7 +66,7 @@ describe('structured permission manifest', () => {
 
   it('normalizes a valid structured MCP manifest into the current enforcement contract', () => {
     const data = {
-      manifest_version: '1',
+      manifest_version: '1.0.0',
       id: 'github-mcp',
       name: 'GitHub MCP',
       version: '0.1.0',
@@ -97,7 +97,7 @@ describe('structured permission manifest', () => {
 
   it('still rejects unknown explicit policy keys instead of dropping them silently', () => {
     const data = {
-      manifest_version: '1',
+      manifest_version: '1.0.0',
       id: 'bad-policy',
       name: 'Bad Policy',
       version: '0.1.0',
@@ -114,7 +114,7 @@ describe('structured permission manifest', () => {
 
   it('exposes the compiled permission manifest through normalization without changing legacy manifests', () => {
     expect(normalizePackageManifest({
-      manifest_version: '1', id: 'legacy', name: 'Legacy', version: '0.1.0', type: 'plugin',
+      manifest_version: '1.0.0', id: 'legacy', name: 'Legacy', version: '0.1.0', type: 'plugin',
       permissions: ['filesystem.read'], plugin: { entrypoint: 'index.mjs' },
     })?.permission_manifest).toBeUndefined();
   });
