@@ -8,6 +8,7 @@ import { verifyInstalledCommit, verifyResolvedPackage } from './verifier.mjs';
 import { assertCompatibility } from './compatibility.mjs';
 import { assertPermissionConsent, inspectPermissions } from './permissions.mjs';
 import { hasDeclaredSupplyChainEvidence, verifySecurityEvidence } from './supply-chain-verifier.mjs';
+import { verifySupplyChainIdentity } from './supply-chain-identity.mjs';
 
 const exec = promisify(execFile);
 
@@ -37,7 +38,9 @@ function compactEvidenceReport(report) {
     online: report.online === true,
     valid: report.valid === true,
     cryptographic_signature_verified: report.cryptographic_signature_verified === true,
+    slsa_provenance_verified: report.slsa_provenance_verified === true,
     summary: report.summary,
+    identity: report.identity || null,
     evidence: (report.evidence || []).filter((item) => item.declared).map((item) => ({
       kind: item.kind,
       status: item.status,
@@ -47,6 +50,14 @@ function compactEvidenceReport(report) {
       reason: item.reason || null,
     })),
   };
+}
+
+function identityFailures(report) {
+  if (!report?.identity) return [];
+  return ['sigstore', 'slsa']
+    .map((kind) => report.identity[kind])
+    .filter((item) => item?.declared && item.valid === false)
+    .map((item) => `${item.kind}:${item.status}`);
 }
 
 export async function installPackage(pkg, options = {}) {
@@ -97,10 +108,21 @@ export async function installPackage(pkg, options = {}) {
     let evidenceReport = null;
     if (evidenceDeclared) {
       evidenceReport = await verifySecurityEvidence(pkg.security, { root: temp, online: false });
+      const identity = await verifySupplyChainIdentity(pkg.security, evidenceReport, {
+        root: temp,
+        cosignPath: options.cosignPath,
+        cosignRunner: options.cosignRunner,
+        hostEnv: options.hostEnv,
+      });
+      evidenceReport.identity = identity;
+      evidenceReport.cryptographic_signature_verified = identity.cryptographic_signature_verified === true;
+      evidenceReport.slsa_provenance_verified = identity.slsa_provenance_verified === true;
+      evidenceReport.valid = evidenceReport.valid === true && identity.valid === true;
       if (!evidenceReport.valid) {
         const failed = evidenceReport.evidence
           .filter((item) => ['digest-mismatch', 'verification-error'].includes(item.status))
-          .map((item) => `${item.kind}:${item.status}`);
+          .map((item) => `${item.kind}:${item.status}`)
+          .concat(identityFailures(evidenceReport));
         const error = new Error(`supply-chain evidence verification failed: ${failed.join(', ') || 'unknown evidence failure'}`);
         error.code = 'DSH_SUPPLY_CHAIN_EVIDENCE_INVALID';
         error.evidence = evidenceReport;
@@ -162,6 +184,8 @@ export async function installPackage(pkg, options = {}) {
         checked: evidenceDeclared,
         valid: evidenceReport?.valid ?? null,
         summary: evidenceReport?.summary || null,
+        cryptographic_signature_verified: evidenceReport?.cryptographic_signature_verified === true,
+        slsa_provenance_verified: evidenceReport?.slsa_provenance_verified === true,
       },
       backup: options.force ? backup : undefined,
     };
