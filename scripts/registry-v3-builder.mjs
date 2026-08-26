@@ -212,7 +212,21 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
       const repoKey = canonicalRepoKey(repo);
       if (!repo || seenRepos.has(repoKey)) continue;
       if (!isCommitSha(previous.source?.commit) || previous.artifact?.integrity !== artifactIntegrity(previous)) continue;
-      plugins.push(previous); seenRepos.add(repoKey); seenIds.add(previous.id); reusedExistingOnly++;
+
+      // Current catalog identity always wins over stale incremental preservation. The
+      // primary input phase already reserves ids case-insensitively; existing-only
+      // records must obey the exact same invariant before they can be appended.
+      const idKey = String(previous.id || '').trim().toLowerCase();
+      if (!idKey) {
+        excluded.push({ repo, reason: 'preserved registry record missing plugin id' });
+        continue;
+      }
+      if (seenIds.has(idKey)) {
+        excluded.push({ repo, reason: `preserved registry id superseded by current catalog: ${previous.id}` });
+        continue;
+      }
+
+      plugins.push(previous); seenRepos.add(repoKey); seenIds.add(idKey); reusedExistingOnly++;
     }
   }
 

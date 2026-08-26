@@ -76,6 +76,7 @@ describe('Registry V3', () => {
     expect(registry.plugins[0].metadata.repo_url).toBe('https://github.com/owner/new-name');
     expect(registry.plugins[0].artifact.integrity).toBe(artifactIntegrity(registry.plugins[0]));
   });
+
   it('self-heals polluted legacy identity during standalone Registry V3 migration', async () => {
     const commit = '0123456789abcdef0123456789abcdef01234567';
     const catalog: any = {
@@ -112,6 +113,43 @@ describe('Registry V3', () => {
     const { registry, stats } = await buildRegistryV3(catalog, null, { discoveryMode: 'complete', discoveredCount: 2 });
     expect(registry.plugins).toHaveLength(1);
     expect(stats.excluded.some((x: any) => x.reason.includes('duplicate id after case normalization'))).toBe(true);
+  });
+
+  it('lets current catalog identity supersede a stale preserved Registry id case-insensitively', async () => {
+    const current: any = {
+      slug: 'stable-id', full_name: 'owner/current-repo', name: 'current-repo', category: 'tool',
+      snapshot_commit: commit, snapshot_ref: 'main', updated_at: '2026-08-26T00:00:00Z',
+    };
+    const staleLegacy: any = {
+      slug: 'STALE-ID', full_name: 'owner/stale-repo', name: 'stale-repo', category: 'tool',
+      updated_at: '2026-08-24T00:00:00Z',
+    };
+    const stale: any = buildRegistryPlugin(staleLegacy, { id: 'STABLE-ID', repo: 'owner/stale-repo', ref: 'main' }, commit);
+    const existing: any = {
+      registry_version: 3,
+      schema_version: '3.0.0',
+      defaults: { plugin_version: '0.1.0' },
+      generated: { discovery_mode: 'complete', discovered_count: 1 },
+      plugins: [stale],
+    };
+
+    const { registry, stats }: any = await buildRegistryV3(
+      { meta: { etag: 'incremental', count: 1 }, plugins: [current] },
+      existing,
+      { preserveExisting: true, discoveryMode: 'complete', discoveredCount: 1 },
+    );
+
+    expect(registry.plugins).toHaveLength(1);
+    expect(registry.plugins[0].id).toBe('stable-id');
+    expect(registry.plugins[0].source.repo).toBe('owner/current-repo');
+    expect(stats.reused_existing_only).toBe(0);
+    expect(stats.excluded).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        repo: 'owner/stale-repo',
+        reason: 'preserved registry id superseded by current catalog: STABLE-ID',
+      }),
+    ]));
+    expect(validateRegistry(registry).errors).toEqual([]);
   });
 
   it('validator rejects unsafe or case-colliding ids', () => {
