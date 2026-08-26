@@ -6,6 +6,7 @@ import { u, apiUrl } from '../lib/urls';
 
 interface RegistryPlugin {
   id: string;
+  type?: string;
   version: string;
   source?: { repo?: string; commit?: string };
   runtime?: { type?: string };
@@ -30,6 +31,7 @@ interface RegistryData {
 type EcosystemType = 'plugin' | 'mcp' | 'skill' | 'agent';
 
 function itemType(plugin: RegistryPlugin): EcosystemType {
+  if (plugin.type === 'mcp' || plugin.type === 'skill' || plugin.type === 'agent') return plugin.type;
   const runtime = plugin.runtime?.type;
   if (runtime === 'mcp' || runtime === 'skill' || runtime === 'agent') return runtime;
   const capabilities = plugin.capabilities ?? [];
@@ -52,8 +54,10 @@ const items = (registry.plugins ?? []).map((plugin) => {
   deepLink.searchParams.set('id', plugin.id);
   deepLink.searchParams.set('version', plugin.version);
   deepLink.searchParams.set('type', type);
+  const identityQuery = new URLSearchParams({ type }).toString();
   return {
     id: plugin.id,
+    key: `${type}:${plugin.id}`,
     name: plugin.metadata?.name || plugin.id,
     description: plugin.metadata?.description || '',
     version: plugin.version,
@@ -67,12 +71,13 @@ const items = (registry.plugins ?? []).map((plugin) => {
     dependencies: plugin.dependencies?.length ?? 0,
     install: `dsh ${type} install ${plugin.id}@${plugin.version}`,
     deepLink: deepLink.toString(),
-    detail: u(`/ecosystem/${encodeURIComponent(plugin.id)}`),
+    detail: `${u(`/ecosystem/${encodeURIComponent(plugin.id)}`)}?${identityQuery}`,
+    api: `${apiUrl(`/api/v1/ecosystem/${encodeURIComponent(plugin.id)}`)}?${identityQuery}`,
   };
 }).sort((left, right) => {
   const leftRank = left.rank || Number.MAX_SAFE_INTEGER;
   const rightRank = right.rank || Number.MAX_SAFE_INTEGER;
-  return leftRank - rightRank || right.stars - left.stars || left.id.localeCompare(right.id);
+  return leftRank - rightRank || right.stars - left.stars || left.key.localeCompare(right.key);
 });
 
 const counts = Object.fromEntries(['plugin', 'mcp', 'skill', 'agent'].map((type) => [type, items.filter((item) => item.type === type).length]));
@@ -81,7 +86,7 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
 
 <Layout title="DSH Go · Ecosystem Marketplace" description="Registry V3 驱动的 Plugin、MCP、Skill 与 Agent 统一生态市场">
   <section class="hero">
-    <span class="eyebrow">Registry V3 · Runtime Platform V3</span>
+    <span class="eyebrow">DSH 0.1.0 · Registry V3 · API v1</span>
     <h1 class="grad-text">DSH Ecosystem</h1>
     <p>Plugin、MCP、Skill、Agent 统一发现与安装计划。网页只提供可信目录和本地命令，不会远程修改你的客户端。</p>
     <div class="metrics">
@@ -100,7 +105,7 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
   </section>
 
   <section class="filters" aria-label="ecosystem filters">
-    <input id="eco-search" type="search" placeholder="搜索名称、仓库、描述或 capability…" autocomplete="off" />
+    <input id="eco-search" type="search" placeholder="搜索名称、仓库、描述、type:id 或 capability…" autocomplete="off" />
     <div class="type-filters">
       <button class="type-filter active" type="button" data-type-filter="all">All <small>{items.length}</small></button>
       <button class="type-filter" type="button" data-type-filter="plugin">Plugin <small>{counts.plugin}</small></button>
@@ -111,7 +116,7 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
     </div>
   </section>
 
-  <div class="result-line"><span id="eco-count">{items.length} 个生态条目</span><span class="result-links"><a href={u('/profiles')}>Profiles / Bundles</a><a href={apiUrl('/api/v2/search')}>Search API V2 ↗</a></span></div>
+  <div class="result-line"><span id="eco-count">{items.length} 个生态条目</span><span class="result-links"><a href={u('/profiles')}>Profiles / Bundles</a><a href={apiUrl('/api/v1/search')}>Search API v1 ↗</a></span></div>
 
   <section id="eco-grid" class="grid">
     {items.map((item) => (
@@ -119,7 +124,7 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
         class="eco-card"
         data-type={item.type}
         data-verified={String(item.verified)}
-        data-search={`${item.id} ${item.name} ${item.repo} ${item.description} ${item.capabilities.join(' ')}`.toLowerCase()}
+        data-search={`${item.key} ${item.id} ${item.name} ${item.repo} ${item.description} ${item.capabilities.join(' ')}`.toLowerCase()}
       >
         <div class="card-head">
           <span class={`kind ${item.type}`}>{item.type.toUpperCase()}</span>
@@ -128,6 +133,7 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
         <h2>{item.name}</h2>
         <p class="description">{item.description || '暂无描述'}</p>
         <div class="meta">
+          <span>{item.key}</span>
           <span>v{item.version}</span>
           {item.stars > 0 && <span>★ {item.stars}</span>}
           {item.dependencies > 0 && <span>{item.dependencies} deps</span>}
@@ -144,7 +150,7 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
         </div>
         <div class="links">
           <a href={item.detail}>详情 / 安装</a>
-          <a href={apiUrl(`/api/v1/ecosystem/${encodeURIComponent(item.id)}`)}>API</a>
+          <a href={item.api}>API</a>
           {item.repo && <a href={`https://github.com/${item.repo}`} target="_blank" rel="noreferrer">GitHub ↗</a>}
         </div>
       </article>

@@ -1,6 +1,6 @@
 // POST /api/v1/mcp — read-only MCP endpoint for catalog and Registry V3 discovery.
 import { loadCatalog, filterPlugins, json, error, type Env } from '../../_lib';
-import { filterEcosystem, loadRegistryV3, toEcosystemItem } from '../../_registry';
+import { ecosystemType, filterEcosystem, loadRegistryV3, toEcosystemItem } from '../../_registry';
 
 interface McpArgs {
   category?: string;
@@ -22,6 +22,8 @@ interface JsonRpcBody {
   method?: string;
   params?: { name?: string; arguments?: McpArgs };
 }
+
+const ECOSYSTEM_TYPES = ['plugin', 'mcp', 'skill', 'agent'] as const;
 
 const TOOLS = [
   {
@@ -59,7 +61,7 @@ const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {
-        type: { type: 'string', enum: ['plugin', 'mcp', 'skill', 'agent'] },
+        type: { type: 'string', enum: ECOSYSTEM_TYPES },
         search: { type: 'string' },
         capability: { type: 'string' },
         verified: { type: 'boolean' },
@@ -69,13 +71,29 @@ const TOOLS = [
   },
   {
     name: 'get_ecosystem_item',
-    description: '读取 Registry V3 中单个生态条目及本地 Runtime 安装计划',
-    inputSchema: { type: 'object', properties: { id: { type: 'string' }, version: { type: 'string' } }, required: ['id'] },
+    description: '读取 Registry V3 中单个生态条目及本地 Runtime 安装计划；同 ID 多类型时应传 type',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        version: { type: 'string' },
+        type: { type: 'string', enum: ECOSYSTEM_TYPES },
+      },
+      required: ['id'],
+    },
   },
   {
     name: 'plan_local_install',
     description: '生成本地 DSH Runtime 安装命令；仅生成计划，不执行安装',
-    inputSchema: { type: 'object', properties: { id: { type: 'string' }, version: { type: 'string' } }, required: ['id'] },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        version: { type: 'string' },
+        type: { type: 'string', enum: ECOSYSTEM_TYPES },
+      },
+      required: ['id'],
+    },
   },
 ];
 
@@ -84,6 +102,14 @@ function rpcResult(id: unknown, result: unknown) {
 }
 function rpcError(id: unknown, code: number, message: string) {
   return json({ jsonrpc: '2.0', id, error: { code, message } }, { status: 400 });
+}
+
+function normalizeType(value?: string): typeof ECOSYSTEM_TYPES[number] | undefined {
+  if (!value) return undefined;
+  const normalized = value.toLowerCase();
+  return ECOSYSTEM_TYPES.includes(normalized as typeof ECOSYSTEM_TYPES[number])
+    ? normalized as typeof ECOSYSTEM_TYPES[number]
+    : undefined;
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
@@ -107,7 +133,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return rpcResult(id, {
         protocolVersion: '2025-03-26',
         capabilities: { tools: {} },
-        serverInfo: { name: 'dsh-go', version: '2.3.0' },
+        serverInfo: { name: 'dsh-go', version: '0.1.0' },
       });
     }
     if (method === 'tools/list') return rpcResult(id, { tools: TOOLS });
@@ -169,11 +195,20 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         case 'get_ecosystem_item':
         case 'plan_local_install': {
           if (!args?.id) return rpcError(id, -32602, 'id is required');
+          const requestedType = normalizeType(args.type);
+          if (args.type && !requestedType) return rpcError(id, -32602, `invalid ecosystem type: ${args.type}`);
           const { data } = await loadRegistryV3(env, request.url);
           const requestedId = String(args.id).toLowerCase();
-          const match = data.plugins.find((plugin) => plugin.id.toLowerCase() === requestedId && (!args.version || plugin.version === args.version));
-          if (!match) return rpcError(id, -32602, `ecosystem item not found: ${args.id}`);
-          const item = toEcosystemItem(match);
+          const matches = data.plugins.filter((plugin) =>
+            plugin.id.toLowerCase() === requestedId
+            && (!args.version || plugin.version === args.version)
+            && (!requestedType || ecosystemType(plugin) === requestedType));
+          if (!matches.length) return rpcError(id, -32602, `ecosystem item not found: ${args.id}`);
+          if (matches.length > 1 && !requestedType) {
+            const types = [...new Set(matches.map(ecosystemType))].sort();
+            return rpcError(id, -32602, `ecosystem item is ambiguous; specify type (${types.join(', ')}): ${args.id}`);
+          }
+          const item = toEcosystemItem(matches[0]);
           result = name === 'plan_local_install' ? item.local_install : item;
           break;
         }
@@ -195,6 +230,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 export const onRequestGet: PagesFunction = async () =>
   json({
     name: 'DSH Go MCP',
+    version: '0.1.0',
+    api: '/api/v1/mcp',
     description: 'Read-only JSON-RPC 2.0 catalog discovery. Local mutation tools are intentionally not exposed by this remote endpoint.',
     tools: TOOLS.map((tool) => tool.name),
   });

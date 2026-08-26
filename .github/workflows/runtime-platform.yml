@@ -1,4 +1,4 @@
-name: Runtime Platform V3
+name: Runtime Platform 0.1.0
 
 on:
   pull_request:
@@ -12,20 +12,15 @@ on:
       - 'profiles/**'
       - 'schemas/**'
       - 'functions/**'
-      - 'scripts/package-*.mjs'
-      - 'scripts/generate-sbom.mjs'
-      - 'scripts/build-search-index-v2.mjs'
-      - 'scripts/copy-assets.mjs'
-      - 'scripts/sync.mjs'
-      - 'scripts/repository-identity.mjs'
-      - 'scripts/registry-v3-builder.mjs'
-      - 'scripts/validate-registry-v3.mjs'
+      - 'scripts/**'
       - 'tests/runtime-platform/**'
       - 'tests/production-v2/**'
+      - 'tests/completion/**'
       - 'tests/e2e/**'
       - 'package.json'
       - 'package-lock.json'
       - 'site/**'
+      - 'docs/**'
       - '.github/workflows/runtime-platform.yml'
   workflow_dispatch:
 
@@ -49,16 +44,20 @@ jobs:
         run: npm ci
       - name: Install site dependencies
         run: cd site && npm ci
+      - name: Stable contract gate
+        run: npm run contract:check
       - name: Typecheck
         run: npm run typecheck
       - name: Full lint
         run: npm run lint
       - name: Runtime Platform tests
         run: npm run runtime:test
-      - name: Phase 8 Runtime V3 tests
+      - name: Phase 8 compatibility tests
         run: npm run phase8:test
-      - name: Production V2 tests
+      - name: Production compatibility tests
         run: npm run test:production-v2
+      - name: Runtime completion tests
+        run: npm run completion:test
       - name: Full tests
         run: npm test
       - name: Site check and build
@@ -74,13 +73,20 @@ jobs:
         run: |
           node --check bin/dsh.mjs
           node --check runtime/dsh.mjs
+          node --check runtime/control-cli.mjs
           node --check runtime/catalog.mjs
           node --check runtime/compatibility.mjs
           node --check runtime/permissions.mjs
+          node --check runtime/permission-policy.mjs
           node --check runtime/package-manifest.mjs
           node --check runtime/preflight.mjs
           node --check runtime/client-bridge.mjs
           node --check runtime/client-host.mjs
+          node --check runtime/config-store.mjs
+          node --check runtime/secret-store.mjs
+          node --check runtime/dependency-guard.mjs
+          node --check runtime/transaction.mjs
+          node --check runtime/execution.mjs
           node --check runtime/cli.mjs
           node --check runtime/installer.mjs
           node --check runtime/loader.mjs
@@ -89,19 +95,20 @@ jobs:
           node --check runtime/health.mjs
           node --check runtime/rollback.mjs
           node --check runtime/mcp-tools.mjs
+          node --check scripts/check-contract.mjs
           node --check scripts/package-security-audit.mjs
           node --check scripts/generate-sbom.mjs
           node --check scripts/build-search-index-v2.mjs
           node --check scripts/copy-assets.mjs
 
   client-bridge-matrix:
-    name: Client Bridge (${{ matrix.os }})
+    name: Client Runtime (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -110,8 +117,12 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Production client and lifecycle tests
+      - name: Stable contract gate
+        run: npm run contract:check
+      - name: Production compatibility tests
         run: npm run test:production-v2
+      - name: Runtime completion tests
+        run: npm run completion:test
       - name: Official CLI smoke
         run: node bin/dsh.mjs --version
       - name: Production CLI smoke
@@ -121,6 +132,9 @@ jobs:
       - name: Runtime syntax smoke
         run: |
           node --check bin/dsh.mjs
+          node --check runtime/control-cli.mjs
+          node --check runtime/execution.mjs
+          node --check runtime/transaction.mjs
           node --check runtime/resolver.mjs
           node --check runtime/preflight.mjs
-          node --check scripts/package-security-audit.mjs
+          node --check scripts/check-contract.mjs

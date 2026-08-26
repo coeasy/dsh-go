@@ -3,123 +3,193 @@ import Layout from '../../layouts/Layout.astro';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+function itemType(item: any) {
+  if (['plugin', 'mcp', 'skill', 'agent'].includes(item?.type)) return item.type;
+  if (['mcp', 'skill', 'agent'].includes(item?.runtime?.type)) return item.runtime.type;
+  for (const type of ['mcp', 'skill', 'agent']) if ((item?.capabilities || []).includes(type)) return type;
+  return 'plugin';
+}
+
 export async function getStaticPaths() {
   let items: any[] = [];
   try {
     const registry = JSON.parse(readFileSync(resolve('..', 'catalog', 'registry-v3.json'), 'utf8'));
     items = registry.plugins || [];
   } catch { /* keep build resilient when catalog is absent */ }
-  return items.map((item) => ({ params: { id: item.id }, props: { item } }));
+  const groups = new Map<string, any[]>();
+  for (const item of items) {
+    const key = String(item.id);
+    const group = groups.get(key) || [];
+    group.push(item);
+    groups.set(key, group);
+  }
+  return [...groups.entries()].map(([id, variants]) => ({ params: { id }, props: { variants } }));
 }
 
-const { item } = Astro.props as { item: any };
+const { variants } = Astro.props as { variants: any[] };
 const basePath = import.meta.env.BASE_URL || '/';
 const ecosystemHref = `${basePath}ecosystem`;
-const type = item.runtime?.type || 'plugin';
-const name = item.metadata?.name || item.id;
-const description = item.metadata?.description || '';
-const permissions = item.permissions || [];
-const compatibility = item.compatibility || {};
-const dependencies = item.dependencies || [];
-const publisher = item.publisher || null;
-const security = item.security || null;
-const installCommand = `dsh ${type} install ${item.id}@${item.version}`;
-const query = new URLSearchParams({ id: item.id, version: item.version, type });
-const installLink = `dsh://install?${query.toString()}`;
-const highRisk = permissions.filter((permission: string) => ['filesystem.write', 'network.unrestricted', 'shell', 'secrets.read', 'process.spawn'].includes(permission));
-const publisherVerified = publisher?.provider === 'github' && publisher?.id && item.source?.repo?.split('/')[0]?.toLowerCase() === String(publisher.id).toLowerCase();
-const evidence = [item.source?.commit, item.metadata?.verified, publisherVerified, security?.provenance, security?.signature, security?.sbom, security?.license].filter(Boolean).length;
-const trustScore = Math.max(0, Math.min(100, evidence * 12 + (permissions.length ? 10 : 0) - highRisk.length * 5));
+const packageId = variants[0]?.id || 'unknown';
+
+function publisherVerified(item: any) {
+  const owner = item.source?.repo?.split('/')[0]?.toLowerCase();
+  return item.publisher?.provider === 'github' && item.publisher?.id && owner === String(item.publisher.id).toLowerCase();
+}
+
+function evidence(item: any) {
+  return [
+    { label: 'Immutable commit', ok: /^[a-f0-9]{40}$/i.test(item.source?.commit || '') },
+    { label: 'Registry verified', ok: item.metadata?.verified === true },
+    { label: 'Publisher owner match', ok: publisherVerified(item) },
+    { label: 'Provenance declared', ok: Boolean(item.security?.provenance) },
+    { label: 'Signature declared', ok: Boolean(item.security?.signature) },
+    { label: 'SBOM declared', ok: Boolean(item.security?.sbom) },
+    { label: 'License declared', ok: Boolean(item.security?.license) },
+  ];
+}
 ---
 
-<Layout title={`${name} · Ecosystem · DSH Go`} description={description}>
+<Layout title={`${packageId} · Ecosystem · DSH Go`} description={`DSH 0.1.0 ecosystem package ${packageId}`}>
   <main class="eco-detail">
     <a class="back" href={ecosystemHref}>← Ecosystem</a>
-    <section class="hero">
+    <section class="identity">
       <div>
-        <div class="eyebrow"><span>{type.toUpperCase()}</span><span>{item.version}</span>{item.metadata?.verified && <span>✓ Registry verified</span>}</div>
-        <h1>{name}</h1>
-        <p>{description || 'No description provided.'}</p>
+        <span class="eyebrow">DSH 0.1.0 · API v1</span>
+        <h1>{packageId}</h1>
+        <p>同一 ID 可以同时存在不同生态类型。当前页面路径保持不变，使用 <code>?type=...</code> 选择 Plugin / MCP / Skill / Agent。</p>
       </div>
-      <div class="trust"><strong>{trustScore}</strong><span>Trust score</span></div>
+      {variants.length > 1 && (
+        <div class="variant-tabs" role="tablist" aria-label="package types">
+          {variants.map((item) => {
+            const type = itemType(item);
+            return <a href={`?type=${type}`} data-type-tab={type}>{type.toUpperCase()}</a>;
+          })}
+        </div>
+      )}
     </section>
 
-    <section class="install-card">
-      <div>
-        <h2>安装</h2>
-        <p>安装完成后不会自动重启客户端。请手动重启，Startup Loader 会在启动时验证固定 commit 后激活。</p>
-      </div>
-      <div class="actions">
-        <a class="primary" href={installLink}>一键安装</a>
-        <button id="copy-install" data-command={installCommand}>复制命令</button>
-      </div>
-      <code>{installCommand}</code>
-    </section>
+    {variants.map((item) => {
+      const type = itemType(item);
+      const name = item.metadata?.name || item.id;
+      const description = item.metadata?.description || '';
+      const permissions = item.permissions || [];
+      const compatibility = item.compatibility || {};
+      const dependencies = item.dependencies || [];
+      const publisher = item.publisher || null;
+      const security = item.security || null;
+      const installCommand = `dsh ${type} install ${item.id}@${item.version}`;
+      const query = new URLSearchParams({ id: item.id, version: item.version, type });
+      const installLink = `dsh://install?${query.toString()}`;
+      const highRisk = permissions.filter((permission: string) => ['filesystem.write', 'network.unrestricted', 'shell', 'secrets.read', 'process.spawn'].includes(permission));
+      const checks = evidence(item);
+      return (
+        <section class="variant-panel" data-variant-type={type}>
+          <section class="hero">
+            <div>
+              <div class="eyebrow-row"><span>{type.toUpperCase()}</span><span>{item.version}</span>{item.metadata?.verified && <span>✓ Registry verified</span>}</div>
+              <h2>{name}</h2>
+              <p>{description || 'No description provided.'}</p>
+            </div>
+            <div class="evidence-summary"><strong>{checks.filter((check) => check.ok).length}/{checks.length}</strong><span>evidence signals</span></div>
+          </section>
 
-    <div class="grid">
-      <section class="card">
-        <h2>来源与版本</h2>
-        <dl>
-          <dt>Repository</dt><dd><a href={`https://github.com/${item.source?.repo}`} target="_blank" rel="noreferrer">{item.source?.repo}</a></dd>
-          <dt>Commit</dt><dd><code>{item.source?.commit}</code></dd>
-          <dt>Channel</dt><dd>{item.channel || item.release_channel || 'stable'}</dd>
-          <dt>Manifest</dt><dd>{item.metadata?.manifest_file || 'legacy catalog'}</dd>
-        </dl>
-      </section>
+          <section class="install-card">
+            <div>
+              <h2>安装</h2>
+              <p>安装完成后不会自动重启客户端。请手动重启，Startup Loader 会在启动时验证固定 commit 后激活。</p>
+            </div>
+            <div class="actions">
+              <a class="primary" href={installLink}>一键安装</a>
+              <button class="copy-install" data-command={installCommand}>复制命令</button>
+              <a href={`${basePath}api/v1/ecosystem/${encodeURIComponent(item.id)}?type=${type}`}>API v1</a>
+            </div>
+            <code>{installCommand}</code>
+          </section>
 
-      <section class="card">
-        <h2>权限</h2>
-        {permissions.length ? <ul>{permissions.map((permission: string) => <li class={highRisk.includes(permission) ? 'risk' : ''}>{permission}{highRisk.includes(permission) ? ' · 需确认' : ''}</li>)}</ul> : <p>未声明高风险权限。</p>}
-      </section>
+          <div class="grid">
+            <section class="card">
+              <h2>来源与版本</h2>
+              <dl>
+                <dt>Identity</dt><dd><code>{type}:{item.id}</code></dd>
+                <dt>Repository</dt><dd><a href={`https://github.com/${item.source?.repo}`} target="_blank" rel="noreferrer">{item.source?.repo}</a></dd>
+                <dt>Commit</dt><dd><code>{item.source?.commit}</code></dd>
+                <dt>Channel</dt><dd>{item.channel || item.release_channel || 'stable'}</dd>
+                <dt>Manifest</dt><dd>{item.metadata?.manifest_file || 'legacy catalog'}</dd>
+              </dl>
+            </section>
 
-      <section class="card">
-        <h2>兼容性</h2>
-        <dl>
-          <dt>OS</dt><dd>{(compatibility.os || ['any']).join(', ')}</dd>
-          <dt>Arch</dt><dd>{(compatibility.arch || ['any']).join(', ')}</dd>
-          <dt>Node</dt><dd>{compatibility.node || 'unspecified'}</dd>
-          <dt>Runtime</dt><dd>{compatibility.runtime || compatibility.dsh_runtime || 'unspecified'}</dd>
-          <dt>Client</dt><dd>{compatibility.client || compatibility.dsh_client || 'unspecified'}</dd>
-        </dl>
-      </section>
+            <section class="card">
+              <h2>权限</h2>
+              {permissions.length ? <ul>{permissions.map((permission: string) => <li class={highRisk.includes(permission) ? 'risk' : ''}>{permission}{highRisk.includes(permission) ? ' · 需确认' : ''}</li>)}</ul> : <p>未声明高风险权限。</p>}
+            </section>
 
-      <section class="card">
-        <h2>Publisher / Supply Chain</h2>
-        <dl>
-          <dt>Publisher</dt><dd>{publisher?.id || 'not declared'} {publisherVerified ? '✓' : ''}</dd>
-          <dt>Provenance</dt><dd>{security?.provenance ? 'declared' : 'not declared'}</dd>
-          <dt>Signature</dt><dd>{security?.signature ? 'declared' : 'not declared'}</dd>
-          <dt>SBOM</dt><dd>{security?.sbom ? 'declared' : 'not declared'}</dd>
-          <dt>License</dt><dd>{security?.license || 'not declared'}</dd>
-        </dl>
-      </section>
+            <section class="card">
+              <h2>兼容性</h2>
+              <dl>
+                <dt>OS</dt><dd>{(compatibility.os || ['any']).join(', ')}</dd>
+                <dt>Arch</dt><dd>{(compatibility.arch || ['any']).join(', ')}</dd>
+                <dt>Node</dt><dd>{compatibility.node || 'unspecified'}</dd>
+                <dt>Runtime</dt><dd>{compatibility.runtime || compatibility.dsh_runtime || 'unspecified'}</dd>
+                <dt>Client</dt><dd>{compatibility.client || compatibility.dsh_client || 'unspecified'}</dd>
+              </dl>
+            </section>
 
-      <section class="card wide">
-        <h2>依赖与能力</h2>
-        <p><strong>Capabilities:</strong> {(item.capabilities || []).join(', ') || 'none'}</p>
-        <p><strong>Dependencies:</strong> {dependencies.length ? dependencies.map((dependency: any) => typeof dependency === 'string' ? dependency : `${dependency.id}@${dependency.range || dependency.version || '*'}`).join(', ') : 'none'}</p>
-        {(item.conflicts || []).length > 0 && <p><strong>Conflicts:</strong> {item.conflicts.join(', ')}</p>}
-        {(item.replaces || []).length > 0 && <p><strong>Replaces:</strong> {item.replaces.join(', ')}</p>}
-        {(item.provides || []).length > 0 && <p><strong>Provides:</strong> {item.provides.join(', ')}</p>}
-      </section>
-    </div>
+            <section class="card">
+              <h2>Supply-chain evidence</h2>
+              <ul class="checks">{checks.map((check) => <li class={check.ok ? 'ok' : 'missing'}>{check.ok ? '✓' : '○'} {check.label}</li>)}</ul>
+              <p class="hint">“declared” 只表示 Registry 中存在证据引用，不等于已完成密码学验证。</p>
+            </section>
+
+            <section class="card">
+              <h2>Publisher</h2>
+              <dl>
+                <dt>Publisher</dt><dd>{publisher?.id || 'not declared'} {publisherVerified(item) ? '✓ owner match' : ''}</dd>
+                <dt>Provenance</dt><dd>{security?.provenance ? 'declared' : 'not declared'}</dd>
+                <dt>Signature</dt><dd>{security?.signature ? 'declared' : 'not declared'}</dd>
+                <dt>SBOM</dt><dd>{security?.sbom ? 'declared' : 'not declared'}</dd>
+                <dt>License</dt><dd>{security?.license || 'not declared'}</dd>
+              </dl>
+            </section>
+
+            <section class="card wide">
+              <h2>依赖与能力</h2>
+              <p><strong>Capabilities:</strong> {(item.capabilities || []).join(', ') || 'none'}</p>
+              <p><strong>Dependencies:</strong> {dependencies.length ? dependencies.map((dependency: any) => typeof dependency === 'string' ? dependency : `${dependency.type ? `${dependency.type}:` : ''}${dependency.id}@${dependency.range || dependency.version || '*'}`).join(', ') : 'none'}</p>
+              {(item.conflicts || []).length > 0 && <p><strong>Conflicts:</strong> {item.conflicts.join(', ')}</p>}
+              {(item.replaces || []).length > 0 && <p><strong>Replaces:</strong> {item.replaces.join(', ')}</p>}
+              {(item.provides || []).length > 0 && <p><strong>Provides:</strong> {item.provides.join(', ')}</p>}
+            </section>
+          </div>
+        </section>
+      );
+    })}
   </main>
 
   <script>
-    document.getElementById('copy-install')?.addEventListener('click', async (event) => {
-      const button = event.currentTarget as HTMLButtonElement;
-      await navigator.clipboard.writeText(button.dataset.command || '');
-      const old = button.textContent;
-      button.textContent = '已复制';
-      setTimeout(() => { button.textContent = old; }, 1200);
-    });
+    const panels = [...document.querySelectorAll<HTMLElement>('[data-variant-type]')];
+    const tabs = [...document.querySelectorAll<HTMLAnchorElement>('[data-type-tab]')];
+    const requested = new URLSearchParams(window.location.search).get('type');
+    const available = panels.map((panel) => panel.dataset.variantType);
+    const active = requested && available.includes(requested) ? requested : available[0];
+    for (const panel of panels) panel.hidden = panel.dataset.variantType !== active;
+    for (const tab of tabs) tab.classList.toggle('active', tab.dataset.typeTab === active);
+
+    for (const button of document.querySelectorAll<HTMLButtonElement>('.copy-install')) {
+      button.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(button.dataset.command || '');
+        const old = button.textContent;
+        button.textContent = '已复制';
+        setTimeout(() => { button.textContent = old; }, 1200);
+      });
+    }
   </script>
 </Layout>
 
 <style>
   .eco-detail{max-width:1120px;margin:0 auto;padding:36px 20px 70px}.back{display:inline-block;margin-bottom:18px;color:var(--muted)}
-  .hero,.install-card,.card{border:1px solid var(--border);background:var(--card);border-radius:18px}.hero{padding:28px;display:flex;justify-content:space-between;gap:28px;align-items:center}.hero h1{font-size:2.3rem;margin:9px 0}.hero p{color:var(--muted);max-width:760px}.eyebrow{display:flex;gap:8px;flex-wrap:wrap}.eyebrow span{padding:4px 9px;border:1px solid var(--border);border-radius:999px;font-size:.78rem}.trust{min-width:120px;text-align:center}.trust strong{display:block;font-size:2.4rem}.trust span{color:var(--muted);font-size:.8rem}
-  .install-card{margin-top:18px;padding:22px 24px}.install-card h2,.card h2{margin-top:0}.install-card p{color:var(--muted)}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.actions a,.actions button{border:1px solid var(--border);border-radius:10px;padding:10px 16px;font:inherit;cursor:pointer}.actions .primary{background:var(--accent);color:white;border-color:var(--accent)}.install-card code{display:block;overflow:auto;padding:12px;border-radius:10px;background:var(--bg)}
-  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}.card{padding:22px 24px}.wide{grid-column:1/-1}dl{display:grid;grid-template-columns:110px 1fr;gap:10px;margin:0}dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}ul{padding-left:20px}.risk{font-weight:700}.card p{overflow-wrap:anywhere}
-  @media(max-width:760px){.hero{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.wide{grid-column:auto}dl{grid-template-columns:1fr;gap:4px 10px}dd{margin-bottom:10px}}
+  .identity,.hero,.install-card,.card{border:1px solid var(--border);background:var(--card);border-radius:18px}.identity{display:flex;justify-content:space-between;gap:20px;padding:22px 24px;margin-bottom:18px}.identity h1{margin:6px 0}.identity p{margin:0;color:var(--muted);max-width:760px}.eyebrow{color:var(--accent);font-weight:800;font-size:.78rem}.variant-tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.variant-tabs a,.eyebrow-row span{padding:5px 9px;border:1px solid var(--border);border-radius:999px;font-size:.78rem}.variant-tabs a.active{border-color:var(--accent);color:var(--accent);font-weight:800}
+  .hero{padding:28px;display:flex;justify-content:space-between;gap:28px;align-items:center}.hero h2{font-size:2rem;margin:9px 0}.hero p{color:var(--muted);max-width:760px}.eyebrow-row{display:flex;gap:8px;flex-wrap:wrap}.evidence-summary{min-width:140px;text-align:center}.evidence-summary strong{display:block;font-size:2.2rem}.evidence-summary span{color:var(--muted);font-size:.8rem}
+  .install-card{margin-top:18px;padding:22px 24px}.install-card h2,.card h2{margin-top:0}.install-card p,.hint{color:var(--muted)}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.actions a,.actions button{border:1px solid var(--border);border-radius:10px;padding:10px 16px;font:inherit;cursor:pointer;background:transparent;color:inherit}.actions .primary{background:var(--accent);color:white;border-color:var(--accent)}.install-card>code{display:block;overflow:auto;padding:12px;border-radius:10px;background:var(--bg)}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}.card{padding:22px 24px}.wide{grid-column:1/-1}dl{display:grid;grid-template-columns:120px 1fr;gap:10px;margin:0}dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}ul{padding-left:20px}.risk{font-weight:700}.checks{list-style:none;padding:0}.checks li{margin:6px 0}.checks .ok{font-weight:650}.checks .missing{color:var(--muted)}.card p{overflow-wrap:anywhere}.variant-panel[hidden]{display:none}
+  @media(max-width:760px){.identity,.hero{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.wide{grid-column:auto}dl{grid-template-columns:1fr;gap:4px 10px}dd{margin-bottom:10px}}
 </style>

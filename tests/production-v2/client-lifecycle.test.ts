@@ -22,7 +22,7 @@ describe('client install -> manual restart -> startup loader E2E', () => {
     git(fixture, ['config', 'user.name', 'Client E2E']);
     await writeFile(join(fixture, 'dsh-package.json'), JSON.stringify({
       manifest_version: '1.0.0', id: 'client-fixture', name: 'Client Fixture', version: '0.1.0', type: 'skill',
-      permissions: [], compatibility: { node: '>=20.0.0', runtime: '>=3.0.0' },
+      permissions: [], compatibility: { node: '>=20.0.0', runtime: '>=0.1.0' },
       skill: { executor: 'node', entrypoint: 'index.js' },
     }, null, 2));
     await writeFile(join(fixture, 'index.js'), 'export default () => "ok";\n');
@@ -35,7 +35,7 @@ describe('client install -> manual restart -> startup loader E2E', () => {
       artifact: { integrity: artifactIntegrity({ version: '0.1.0', source }) },
       integrity: artifactIntegrity({ version: '0.1.0', source }),
       runtime: { type: 'skill', activation: 'restart-required' }, capabilities: ['plugin', 'skill'], dependencies: [], permissions: [],
-      compatibility: { node: '>=20.0.0', runtime: '>=3.0.0' },
+      compatibility: { node: '>=20.0.0', runtime: '>=0.1.0' },
     };
 
     const installed = await installPlugin(plugin, { root, repositoryUrl: fixture });

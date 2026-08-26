@@ -19,14 +19,26 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
     } catch { /* static metadata is optional for legacy API availability */ }
 
     return json({
-      name: 'DSH Go API', version: 'v1', data_version: data.version,
+      name: 'DSH Go API',
+      product_version: '0.1.0',
+      runtime_version: '0.1.0',
+      api_version: 'v1',
+      version: 'v1',
+      data_version: data.version,
       registry_version: syncMeta.registry_version || null,
-      updated_at: data.meta.updated_at, count: data.meta.count, active_count: activeCount, inactive_count: data.meta.count - activeCount, etag, source: 'static',
-      last_sync: syncMeta.last_sync || null, registry: syncMeta.registry || null, pipeline: syncMeta.pipeline || null,
+      updated_at: data.meta.updated_at,
+      count: data.meta.count,
+      active_count: activeCount,
+      inactive_count: data.meta.count - activeCount,
+      etag,
+      source: 'static',
+      last_sync: syncMeta.last_sync || null,
+      registry: syncMeta.registry || null,
+      pipeline: syncMeta.pipeline || null,
       endpoints: [
         '/api/v1/plugins', '/api/v1/plugins/:slug', '/api/v1/categories',
         '/api/v1/stats', '/api/v1/search', '/api/v1/meta', '/api/v1/health',
-        '/api/v1/registry', '/api/v1/mcp',
+        '/api/v1/registry', '/api/v1/ecosystem', '/api/v1/ecosystem/:id?type=...', '/api/v1/mcp',
       ],
     });
   } catch (error) { return internalError(error); }

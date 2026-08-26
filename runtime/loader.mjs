@@ -12,6 +12,31 @@ import {
 import { readInstallLock, verifyInstalledCommit } from './verifier.mjs';
 import { assertCompatibility } from './compatibility.mjs';
 
+function hydrateRuntimeRecord(record, lock, target) {
+  return {
+    ...record,
+    id: lock.id,
+    type: lock.type,
+    version: lock.version,
+    channel: lock.channel || record.channel || 'stable',
+    path: target,
+    source: lock.source,
+    commit: lock.source.commit,
+    runtime: lock.runtime || {},
+    capabilities: lock.capabilities || [],
+    dependencies: lock.dependencies || [],
+    permissions: lock.permissions || [],
+    permission_policy: lock.permission_policy || null,
+    compatibility: lock.compatibility || {},
+    publisher: lock.publisher || null,
+    security: lock.security || null,
+    conflicts: lock.conflicts || [],
+    replaces: lock.replaces || [],
+    provides: lock.provides || [],
+    type_config: lock.type_config || null,
+  };
+}
+
 export async function loadInstalledPackage(type, id, options = {}) {
   const normalizedType = assertPackageType(type);
   const normalizedId = safePackageId(id);
@@ -47,7 +72,8 @@ export async function loadInstalledPackage(type, id, options = {}) {
 
   let activatedRecord = runtimeRecord;
   if (runtimeRecord) {
-    activatedRecord = activatePackage(runtimeRecord, binding);
+    const hydrated = hydrateRuntimeRecord(runtimeRecord, lock, target);
+    activatedRecord = activatePackage(hydrated, binding);
     await writeRuntimeRegistry(
       upsertRuntimePackage(runtimeRegistry, activatedRecord),
       options.registryFile,
@@ -64,6 +90,7 @@ export async function loadInstalledPackage(type, id, options = {}) {
     runtime: lock.runtime,
     capabilities: lock.capabilities || [],
     permissions: lock.permissions || [],
+    permission_policy: lock.permission_policy || null,
     compatibility,
     publisher: lock.publisher || null,
     security: lock.security || null,

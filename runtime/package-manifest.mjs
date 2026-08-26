@@ -56,6 +56,7 @@ export function normalizePackageManifest(data, file = 'dsh-package.json') {
     capabilities: stringArray(data.capabilities),
     dependencies: Array.isArray(data.dependencies) ? data.dependencies.slice(0, 200) : [],
     permissions: permissions.permissions,
+    permission_policy: objectOrUndefined(data.permission_policy),
     compatibility: objectOrUndefined(data.compatibility),
     publisher: objectOrUndefined(data.publisher),
     security: objectOrUndefined(data.security),
@@ -68,6 +69,14 @@ export function normalizePackageManifest(data, file = 'dsh-package.json') {
     agent: type === 'agent' ? objectOrUndefined(data.agent) : undefined,
   };
   return Object.fromEntries(Object.entries(manifest).filter(([, value]) => value !== undefined));
+}
+
+function validatePermissionPolicy(policy, errors) {
+  if (!policy) return;
+  for (const [name, rule] of Object.entries(policy)) {
+    if (!KNOWN_PERMISSIONS.includes(name)) errors.push(`permission_policy contains unknown permission: ${name}`);
+    if (!rule || typeof rule !== 'object' || Array.isArray(rule)) errors.push(`permission_policy.${name} must be an object`);
+  }
 }
 
 export function validatePackageManifest(data, options = {}) {
@@ -84,13 +93,17 @@ export function validatePackageManifest(data, options = {}) {
   if (manifest.version !== DSH_DEFAULT_PACKAGE_VERSION && options.enforceDefaultVersion) errors.push(`new ecosystem packages must start at ${DSH_DEFAULT_PACKAGE_VERSION}`);
   const permissionReport = inspectPermissions(manifest.permissions);
   if (permissionReport.unknown.length) errors.push(`unknown permissions: ${permissionReport.unknown.join(', ')}`);
+  validatePermissionPolicy(manifest.permission_policy, errors);
   if (manifest.type === 'mcp') {
     const transport = manifest.mcp?.transport;
     if (!['stdio', 'sse', 'streamable-http'].includes(transport)) errors.push('mcp.transport must be stdio, sse, or streamable-http');
     if (transport === 'stdio' && !manifest.mcp?.command) errors.push('mcp.command is required for stdio transport');
     if (transport !== 'stdio' && !manifest.mcp?.url) errors.push('mcp.url is required for remote transport');
   }
-  if (manifest.type === 'skill' && !manifest.skill?.executor) errors.push('skill.executor is required');
+  if (manifest.type === 'skill') {
+    if (!manifest.skill?.executor) errors.push('skill.executor is required');
+    if (!manifest.skill?.entrypoint) errors.push('skill.entrypoint is required');
+  }
   if (manifest.type === 'agent' && !manifest.agent?.workflow && !manifest.agent?.entrypoint) errors.push('agent.workflow or agent.entrypoint is required');
   if (manifest.publisher?.provider && manifest.publisher.provider !== 'github') warnings.push('publisher ownership auto-verification currently supports GitHub publishers only');
   if (manifest.security?.signature && !manifest.security?.provenance) warnings.push('signature is declared without provenance metadata');
@@ -121,13 +134,14 @@ export function createManifestTemplate(type = 'plugin', options = {}) {
     capabilities: [normalizedType],
     dependencies: [],
     permissions: [],
-    compatibility: { os: ['linux', 'darwin', 'win32'], arch: ['x64', 'arm64'], node: '>=20.0.0', runtime: '>=3.0.0' },
+    permission_policy: {},
+    compatibility: { os: ['linux', 'darwin', 'win32'], arch: ['x64', 'arm64'], node: '>=20.0.0', runtime: '>=0.1.0' },
     publisher: { provider: 'github', id: '', repository_ownership: 'required' },
     security: { provenance: null, signature: null, sbom: null, license: '' },
   };
   if (normalizedType === 'plugin') template.plugin = { entrypoint: '' };
   if (normalizedType === 'mcp') template.mcp = { transport: 'stdio', command: '', args: [], tools: [] };
-  if (normalizedType === 'skill') template.skill = { executor: 'node', entrypoint: '', input_schema: null, output_schema: null };
+  if (normalizedType === 'skill') template.skill = { executor: 'node', entrypoint: 'index.mjs', input_schema: null, output_schema: null };
   if (normalizedType === 'agent') template.agent = { entrypoint: '', workflow: null, model: { required: false }, tools: [] };
   return template;
 }
