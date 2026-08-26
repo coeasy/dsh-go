@@ -66,7 +66,6 @@ jobs:
             echo "token_configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "token_configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::EDGEONE_API_TOKEN is not configured; EdgeOne deployment will be skipped"
           fi
 
           if [ -n "$EDGEONE_SITE_URL" ]; then
@@ -74,6 +73,12 @@ jobs:
           else
             echo "site_url_configured=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Require EdgeOne API token
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured != 'true' }}
+        run: |
+          echo "::error::EDGEONE_API_TOKEN secret is required for production deployment"
+          exit 1
 
       - name: Require stable EdgeOne production URL
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured != 'true' }}
@@ -128,8 +133,8 @@ jobs:
           test -f site/dist/catalog/plugins.json
           test -f site/dist/catalog/registry-v3.json
           test -f site/dist/catalog/schema-v3.json
-          node -e "const v=require('./site/dist/version.json'); if(v.git_sha !== process.env.DEPLOYMENT_SHA) process.exit(1)"
-          node -e "const r=require('./site/dist/catalog/registry-v3.json'); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length) process.exit(1)"
+          node -e "const fs=require('node:fs'); const v=JSON.parse(fs.readFileSync('site/dist/version.json','utf8')); if(v.git_sha !== process.env.DEPLOYMENT_SHA) process.exit(1)"
+          node -e "const fs=require('node:fs'); const r=JSON.parse(fs.readFileSync('site/dist/catalog/registry-v3.json','utf8')); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length) process.exit(1)"
 
       - name: Verify EdgeOne CLI contract
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
