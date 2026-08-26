@@ -97,22 +97,8 @@ jobs:
         uses: actions/deploy-pages@v5
       - name: Post-deploy Registry V3 convergence check
         if: ${{ steps.registry.outputs.ready == 'true' }}
-        shell: bash
         env:
-          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-        run: |
-          set -euo pipefail
-          EXPECTED_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
-          EXPECTED_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
-          BASE_URL="${PAGE_URL%/}"
-          for attempt in 1 2 3 4 5 6; do
-            if curl -fsS --max-time 20 "${BASE_URL}/catalog/registry-v3.json" -o /tmp/registry-v3.json; then
-              if EXPECTED_HASH="$EXPECTED_HASH" EXPECTED_COUNT="$EXPECTED_COUNT" node -e "const r=require('/tmp/registry-v3.json'); if(r.generated?.content_hash!==process.env.EXPECTED_HASH || String(r.plugins?.length)!==process.env.EXPECTED_COUNT) process.exit(1)"; then
-                echo "GitHub Pages Registry V3 converged"
-                exit 0
-              fi
-            fi
-            sleep 10
-          done
-          echo "GitHub Pages did not converge to the exact Registry V3 revision"
-          exit 1
+          DEPLOY_BASE_URL: ${{ steps.deployment.outputs.page_url }}
+          DEPLOY_LABEL: GitHub Pages
+          DEPLOY_CONVERGENCE_ATTEMPTS: "6"
+        run: node scripts/check-deployment-convergence.mjs
