@@ -52,6 +52,7 @@ export async function loadRegistrySource(source, options = {}) {
 
 export async function resolveRegistrySource(explicit) {
   if (explicit) return explicit;
+  if (process.env.DSH_CATALOG_REGISTRY) return process.env.DSH_CATALOG_REGISTRY;
   if (process.env.DSH_REGISTRY) return process.env.DSH_REGISTRY;
   const cwdRegistry = resolve(process.cwd(), 'catalog/registry-v3.json');
   if (await exists(cwdRegistry)) return cwdRegistry;
