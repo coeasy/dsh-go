@@ -12,13 +12,24 @@ on:
         description: "Exact commit SHA to route (defaults to current revision)"
         required: false
         type: string
+      target:
+        description: "Deployment target"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - cloudflare
+          - github-pages
+          - mirrors
+          - edgeone
 
 permissions:
   contents: read
   actions: write
 
 concurrency:
-  group: deploy-router-${{ github.ref }}
+  group: deploy-router-${{ github.ref }}-${{ inputs.target || 'all' }}
   cancel-in-progress: true
 
 jobs:
@@ -70,28 +81,63 @@ jobs:
           echo "generated_catalog=$GENERATED_CATALOG" >> "$GITHUB_OUTPUT"
           echo "revision=$SHA" >> "$GITHUB_OUTPUT"
       - name: Reject manual generated catalog publication
-        if: ${{ steps.changes.outputs.generated_catalog == 'true' }}
+        if: ${{ github.event_name == 'push' && steps.changes.outputs.generated_catalog == 'true' }}
         run: |
           echo "Generated catalog files are owned by Sync V3 and must not be deployed from a direct push."
           exit 1
       - name: Defer Registry-owned changes to Sync V3
-        if: ${{ steps.changes.outputs.sync_owned == 'true' && steps.changes.outputs.generated_catalog != 'true' }}
+        if: ${{ github.event_name == 'push' && steps.changes.outputs.sync_owned == 'true' && steps.changes.outputs.generated_catalog != 'true' }}
         run: |
           echo "Registry-owned files changed; Sync V3 has deployment authority for revision ${{ steps.changes.outputs.revision }}."
           echo "### Deployment deferred to Sync V3" >> "$GITHUB_STEP_SUMMARY"
           echo "- source revision: ${{ steps.changes.outputs.revision }}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Resolve deployment targets
+        id: targets
+        if: ${{ github.event_name != 'push' || (steps.changes.outputs.sync_owned != 'true' && steps.changes.outputs.generated_catalog != 'true') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="${{ inputs.target || 'all' }}"
+          case "$TARGET" in
+            all)
+              WORKFLOWS="deploy.yml deploy-pages.yml deploy-mirror.yml deploy-edgeone.yml"
+              LABEL="Cloudflare Pages, GitHub Pages, CN Mirrors, Tencent EdgeOne"
+              ;;
+            cloudflare)
+              WORKFLOWS="deploy.yml"
+              LABEL="Cloudflare Pages"
+              ;;
+            github-pages)
+              WORKFLOWS="deploy-pages.yml"
+              LABEL="GitHub Pages"
+              ;;
+            mirrors)
+              WORKFLOWS="deploy-mirror.yml"
+              LABEL="CN Mirrors"
+              ;;
+            edgeone)
+              WORKFLOWS="deploy-edgeone.yml"
+              LABEL="Tencent EdgeOne"
+              ;;
+            *)
+              echo "Unknown deployment target: $TARGET"
+              exit 1
+              ;;
+          esac
+          echo "workflows=$WORKFLOWS" >> "$GITHUB_OUTPUT"
+          echo "label=$LABEL" >> "$GITHUB_OUTPUT"
       - name: Dispatch deployment workflows
-        if: ${{ steps.changes.outputs.sync_owned != 'true' && steps.changes.outputs.generated_catalog != 'true' }}
+        if: ${{ steps.targets.outputs.workflows != '' }}
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           SHA="${{ steps.changes.outputs.revision }}"
-          for workflow in deploy.yml deploy-pages.yml deploy-mirror.yml deploy-edgeone.yml; do
+          for workflow in ${{ steps.targets.outputs.workflows }}; do
             echo "Dispatching ${workflow} at ${SHA}"
             gh workflow run "$workflow" --ref main -f commit_sha="$SHA"
           done
           echo "### Deployment routed" >> "$GITHUB_STEP_SUMMARY"
           echo "- authoritative revision: ${SHA}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- targets: Cloudflare Pages, GitHub Pages, CN Mirrors, Tencent EdgeOne" >> "$GITHUB_STEP_SUMMARY"
+          echo "- targets: ${{ steps.targets.outputs.label }}" >> "$GITHUB_STEP_SUMMARY"
