@@ -136,6 +136,7 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
         <nav class="nav-links" data-path={Astro.url.pathname.replace(/\/$/, '') || '/'}>
           <a href={u('/')} data-i18n="nav_home" data-nav="/">首页</a>
           <a href={u('/ecosystem')} data-nav={u('/ecosystem')}>Ecosystem</a>
+          <a href={u('/profiles')} data-nav={u('/profiles')}>Profiles</a>
           <a href={u('/docs')} data-i18n="nav_docs" data-nav={u('/docs')}>API 文档</a>
           <a href={u('/stats')} data-i18n="nav_stats" data-nav={u('/stats')}>统计</a>
           <a href={u('/trending')} data-i18n="nav_trending" data-nav={u('/trending')}>趋势</a>

@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { u, apiUrl } from '../lib/urls';
 
 interface RegistryPlugin {
   id: string;
@@ -45,21 +46,30 @@ try {
   registry = { plugins: [] };
 }
 
-const items = (registry.plugins ?? []).map((plugin) => ({
-  id: plugin.id,
-  name: plugin.metadata?.name || plugin.id,
-  description: plugin.metadata?.description || '',
-  version: plugin.version,
-  type: itemType(plugin),
-  verified: plugin.metadata?.verified === true,
-  stars: Number(plugin.metadata?.stars || 0),
-  rank: Number(plugin.metadata?.rank || 0),
-  repo: plugin.source?.repo || '',
-  commit: plugin.source?.commit || '',
-  capabilities: plugin.capabilities ?? [],
-  dependencies: plugin.dependencies?.length ?? 0,
-  install: `dsh plugin install ${plugin.id}@${plugin.version}`,
-})).sort((left, right) => {
+const items = (registry.plugins ?? []).map((plugin) => {
+  const type = itemType(plugin);
+  const deepLink = new URL('dsh://install');
+  deepLink.searchParams.set('id', plugin.id);
+  deepLink.searchParams.set('version', plugin.version);
+  deepLink.searchParams.set('type', type);
+  return {
+    id: plugin.id,
+    name: plugin.metadata?.name || plugin.id,
+    description: plugin.metadata?.description || '',
+    version: plugin.version,
+    type,
+    verified: plugin.metadata?.verified === true,
+    stars: Number(plugin.metadata?.stars || 0),
+    rank: Number(plugin.metadata?.rank || 0),
+    repo: plugin.source?.repo || '',
+    commit: plugin.source?.commit || '',
+    capabilities: plugin.capabilities ?? [],
+    dependencies: plugin.dependencies?.length ?? 0,
+    install: `dsh ${type} install ${plugin.id}@${plugin.version}`,
+    deepLink: deepLink.toString(),
+    detail: u(`/ecosystem/${encodeURIComponent(plugin.id)}`),
+  };
+}).sort((left, right) => {
   const leftRank = left.rank || Number.MAX_SAFE_INTEGER;
   const rightRank = right.rank || Number.MAX_SAFE_INTEGER;
   return leftRank - rightRank || right.stars - left.stars || left.id.localeCompare(right.id);
@@ -71,7 +81,7 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
 
 <Layout title="DSH Go · Ecosystem Marketplace" description="Registry V3 驱动的 Plugin、MCP、Skill 与 Agent 统一生态市场">
   <section class="hero">
-    <span class="eyebrow">Registry V3 · Runtime Platform V2</span>
+    <span class="eyebrow">Registry V3 · Runtime Platform V3</span>
     <h1 class="grad-text">DSH Ecosystem</h1>
     <p>Plugin、MCP、Skill、Agent 统一发现与安装计划。网页只提供可信目录和本地命令，不会远程修改你的客户端。</p>
     <div class="metrics">
@@ -86,7 +96,7 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
 
   <section class="notice">
     <b>安装闭环：</b>
-    复制命令 → 本地 DSH Runtime 校验并安装 → 手动重启客户端 → Startup Loader 再校验并激活。
+    一键安装或复制命令 → 本地 DSH Runtime 预检权限/兼容性并安装 → 手动重启客户端 → Startup Loader 再校验并激活。
   </section>
 
   <section class="filters" aria-label="ecosystem filters">
@@ -101,7 +111,7 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
     </div>
   </section>
 
-  <div class="result-line"><span id="eco-count">{items.length} 个生态条目</span><a href="/api/v1/ecosystem">JSON API ↗</a></div>
+  <div class="result-line"><span id="eco-count">{items.length} 个生态条目</span><span class="result-links"><a href={u('/profiles')}>Profiles / Bundles</a><a href={apiUrl('/api/v2/search')}>Search API V2 ↗</a></span></div>
 
   <section id="eco-grid" class="grid">
     {items.map((item) => (
@@ -129,10 +139,12 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
         <div class="repo">{item.repo || item.id}</div>
         <div class="install-row">
           <code>{item.install}</code>
+          <a class="copy-btn" href={item.deepLink}>一键安装</a>
           <button class="copy-btn" type="button" data-copy-command={item.install}>复制</button>
         </div>
         <div class="links">
-          <a href={`/api/v1/ecosystem/${encodeURIComponent(item.id)}`}>API 详情</a>
+          <a href={item.detail}>详情 / 安装</a>
+          <a href={apiUrl(`/api/v1/ecosystem/${encodeURIComponent(item.id)}`)}>API</a>
           {item.repo && <a href={`https://github.com/${item.repo}`} target="_blank" rel="noreferrer">GitHub ↗</a>}
         </div>
       </article>
@@ -209,7 +221,8 @@ const updatedAt = registry.generated?.at ? new Date(registry.generated.at).toISO
   .type-filter small { margin-left: 3px; color: inherit; }
   .type-filter.active { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); font-weight: 700; }
   .verified-only { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; margin-left: auto; }
-  .result-line { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 13px; margin: 10px 0; }
+  .result-line { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 13px; margin: 10px 0; gap: 12px; }
+  .result-links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
   .eco-card { border: 1px solid var(--border); border-radius: 14px; background: var(--card); padding: 16px; box-shadow: var(--shadow-sm); min-width: 0; }
   .eco-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }

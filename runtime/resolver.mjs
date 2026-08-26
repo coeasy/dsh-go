@@ -22,17 +22,24 @@ function defaultRegistryVersion(registry, type) {
   return registry?.defaults?.[`${type}_version`] || registry?.defaults?.plugin_version || '0.1.0';
 }
 
+function matchesCapability(item, token) {
+  const key = String(token || '').toLowerCase();
+  return (item.provides || []).some((capability) => String(capability).toLowerCase() === key);
+}
+
 export function resolvePackage(registry, type, id, version, options = {}) {
   if (registry?.registry_version !== 3) throw new Error('Registry V3 is required');
   const normalizedType = assertPackageType(type);
   const range = version || defaultRegistryVersion(registry, normalizedType) || '*';
   const channel = options.channel || 'stable';
   const idKey = String(id || '').toLowerCase();
-  const candidates = (registry.plugins || [])
+  const eligible = (registry.plugins || [])
     .filter((item) => inferPackageType(item) === normalizedType)
-    .filter((item) => String(item.id || '').toLowerCase() === idKey)
     .filter((item) => releaseChannel(item) === channel)
-    .filter((item) => satisfiesVersion(item.version, range))
+    .filter((item) => satisfiesVersion(item.version, range));
+  const directCandidates = eligible.filter((item) => String(item.id || '').toLowerCase() === idKey);
+  const providerCandidates = directCandidates.length ? [] : eligible.filter((item) => matchesCapability(item, idKey));
+  const candidates = [...directCandidates, ...providerCandidates]
     .sort((a, b) => compareVersions(b.version, a.version));
   const pkg = candidates[0];
   if (!pkg) throw new Error(`Runtime package not found: ${normalizedType}:${id}@${range} [${channel}]`);
@@ -50,6 +57,14 @@ export function resolvePackage(registry, type, id, version, options = {}) {
     runtime: pkg.runtime,
     capabilities: pkg.capabilities || [],
     dependencies: pkg.dependencies || [],
+    permissions: pkg.permissions || [],
+    compatibility: pkg.compatibility || {},
+    publisher: pkg.publisher || null,
+    security: pkg.security || null,
+    conflicts: pkg.conflicts || [],
+    replaces: pkg.replaces || [],
+    provides: pkg.provides || [],
+    type_config: pkg.type_config || null,
     metadata: pkg.metadata || {},
     source: pkg.source,
     artifact: pkg.artifact,
@@ -70,6 +85,11 @@ function graphKey(pkg) {
 
 function resolveDependency(registry, dependency, options) {
   return resolvePackage(registry, dependency.type, dependency.id, dependency.range, options);
+}
+
+function recordMatchesToken(item, token) {
+  return String(item.id || '').toLowerCase() === String(token || '').toLowerCase()
+    || matchesCapability(item, token);
 }
 
 export function buildDependencyPlan(registry, rootPackage, options = {}) {
@@ -133,6 +153,22 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
 
   visit({ ...rootPackage, type: assertPackageType(rootPackage.type || 'plugin') });
   const installed = options.installed || [];
+  const activeInstalled = installed.filter((item) => item.state !== 'removed');
+
+  for (const pkg of order) {
+    for (const conflict of pkg.conflicts || []) {
+      const selectedConflict = order.find((candidate) =>
+        packageKey(candidate.type || 'plugin', candidate.id) !== packageKey(pkg.type || 'plugin', pkg.id)
+        && recordMatchesToken(candidate, conflict));
+      const installedConflict = activeInstalled.find((candidate) =>
+        packageKey(candidate.type || 'plugin', candidate.id) !== packageKey(pkg.type || 'plugin', pkg.id)
+        && recordMatchesToken(candidate, conflict));
+      if (selectedConflict || installedConflict) {
+        throw new Error(`package conflict: ${packageKey(pkg.type || 'plugin', pkg.id)} conflicts with ${conflict}`);
+      }
+    }
+  }
+
   const replacements = order
     .filter((pkg) => {
       const key = packageKey(pkg.type, pkg.id);
@@ -140,6 +176,7 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
       return current && (current.version !== pkg.version || current.commit !== pkg.commit);
     })
     .map((pkg) => pkg.type === 'plugin' ? pkg.id : packageKey(pkg.type, pkg.id));
+  const declared_replacements = [...new Set(order.flatMap((pkg) => pkg.replaces || []))];
 
   return {
     root: rootPackage.type === 'plugin' || !rootPackage.type ? rootPackage.id : packageKey(rootPackage.type, rootPackage.id),
@@ -148,6 +185,7 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
     order,
     graph,
     replacements,
+    declared_replacements,
   };
 }
 

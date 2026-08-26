@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeasy.github.io/dsh-go/schemas/dsh-package.schema.json",
+  "title": "DSH Ecosystem Package Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["manifest_version", "name", "version", "type"],
+  "properties": {
+    "manifest_version": { "const": "1.0.0" },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$" },
+    "type": { "enum": ["plugin", "mcp", "skill", "agent"] },
+    "description": { "type": "string", "maxLength": 4000 },
+    "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "capabilities": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "dependencies": { "type": "array" },
+    "permissions": { "type": "array", "uniqueItems": true, "items": { "enum": ["filesystem.read", "filesystem.write", "network", "network.unrestricted", "shell", "secrets.read", "mcp.tools", "process.spawn"] } },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "os": { "type": "array", "items": { "enum": ["linux", "darwin", "win32"] }, "uniqueItems": true },
+        "arch": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "node": { "type": "string" }, "runtime": { "type": "string" }, "client": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "publisher": {
+      "type": "object", "required": ["provider", "id"],
+      "properties": {
+        "provider": { "type": "string" }, "id": { "type": "string" },
+        "repository_ownership": { "enum": ["required", "declared", "unverified"] }, "verified_at": { "type": "string" }
+      }
+    },
+    "security": {
+      "type": "object", "additionalProperties": true,
+      "properties": {
+        "provenance": { "type": ["object", "null"] }, "signature": { "type": ["object", "null"] },
+        "sbom": { "type": ["object", "null"] }, "license": { "type": "string" },
+        "advisories": { "type": "array" }, "yanked": { "type": "boolean" }, "deprecated": { "type": "boolean" }
+      }
+    },
+    "conflicts": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "replaces": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "provides": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "plugin": { "type": "object" },
+    "mcp": { "type": "object", "properties": { "transport": { "enum": ["stdio", "sse", "streamable-http"] }, "command": { "type": "string" }, "args": { "type": "array", "items": { "type": "string" } }, "url": { "type": "string" }, "tools": { "type": "array", "items": { "type": "string" } } } },
+    "skill": { "type": "object" },
+    "agent": { "type": "object" }
+  }
+}

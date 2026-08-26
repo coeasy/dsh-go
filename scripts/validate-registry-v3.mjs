@@ -11,6 +11,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_FILE = resolve(ROOT, 'catalog/registry-v3.json');
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const RUNTIMES = new Set(['plugin', 'mcp', 'skill', 'agent']);
+const MANIFESTS = new Set(['dsh-package.json', 'dsh-plugin.json', 'dsh-mcp.json', 'dsh-skill.json', 'dsh-agent.json']);
+const PERMISSIONS = new Set(['filesystem.read', 'filesystem.write', 'network', 'network.unrestricted', 'shell', 'secrets.read', 'mcp.tools', 'process.spawn']);
 
 export function validateRegistry(data) {
   const errors = [];
@@ -50,17 +52,20 @@ export function validateRegistry(data) {
     if (plugin?.runtime?.activation !== 'restart-required') warns.push(`${id}: runtime activation is not restart-required`);
     if (!Array.isArray(plugin?.capabilities) || !plugin.capabilities.includes('plugin')) errors.push(`${id}: capabilities must include plugin`);
     if (!Array.isArray(plugin?.dependencies)) errors.push(`${id}: dependencies must be array`);
+    if (plugin.permissions !== undefined && (!Array.isArray(plugin.permissions) || plugin.permissions.some((permission) => !PERMISSIONS.has(permission)))) errors.push(`${id}: invalid permissions declaration`);
+    if (plugin.compatibility !== undefined && (!plugin.compatibility || typeof plugin.compatibility !== 'object' || Array.isArray(plugin.compatibility))) errors.push(`${id}: compatibility must be object`);
+    for (const field of ['conflicts', 'replaces', 'provides']) if (plugin[field] !== undefined && !Array.isArray(plugin[field])) errors.push(`${id}: ${field} must be array`);
     const metadata = plugin?.metadata || {};
     const repoName = repoNameFromFullName(repo);
     if (metadata.repo_name !== repoName) errors.push(`${id}: metadata.repo_name mismatch`);
     if (metadata.repo_url !== canonicalRepoUrl(repo)) errors.push(`${id}: metadata.repo_url is not canonical`);
     if (metadata.install_cmd !== makeInstallCmd(repo, metadata.category || 'other')) errors.push(`${id}: metadata.install_cmd source mismatch`);
-    if (!['github', 'dsh-plugin', 'override'].includes(metadata.metadata_source)) errors.push(`${id}: unsupported metadata_source ${metadata.metadata_source || '<missing>'}`);
+    if (!['github', 'dsh-package', 'dsh-plugin', 'dsh-mcp', 'dsh-skill', 'dsh-agent', 'override'].includes(metadata.metadata_source)) errors.push(`${id}: unsupported metadata_source ${metadata.metadata_source || '<missing>'}`);
     if (metadata.metadata_source === 'github' && metadata.name !== repoName) errors.push(`${id}: GitHub metadata.name must match repository name`);
     if (metadata.metadata_source === 'github' && (metadata.verified || metadata.manifest_file)) errors.push(`${id}: GitHub metadata cannot be verified or manifest-backed`);
-    if (metadata.metadata_source === 'dsh-plugin' && (!metadata.verified || metadata.manifest_file !== 'dsh-plugin.json')) errors.push(`${id}: dsh-plugin metadata requires verified dsh-plugin.json`);
-    if (metadata.verified && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: verified metadata requires dsh-plugin.json`);
-    if (metadata.manifest_file && metadata.manifest_file !== 'dsh-plugin.json') errors.push(`${id}: unsupported manifest_file ${metadata.manifest_file}`);
+    if (metadata.metadata_source.startsWith('dsh-') && (!metadata.verified || !MANIFESTS.has(metadata.manifest_file))) errors.push(`${id}: DSH manifest metadata requires a verified supported manifest`);
+    if (metadata.verified && !MANIFESTS.has(metadata.manifest_file)) errors.push(`${id}: verified metadata requires a supported DSH manifest`);
+    if (metadata.manifest_file && !MANIFESTS.has(metadata.manifest_file)) errors.push(`${id}: unsupported manifest_file ${metadata.manifest_file}`);
     const overrideFields = normalizeOverrideFields(metadata.override_fields);
     if (metadata.metadata_source === 'override' && overrideFields.length === 0) errors.push(`${id}: override metadata missing override_fields`);
     if (Array.isArray(metadata.override_fields) && overrideFields.length !== metadata.override_fields.length) errors.push(`${id}: unsupported override_fields`);

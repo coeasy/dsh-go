@@ -10,6 +10,7 @@ import {
   writeRuntimeRegistry,
 } from './registry.mjs';
 import { readInstallLock, verifyInstalledCommit } from './verifier.mjs';
+import { assertCompatibility } from './compatibility.mjs';
 
 export async function loadInstalledPackage(type, id, options = {}) {
   const normalizedType = assertPackageType(type);
@@ -32,6 +33,7 @@ export async function loadInstalledPackage(type, id, options = {}) {
     throw new Error(`installed version mismatch: expected ${options.version}, got ${lock.version}`);
   }
   await verifyInstalledCommit(target, lock.source.commit);
+  const compatibility = assertCompatibility(lock, options.environment);
 
   const manifest = await discoverPackageManifest(target, normalizedType);
   const binding = createRuntimeBinding({
@@ -61,12 +63,20 @@ export async function loadInstalledPackage(type, id, options = {}) {
     commit: lock.source.commit,
     runtime: lock.runtime,
     capabilities: lock.capabilities || [],
+    permissions: lock.permissions || [],
+    compatibility,
+    publisher: lock.publisher || null,
+    security: lock.security || null,
+    conflicts: lock.conflicts || [],
+    replaces: lock.replaces || [],
+    provides: lock.provides || [],
+    type_config: lock.type_config || null,
     manifest_file: manifest.file,
     manifest: manifest.manifest,
     binding,
     activation: 'active',
     restart_required: activatedRecord?.restart_required ?? false,
-    message: `Runtime package ${key} is installed, verified, bound locally, and activated by the client startup loader.`,
+    message: `Runtime package ${key} is installed, verified, compatible, bound locally, and activated by the client startup loader.`,
   };
 }
 
@@ -74,6 +84,6 @@ export async function loadInstalledPlugin(id, options = {}) {
   const loaded = await loadInstalledPackage('plugin', id, options);
   return {
     ...loaded,
-    message: 'Plugin source is installed, verified, and activated by the client startup loader.',
+    message: 'Plugin source is installed, verified, compatible, and activated by the client startup loader.',
   };
 }
