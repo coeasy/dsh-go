@@ -31,10 +31,12 @@ export function isStructuredPermissionManifest(value) {
   return ['filesystem', 'network', 'process', 'secrets', 'mcp', 'shell'].some((key) => Object.prototype.hasOwnProperty.call(value, key));
 }
 
-export function compilePermissionManifest(value, explicitPolicy = undefined) {
+export function compilePermissionManifest(value, explicitPolicy = {}) {
+  /** @type {Record<string, { allow: string[], deny: string[] }>} */
+  const policy = {};
   const model = {
     permissions: new Set(normalizePermissions(value)),
-    policy: {},
+    policy,
     structured: isStructuredPermissionManifest(value),
     manifest: null,
   };
