@@ -96,25 +96,11 @@ jobs:
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
       - name: Post-deploy Registry V3 convergence check
         if: ${{ steps.registry.outputs.ready == 'true' }}
-        shell: bash
         env:
-          SITE_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
-        run: |
-          set -euo pipefail
-          EXPECTED_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
-          EXPECTED_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
-          for attempt in 1 2 3 4 5 6 7 8 9; do
-            if curl -fsS --max-time 20 "${SITE_URL}/catalog/registry-v3.json" -o /tmp/registry-v3.json; then
-              if EXPECTED_HASH="$EXPECTED_HASH" EXPECTED_COUNT="$EXPECTED_COUNT" node -e "const r=require('/tmp/registry-v3.json'); if(r.registry_version!==3 || r.generated?.content_hash!==process.env.EXPECTED_HASH || String(r.plugins?.length)!==process.env.EXPECTED_COUNT) process.exit(1)"; then
-                echo "Registry V3 converged: hash=${EXPECTED_HASH}, count=${EXPECTED_COUNT}"
-                exit 0
-              fi
-            fi
-            echo "Waiting for Cloudflare production convergence (${attempt}/9)"
-            sleep 10
-          done
-          echo "Cloudflare production did not converge to the exact Registry V3 revision"
-          exit 1
+          DEPLOY_BASE_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
+          DEPLOY_LABEL: Cloudflare Pages
+          DEPLOY_CONVERGENCE_ATTEMPTS: "9"
+        run: node scripts/check-deployment-convergence.mjs
       - name: Deployment summary
         if: always()
         run: |
