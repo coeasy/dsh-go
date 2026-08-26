@@ -34,19 +34,51 @@ function parseStartedAt(value) {
   return Number.isFinite(timestamp) ? timestamp : null;
 }
 
-async function defaultProcessStartTime(pid, platform = process.platform) {
-  if (platform === 'win32') {
-    const script = [
-      `$p = Get-Process -Id ${pid} -ErrorAction Stop`,
-      '$p.StartTime.ToUniversalTime().ToString("o")',
-    ].join('; ');
-    const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
-      encoding: 'utf8',
-      windowsHide: true,
-      timeout: 5_000,
+export function parseWindowsWmicCreationDate(value) {
+  const match = String(value || '').match(/CreationDate=(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\.(\d{1,6})([+-])(\d{3})/i);
+  if (!match) return null;
+  const [, year, month, day, hour, minute, second, micros, sign, offset] = match;
+  const milliseconds = Number(micros.padEnd(6, '0').slice(0, 3));
+  const local = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second), milliseconds);
+  const offsetMinutes = Number(offset) * (sign === '+' ? 1 : -1);
+  const timestamp = local - offsetMinutes * 60_000;
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+}
+
+async function windowsProcessStartTime(pid) {
+  const windir = process.env.WINDIR || 'C:\\Windows';
+  const wmic = join(windir, 'System32', 'wbem', 'WMIC.exe');
+  try {
+    const { stdout } = await execFileAsync(wmic, ['process', 'where', `ProcessId=${pid}`, 'get', 'CreationDate', '/value'], {
+      encoding: 'utf8', windowsHide: true, timeout: 3_000,
+    });
+    const parsed = parseWindowsWmicCreationDate(stdout);
+    if (parsed) return parsed;
+  } catch {
+    // WMIC is optional on newer Windows images. Fall through to PowerShell.
+  }
+
+  const script = [
+    `$p = Get-Process -Id ${pid} -ErrorAction Stop`,
+    '$p.StartTime.ToUniversalTime().ToString("o")',
+  ].join('; ');
+  try {
+    const { stdout } = await execFileAsync('pwsh.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+      encoding: 'utf8', windowsHide: true, timeout: 5_000,
     });
     return stdout.trim() || null;
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
   }
+
+  const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+    encoding: 'utf8', windowsHide: true, timeout: 5_000,
+  });
+  return stdout.trim() || null;
+}
+
+async function defaultProcessStartTime(pid, platform = process.platform) {
+  if (platform === 'win32') return windowsProcessStartTime(pid);
 
   const { stdout } = await execFileAsync('ps', ['-p', String(pid), '-o', 'lstart='], {
     encoding: 'utf8',
