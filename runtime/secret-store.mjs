@@ -11,6 +11,8 @@ import {
 } from './secret-provider.mjs';
 
 const NAME_RE = /^[A-Za-z0-9_.-]{1,160}$/;
+const SECRET_KEY_INIT_LOCK_TIMEOUT_MS = 30_000;
+const SECRET_KEY_INIT_LOCK_STALE_MS = 60_000;
 
 export function secretStorePaths() {
   const base = join(runtimeRoot(), 'secrets');
@@ -71,6 +73,13 @@ async function masterKey() {
     await mkdir(paths.base, { recursive: true });
     const created = await createSecretMasterKey(paths, configuredSecretKeyBackend());
     return { created: true, key: created.key };
+  }, {
+    // Native key providers can require a bounded OS helper cold start. Keep
+    // first-use initialization serialized without inheriting the generic 5s
+    // state-lock budget used for ordinary local JSON mutations.
+    timeoutMs: SECRET_KEY_INIT_LOCK_TIMEOUT_MS,
+    staleMs: SECRET_KEY_INIT_LOCK_STALE_MS,
+    retryMs: 25,
   });
 
   if (initialized.created && initialized.key) return initialized.key;
