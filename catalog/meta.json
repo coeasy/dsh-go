@@ -1,11 +1,11 @@
 {
   "last_sync": {
-    "at": "2026-08-26T07:10:06.707Z",
+    "at": "2026-08-26T08:23:55.122Z",
     "mode": "incremental",
-    "duration_ms": 58451,
-    "scanned": 990,
-    "included": 676,
-    "skipped": 41,
+    "duration_ms": 47867,
+    "scanned": 1086,
+    "included": 768,
+    "skipped": 39,
     "data_changed": true,
     "errors": []
   },
@@ -279,32 +279,55 @@
       "skipped": 41,
       "data_changed": true,
       "errors": []
+    },
+    {
+      "at": "2026-08-26T08:23:55.122Z",
+      "mode": "incremental",
+      "duration_ms": 47867,
+      "scanned": 1086,
+      "included": 768,
+      "skipped": 39,
+      "data_changed": true,
+      "errors": []
     }
   ],
   "registry_version": 3,
   "registry": {
     "schema_version": "3.0.0",
     "path": "catalog/registry-v3.json",
-    "count": 11883,
-    "excluded_count": 46,
-    "source_catalog_etag": "f55b458555955fb0",
-    "content_hash": "3776ef2cee38a91c466a9522e3ba5a3710e8ab49fd05b729ed8cfa3065790551",
+    "count": 11903,
+    "excluded_count": 47,
+    "source_catalog_etag": "54d9212a8bb39ead",
+    "content_hash": "6623399f4329a7a1e0f47a6bc973db48a41e31e1cb28e00c4b39485650c94462",
     "schema_hash": "5ee00d307b6cd601c243c3ab9d3bbb076cd2235cd392c745b9b53dbe133c9842",
-    "generated_at": "2026-08-26T07:10:24.164Z",
+    "generated_at": "2026-08-26T08:24:15.465Z",
     "discovery_mode": "complete",
     "discovery_transport": "graphql-topic",
-    "discovered_count": 11880
+    "discovered_count": 11880,
+    "distribution": {
+      "version": 1,
+      "index_path": "catalog/distribution-v1/index.json",
+      "delta_path": "catalog/distribution-delta.json",
+      "shard_count": 256,
+      "package_records": true,
+      "content_hash": "6623399f4329a7a1e0f47a6bc973db48a41e31e1cb28e00c4b39485650c94462",
+      "delta_content_hash": "263cb2cf2a003bfbffccab369bb7329917c64d21f92bda5eee3d779722bcd928",
+      "delta_changed": 10905,
+      "delta_removed": 10
+    }
   },
   "pipeline": {
     "stage": "sync-v3",
     "verified": true,
     "frozen": true,
     "registry_changed": true,
-    "run_at": "2026-08-26T07:10:24.875Z",
-    "source_catalog_etag": "f55b458555955fb0",
+    "run_at": "2026-08-26T08:24:16.652Z",
+    "source_catalog_etag": "54d9212a8bb39ead",
     "mode": "incremental",
-    "input_count": 11890,
-    "output_count": 11883,
-    "excluded_count": 46
+    "input_count": 11910,
+    "output_count": 11903,
+    "excluded_count": 47,
+    "distribution_version": 1,
+    "distribution_delta_hash": "263cb2cf2a003bfbffccab369bb7329917c64d21f92bda5eee3d779722bcd928"
   }
 }

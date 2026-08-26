@@ -23,13 +23,13 @@ API调用使用域名：https://dsh-go.pages.dev/
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 3.7k | TypeScript | 2026-08-25 | The first vision plugin for DeepSeek Harne… |
 | 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 2.9k | TypeScript | 2026-08-25 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 979 | JavaScript | 2026-08-26 | Eyes for text-only DeepSeek Harness agents… |
-| 4 | [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) | 2.6k | TypeScript | 2026-08-26 | DSH 官方公众号收录的 TUI 补位插件：Claude Code 风，鲸鱼顶栏/实… |
-| 5 | [dsh-market](https://github.com/dsh-market/dsh-market) | 2.4k | TypeScript | 2026-08-26 | The plugin market inside DeepSeek Harness … |
-| 6 | [deepseek-harness-desktop](https://github.com/dsh-tauri-desk/deepseek-harness-desktop) | 1.2k | Rust | 2026-08-26 | DeepSeek Harness Tauri 桌面版 \| Only 5mb ins… |
-| 7 | [dsh-im](https://github.com/xmanrui/dsh-im) | 860 | JavaScript | 2026-08-26 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
-| 8 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 1k | TypeScript | 2026-08-26 | The best DeepSeek Harness plugin for conte… |
-| 9 | [dsh-infinite-gen-2](https://github.com/Minglink/dsh-infinite-gen-2) | 403 | PowerShell | 2026-08-26 | DeepSeek 专用破甲插件「无限二代」dsh-infinite-gen-2 — … |
+| 3 | [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) | 2.6k | TypeScript | 2026-08-26 | DSH 官方公众号收录的 TUI 补位插件：Claude Code 风，鲸鱼顶栏/实… |
+| 4 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 982 | JavaScript | 2026-08-26 | Eyes for text-only DeepSeek Harness agents… |
+| 5 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 1k | TypeScript | 2026-08-26 | The best DeepSeek Harness plugin for conte… |
+| 6 | [dsh-market](https://github.com/dsh-market/dsh-market) | 2.4k | TypeScript | 2026-08-26 | The plugin market inside DeepSeek Harness … |
+| 7 | [deepseek-harness-desktop](https://github.com/dsh-tauri-desk/deepseek-harness-desktop) | 1.2k | Rust | 2026-08-26 | DeepSeek Harness Tauri 桌面版 \| Only 5mb ins… |
+| 8 | [dsh-im](https://github.com/xmanrui/dsh-im) | 862 | JavaScript | 2026-08-26 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
+| 9 | [dsh-infinite-gen-2](https://github.com/Minglink/dsh-infinite-gen-2) | 408 | PowerShell | 2026-08-26 | DeepSeek 专用破甲插件「无限二代」dsh-infinite-gen-2 — … |
 | 10 | [dsh-anchored-standard](https://github.com/xiaobright/dsh-anchored-standard) | 3.8k | JavaScript | 2026-08-26 | Two-phase DeepSeek Harness preset: Minimal… |
 | 11 | [dsh-pet](https://github.com/PC2005-cloud/dsh-pet) | 418 | TypeScript | 2026-08-25 | DSH 桌面宠物：一行命令装好即用的透明动画小桌宠，支持多开、大小位置随心配置；还内… |
 | 12 | [dsh-pocket](https://github.com/shaobeichen/dsh-pocket) | 661 | JavaScript | 2026-08-25 | 把 DeepSeek Harness 装进你的口袋：电脑上跑 dsh web，手机扫… |
