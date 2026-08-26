@@ -20,7 +20,13 @@ export async function acquireFileLock(file, options = {}) {
   while (true) {
     try {
       const handle = await open(lockFile, 'wx', 0o600);
-      await handle.writeFile(`${JSON.stringify({ pid: process.pid, created_at: new Date().toISOString() })}\n`, 'utf8');
+      try {
+        await handle.writeFile(`${JSON.stringify({ pid: process.pid, created_at: new Date().toISOString() })}\n`, 'utf8');
+      } catch (error) {
+        await handle.close().catch(() => {});
+        await unlink(lockFile).catch(() => {});
+        throw error;
+      }
       let released = false;
       return async () => {
         if (released) return;
