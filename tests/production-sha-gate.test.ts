@@ -10,6 +10,25 @@ import {
 
 const SHA = '0123456789abcdef0123456789abcdef01234567';
 
+type ShaGateOptions = {
+  baseUrl: string;
+  expectedSha: string;
+  label?: string;
+  attempts?: number;
+  delayMs?: number;
+  timeoutMs?: number;
+  fetchImpl?: (input: URL | RequestInfo, init?: RequestInit) => Promise<Response>;
+  log?: (...args: unknown[]) => void;
+  wait?: (ms: number) => Promise<void>;
+  nonceFactory?: (attempt: number) => number;
+};
+
+type ShaGateResult = {
+  actualSha: string;
+};
+
+const runShaGate = checkProductionSha as unknown as (options: ShaGateOptions) => Promise<ShaGateResult>;
+
 describe('production SHA deployment gate', () => {
   it('requires an exact immutable commit SHA', () => {
     expect(validateExpectedSha(SHA.toUpperCase())).toBe(SHA);
@@ -18,11 +37,11 @@ describe('production SHA deployment gate', () => {
   });
 
   it('builds a cache-busted version URL while preserving signed query parameters', () => {
-    const url = buildVersionUrl('https://preview.edgeone.app/base?eo_token=secret#fragment', 'attempt-1');
+    const url = buildVersionUrl('https://preview.edgeone.app/base?eo_token=secret#fragment', 1);
 
     expect(url.pathname).toBe('/base/version.json');
     expect(url.searchParams.get('eo_token')).toBe('secret');
-    expect(url.searchParams.get('__dsh_sha_gate')).toBe('attempt-1');
+    expect(url.searchParams.get('__dsh_sha_gate')).toBe('1');
     expect(safeDisplayUrl(url)).toBe('https://preview.edgeone.app/base/version.json');
   });
 
@@ -41,15 +60,15 @@ describe('production SHA deployment gate', () => {
     const requested: URL[] = [];
     let waits = 0;
 
-    const result = await checkProductionSha({
+    const result = await runShaGate({
       baseUrl: 'https://dsh.example.com',
       expectedSha: SHA,
       attempts: 3,
       delayMs: 0,
       timeoutMs: 1_000,
-      nonceFactory: (attempt: number) => `test-${attempt}`,
-      fetchImpl: async (url: URL | string) => {
-        requested.push(new URL(String(url)));
+      nonceFactory: (attempt) => attempt,
+      fetchImpl: async (input) => {
+        requested.push(new URL(String(input)));
         const body = responses.shift() ?? {};
         return new Response(JSON.stringify(body), {
           status: 200,
@@ -64,19 +83,19 @@ describe('production SHA deployment gate', () => {
 
     expect(result.actualSha).toBe(SHA);
     expect(requested).toHaveLength(2);
-    expect(requested[0].searchParams.get('__dsh_sha_gate')).toBe('test-1');
-    expect(requested[1].searchParams.get('__dsh_sha_gate')).toBe('test-2');
+    expect(requested[0].searchParams.get('__dsh_sha_gate')).toBe('1');
+    expect(requested[1].searchParams.get('__dsh_sha_gate')).toBe('2');
     expect(waits).toBe(1);
   });
 
   it('fails closed when the stable endpoint never reaches the requested SHA', async () => {
-    await expect(checkProductionSha({
+    await expect(runShaGate({
       baseUrl: 'https://dsh.example.com',
       expectedSha: SHA,
       attempts: 2,
       delayMs: 0,
       timeoutMs: 1_000,
-      nonceFactory: (attempt: number) => `test-${attempt}`,
+      nonceFactory: (attempt) => attempt,
       fetchImpl: async () => new Response(JSON.stringify({ git_sha: 'f'.repeat(40) }), { status: 200 }),
       log: () => undefined,
       wait: async () => undefined,
