@@ -47,7 +47,7 @@ describe('deployment dispatch fan-out', () => {
     await expect(dispatchDeployments({
       env: {
         DEPLOY_REVISION: 'b'.repeat(40),
-        DEPLOY_WORKFLOWS: 'deploy.yml deploy-pages.yml deploy-mirror.yml',
+        DEPLOY_WORKFLOWS: 'deploy.yml deploy-pages.yml deploy-edgeone.yml',
         DEPLOY_LABEL: 'test providers',
         DEPLOY_DISPATCH_RETRIES: '3',
         DEPLOY_DISPATCH_RETRY_DELAY_MS: '1',
@@ -57,7 +57,7 @@ describe('deployment dispatch fan-out', () => {
       wait,
     })).rejects.toThrow('1 failed dispatch');
 
-    expect(calls).toEqual(['deploy.yml', 'deploy-pages.yml', 'deploy-pages.yml', 'deploy-mirror.yml']);
+    expect(calls).toEqual(['deploy.yml', 'deploy-pages.yml', 'deploy-pages.yml', 'deploy-edgeone.yml']);
     expect(wait).toHaveBeenCalledTimes(1);
   });
 });
