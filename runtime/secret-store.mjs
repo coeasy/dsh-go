@@ -56,9 +56,11 @@ async function masterKey() {
   const existing = await readExistingSecretMasterKey(paths);
   if (existing) return existing.key;
 
-  return withFileLock(paths.key_lock, async () => {
-    const current = await readExistingSecretMasterKey(paths);
-    if (current) return current.key;
+  const initialized = await withFileLock(paths.key_lock, async () => {
+    // Keep native-key unwrap outside this initialization lock. A marker/key
+    // written by another process is enough to prove initialization finished;
+    // each waiter can then unwrap in parallel after the lock is released.
+    if (await exists(paths.backend) || await exists(paths.key)) return { created: false, key: null };
 
     if (await exists(paths.data)) {
       const error = new Error('DSH encrypted secret data exists but its master key is missing');
@@ -68,8 +70,15 @@ async function masterKey() {
 
     await mkdir(paths.base, { recursive: true });
     const created = await createSecretMasterKey(paths, configuredSecretKeyBackend());
-    return created.key;
+    return { created: true, key: created.key };
   });
+
+  if (initialized.created && initialized.key) return initialized.key;
+  const current = await readExistingSecretMasterKey(paths);
+  if (current) return current.key;
+  const error = new Error('DSH secret master key initialization completed without a readable key');
+  error.code = 'DSH_SECRET_MASTER_KEY_MISSING';
+  throw error;
 }
 
 export async function secretStoreStatus() {
@@ -81,7 +90,7 @@ export async function secretStoreStatus() {
   };
 }
 
-async function readSecrets() {
+async function readSecrets(preparedKey = null) {
   const paths = secretStorePaths();
   let payload;
   try {
@@ -91,7 +100,7 @@ async function readSecrets() {
     throw error;
   }
   if (!payload || payload.algorithm !== 'aes-256-gcm') throw new Error('unsupported DSH secret payload');
-  const key = await masterKey();
+  const key = preparedKey || await masterKey();
   const iv = Buffer.from(payload.iv || '', 'base64');
   const tag = Buffer.from(payload.tag || '', 'base64');
   const ciphertext = Buffer.from(payload.ciphertext || '', 'base64');
@@ -104,9 +113,9 @@ async function readSecrets() {
   return value;
 }
 
-async function writeSecrets(value) {
+async function writeSecrets(value, preparedKey = null) {
   const paths = secretStorePaths();
-  const key = await masterKey();
+  const key = preparedKey || await masterKey();
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', key, iv);
   const ciphertext = Buffer.concat([cipher.update(JSON.stringify(value), 'utf8'), cipher.final()]);
@@ -134,10 +143,14 @@ export async function setSecret(name, value) {
   const text = String(value ?? '');
   if (!text) throw new Error('secret value cannot be empty');
   const paths = secretStorePaths();
+
+  // DPAPI/Secret Service may require a helper process. Prepare the key before
+  // taking the data lock so slow native unwraps never serialize secret writers.
+  const key = await masterKey();
   return withFileLock(paths.data_lock, async () => {
-    const values = await readSecrets();
+    const values = await readSecrets(key);
     values[normalized] = text;
-    await writeSecrets(values);
+    await writeSecrets(values, key);
     return { name: normalized, stored: true };
   });
 }
@@ -145,11 +158,12 @@ export async function setSecret(name, value) {
 export async function deleteSecret(name) {
   const normalized = assertSecretName(name);
   const paths = secretStorePaths();
+  const key = await exists(paths.data) ? await masterKey() : null;
   return withFileLock(paths.data_lock, async () => {
-    const values = await readSecrets();
+    const values = await readSecrets(key);
     const existed = Object.prototype.hasOwnProperty.call(values, normalized);
     delete values[normalized];
-    if (existed) await writeSecrets(values);
+    if (existed) await writeSecrets(values, key);
     return { name: normalized, deleted: existed };
   });
 }
