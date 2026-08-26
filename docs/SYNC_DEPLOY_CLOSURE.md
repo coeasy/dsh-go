@@ -30,6 +30,16 @@ The following paths remain owned by Sync V3 and are deferred instead of deployed
 
 The router also rejects direct human publication of generated catalog files (`plugins.json`, `registry-v3.json`, feed/meta/audit outputs). Generated Registry V3 state must continue to flow through Sync V3.
 
+For operational retries, manual `Deploy Router` runs can select one target without fan-out to unrelated providers. The `target` input supports:
+
+- `all` — Cloudflare Pages, GitHub Pages, CN Mirrors, and Tencent EdgeOne;
+- `cloudflare` — Cloudflare Pages only;
+- `github-pages` — GitHub Pages only;
+- `mirrors` — Gitee/GitCode mirrors only;
+- `edgeone` — Tencent EdgeOne only.
+
+Manual runs can also provide an exact `commit_sha`, so a failed provider can be retried against the original immutable revision rather than whatever `main` happens to contain later. Push-triggered routing always keeps the full four-target fan-out.
+
 ## Sync V3
 
 The narrowed Sync trigger and incremental push mode are preserved. A push that touches Sync-owned files runs the integrity gates first, then dispatches the deployment targets at `steps.publish.outputs.commit_sha` even when the registry content did not need a new generated-data commit.
@@ -49,7 +59,7 @@ This prevents a race where `main` advances after routing or Sync finishes but be
 - `deploy-mirror.yml` — existing Gitee/GitCode mirrors; retained as requested.
 - `deploy-edgeone.yml` — Tencent EdgeOne Makers static deployment.
 
-Each target remains manually dispatchable.
+Each target remains manually dispatchable, either directly or through the selective Deploy Router.
 
 ## Tencent EdgeOne
 
