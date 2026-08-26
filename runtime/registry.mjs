@@ -13,8 +13,25 @@ export function runtimeRoot() {
   return resolve(process.env.DSH_RUNTIME_HOME || join(homedir(), '.dsh'));
 }
 
+function looksLikeCatalogRegistrySource(value) {
+  const input = String(value || '').trim();
+  if (!input) return false;
+  return /^https?:\/\//i.test(input)
+    || /(?:^|[\\/])catalog[\\/]/i.test(input)
+    || /registry-v\d+\.json(?:$|[?#])/i.test(input);
+}
+
+export function runtimeRegistryEnv() {
+  const explicit = String(process.env.DSH_RUNTIME_REGISTRY || '').trim();
+  if (explicit) return { name: 'DSH_RUNTIME_REGISTRY', value: explicit, legacy: false };
+  const legacy = String(process.env.DSH_REGISTRY || '').trim();
+  if (!legacy || looksLikeCatalogRegistrySource(legacy)) return null;
+  return { name: 'DSH_REGISTRY', value: legacy, legacy: true };
+}
+
 export function registryPath() {
-  return resolve(process.env.DSH_REGISTRY || join(runtimeRoot(), 'registry', 'runtime.json'));
+  const configured = runtimeRegistryEnv();
+  return resolve(configured?.value || join(runtimeRoot(), 'registry', 'runtime.json'));
 }
 
 export function registryLockPath(file = registryPath()) {
