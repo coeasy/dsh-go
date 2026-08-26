@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-/** Build-time asset copier + install-script/search-index generator. */
+/** Build-time asset copier + install-script/search-index/registry-distribution generator. */
 import { mkdir, cp, readFile, access, writeFile, readdir, unlink } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { buildSearchIndex } from './build-search-index-v2.mjs';
+import { writeRegistryDistribution } from './registry-distribution.mjs';
 
 function findRoot() {
   const bases = [process.cwd(), dirname(fileURLToPath(import.meta.url))];
@@ -70,6 +71,20 @@ async function genSearchIndex() {
   console.log(`Generated Search Index V2 (${index.count} packages)`);
 }
 
+async function genRegistryDistribution() {
+  const registryFile = resolve(CATALOG_DIR, 'registry-v3.json');
+  if (!(await exists(registryFile))) { console.warn('Missing registry-v3.json; skipping Registry Distribution'); return; }
+  const registry = JSON.parse(await readFile(registryFile, 'utf8'));
+  const deltaFile = resolve(CATALOG_DIR, 'distribution-delta.json');
+  const delta = await exists(deltaFile) ? JSON.parse(await readFile(deltaFile, 'utf8')) : null;
+  const result = await writeRegistryDistribution(
+    registry,
+    resolve(TARGET_DIR, 'distribution-v1'),
+    { delta, concurrency: Number(process.env.REGISTRY_DISTRIBUTION_WRITE_CONCURRENCY || 32) },
+  );
+  console.log(`Generated Registry Distribution V1 (${result.records} records, ${result.packages} packages, ${result.shards} shards, hash=${result.content_hash})`);
+}
+
 async function main() {
   await mkdir(TARGET_DIR, { recursive: true });
   for (const file of ['plugins.json', 'meta.json', 'registry-v3.json', 'schema-v3.json']) {
@@ -77,6 +92,7 @@ async function main() {
     if (await exists(src)) { await cp(src, resolve(TARGET_DIR, file)); console.log(`Copied ${file} -> site/public/catalog/`); }
     else if (file === 'registry-v3.json') console.warn('Missing registry-v3.json; run npm run registry:migrate or npm run sync first');
   }
+  await genRegistryDistribution();
   await genSearchIndex();
   if (await exists(resolve(CATALOG_DIR, 'feed.xml'))) await cp(resolve(CATALOG_DIR, 'feed.xml'), resolve(ROOT, 'site/public/feed.xml'));
   for (const file of ['_headers', '_redirects']) {
