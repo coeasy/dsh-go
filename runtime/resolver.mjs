@@ -27,20 +27,39 @@ function matchesCapability(item, token) {
   return (item.provides || []).some((capability) => String(capability).toLowerCase() === key);
 }
 
+function isYanked(item) {
+  return item?.security?.yanked === true;
+}
+
+function yankedError(type, id, range, channel) {
+  const error = new Error(`Runtime package is yanked and cannot be selected: ${type}:${id}@${range} [${channel}]`);
+  error.code = 'DSH_PACKAGE_YANKED';
+  return error;
+}
+
 export function resolvePackage(registry, type, id, version, options = {}) {
   if (registry?.registry_version !== 3) throw new Error('Registry V3 is required');
   const normalizedType = assertPackageType(type);
   const range = version || defaultRegistryVersion(registry, normalizedType) || '*';
   const channel = options.channel || 'stable';
   const idKey = String(id || '').toLowerCase();
-  const eligible = (registry.plugins || [])
+  const matching = (registry.plugins || [])
     .filter((item) => inferPackageType(item) === normalizedType)
     .filter((item) => releaseChannel(item) === channel)
     .filter((item) => satisfiesVersion(item.version, range));
-  const directCandidates = eligible.filter((item) => String(item.id || '').toLowerCase() === idKey);
-  const providerCandidates = directCandidates.length ? [] : eligible.filter((item) => matchesCapability(item, idKey));
-  const candidates = [...directCandidates, ...providerCandidates]
-    .sort((a, b) => compareVersions(b.version, a.version));
+
+  const directMatching = matching.filter((item) => String(item.id || '').toLowerCase() === idKey);
+  let candidates;
+  if (directMatching.length) {
+    candidates = options.allowYanked === true ? directMatching : directMatching.filter((item) => !isYanked(item));
+    if (!candidates.length) throw yankedError(normalizedType, id, range, channel);
+  } else {
+    const providerMatching = matching.filter((item) => matchesCapability(item, idKey));
+    candidates = options.allowYanked === true ? providerMatching : providerMatching.filter((item) => !isYanked(item));
+    if (!candidates.length && providerMatching.some(isYanked)) throw yankedError(normalizedType, id, range, channel);
+  }
+
+  candidates.sort((a, b) => compareVersions(b.version, a.version));
   const pkg = candidates[0];
   if (!pkg) throw new Error(`Runtime package not found: ${normalizedType}:${id}@${range} [${channel}]`);
 
@@ -127,6 +146,7 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
       try {
         resolved = resolveDependency(registry, dependency, {
           channel: options.channel || pkg.channel || 'stable',
+          allowYanked: options.allowYanked === true,
         });
       } catch (error) {
         if (dependency.optional) continue;

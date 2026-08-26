@@ -2,6 +2,7 @@ import { access } from 'node:fs/promises';
 import { discoverPackageManifest } from './bindings.mjs';
 import { assertPackageType, normalizePackageDependency, packageKey } from './package-model.mjs';
 import { readInstallLock, verifyInstalledCommit } from './verifier.mjs';
+import { hasDeclaredSupplyChainEvidence, verifySecurityEvidence } from './supply-chain-verifier.mjs';
 
 async function exists(path) {
   try {
@@ -88,6 +89,32 @@ export async function checkRuntimePackageHealth(pkg, options = {}) {
   checks.manifest = Boolean(manifest?.file);
   if (!checks.manifest) warnings.push('manifest');
 
+  let supplyChain = null;
+  const security = lock?.security || pkg?.security || {};
+  if (checks.path && hasDeclaredSupplyChainEvidence(security)) {
+    try {
+      supplyChain = await verifySecurityEvidence(security, { root: target, online: false });
+      checks.supply_chain = supplyChain.valid === true;
+      for (const evidence of supplyChain.evidence || []) {
+        if (!evidence.declared || evidence.verified) continue;
+        if (!['digest-mismatch', 'verification-error'].includes(evidence.status)) {
+          warnings.push(`supply-chain:${evidence.kind}:${evidence.status}`);
+        }
+      }
+      if (security.signature && !supplyChain.cryptographic_signature_verified) {
+        warnings.push('supply-chain:signature:cryptographic-verification-pending');
+      }
+    } catch (error) {
+      checks.supply_chain = false;
+      supplyChain = {
+        valid: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  } else {
+    checks.supply_chain = true;
+  }
+
   const runtimePackages = options.runtimeRegistry?.packages || options.runtimeRegistry?.plugins;
   if (Array.isArray(runtimePackages)) {
     const dependencies = (pkg.dependencies || []).map((item) => normalizePackageDependency(item, 'plugin'));
@@ -100,13 +127,14 @@ export async function checkRuntimePackageHealth(pkg, options = {}) {
     if (missing.length) warnings.push(...missing.map((dependency) => `dependency:${packageKey(dependency.type, dependency.id)}`));
   }
 
-  const critical = ['type', 'id', 'version', 'source', 'state', 'path', 'lock', 'lock_type', 'lock_id', 'lock_version', 'commit'];
+  const critical = ['type', 'id', 'version', 'source', 'state', 'path', 'lock', 'lock_type', 'lock_id', 'lock_version', 'commit', 'supply_chain'];
   const failed = critical.filter((name) => checks[name] === false);
   return {
     status: failed.length ? 'failed' : warnings.length ? 'warning' : 'healthy',
     checks,
     failed,
     warnings,
+    supply_chain: supplyChain,
     checked_at: new Date().toISOString(),
   };
 }

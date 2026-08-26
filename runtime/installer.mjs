@@ -7,6 +7,7 @@ import { packageRoot, pluginRoot } from './registry.mjs';
 import { verifyInstalledCommit, verifyResolvedPackage } from './verifier.mjs';
 import { assertCompatibility } from './compatibility.mjs';
 import { assertPermissionConsent, inspectPermissions } from './permissions.mjs';
+import { hasDeclaredSupplyChainEvidence, verifySecurityEvidence } from './supply-chain-verifier.mjs';
 
 const exec = promisify(execFile);
 
@@ -22,8 +23,35 @@ async function git(args, cwd) {
   return exec('git', args, { cwd, windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
 }
 
+function assertNotYanked(pkg) {
+  if (pkg?.security?.yanked !== true) return;
+  const error = new Error(`runtime package is yanked and cannot be installed: ${pkg.type || 'plugin'}:${pkg.id}@${pkg.version}`);
+  error.code = 'DSH_PACKAGE_YANKED';
+  throw error;
+}
+
+function compactEvidenceReport(report) {
+  if (!report) return null;
+  return {
+    checked_at: new Date().toISOString(),
+    online: report.online === true,
+    valid: report.valid === true,
+    cryptographic_signature_verified: report.cryptographic_signature_verified === true,
+    summary: report.summary,
+    evidence: (report.evidence || []).filter((item) => item.declared).map((item) => ({
+      kind: item.kind,
+      status: item.status,
+      verified: item.verified === true,
+      expected_sha256: item.expected_sha256 || null,
+      actual_sha256: item.actual_sha256 || null,
+      reason: item.reason || null,
+    })),
+  };
+}
+
 export async function installPackage(pkg, options = {}) {
   const type = assertPackageType(pkg?.type || 'plugin');
+  assertNotYanked({ ...pkg, type });
   const verification = verifyResolvedPackage({ ...pkg, type });
   if (!verification.ok) throw new Error('runtime package verification failed: ' + verification.errors.join('; '));
   const compatibility = assertCompatibility(pkg, options.environment);
@@ -37,6 +65,7 @@ export async function installPackage(pkg, options = {}) {
   const root = resolve(options.root || defaultPackageHome(type));
   const target = join(root, safePackageId(pkg.id));
   const backup = target + '.backup';
+  const evidenceDeclared = hasDeclaredSupplyChainEvidence(pkg.security);
   const plan = {
     id: pkg.id,
     type,
@@ -49,6 +78,7 @@ export async function installPackage(pkg, options = {}) {
     restart_required: true,
     compatibility,
     permissions,
+    supply_chain: { declared: evidenceDeclared, checked: false, valid: null },
   };
   if (options.dryRun) return plan;
 
@@ -63,6 +93,21 @@ export async function installPackage(pkg, options = {}) {
     await git(['fetch', '--depth', '1', 'origin', pkg.commit], temp);
     await git(['checkout', '--detach', '-q', 'FETCH_HEAD'], temp);
     await verifyInstalledCommit(temp, pkg.commit);
+
+    let evidenceReport = null;
+    if (evidenceDeclared) {
+      evidenceReport = await verifySecurityEvidence(pkg.security, { root: temp, online: false });
+      if (!evidenceReport.valid) {
+        const failed = evidenceReport.evidence
+          .filter((item) => ['digest-mismatch', 'verification-error'].includes(item.status))
+          .map((item) => `${item.kind}:${item.status}`);
+        const error = new Error(`supply-chain evidence verification failed: ${failed.join(', ') || 'unknown evidence failure'}`);
+        error.code = 'DSH_SUPPLY_CHAIN_EVIDENCE_INVALID';
+        error.evidence = evidenceReport;
+        throw error;
+      }
+    }
+    const compactEvidence = compactEvidenceReport(evidenceReport);
 
     const lock = {
       registry_version: 3,
@@ -82,6 +127,7 @@ export async function installPackage(pkg, options = {}) {
       compatibility: pkg.compatibility || {},
       publisher: pkg.publisher || null,
       security: pkg.security || null,
+      supply_chain_verification: compactEvidence,
       conflicts: pkg.conflicts || [],
       replaces: pkg.replaces || [],
       provides: pkg.provides || [],
@@ -109,7 +155,16 @@ export async function installPackage(pkg, options = {}) {
 
     await mkdir(dirname(target), { recursive: true });
     await rename(temp, target);
-    return { ...plan, backup: options.force ? backup : undefined };
+    return {
+      ...plan,
+      supply_chain: {
+        declared: evidenceDeclared,
+        checked: evidenceDeclared,
+        valid: evidenceReport?.valid ?? null,
+        summary: evidenceReport?.summary || null,
+      },
+      backup: options.force ? backup : undefined,
+    };
   } catch (error) {
     await rm(temp, { recursive: true, force: true });
     try {
