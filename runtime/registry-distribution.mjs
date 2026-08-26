@@ -42,6 +42,21 @@ async function writeAtomic(file, content) {
   await rename(temp, file);
 }
 
+function assertRelativeDistributionPath(path, label = 'path') {
+  const value = String(path || '');
+  const parts = value.split('/');
+  if (!value
+    || value.startsWith('/')
+    || value.includes('\\')
+    || /^[A-Za-z][A-Za-z0-9+.-]*:/.test(value)
+    || parts.some((part) => !part || part === '.' || part === '..')) {
+    const error = new Error(`unsafe Registry Distribution ${label}: ${value}`);
+    error.code = 'DSH_REGISTRY_DISTRIBUTION_PATH';
+    throw error;
+  }
+  return value;
+}
+
 export function isRegistryDistributionIndex(value) {
   return value?.format === REGISTRY_DISTRIBUTION_FORMAT
     && value?.distribution_version === REGISTRY_DISTRIBUTION_VERSION
@@ -67,8 +82,9 @@ function commandHeaders(extra = {}) {
 }
 
 function resolveChildSource(indexSource, relativePath) {
-  if (/^https?:\/\//i.test(indexSource)) return new URL(relativePath, indexSource).toString();
-  return resolve(dirname(indexSource), relativePath);
+  const safePath = assertRelativeDistributionPath(relativePath, 'child path');
+  if (/^https?:\/\//i.test(indexSource)) return new URL(safePath, indexSource).toString();
+  return resolve(dirname(indexSource), safePath);
 }
 
 async function loadJsonSource(source, options = {}) {
@@ -96,6 +112,9 @@ function validateIndex(index) {
   const prefixes = new Set();
   for (const descriptor of index.shards) {
     if (!descriptor?.prefix || !descriptor?.path || !descriptor?.content_hash) throw new Error('invalid Registry Distribution shard descriptor');
+    if (!/^[0-9a-f]{2}$/.test(descriptor.prefix)) throw new Error(`invalid Registry Distribution shard prefix: ${descriptor.prefix}`);
+    const safePath = assertRelativeDistributionPath(descriptor.path, 'shard path');
+    if (safePath !== `shards/${descriptor.prefix}.json`) throw new Error(`Registry Distribution shard path mismatch: ${descriptor.prefix}`);
     if (prefixes.has(descriptor.prefix)) throw new Error(`duplicate Registry Distribution shard: ${descriptor.prefix}`);
     prefixes.add(descriptor.prefix);
   }
@@ -238,6 +257,16 @@ export async function materializeRegistryDistribution(source, options = {}) {
 
   const shards = await mapConcurrently(index.shards, options.shardConcurrency || 12, (descriptor) => loadShard(source, root, descriptor, options));
   const entries = shards.flatMap((shard) => shard.entries).sort((a, b) => Number(a.ordinal) - Number(b.ordinal));
+  const ordinals = new Set();
+  for (const entry of entries) {
+    const ordinal = Number(entry?.ordinal);
+    if (!Number.isInteger(ordinal) || ordinal < 0 || ordinal >= index.count || ordinals.has(ordinal) || !entry?.package) {
+      const error = new Error(`invalid Registry Distribution ordinal: ${entry?.ordinal}`);
+      error.code = 'DSH_REGISTRY_DISTRIBUTION_INTEGRITY';
+      throw error;
+    }
+    ordinals.add(ordinal);
+  }
   const plugins = entries.map((entry) => entry.package);
   if (plugins.length !== index.count) throw new Error(`Registry Distribution materialized count mismatch: ${plugins.length} != ${index.count}`);
 
@@ -279,7 +308,14 @@ export async function loadDistributedPackage(source, type, id, options = {}) {
     error.code = 'DSH_PACKAGE_NOT_FOUND';
     throw error;
   }
-  const file = join(root, descriptor.path);
+  const relativePath = assertRelativeDistributionPath(descriptor.path, 'package path');
+  const objectHash = sha256(key);
+  if (relativePath !== `packages/${objectHash.slice(0, 2)}/${objectHash}.json`) {
+    const error = new Error(`Registry Distribution package path mismatch: ${key}`);
+    error.code = 'DSH_REGISTRY_DISTRIBUTION_PATH';
+    throw error;
+  }
+  const file = join(root, relativePath);
   if (await exists(file)) {
     try {
       return { index, record: validatePackageRecord(JSON.parse(await readFile(file, 'utf8')), { ...descriptor, key }), cache_hit: true };
@@ -287,7 +323,7 @@ export async function loadDistributedPackage(source, type, id, options = {}) {
       // Re-fetch corrupt/stale package cache.
     }
   }
-  const childSource = resolveChildSource(source, descriptor.path);
+  const childSource = resolveChildSource(source, relativePath);
   const { value } = await loadJsonSource(childSource, options);
   const record = validatePackageRecord(value, { ...descriptor, key });
   await writeAtomic(file, `${JSON.stringify(record)}\n`);
