@@ -35,20 +35,44 @@ jobs:
   route:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[no deploy]') }}
     steps:
       - name: Checkout routing revision
         uses: actions/checkout@v7
         with:
           ref: ${{ inputs.commit_sha || github.sha }}
           fetch-depth: 0
+      - name: Classify changed paths
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA=$(git rev-parse HEAD)
+          SYNC_OWNED=false
+          GENERATED_CATALOG=false
+          git diff --name-only HEAD~1 HEAD > /tmp/changed-files || true
+          while IFS= read -r path; do
+            case "$path" in
+              scripts/sync*.mjs|scripts/registry-pipeline-v3.mjs|scripts/registry-v3-builder.mjs|scripts/repository-identity.mjs|scripts/github-discovery.mjs|scripts/checksum.mjs|scripts/validate-registry-v3.mjs|catalog/schema-v3.json|catalog/overrides.json|.github/workflows/sync.yml)
+                SYNC_OWNED=true ;;
+              catalog/plugins.json|catalog/feed.xml|catalog/meta.json|catalog/registry-v3.json|catalog/audit-report.json)
+                GENERATED_CATALOG=true ;;
+            esac
+          done < /tmp/changed-files
+          echo "sync_owned=$SYNC_OWNED" >> "$GITHUB_OUTPUT"
+          echo "generated_catalog=$GENERATED_CATALOG" >> "$GITHUB_OUTPUT"
+          echo "revision=$SHA" >> "$GITHUB_OUTPUT"
+      - name: Reject manual generated catalog publication
+        if: ${{ steps.changes.outputs.generated_catalog == 'true' }}
+        run: |
+          echo "Generated catalog files are owned by Sync V3"
+          exit 1
+      - name: Defer Registry-owned changes to Sync V3
+        if: ${{ steps.changes.outputs.sync_owned == 'true' && steps.changes.outputs.generated_catalog != 'true' }}
+        run: echo "Registry-owned files changed; Sync V3 has deployment authority"
       - name: Dispatch deployment workflows
-        id: dispatch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEPLOY_REVISION: ${{ inputs.commit_sha || github.sha }}
+          DEPLOY_REVISION: ${{ steps.changes.outputs.revision || inputs.commit_sha || github.sha }}
           DEPLOY_WORKFLOWS: ${{ inputs.target == 'edgeone' && 'deploy-edgeone.yml' || inputs.target == 'github-pages' && 'deploy-pages.yml' || inputs.target == 'cloudflare' && 'deploy.yml' || 'deploy.yml deploy-pages.yml deploy-edgeone.yml' }}
           DEPLOY_LABEL: refreshed production deployment
-          DEPLOY_DISPATCH_RETRIES: "5"
-          DEPLOY_DISPATCH_RETRY_DELAY_MS: "5000"
         run: node scripts/dispatch-deployments.mjs
