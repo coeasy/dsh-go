@@ -142,13 +142,20 @@ function dpapiLockPath() {
 }
 
 async function runDpapiCommand(run, script, input, options = {}) {
+  const invoke = () => run(
+    'powershell.exe',
+    ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
+    input,
+    { ...options, platform: 'win32', timeoutMs: Number(options.timeoutMs) || COMMAND_TIMEOUT_MS },
+  );
+
+  // An injected command transport is a deterministic test seam, not the real
+  // Windows OS adapter. It must not compete with live DPAPI helpers running in
+  // other Vitest workers for the user-scoped semaphore.
+  if (typeof options.runCommand === 'function') return invoke();
+
   try {
-    return await withFileLock(dpapiLockPath(), () => run(
-      'powershell.exe',
-      ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
-      input,
-      { ...options, platform: 'win32', timeoutMs: Number(options.timeoutMs) || COMMAND_TIMEOUT_MS },
-    ), {
+    return await withFileLock(dpapiLockPath(), invoke, {
       timeoutMs: Number(options.lockTimeoutMs) || DPAPI_LOCK_TIMEOUT_MS,
       staleMs: Math.max(60_000, Number(options.lockStaleMs) || 0),
       retryMs: 25,
