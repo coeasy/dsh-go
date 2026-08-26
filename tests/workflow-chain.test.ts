@@ -83,6 +83,23 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).toContain('configured=false');
   });
 
+  it('uses structured EdgeOne CI output and retries only transient transport failures', () => {
+    const edgeone = workflow('deploy-edgeone.yml');
+
+    expect(edgeone).toContain("EDGEONE_DEPLOY_RETRIES: ${{ vars.EDGEONE_DEPLOY_RETRIES || '3' }}");
+    expect(edgeone).toContain('--json 2>&1');
+    expect(edgeone).toContain("r.status!=='success' || !r.url || !r.projectId");
+    expect(edgeone).toContain('fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up|network');
+    expect(edgeone).toContain('EdgeOne deployment failed after retry policy');
+  });
+
+  it('preserves EdgeOne preview query credentials when checking Registry V3', () => {
+    const edgeone = workflow('deploy-edgeone.yml');
+
+    expect(edgeone).toContain("const u=new URL(process.env.EDGEONE_SITE_URL);u.pathname='/catalog/registry-v3.json';process.stdout.write(u.toString())");
+    expect(edgeone).not.toContain('BASE_URL="${EDGEONE_SITE_URL%/}"');
+  });
+
   it('gates deployed Registry V3 against the latest main registry', () => {
     const monitor = workflow('monitor.yml');
 
