@@ -135,14 +135,14 @@ function cachedNativeKey(paths, backend) {
 const DPAPI_PROTECT_SCRIPT = [
   '$value = [Console]::In.ReadToEnd().Trim()',
   '$bytes = [Convert]::FromBase64String($value)',
-  '$protected = [Security.Cryptography.ProtectedData]::Protect($bytes, $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)',
+  '$protected = [System.Security.Cryptography.ProtectedData]::Protect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
   '[Console]::Out.Write([Convert]::ToBase64String($protected))',
 ].join('; ');
 
 const DPAPI_UNPROTECT_SCRIPT = [
   '$value = [Console]::In.ReadToEnd().Trim()',
   '$bytes = [Convert]::FromBase64String($value)',
-  '$plain = [Security.Cryptography.ProtectedData]::Unprotect($bytes, $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)',
+  '$plain = [System.Security.Cryptography.ProtectedData]::Unprotect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
   '[Console]::Out.Write([Convert]::ToBase64String($plain))',
 ].join('; ');
 
