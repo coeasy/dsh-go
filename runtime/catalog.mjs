@@ -12,6 +12,26 @@ export function registryCacheFile() {
   return process.env.DSH_REGISTRY_CACHE || join(homedir(), '.dsh', 'cache', 'registry-v3.json');
 }
 
+export function registryCacheMetadataFile(cacheFile = registryCacheFile()) {
+  return `${resolve(cacheFile)}.meta.json`;
+}
+
+async function readCacheMetadata(file, source) {
+  try {
+    const metadata = JSON.parse(await readFile(file, 'utf8'));
+    return metadata?.source === source ? metadata : null;
+  } catch (error) {
+    if (error?.code === 'ENOENT' || error instanceof SyntaxError) return null;
+    throw error;
+  }
+}
+
+async function writeAtomic(file, content) {
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
+  await writeFile(temp, content, 'utf8');
+  await rename(temp, file);
+}
+
 export async function loadRegistrySource(source, options = {}) {
   const input = String(source || '').trim();
   if (/^https?:\/\//i.test(input)) {
@@ -42,19 +62,44 @@ export async function ensureRegistryCache(source, options = {}) {
   const resolvedSource = await resolveRegistrySource(source);
   if (!/^https?:\/\//i.test(resolvedSource)) return resolve(resolvedSource);
   const file = resolve(options.cacheFile || registryCacheFile());
+  const metadataFile = resolve(options.metadataFile || registryCacheMetadataFile(file));
   await mkdir(dirname(file), { recursive: true });
+
   try {
+    const cached = await exists(file);
+    const metadata = cached ? await readCacheMetadata(metadataFile, resolvedSource) : null;
+    const headers = { Accept: 'application/json', 'User-Agent': 'dsh-runtime-v3' };
+    if (metadata?.etag) headers['If-None-Match'] = metadata.etag;
+    if (metadata?.last_modified) headers['If-Modified-Since'] = metadata.last_modified;
+
     const response = await fetch(resolvedSource, {
-      headers: { Accept: 'application/json', 'User-Agent': 'dsh-runtime-v3' },
+      headers,
       signal: AbortSignal.timeout(options.timeout || 30000),
     });
+
+    if (response.status === 304) {
+      if (!cached) throw new Error('registry server returned 304 without a local cache');
+      await writeAtomic(metadataFile, `${JSON.stringify({
+        ...metadata,
+        source: resolvedSource,
+        checked_at: new Date().toISOString(),
+      }, null, 2)}\n`);
+      return file;
+    }
+
     if (!response.ok) throw new Error(`registry fetch failed: HTTP ${response.status}`);
     const text = await response.text();
     const parsed = JSON.parse(text);
     if (parsed?.registry_version !== 3 || !Array.isArray(parsed?.plugins)) throw new Error('remote registry is not Registry V3');
-    const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
-    await writeFile(temp, text.endsWith('\n') ? text : `${text}\n`, 'utf8');
-    await rename(temp, file);
+
+    await writeAtomic(file, text.endsWith('\n') ? text : `${text}\n`);
+    await writeAtomic(metadataFile, `${JSON.stringify({
+      source: resolvedSource,
+      etag: response.headers.get('etag') || null,
+      last_modified: response.headers.get('last-modified') || null,
+      fetched_at: new Date().toISOString(),
+      checked_at: new Date().toISOString(),
+    }, null, 2)}\n`);
     return file;
   } catch (error) {
     if (options.allowStale !== false && await exists(file)) return file;
