@@ -8,6 +8,7 @@ import { sha256 } from './checksum.mjs';
 import { applyManifestObservation, buildFeed, observeDshManifest } from './sync.mjs';
 import { canonicalRepoKey, mergeCatalogPluginsWithDiscovery } from './repository-identity.mjs';
 import { buildRegistryV3 } from './registry-v3-builder.mjs';
+import { buildDistributionDelta } from './registry-distribution.mjs';
 import { discoverAllRepositories, discoveryRepoToLegacy } from './github-discovery.mjs';
 import { validateRegistry } from './validate-registry-v3.mjs';
 
@@ -19,6 +20,7 @@ const META_FILE = resolve(CATALOG, 'meta.json');
 const FEED_FILE = resolve(CATALOG, 'feed.xml');
 const OBSERVED_FILE = resolve(CATALOG, '.sync-observed.json');
 const SCHEMA_FILE = resolve(CATALOG, 'schema-v3.json');
+const DISTRIBUTION_DELTA_FILE = resolve(CATALOG, 'distribution-delta.json');
 
 async function readJson(file, fallback = null) { try { return JSON.parse(await readFile(file, 'utf8')); } catch { return fallback; } }
 function runNode(args, env = process.env) {
@@ -153,6 +155,11 @@ async function main() {
   if (validation.errors.length) { validation.errors.slice(0, 50).forEach((error) => console.error('[REGISTRY ERROR]', error)); throw new Error(`Registry V3 validation failed with ${validation.errors.length} error(s)`); }
   validation.warns.slice(0, 50).forEach((warning) => console.warn(`[REGISTRY WARN] ${warning}`));
 
+  // Delta metadata is small and belongs in Git; the thousands of shard/package
+  // files are build artifacts generated later by copy-assets/site:build.
+  const distributionDelta = buildDistributionDelta(candidate, existing);
+  await writeJsonAtomic(DISTRIBUTION_DELTA_FILE, distributionDelta);
+
   const unchanged = existing?.generated?.content_hash === candidate.generated.content_hash;
   let published = candidate;
   if (unchanged && existing) { published = existing; console.log(`[sync-v3] registry content unchanged (${candidate.generated.content_hash})`); }
@@ -166,13 +173,25 @@ async function main() {
     source_catalog_etag: published.generated.source_catalog_etag, content_hash: published.generated.content_hash, schema_hash: schemaHash, generated_at: published.generated.at,
     discovery_mode: published.generated.discovery_mode || discoveryMode, discovery_transport: published.generated.discovery_transport || discoveryTransport,
     discovered_count: published.generated.discovered_count || discoveredCount,
+    distribution: {
+      version: 1,
+      index_path: 'catalog/distribution-v1/index.json',
+      delta_path: 'catalog/distribution-delta.json',
+      shard_count: 256,
+      package_records: true,
+      content_hash: published.generated.content_hash,
+      delta_content_hash: distributionDelta.content_hash,
+      delta_changed: distributionDelta.counts.changed,
+      delta_removed: distributionDelta.counts.removed,
+    },
   };
   meta.pipeline = {
     stage: 'sync-v3', verified: true, frozen: true, registry_changed: !unchanged, run_at: new Date().toISOString(), source_catalog_etag: legacy.meta?.etag || '',
     mode: registryOnly ? 'registry-only' : mode, input_count: stats.input, output_count: stats.output, excluded_count: stats.excluded.length,
+    distribution_version: 1, distribution_delta_hash: distributionDelta.content_hash,
   };
   await writeJsonAtomic(META_FILE, meta);
-  console.log(`[sync-v3] complete mode=${registryOnly ? 'registry-only' : mode} input=${stats.input} output=${stats.output} reused=${stats.reused} pinned=${stats.pinned_from_discovery} resolved=${stats.resolved} excluded=${stats.excluded.length}`);
+  console.log(`[sync-v3] complete mode=${registryOnly ? 'registry-only' : mode} input=${stats.input} output=${stats.output} reused=${stats.reused} pinned=${stats.pinned_from_discovery} resolved=${stats.resolved} excluded=${stats.excluded.length} delta=${distributionDelta.counts.changed}/${distributionDelta.counts.removed}`);
   stats.excluded.slice(0, 20).forEach((item) => console.warn(`[sync-v3] excluded ${item.repo || '<unknown>'}: ${item.reason}`));
 }
 
