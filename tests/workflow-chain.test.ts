@@ -95,7 +95,7 @@ describe('authoritative deployment routing', () => {
     expect(deploy).not.toContain('cloudflare/pages-action@v1');
   });
 
-  it('keeps the EdgeOne workflow indexer-friendly and fails closed until production reaches the exact SHA', () => {
+  it('keeps the EdgeOne workflow indexer-friendly and fails closed until the production target reaches the exact SHA', () => {
     const edgeone = workflow('deploy-edgeone.yml');
     const edgeoneScript = script('edgeone-deploy-ci.mjs');
     const shaGate = script('check-production-sha.mjs');
@@ -107,13 +107,16 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).toContain('token_configured=false');
     expect(edgeone).toContain('site_url_configured=false');
     expect(edgeone).toContain('EDGEONE_API_TOKEN secret is required for production deployment');
-    expect(edgeone).toContain('EDGEONE_SITE_URL repository variable is required for production SHA verification');
+    expect(edgeone).not.toContain('EDGEONE_SITE_URL repository variable is required for production SHA verification');
+    expect(edgeone).not.toContain("steps.edgeone-config.outputs.site_url_configured == 'true'");
     expect(edgeone).toContain('PUBLIC_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}');
     expect(edgeone).toContain('run: node scripts/write-deployment-version.mjs site/dist/version.json');
     expect(edgeone).toContain('run: node scripts/edgeone-deploy-ci.mjs --check');
     expect(edgeone).toContain('run: node scripts/edgeone-deploy-ci.mjs');
     expect(edgeone).toContain('run: node scripts/check-production-sha.mjs');
-    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ vars.EDGEONE_SITE_URL }}');
+    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.deploy_url }}');
+    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}');
+    expect(edgeone).toContain('production target fallback: CLI production deployment URL when EDGEONE_SITE_URL is unset');
     expect(edgeone).toContain('Production Registry V3 convergence gate');
     expect(edgeone).not.toContain("<<'NODE'");
     expect(edgeone.length).toBeLessThan(12_000);
@@ -122,6 +125,8 @@ describe('authoritative deployment routing', () => {
     expect(edgeoneScript).toContain("'--json'");
     expect(edgeoneScript).toContain('using per-invocation token auth');
     expect(edgeoneScript).toContain('EdgeOne CLI >= 1.6.0 is required');
+    expect(edgeoneScript).toContain('const healthUrl = env.EDGEONE_SITE_URL || deployUrl;');
+    expect(edgeoneScript).toContain("writeOutput('health_url', healthUrl)");
     expect(edgeoneScript).not.toContain('login --token');
     expect(edgeoneScript).not.toContain('whoami');
 
