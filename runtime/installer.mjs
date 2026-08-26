@@ -5,6 +5,8 @@ import { promisify } from 'node:util';
 import { assertPackageType, safePackageId } from './package-model.mjs';
 import { packageRoot, pluginRoot } from './registry.mjs';
 import { verifyInstalledCommit, verifyResolvedPackage } from './verifier.mjs';
+import { assertCompatibility } from './compatibility.mjs';
+import { assertPermissionConsent, inspectPermissions } from './permissions.mjs';
 
 const exec = promisify(execFile);
 
@@ -24,6 +26,13 @@ export async function installPackage(pkg, options = {}) {
   const type = assertPackageType(pkg?.type || 'plugin');
   const verification = verifyResolvedPackage({ ...pkg, type });
   if (!verification.ok) throw new Error('runtime package verification failed: ' + verification.errors.join('; '));
+  const compatibility = assertCompatibility(pkg, options.environment);
+  const permissions = inspectPermissions(pkg.permissions);
+  if (!options.dryRun) {
+    assertPermissionConsent(pkg.permissions, {
+      approved: options.approved === true || process.env.DSH_PERMISSION_APPROVED === '1',
+    });
+  }
 
   const root = resolve(options.root || defaultPackageHome(type));
   const target = join(root, safePackageId(pkg.id));
@@ -38,6 +47,8 @@ export async function installPackage(pkg, options = {}) {
     target,
     backup,
     restart_required: true,
+    compatibility,
+    permissions,
   };
   if (options.dryRun) return plan;
 
@@ -66,6 +77,14 @@ export async function installPackage(pkg, options = {}) {
       runtime: pkg.runtime,
       capabilities: pkg.capabilities || [],
       dependencies: pkg.dependencies || [],
+      permissions: pkg.permissions || [],
+      compatibility: pkg.compatibility || {},
+      publisher: pkg.publisher || null,
+      security: pkg.security || null,
+      conflicts: pkg.conflicts || [],
+      replaces: pkg.replaces || [],
+      provides: pkg.provides || [],
+      type_config: pkg.type_config || null,
       installed_at: new Date().toISOString(),
       restart_required: true,
     };

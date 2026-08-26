@@ -1,4 +1,8 @@
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+export const DSH_MANIFEST_FILES = Object.freeze(['dsh-package.json', 'dsh-plugin.json', 'dsh-mcp.json', 'dsh-skill.json', 'dsh-agent.json']);
+const DSH_MANIFEST_SET = new Set(DSH_MANIFEST_FILES);
+export function isAuthoritativeDshManifest(file) { return DSH_MANIFEST_SET.has(String(file || '')); }
+export function manifestMetadataSource(file) { return isAuthoritativeDshManifest(file) ? String(file).replace(/\.json$/, '') : 'github'; }
 export const VALID_PLUGIN_CATEGORIES = Object.freeze([
   'web-ui', 'desktop', 'mcp', 'skills', 'theme', 'terminal', 'coding', 'agent',
   'vision', 'memory', 'security', 'integration', 'tool', 'other',
@@ -121,13 +125,13 @@ export function normalizeStoredPlugin(plugin) {
   const fullName = String(plugin?.full_name || plugin?.source?.repo || '').trim();
   if (!isValidRepositoryName(fullName)) return { ...plugin };
   const repoName = repoNameFromFullName(fullName);
-  const authoritativeManifest = plugin?.manifest_file === 'dsh-plugin.json';
+  const authoritativeManifest = isAuthoritativeDshManifest(plugin?.manifest_file);
   // Legacy records used metadata_source=override as a record-wide flag. Do not trust that
   // legacy flag by itself: only explicit override_fields may freeze individual fields.
   const overrideFields = normalizeOverrideFields(plugin?.override_fields);
   const overrideSet = new Set(overrideFields);
   const category = normalizePluginCategory(plugin?.category, 'other');
-  const metadataSource = overrideFields.length ? 'override' : (authoritativeManifest ? 'dsh-plugin' : 'github');
+  const metadataSource = overrideFields.length ? 'override' : (authoritativeManifest ? manifestMetadataSource(plugin?.manifest_file) : 'github');
   const normalized = {
     ...plugin,
     full_name: fullName,
@@ -137,7 +141,7 @@ export function normalizeStoredPlugin(plugin) {
     install_cmd: makeInstallCmd(fullName, category),
     homepage: normalizeHttpUrl(plugin?.homepage),
     metadata_source: metadataSource,
-    manifest_file: authoritativeManifest ? 'dsh-plugin.json' : null,
+    manifest_file: authoritativeManifest ? plugin.manifest_file : null,
     verified: authoritativeManifest,
     name: (overrideSet.has('name') || authoritativeManifest) ? (plugin?.name || repoName) : repoName,
   };
@@ -186,7 +190,7 @@ export function mergeDiscoveredRepository(current, discovered) {
 
   const base = normalizeStoredPlugin(current);
   const manifestSource = liveManifestObserved ? live : base;
-  const manifestAuthoritative = manifestSource.manifest_file === 'dsh-plugin.json';
+  const manifestAuthoritative = isAuthoritativeDshManifest(manifestSource.manifest_file);
   const overrideFields = normalizeOverrideFields(base.override_fields);
   const overrideSet = new Set(overrideFields);
   const hasOverrides = overrideFields.length > 0;
@@ -227,8 +231,13 @@ export function mergeDiscoveredRepository(current, discovered) {
     snapshot_ref: live.snapshot_ref || base.snapshot_ref,
     deprecated: Boolean(live.deprecated),
     disabled: Boolean(live.disabled),
-    metadata_source: hasOverrides ? 'override' : (manifestAuthoritative ? 'dsh-plugin' : 'github'),
-    manifest_file: manifestAuthoritative ? 'dsh-plugin.json' : null,
+    metadata_source: hasOverrides ? 'override' : (manifestAuthoritative ? manifestMetadataSource(manifestSource.manifest_file) : 'github'),
+    manifest_file: manifestAuthoritative ? manifestSource.manifest_file : null,
+    package_id: manifestSource.package_id || null,
+    package_type: manifestSource.package_type || null,
+    capabilities: manifestSource.capabilities || [], dependencies: manifestSource.dependencies || [], permissions: manifestSource.permissions || [],
+    compatibility: manifestSource.compatibility || null, publisher: manifestSource.publisher || null, security: manifestSource.security || null,
+    conflicts: manifestSource.conflicts || [], replaces: manifestSource.replaces || [], provides: manifestSource.provides || [], type_config: manifestSource.type_config || null,
     verified: manifestAuthoritative,
     category,
     tags,
@@ -284,7 +293,7 @@ export function mergeCatalogPluginsWithDiscovery(existingPlugins, discoveredPlug
   let pruned = 0;
   for (const [key, plugin] of byKey) {
     const discovered = discoveredKeys.has(key);
-    const manifestAuthoritative = plugin.manifest_file === 'dsh-plugin.json';
+    const manifestAuthoritative = isAuthoritativeDshManifest(plugin.manifest_file);
     const repoId = plugin.repo_id ? String(plugin.repo_id) : '';
     const observedThisRun = !observationRequired || observedKeys.has(key) || (repoId && observedIds.has(repoId));
 

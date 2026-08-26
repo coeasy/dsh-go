@@ -1,5 +1,5 @@
 /**
- * DSH Go — 同步引擎 V2
+ * DSH Go — 同步引擎 V3
  * =========================================================
  * 模式：
  *   node scripts/sync.mjs            → 自动（默认 incremental）
@@ -37,11 +37,15 @@ const TOPIC = 'topic:dsh-plugin';
 // 补充主题：为扩大收录，额外搜索相关生态标签（如 DeepSeek Harness 生态）。
 // ⚠️ 补充主题必须带 manifest（dsh-plugin.json）才收录，避免把非插件项目混入目录。
 const EXTRA_TOPICS = ['topic:deepseek-harness'];
+const NATIVE_ECOSYSTEM_TOPICS = ['topic:dsh-package', 'topic:dsh-mcp', 'topic:dsh-skill', 'topic:dsh-agent'];
 const REQUEST_DELAY = 120; // ms，普通资源请求间隔
 // 搜索 API 速率：认证 30 req/min、匿名 10 req/min。主动限速避免 403 导致全量中途失败。
 const SEARCH_DELAY = TOKEN ? 2200 : 6000; // ms
 const README_EXCERPT_LEN = 500;
-const MANIFEST_FILES = Object.freeze(['dsh-plugin.json']);
+const MANIFEST_FILES = Object.freeze(['dsh-package.json', 'dsh-plugin.json', 'dsh-mcp.json', 'dsh-skill.json', 'dsh-agent.json']);
+const MANIFEST_TYPE_BY_FILE = Object.freeze({
+  'dsh-plugin.json': 'plugin', 'dsh-mcp.json': 'mcp', 'dsh-skill.json': 'skill', 'dsh-agent.json': 'agent',
+});
 
 const CATEGORIES = {
   'web-ui': 'Web UI 组件',
@@ -129,16 +133,28 @@ export function normalizeCategory(value, fallback = 'other') {
   return Object.prototype.hasOwnProperty.call(CATEGORIES, category) ? category : fallback;
 }
 
-export function sanitizeManifest(data) {
+export function sanitizeManifest(data, file = 'dsh-plugin.json') {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const explicitType = String(data.type || data.runtime?.type || '').toLowerCase();
+  const type = ['plugin', 'mcp', 'skill', 'agent'].includes(explicitType) ? explicitType : MANIFEST_TYPE_BY_FILE[file] || '';
+  if (file === 'dsh-package.json' && !type) return null;
   const clean = {};
+  if (typeof data.id === 'string' && /^[A-Za-z0-9_.-]+$/.test(data.id.trim())) clean.id = data.id.trim();
   if (typeof data.name === 'string' && data.name.trim()) clean.name = data.name.trim().slice(0, 200);
   if (typeof data.description === 'string' && data.description.trim()) clean.description = data.description.trim().slice(0, 4000);
   const category = normalizeCategory(data.category, '');
   if (category) clean.category = category;
-  clean.tags = Array.isArray(data.tags)
-    ? data.tags.filter((tag) => typeof tag === 'string').map((tag) => tag.trim()).filter(Boolean).slice(0, 100)
-    : [];
+  clean.tags = Array.isArray(data.tags) ? data.tags.filter((tag) => typeof tag === 'string').map((tag) => tag.trim()).filter(Boolean).slice(0, 100) : [];
+  const nativeManifest = file !== 'dsh-plugin.json' || Boolean(data.type || data.runtime?.type);
+  if (nativeManifest) clean.type = type || 'plugin';
+  if (Array.isArray(data.capabilities)) clean.capabilities = data.capabilities.filter((value) => typeof value === 'string').map((value) => value.trim().toLowerCase()).filter(Boolean).slice(0, 100);
+  if (Array.isArray(data.dependencies)) clean.dependencies = data.dependencies.slice(0, 200);
+  if (Array.isArray(data.permissions)) clean.permissions = data.permissions.filter((value) => typeof value === 'string').map((value) => value.trim().toLowerCase()).filter(Boolean).slice(0, 50);
+  for (const field of ['compatibility', 'publisher', 'security']) if (data[field] && typeof data[field] === 'object' && !Array.isArray(data[field])) clean[field] = data[field];
+  for (const field of ['conflicts', 'replaces', 'provides']) if (Array.isArray(data[field])) clean[field] = [...new Set(data[field].filter((value) => typeof value === 'string').map((value) => value.trim()).filter(Boolean))].slice(0, 100);
+  const typeConfig = data[type || 'plugin'];
+  if (typeConfig && typeof typeConfig === 'object' && !Array.isArray(typeConfig)) clean.type_config = typeConfig;
+  if (nativeManifest) clean.metadata_source = file.endsWith('.json') ? file.slice(0, -5) : file;
   return clean;
 }
 
@@ -240,32 +256,32 @@ function applyOverrides(plugin, overrides) {
 // ---------- DSH 清单抓取（走 raw 域名，不占 REST 配额） ----------
 // package.json 是包管理元数据，不是 DSH manifest；不能用于覆盖仓库展示名、分类或 verified。
 export async function observeDshManifest(fullName, branch) {
-  const file = MANIFEST_FILES[0];
-  const url = `https://raw.githubusercontent.com/${fullName}/${branch}/${file}`;
-  let lastError = '';
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' }, signal: AbortSignal.timeout(15000) });
-      if (res.status === 404) return { observed: true, manifest: null, status: 404 };
-      if (!res.ok) {
-        lastError = `HTTP ${res.status}`;
-        if ([403, 429, 500, 502, 503, 504].includes(res.status) && attempt < 2) {
-          await sleep(500 * (attempt + 1));
-          continue;
+  let observedAny = false;
+  for (const file of MANIFEST_FILES) {
+    const url = `https://raw.githubusercontent.com/${fullName}/${branch}/${file}`;
+    let lastError = '';
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' }, signal: AbortSignal.timeout(15000) });
+        if (res.status === 404) { observedAny = true; break; }
+        if (!res.ok) {
+          lastError = `HTTP ${res.status}`;
+          if ([403, 429, 500, 502, 503, 504].includes(res.status) && attempt < 2) { await sleep(500 * (attempt + 1)); continue; }
+          return { observed: false, manifest: null, status: res.status, error: lastError };
         }
-        return { observed: false, manifest: null, status: res.status, error: lastError };
+        observedAny = true;
+        let data;
+        try { data = await res.json(); }
+        catch { return { observed: true, manifest: null, status: res.status, error: `invalid-json:${file}` }; }
+        const clean = sanitizeManifest(data, file);
+        return { observed: true, manifest: clean ? { file, data: clean } : null, status: res.status, error: clean ? '' : `invalid-manifest:${file}` };
+      } catch (error) {
+        lastError = error?.message || String(error);
+        if (attempt < 2) { await sleep(500 * (attempt + 1)); continue; }
       }
-      let data;
-      try { data = await res.json(); }
-      catch { return { observed: true, manifest: null, status: res.status, error: 'invalid-json' }; }
-      const clean = sanitizeManifest(data);
-      return { observed: true, manifest: clean ? { file, data: clean } : null, status: res.status, error: clean ? '' : 'invalid-manifest' };
-    } catch (error) {
-      lastError = error?.message || String(error);
-      if (attempt < 2) { await sleep(500 * (attempt + 1)); continue; }
     }
   }
-  return { observed: false, manifest: null, status: 0, error: lastError || 'manifest-observation-failed' };
+  return { observed: observedAny, manifest: null, status: observedAny ? 404 : 0, error: observedAny ? '' : 'manifest-observation-failed' };
 }
 
 async function fetchManifest(fullName, branch) {
@@ -278,21 +294,24 @@ export function applyManifestObservation(plugin, observation) {
   const base = normalizeStoredPlugin(plugin);
   if (!observation?.observed) return base;
   const manifest = observation.manifest;
+  const data = manifest?.data || {};
   const result = manifest ? {
     ...base,
-    name: manifest.data?.name || base.repo_name,
-    description: manifest.data?.description || base.description || '',
-    category: normalizeCategory(manifest.data?.category, base.category || 'other'),
-    tags: dedupeTags([...(manifest.data?.tags || []), ...(base.topics || [])]),
-    metadata_source: 'dsh-plugin',
-    manifest_file: 'dsh-plugin.json',
-    verified: true,
+    package_id: data.id || null,
+    package_type: data.type || 'plugin',
+    name: data.name || base.repo_name,
+    description: data.description || base.description || '',
+    category: normalizeCategory(data.category, ({ mcp: 'mcp', skill: 'skills', agent: 'agent' }[data.type] || base.category || 'other')),
+    tags: dedupeTags([...(data.tags || []), ...(base.topics || [])]),
+    capabilities: data.capabilities || [], dependencies: data.dependencies || [], permissions: data.permissions || [],
+    compatibility: data.compatibility || null, publisher: data.publisher || null, security: data.security || null,
+    conflicts: data.conflicts || [], replaces: data.replaces || [], provides: data.provides || [], type_config: data.type_config || null,
+    metadata_source: data.metadata_source || manifest.file.replace(/\.json$/, ''), manifest_file: manifest.file, verified: true,
   } : {
     ...base,
-    name: base.repo_name,
-    metadata_source: 'github',
-    manifest_file: null,
-    verified: false,
+    package_id: null, package_type: null, capabilities: [], dependencies: [], permissions: [], compatibility: null, publisher: null, security: null,
+    conflicts: [], replaces: [], provides: [], type_config: null,
+    name: base.repo_name, metadata_source: 'github', manifest_file: null, verified: false,
   };
   result.install_cmd = makeInstallCmd(result.full_name, result.category);
   result._manifest_observed = true;
@@ -350,7 +369,8 @@ async function buildPlugin(repo, oldPlugins) {
 
   const license = repo.license ? repo.license.spdx_id : null;
   const detectedCategory = detectCategory(repo, manifest);
-  const category = normalizeCategory(manifest?.data?.category, detectedCategory);
+  const typeCategory = ({ mcp: 'mcp', skill: 'skills', agent: 'agent' })[manifest?.data?.type] || '';
+  const category = normalizeCategory(manifest?.data?.category || typeCategory, detectedCategory);
   const base = old ? old : {};
   const repoState = restRepositoryState(repo, base);
   const now = new Date().toISOString();
@@ -360,7 +380,7 @@ async function buildPlugin(repo, oldPlugins) {
     repo_id: repoId,
     name: manifest?.data?.name || repo.name,
     repo_name: repo.name,
-    metadata_source: manifest ? 'dsh-plugin' : 'github',
+    metadata_source: manifest?.data?.metadata_source || (manifest ? manifest.file.replace(/\.json$/, '') : 'github'),
     full_name: fullName,
     description: manifest?.data?.description || repo.description || '',
     category,
@@ -383,6 +403,18 @@ async function buildPlugin(repo, oldPlugins) {
     disabled: repoState.disabled,
     verified: Boolean(manifest),
     manifest_file: manifest ? manifest.file : null,
+    package_id: manifest?.data?.id || null,
+    package_type: manifest?.data?.type || null,
+    capabilities: manifest?.data?.capabilities || [],
+    dependencies: manifest?.data?.dependencies || [],
+    permissions: manifest?.data?.permissions || [],
+    compatibility: manifest?.data?.compatibility || null,
+    publisher: manifest?.data?.publisher || null,
+    security: manifest?.data?.security || null,
+    conflicts: manifest?.data?.conflicts || [],
+    replaces: manifest?.data?.replaces || [],
+    provides: manifest?.data?.provides || [],
+    type_config: manifest?.data?.type_config || null,
     has_readme: readme.has,
     readme_excerpt: readme.excerpt,
     snapshot_commit: repo.default_branch || 'main',
@@ -438,7 +470,15 @@ async function main() {
         await sleep(500);
       }
     }
-    log(`全量搜索完成，共获取 ${repos.length} 个候选（主源 + 补充主题分桶并集）`);
+    for (const topic of NATIVE_ECOSYSTEM_TOPICS) {
+      log(`全量原生生态主题：${topic}`);
+      for (const buck of BUCKETS) {
+        const hits = await fetchRange(`${topic} ${buck}`, { sort: 'stars', maxPages: 10 });
+        hits.forEach((r) => repos.push({ ...r, __extra: true, __source: topic }));
+        await sleep(500);
+      }
+    }
+    log(`全量搜索完成，共获取 ${repos.length} 个候选（插件主题 + 原生生态主题 + 补充主题分桶并集）`);
     scanned = repos.length;
   } else {
     // 增量模式：只抓上次同步以来 pushed 变更的仓库。
@@ -457,8 +497,8 @@ async function main() {
       if (repos.length >= total || items.length === 0) break;
       await sleep(REQUEST_DELAY);
     }
-    // 补充主题增量：pushed 窗口内的候选，标记 extra=true 后续只收带 manifest 的
-    for (const topic of EXTRA_TOPICS) {
+    // 补充/原生生态主题增量：pushed 窗口内候选只收带权威 DSH manifest 的仓库。
+    for (const topic of [...EXTRA_TOPICS, ...NATIVE_ECOSYSTEM_TOPICS]) {
       for (let page = 1; page <= 3; page++) {
         const { items } = await searchRepos(`${topic} pushed:>${since}`, page);
         scanned += items.length;
@@ -521,9 +561,8 @@ async function main() {
       const repo = repos[idx];
       try {
         const p = await buildPlugin(repo, oldPlugins);
-        // 补充主题候选：仅收「确切带 dsh-plugin.json」的插件，避免把仅含 package.json
-        // 的非插件项目（如 cherry-studio）混入目录；主源候选不受此限制。
-        if (repo.__extra && p.manifest_file !== 'dsh-plugin.json') {
+        // 补充/原生生态主题候选必须带任一权威 DSH manifest。package.json 永远不提供验证权限。
+        if (repo.__extra && !isAuthoritativeManifestFile(p.manifest_file)) {
           skipped++;
           results[idx] = null;
           continue;
@@ -606,7 +645,7 @@ async function main() {
     meta: {
       updated_at: new Date().toISOString(),
       source: `github:${TOPIC}`,
-      source_topics: [TOPIC, ...EXTRA_TOPICS],
+      source_topics: [TOPIC, ...EXTRA_TOPICS, ...NATIVE_ECOSYSTEM_TOPICS],
       count: plugins.length,
       etag,
       stats: {

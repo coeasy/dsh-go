@@ -25,6 +25,8 @@ export function packageKey(type, id) {
 }
 
 export function inferPackageType(item) {
+  const explicitType = String(item?.type || '').toLowerCase();
+  if (PACKAGE_TYPES.has(explicitType)) return explicitType;
   const runtimeType = String(item?.runtime?.type || '').toLowerCase();
   if (PACKAGE_TYPES.has(runtimeType)) return runtimeType;
   const capabilities = Array.isArray(item?.capabilities) ? item.capabilities.map((value) => String(value).toLowerCase()) : [];
@@ -75,20 +77,24 @@ export function normalizePackageDependency(dependency, defaultType = 'plugin') {
 }
 
 export function manifestCandidates(type) {
+  const unified = { file: 'dsh-package.json', format: 'json' };
   switch (assertPackageType(type)) {
     case 'plugin':
       return [
+        unified,
         { file: 'dsh-plugin.json', format: 'json' },
         { file: 'package.json', format: 'json' },
       ];
     case 'mcp':
       return [
+        unified,
         { file: 'dsh-mcp.json', format: 'json' },
         { file: 'mcp.json', format: 'json' },
         { file: 'package.json', format: 'json' },
       ];
     case 'skill':
       return [
+        unified,
         { file: 'SKILL.md', format: 'markdown' },
         { file: 'skill.md', format: 'markdown' },
         { file: 'dsh-skill.json', format: 'json' },
@@ -96,6 +102,7 @@ export function manifestCandidates(type) {
       ];
     case 'agent':
       return [
+        unified,
         { file: 'dsh-agent.json', format: 'json' },
         { file: 'agent.json', format: 'json' },
         { file: 'package.json', format: 'json' },

@@ -10,6 +10,7 @@ const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 export function isCommitSha(value) { return COMMIT_RE.test(String(value || '')); }
 
 export function inferRuntimeType(plugin) {
+  if (['plugin', 'mcp', 'skill', 'agent'].includes(plugin.package_type)) return plugin.package_type;
   switch (plugin.category) {
     case 'mcp': return 'mcp';
     case 'skills': return 'skill';
@@ -29,7 +30,7 @@ export function inferCapabilities(plugin) {
 export function normalizeLegacyPlugin(plugin) {
   const repo = String(plugin.full_name || plugin.source?.repo || '').trim();
   if (!REPO_RE.test(repo)) return { error: 'invalid repository name' };
-  const id = String(plugin.id || plugin.slug || repo.replace('/', '-')).trim();
+  const id = String(plugin.id || plugin.package_id || plugin.slug || repo.replace('/', '-')).trim();
   if (!id) return { error: 'missing plugin id' };
   const snapshot = String(plugin.snapshot_commit || '').trim();
   const ref = String(plugin.snapshot_ref || plugin.source?.ref || (!isCommitSha(snapshot) ? snapshot : '') || 'HEAD').trim();
@@ -131,13 +132,21 @@ export function buildRegistryPlugin(legacy, normalized, commit) {
     dependencies: Array.isArray(legacy.dependencies) ? legacy.dependencies : [],
     metadata: {
       name: legacy.name || normalized.id, repo_id: legacy.repo_id || null, repo_name: legacy.repo_name || repoNameFromFullName(normalized.repo),
-      metadata_source: legacy.metadata_source || (legacy.manifest_file === 'dsh-plugin.json' ? 'dsh-plugin' : 'github'),
+      metadata_source: legacy.metadata_source || (legacy.manifest_file ? String(legacy.manifest_file).replace(/\.json$/, '') : 'github'),
       override_fields: Array.isArray(legacy.override_fields) ? legacy.override_fields : [],
       description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),
       stars: Number(legacy.stars || 0), rank: Number(legacy.rank || 0), repo_url: canonicalRepoUrl(normalized.repo),
       install_cmd: makeInstallCmd(normalized.repo, legacy.category || 'other'), manifest_file: legacy.manifest_file || null,
     },
   };
+  if (Array.isArray(legacy.permissions) && legacy.permissions.length) record.permissions = legacy.permissions;
+  if (legacy.compatibility && Object.keys(legacy.compatibility).length) record.compatibility = legacy.compatibility;
+  if (legacy.publisher) record.publisher = legacy.publisher;
+  if (legacy.security) record.security = legacy.security;
+  if (Array.isArray(legacy.conflicts) && legacy.conflicts.length) record.conflicts = legacy.conflicts;
+  if (Array.isArray(legacy.replaces) && legacy.replaces.length) record.replaces = legacy.replaces;
+  if (Array.isArray(legacy.provides) && legacy.provides.length) record.provides = legacy.provides;
+  if (legacy.type_config) record.type_config = legacy.type_config;
   record.artifact.integrity = artifactIntegrity(record);
   return record;
 }

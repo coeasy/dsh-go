@@ -1,10 +1,28 @@
-name: Runtime Platform V2
+name: Runtime Platform V3
 
 on:
   pull_request:
     paths:
+      - 'bin/**'
       - 'runtime/**'
+      - 'marketplace/**'
+      - 'mcp/**'
+      - 'skills/**'
+      - 'agents/**'
+      - 'profiles/**'
+      - 'schemas/**'
+      - 'functions/**'
+      - 'scripts/package-*.mjs'
+      - 'scripts/generate-sbom.mjs'
+      - 'scripts/build-search-index-v2.mjs'
+      - 'scripts/copy-assets.mjs'
+      - 'scripts/sync.mjs'
+      - 'scripts/repository-identity.mjs'
+      - 'scripts/registry-v3-builder.mjs'
+      - 'scripts/validate-registry-v3.mjs'
       - 'tests/runtime-platform/**'
+      - 'tests/production-v2/**'
+      - 'tests/e2e/**'
       - 'package.json'
       - 'package-lock.json'
       - 'site/**'
@@ -17,7 +35,7 @@ permissions:
 jobs:
   runtime-e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -37,14 +55,32 @@ jobs:
         run: npm run lint
       - name: Runtime Platform tests
         run: npm run runtime:test
+      - name: Phase 8 Runtime V3 tests
+        run: npm run phase8:test
+      - name: Production V2 tests
+        run: npm run test:production-v2
       - name: Full tests
         run: npm test
-      - name: Site check
-        run: cd site && npm run check
+      - name: Site check and build
+        run: |
+          cd site
+          npm run check
+          npm run build
       - name: Registry compatibility gate
         run: npm run runtime:check
+      - name: Distributable package smoke
+        run: npm pack --dry-run
       - name: Runtime syntax checks
         run: |
+          node --check bin/dsh.mjs
+          node --check runtime/dsh.mjs
+          node --check runtime/catalog.mjs
+          node --check runtime/compatibility.mjs
+          node --check runtime/permissions.mjs
+          node --check runtime/package-manifest.mjs
+          node --check runtime/preflight.mjs
+          node --check runtime/client-bridge.mjs
+          node --check runtime/client-host.mjs
           node --check runtime/cli.mjs
           node --check runtime/installer.mjs
           node --check runtime/loader.mjs
@@ -53,3 +89,38 @@ jobs:
           node --check runtime/health.mjs
           node --check runtime/rollback.mjs
           node --check runtime/mcp-tools.mjs
+          node --check scripts/package-security-audit.mjs
+          node --check scripts/generate-sbom.mjs
+          node --check scripts/build-search-index-v2.mjs
+          node --check scripts/copy-assets.mjs
+
+  client-bridge-matrix:
+    name: Client Bridge (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Production client and lifecycle tests
+        run: npm run test:production-v2
+      - name: Official CLI smoke
+        run: node bin/dsh.mjs --version
+      - name: Production CLI smoke
+        run: node runtime/dsh.mjs version
+      - name: Protocol registration plan
+        run: node bin/dsh.mjs host registration
+      - name: Runtime syntax smoke
+        run: |
+          node --check bin/dsh.mjs
+          node --check runtime/resolver.mjs
+          node --check runtime/preflight.mjs
+          node --check scripts/package-security-audit.mjs

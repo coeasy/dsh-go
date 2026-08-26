@@ -1,0 +1,59 @@
+---
+import Layout from '../layouts/Layout.astro';
+const ecosystemHref = `${import.meta.env.BASE_URL || '/'}ecosystem`;
+---
+
+<Layout title="Profiles & Bundles · DSH Go" description="用一份声明批量规划并安装 Plugin、MCP、Skill 与 Agent">
+  <main class="profiles-page">
+    <header>
+      <span>Runtime Platform V3</span>
+      <h1>Profiles & Bundles</h1>
+      <p>把多个生态包组合成可审计、可预检、可重复执行的安装计划。每个条目和它的完整依赖图都会经过 Registry 固定 commit、兼容性、冲突和权限检查。</p>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Profile</h2>
+        <p>适合“开发环境 / 数据分析 / Agent 工作台”这类可重复配置。</p>
+        <pre><code>{`{
+  "name": "developer",
+  "packages": [
+    { "id": "example-plugin", "version": "0.1.0", "type": "plugin" },
+    { "id": "example-skill", "version": "0.1.0", "type": "skill" }
+  ]
+}`}</code></pre>
+        <code>dsh profile apply developer.json --dry-run</code>
+        <code>dsh profile apply developer.json --yes</code>
+      </section>
+
+      <section class="card">
+        <h2>Bundle</h2>
+        <p>适合发布者提供“一组必须一起安装”的能力集合。</p>
+        <pre><code>{`{
+  "name": "agent-stack",
+  "packages": [
+    { "id": "example-mcp", "version": "0.1.0", "type": "mcp" },
+    { "id": "example-agent", "version": "0.1.0", "type": "agent" }
+  ]
+}`}</code></pre>
+        <code>dsh bundle install agent-stack.json --dry-run</code>
+        <code>dsh bundle install agent-stack.json --yes</code>
+      </section>
+    </div>
+
+    <section class="rules">
+      <h2>执行规则</h2>
+      <ul>
+        <li>先对所有 package 和依赖进行 Registry resolve、OS/Arch/Node/Runtime/Client preflight。</li>
+        <li>检测 dependencies、conflicts、replaces、provides 和危险权限，并在执行前一次性展示。</li>
+        <li><code>--dry-run</code> 只输出完整依赖计划，不修改本机。</li>
+        <li>实际安装不会自动重启客户端；完成后统一提示手动重启。</li>
+      </ul>
+      <a href={ecosystemHref}>浏览 Ecosystem →</a>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  .profiles-page{max-width:1050px;margin:0 auto;padding:40px 20px 80px}.profiles-page header{text-align:center;margin-bottom:26px}.profiles-page header span{color:var(--accent);font-weight:800;font-size:.8rem}.profiles-page h1{font-size:2.5rem;margin:8px 0}.profiles-page header p{max-width:760px;margin:auto;color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.card,.rules{border:1px solid var(--border);background:var(--card);border-radius:18px;padding:22px}.card p,.rules li{color:var(--muted)}pre{overflow:auto;background:var(--bg);border-radius:12px;padding:14px}.card>code{display:block;margin-top:9px;padding:10px;background:var(--bg);border-radius:9px;overflow:auto}.rules{margin-top:18px}.rules a{display:inline-block;margin-top:8px}@media(max-width:760px){.grid{grid-template-columns:1fr}}
+</style>
