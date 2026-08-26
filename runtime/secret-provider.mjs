@@ -149,13 +149,38 @@ function dpapiLockPath(paths) {
   return join(tmpdir(), `dsh-go-dpapi-${scope}.lock`);
 }
 
+function powershellArgs(script) {
+  return ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script];
+}
+
+async function invokeWindowsPowerShell(run, script, input, options = {}) {
+  const commandOptions = {
+    ...options,
+    platform: 'win32',
+    timeoutMs: Number(options.timeoutMs) || COMMAND_TIMEOUT_MS,
+  };
+
+  // Deterministic injected transports keep the historic command name so unit
+  // tests do not depend on whether pwsh is installed on the host running them.
+  if (typeof options.runCommand === 'function') {
+    return run('powershell.exe', powershellArgs(script), input, commandOptions);
+  }
+
+  try {
+    // PowerShell 7 has a self-contained Microsoft.PowerShell.Security module
+    // and is substantially more reliable under concurrent CI/runtime starts.
+    return await run('pwsh.exe', powershellArgs(script), input, commandOptions);
+  } catch (error) {
+    // Fall back only when PowerShell 7 is not installed. An executed pwsh that
+    // returns a DPAPI/module error must fail closed rather than silently using
+    // a second implementation with different behavior.
+    if (error?.cause?.code !== 'ENOENT') throw error;
+    return run('powershell.exe', powershellArgs(script), input, commandOptions);
+  }
+}
+
 async function runDpapiCommand(paths, run, script, input, options = {}) {
-  const invoke = () => run(
-    'powershell.exe',
-    ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
-    input,
-    { ...options, platform: 'win32', timeoutMs: Number(options.timeoutMs) || COMMAND_TIMEOUT_MS },
-  );
+  const invoke = () => invokeWindowsPowerShell(run, script, input, options);
 
   // An injected command transport is a deterministic test seam, not the real
   // Windows OS adapter. It must not compete with live DPAPI helpers.
@@ -178,19 +203,21 @@ async function runDpapiCommand(paths, run, script, input, options = {}) {
   }
 }
 
-// Windows PowerShell's SecureString serialization without -Key is backed by
-// DPAPI for CurrentUser. The base64 master key is supplied only over stdin and
-// never appears in argv. This avoids dynamic Add-Type assembly startup costs.
+// SecureString serialization without -Key uses DPAPI CurrentUser on Windows.
+// Import and module-qualify the Security commands to avoid module-autoload
+// races across concurrent DSH processes. The base64 key travels only on stdin.
 const DPAPI_PROTECT_SCRIPT = [
+  'Import-Module Microsoft.PowerShell.Security -ErrorAction Stop',
   '$value = [Console]::In.ReadToEnd().Trim()',
-  '$secure = ConvertTo-SecureString -String $value -AsPlainText -Force',
-  '$wrapped = ConvertFrom-SecureString -SecureString $secure',
+  '$secure = Microsoft.PowerShell.Security\\ConvertTo-SecureString -String $value -AsPlainText -Force',
+  '$wrapped = Microsoft.PowerShell.Security\\ConvertFrom-SecureString -SecureString $secure',
   '[Console]::Out.Write($wrapped)',
 ].join('; ');
 
 const DPAPI_UNPROTECT_SCRIPT = [
+  'Import-Module Microsoft.PowerShell.Security -ErrorAction Stop',
   '$wrapped = [Console]::In.ReadToEnd().Trim()',
-  '$secure = ConvertTo-SecureString -String $wrapped',
+  '$secure = Microsoft.PowerShell.Security\\ConvertTo-SecureString -String $wrapped',
   '$bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)',
   'try { [Console]::Out.Write([System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)) } finally { [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }',
 ].join('; ');
