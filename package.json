@@ -34,6 +34,7 @@
     "registry:migrate": "node scripts/sync-v3.mjs --registry-only",
     "registry:verify": "node scripts/validate-registry-v3.mjs",
     "registry:pipeline": "node scripts/registry-pipeline-v3.mjs",
+    "registry:distribution": "node scripts/registry-distribution.mjs",
     "runtime:check": "node runtime/cli.mjs check-registry",
     "runtime:resolve": "node runtime/cli.mjs resolve",
     "runtime:install": "node runtime/cli.mjs install",

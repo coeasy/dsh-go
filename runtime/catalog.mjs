@@ -1,8 +1,13 @@
 import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
+import {
+  isRegistryDistributionSource,
+  materializeRegistryDistribution,
+} from './registry-distribution.mjs';
 
 export const DEFAULT_REGISTRY_URL = 'https://coeasy.github.io/dsh-go/catalog/registry-v3.json';
+export const DEFAULT_DISTRIBUTION_URL = 'https://coeasy.github.io/dsh-go/catalog/distribution-v1/index.json';
 
 async function exists(file) {
   try { await access(file); return true; } catch { return false; }
@@ -32,35 +37,7 @@ async function writeAtomic(file, content) {
   await rename(temp, file);
 }
 
-export async function loadRegistrySource(source, options = {}) {
-  const input = String(source || '').trim();
-  if (/^https?:\/\//i.test(input)) {
-    const response = await fetch(input, {
-      headers: { Accept: 'application/json', 'User-Agent': 'dsh-runtime-v3' },
-      signal: AbortSignal.timeout(options.timeout || 30000),
-    });
-    if (!response.ok) throw new Error(`registry fetch failed: HTTP ${response.status}`);
-    const data = await response.json();
-    if (data?.registry_version !== 3 || !Array.isArray(data?.plugins)) throw new Error('remote registry is not Registry V3');
-    return data;
-  }
-  const file = resolve(input || 'catalog/registry-v3.json');
-  const data = JSON.parse(await readFile(file, 'utf8'));
-  if (data?.registry_version !== 3 || !Array.isArray(data?.plugins)) throw new Error('registry file is not Registry V3');
-  return data;
-}
-
-export async function resolveRegistrySource(explicit) {
-  if (explicit) return explicit;
-  if (process.env.DSH_CATALOG_REGISTRY) return process.env.DSH_CATALOG_REGISTRY;
-  if (process.env.DSH_REGISTRY) return process.env.DSH_REGISTRY;
-  const cwdRegistry = resolve(process.cwd(), 'catalog/registry-v3.json');
-  if (await exists(cwdRegistry)) return cwdRegistry;
-  return process.env.DSH_REGISTRY_URL || DEFAULT_REGISTRY_URL;
-}
-
-export async function ensureRegistryCache(source, options = {}) {
-  const resolvedSource = await resolveRegistrySource(source);
+async function ensureLegacyRegistryCache(resolvedSource, options = {}) {
   if (!/^https?:\/\//i.test(resolvedSource)) return resolve(resolvedSource);
   const file = resolve(options.cacheFile || registryCacheFile());
   const metadataFile = resolve(options.metadataFile || registryCacheMetadataFile(file));
@@ -96,6 +73,8 @@ export async function ensureRegistryCache(source, options = {}) {
     await writeAtomic(file, text.endsWith('\n') ? text : `${text}\n`);
     await writeAtomic(metadataFile, `${JSON.stringify({
       source: resolvedSource,
+      mode: 'legacy-full-registry',
+      content_hash: parsed.generated?.content_hash || null,
       etag: response.headers.get('etag') || null,
       last_modified: response.headers.get('last-modified') || null,
       fetched_at: new Date().toISOString(),
@@ -106,4 +85,60 @@ export async function ensureRegistryCache(source, options = {}) {
     if (options.allowStale !== false && await exists(file)) return file;
     throw error;
   }
+}
+
+export async function loadRegistrySource(source, options = {}) {
+  const file = await ensureRegistryCache(source, options);
+  const data = JSON.parse(await readFile(file, 'utf8'));
+  if (data?.registry_version !== 3 || !Array.isArray(data?.plugins)) throw new Error('registry source is not Registry V3');
+  return data;
+}
+
+export async function resolveRegistrySource(explicit) {
+  if (explicit) return explicit;
+  if (process.env.DSH_CATALOG_REGISTRY) return process.env.DSH_CATALOG_REGISTRY;
+  if (process.env.DSH_REGISTRY) return process.env.DSH_REGISTRY;
+  const cwdRegistry = resolve(process.cwd(), 'catalog/registry-v3.json');
+  if (await exists(cwdRegistry)) return cwdRegistry;
+  return process.env.DSH_REGISTRY_DISTRIBUTION_URL
+    || process.env.DSH_REGISTRY_URL
+    || DEFAULT_DISTRIBUTION_URL;
+}
+
+export async function ensureRegistryCache(source, options = {}) {
+  const resolvedSource = await resolveRegistrySource(source);
+  const file = resolve(options.cacheFile || registryCacheFile());
+
+  if (isRegistryDistributionSource(resolvedSource)) {
+    try {
+      const result = await materializeRegistryDistribution(resolvedSource, {
+        ...options,
+        cacheFile: file,
+      });
+      await mkdir(dirname(file), { recursive: true });
+      await writeAtomic(registryCacheMetadataFile(file), `${JSON.stringify({
+        source: resolvedSource,
+        mode: 'distribution-v1',
+        content_hash: result.index.content_hash,
+        distribution_version: result.index.distribution_version,
+        shard_count: result.index.shards.length,
+        package_count: result.index.package_count,
+        cache_hit: result.cache_hit,
+        stale: result.stale,
+        checked_at: new Date().toISOString(),
+      }, null, 2)}\n`);
+      return result.file;
+    } catch (distributionError) {
+      if (options.allowLegacyFallback === false) throw distributionError;
+      const legacySource = options.legacySource || process.env.DSH_LEGACY_REGISTRY_URL || DEFAULT_REGISTRY_URL;
+      try {
+        return await ensureLegacyRegistryCache(legacySource, { ...options, cacheFile: file });
+      } catch (legacyError) {
+        legacyError.cause = distributionError;
+        throw legacyError;
+      }
+    }
+  }
+
+  return ensureLegacyRegistryCache(resolvedSource, { ...options, cacheFile: file });
 }
