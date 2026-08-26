@@ -81,27 +81,47 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).toContain('makers deploy ./site/dist');
     expect(edgeone).toContain('secrets.EDGEONE_API_TOKEN');
     expect(edgeone).toContain('configured=false');
+    expect(edgeone).toContain('EdgeOne CLI >= 1.6.0 is required');
   });
 
-  it('authenticates an ephemeral EdgeOne runner session before project API calls', () => {
+  it('uses per-invocation EdgeOne token auth in CI without persistent runner login state', () => {
     const edgeone = workflow('deploy-edgeone.yml');
 
-    expect(edgeone).toContain('Authenticate EdgeOne runner session');
-    expect(edgeone).toContain('login --token "$EDGEONE_API_TOKEN"');
-    expect(edgeone).toContain('whoami >/dev/null 2>&1');
-    expect(edgeone).toContain('temporary runner session is active');
-    expect(edgeone).toContain('using authenticated runner session');
-    expect(edgeone).not.toContain('-t "$EDGEONE_API_TOKEN" \\\n              -e production');
+    expect(edgeone).toContain('PAGES_SOURCE: skills');
+    expect(edgeone).toContain('-t "$EDGEONE_API_TOKEN"');
+    expect(edgeone).toContain('using per-invocation token auth');
+    expect(edgeone).toContain('auth mode: per-invocation token (-t)');
+    expect(edgeone).not.toContain('login --token');
+    expect(edgeone).not.toContain('whoami');
+    expect(edgeone).not.toContain('temporary runner session');
   });
 
-  it('uses structured EdgeOne CI output and retries only transient transport failures', () => {
+  it('uses structured EdgeOne CI output and retries only classified transport failures', () => {
     const edgeone = workflow('deploy-edgeone.yml');
 
     expect(edgeone).toContain("EDGEONE_DEPLOY_RETRIES: ${{ vars.EDGEONE_DEPLOY_RETRIES || '3' }}");
-    expect(edgeone).toContain('--json 2>&1');
+    expect(edgeone).toContain("EDGEONE_ATTEMPT_TIMEOUT_SECONDS: ${{ vars.EDGEONE_ATTEMPT_TIMEOUT_SECONDS || '240' }}");
+    expect(edgeone).toContain('timeout --signal=TERM --kill-after=10s');
+    expect(edgeone).toContain('--json >"$ATTEMPT_LOG" 2>&1');
     expect(edgeone).toContain("r.status!=='success' || !r.url || !r.projectId");
     expect(edgeone).toContain('fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up|network');
+    expect(edgeone).toContain('[ "$FAILURE_CLASS" = "transport" ]');
+    expect(edgeone).toContain('echo "authentication"');
+    expect(edgeone).toContain('echo "quota"');
+    expect(edgeone).toContain('echo "project_conflict"');
+    expect(edgeone).toContain('echo "protocol"');
+    expect(edgeone).toContain('echo "api"');
+    expect(edgeone).toContain('Sanitized EdgeOne error output');
     expect(edgeone).toContain('EdgeOne deployment failed after retry policy');
+  });
+
+  it('masks EdgeOne credentials and signed deployment URLs in Actions logs', () => {
+    const edgeone = workflow('deploy-edgeone.yml');
+
+    expect(edgeone).toContain('echo "::add-mask::$EDGEONE_API_TOKEN"');
+    expect(edgeone).toContain(".replace(/([?&](?:eo_)?token=)");
+    expect(edgeone).toContain('echo "::add-mask::$DEPLOY_URL"');
+    expect(edgeone).toContain('value intentionally not echoed');
   });
 
   it('preserves EdgeOne preview query credentials when checking Registry V3', () => {
