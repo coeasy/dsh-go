@@ -13,7 +13,14 @@ const nativeMasterKeyCache = new Map();
 
 function commandEnv(platform = process.platform) {
   const keys = platform === 'win32'
-    ? ['PATH', 'Path', 'PATHEXT', 'SystemRoot', 'SYSTEMROOT', 'WINDIR', 'USERPROFILE', 'TEMP', 'TMP']
+    ? [
+        'PATH', 'Path', 'PATHEXT',
+        'SystemRoot', 'SYSTEMROOT', 'WINDIR',
+        'ComSpec', 'COMSPEC', 'PSModulePath',
+        'ProgramData', 'ProgramFiles', 'ProgramW6432', 'ProgramFiles(x86)',
+        'USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'USERNAME', 'USERDOMAIN',
+        'APPDATA', 'LOCALAPPDATA', 'TEMP', 'TMP',
+      ]
     : ['PATH', 'HOME', 'USER', 'LOGNAME', 'LANG', 'LC_ALL', 'TMPDIR', 'XDG_RUNTIME_DIR', 'DBUS_SESSION_BUS_ADDRESS'];
   return Object.fromEntries(keys.filter((key) => process.env[key] !== undefined).map((key) => [key, process.env[key]]));
 }
