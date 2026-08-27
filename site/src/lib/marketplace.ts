@@ -155,3 +155,11 @@ export function alignRegistryItem(item: any, legacyIndex: Map<string, any>): Ali
     legacy,
   };
 }
+
+export function preferAlignedVariant(current: AlignedMarketplaceItem | undefined, candidate: AlignedMarketplaceItem): AlignedMarketplaceItem {
+  if (!current) return candidate;
+  const currentStable = (current.registry?.channel || current.registry?.release_channel || 'stable') === 'stable';
+  const candidateStable = (candidate.registry?.channel || candidate.registry?.release_channel || 'stable') === 'stable';
+  if (currentStable !== candidateStable) return candidateStable ? candidate : current;
+  return String(candidate.version).localeCompare(String(current.version), undefined, { numeric: true, sensitivity: 'base' }) > 0 ? candidate : current;
+}
