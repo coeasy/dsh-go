@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout main registry
+      - name: Checkout main registries
         uses: actions/checkout@v7
         with:
           ref: main
@@ -23,13 +23,14 @@ jobs:
           [ -n "$SITE_URL" ] || { echo "SITE_URL repository variable is missing"; exit 1; }
         env:
           SITE_URL: ${{ vars.SITE_URL }}
-      - name: Check site and API
+      - name: Check site and public APIs
         env:
           SITE_URL: ${{ vars.SITE_URL }}
         run: |
           curl -fsS --max-time 20 "${SITE_URL}/" >/dev/null
           curl -fsS --max-time 20 "${SITE_URL}/api/v1/health" >/dev/null
           curl -fsS --max-time 20 "${SITE_URL}/api/v1/registry" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);if(r.registry_version!==3||!r.generated?.content_hash||!r.plugins?.length)process.exit(1)})"
+          curl -fsS --max-time 20 "${SITE_URL}/api/v1/providers?per_page=1" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);if(r.meta?.registry_version!==1||!r.meta?.content_hash||typeof r.meta?.count!=='number')process.exit(1)})"
       - name: Check data freshness and deployed registry convergence
         env:
           SITE_URL: ${{ vars.SITE_URL }}
@@ -37,6 +38,8 @@ jobs:
           set -euo pipefail
           MAIN_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
           MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
+          PROVIDER_MAIN_HASH=$(node -p "require('./catalog/provider-adapters.json').generated.content_hash")
+          PROVIDER_MAIN_COUNT=$(node -p "require('./catalog/provider-adapters.json').providers.length")
           UPDATED=""
           for attempt in 1 2 3 4 5 6 7 8 9; do
             META=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/meta")
@@ -46,16 +49,19 @@ jobs:
             REG_HASH=$(printf '%s' "$REGISTRY" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).generated.content_hash))")
             REG_COUNT=$(printf '%s' "$REGISTRY" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).plugins.length))")
             API_HASH=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/registry" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).generated.content_hash))")
-            if [ "$META_HASH" = "$MAIN_HASH" ] && [ "$REG_HASH" = "$MAIN_HASH" ] && [ "$API_HASH" = "$MAIN_HASH" ] && [ "$REG_COUNT" = "$MAIN_COUNT" ]; then
+            PROVIDERS=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/providers?per_page=1")
+            PROVIDER_API_HASH=$(printf '%s' "$PROVIDERS" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).meta.content_hash))")
+            PROVIDER_API_COUNT=$(printf '%s' "$PROVIDERS" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).meta.count))")
+            if [ "$META_HASH" = "$MAIN_HASH" ] && [ "$REG_HASH" = "$MAIN_HASH" ] && [ "$API_HASH" = "$MAIN_HASH" ] && [ "$REG_COUNT" = "$MAIN_COUNT" ] && [ "$PROVIDER_API_HASH" = "$PROVIDER_MAIN_HASH" ] && [ "$PROVIDER_API_COUNT" = "$PROVIDER_MAIN_COUNT" ]; then
               AGE_H=$(( ( $(date +%s) - $(date -d "$UPDATED" +%s) ) / 3600 ))
               [ "$AGE_H" -lt 36 ] || { echo "Data is stale: ${AGE_H}h"; exit 1; }
-              echo "Registry converged with main, data age=${AGE_H}h, count=${REG_COUNT}, hash=${MAIN_HASH}"
+              echo "Registries converged with main, data age=${AGE_H}h, packages=${REG_COUNT}, providers=${PROVIDER_API_COUNT}, registry_hash=${MAIN_HASH}, provider_hash=${PROVIDER_MAIN_HASH}"
               exit 0
             fi
-            echo "Registry not converged (attempt ${attempt}/9): main=${MAIN_HASH}/${MAIN_COUNT}, meta=${META_HASH}, catalog=${REG_HASH}/${REG_COUNT}, api=${API_HASH}"
+            echo "Registries not converged (attempt ${attempt}/9): registry main=${MAIN_HASH}/${MAIN_COUNT}, meta=${META_HASH}, catalog=${REG_HASH}/${REG_COUNT}, api=${API_HASH}; provider main=${PROVIDER_MAIN_HASH}/${PROVIDER_MAIN_COUNT}, api=${PROVIDER_API_HASH}/${PROVIDER_API_COUNT}"
             sleep 10
           done
-          echo "Deployed Registry V3 did not converge to main within the monitor retry window"
+          echo "Deployed Registry V3 did not converge to main; Provider Adapter Registry convergence is also required"
           exit 1
       - name: Check GitHub Pages registry convergence
         env:
@@ -64,16 +70,18 @@ jobs:
           set -euo pipefail
           MAIN_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
           MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
+          PROVIDER_MAIN_HASH=$(node -p "require('./catalog/provider-adapters.json').generated.content_hash")
+          PROVIDER_MAIN_COUNT=$(node -p "require('./catalog/provider-adapters.json').providers.length")
           for attempt in 1 2 3 4 5 6; do
-            if curl -fsS --max-time 20 "${GITHUB_PAGES_URL}/catalog/registry-v3.json" -o /tmp/github-pages-registry.json; then
-              if MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" node -e "const r=require('/tmp/github-pages-registry.json'); if(r.generated?.content_hash!==process.env.MAIN_HASH || String(r.plugins?.length)!==process.env.MAIN_COUNT) process.exit(1)"; then
-                echo "GitHub Pages converged with main"
+            if curl -fsS --max-time 20 "${GITHUB_PAGES_URL}/catalog/registry-v3.json" -o /tmp/github-pages-registry.json && curl -fsS --max-time 20 "${GITHUB_PAGES_URL}/catalog/provider-adapters.json" -o /tmp/github-pages-providers.json; then
+              if MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "const r=require('/tmp/github-pages-registry.json');const p=require('/tmp/github-pages-providers.json');if(r.generated?.content_hash!==process.env.MAIN_HASH||String(r.plugins?.length)!==process.env.MAIN_COUNT||p.generated?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.providers?.length)!==process.env.PROVIDER_MAIN_COUNT)process.exit(1)"; then
+                echo "GitHub Pages registries converged with main"
                 exit 0
               fi
             fi
             sleep 10
           done
-          echo "GitHub Pages Registry V3 did not converge to main"
+          echo "GitHub Pages registries did not converge to main"
           exit 1
       - name: Check optional EdgeOne registry convergence
         env:
@@ -86,15 +94,17 @@ jobs:
           fi
           MAIN_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
           MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
+          PROVIDER_MAIN_HASH=$(node -p "require('./catalog/provider-adapters.json').generated.content_hash")
+          PROVIDER_MAIN_COUNT=$(node -p "require('./catalog/provider-adapters.json').providers.length")
           BASE_URL="${EDGEONE_SITE_URL%/}"
           for attempt in 1 2 3 4 5 6; do
-            if curl -fsS --max-time 20 "${BASE_URL}/catalog/registry-v3.json" -o /tmp/edgeone-registry.json; then
-              if MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" node -e "const r=require('/tmp/edgeone-registry.json'); if(r.generated?.content_hash!==process.env.MAIN_HASH || String(r.plugins?.length)!==process.env.MAIN_COUNT) process.exit(1)"; then
-                echo "EdgeOne converged with main"
+            if curl -fsS --max-time 20 "${BASE_URL}/catalog/registry-v3.json" -o /tmp/edgeone-registry.json && curl -fsS --max-time 20 "${BASE_URL}/catalog/provider-adapters.json" -o /tmp/edgeone-providers.json; then
+              if MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "const r=require('/tmp/edgeone-registry.json');const p=require('/tmp/edgeone-providers.json');if(r.generated?.content_hash!==process.env.MAIN_HASH||String(r.plugins?.length)!==process.env.MAIN_COUNT||p.generated?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.providers?.length)!==process.env.PROVIDER_MAIN_COUNT)process.exit(1)"; then
+                echo "EdgeOne registries converged with main"
                 exit 0
               fi
             fi
             sleep 10
           done
-          echo "EdgeOne Registry V3 did not converge to main"
+          echo "EdgeOne registries did not converge to main"
           exit 1

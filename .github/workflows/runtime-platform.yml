@@ -3,75 +3,76 @@ name: Runtime Platform 0.1.0
 on:
   pull_request:
     paths:
-      - 'bin/**'
-      - 'runtime/**'
-      - 'marketplace/**'
-      - 'mcp/**'
-      - 'skills/**'
-      - 'agents/**'
-      - 'profiles/**'
-      - 'schemas/**'
-      - 'functions/**'
-      - 'scripts/**'
-      - 'tests/runtime-platform/**'
-      - 'tests/production-v2/**'
-      - 'tests/completion/**'
-      - 'tests/e2e/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'site/**'
-      - 'docs/**'
-      - '.github/workflows/runtime-platform.yml'
+      - "bin/**"
+      - "runtime/**"
+      - "marketplace/**"
+      - "mcp/**"
+      - "skills/**"
+      - "agents/**"
+      - "profiles/**"
+      - "schemas/**"
+      - "functions/**"
+      - "scripts/**"
+      - "tests/runtime-platform/**"
+      - "tests/production-v2/**"
+      - "tests/completion/**"
+      - "tests/e2e/**"
+      - "package.json"
+      - "package-lock.json"
+      - "site/**"
+      - "docs/**"
+      - ".github/workflows/runtime-platform.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: runtime-platform-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   runtime-e2e:
+    name: Runtime + full regression
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: |
             package-lock.json
             site/package-lock.json
-      - name: Install root dependencies
-        run: npm ci
-      - name: Install site dependencies
-        run: cd site && npm ci
-      - name: Stable contract gate
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd site && npm ci
+      - name: Verify public contract
         run: npm run contract:check
       - name: Typecheck
         run: npm run typecheck
-      - name: Full lint
+      - name: Lint
         run: npm run lint
-      - name: Runtime Platform tests
-        run: npm run runtime:test
-      - name: Phase 8 compatibility tests
-        run: npm run phase8:test
-      - name: Production compatibility tests
-        run: npm run test:production-v2
-      - name: Runtime completion tests
-        run: npm run completion:test
-      - name: Full tests
+      - name: Full regression suite
         run: npm test
       - name: Site check and build
         run: |
           cd site
           npm run check
           npm run build
-      - name: Registry compatibility gate
+      - name: Runtime Registry compatibility
         run: npm run runtime:check
-      - name: Distributable package smoke
+      - name: Package smoke
         run: npm pack --dry-run
-      - name: Runtime syntax checks
+      - name: Runtime syntax smoke
+        shell: bash
         run: |
           node --check bin/dsh.mjs
+          node --check bin/dsh-core.mjs
           node --check runtime/dsh.mjs
           node --check runtime/control-cli.mjs
           node --check runtime/catalog.mjs
@@ -95,30 +96,41 @@ jobs:
           node --check runtime/health.mjs
           node --check runtime/rollback.mjs
           node --check runtime/mcp-tools.mjs
+          node --check runtime/host-bridge.mjs
+          node --check runtime/startup.mjs
+          node --check runtime/provider-cli.mjs
+          node --check runtime/provider-store.mjs
           node --check scripts/check-contract.mjs
           node --check scripts/package-security-audit.mjs
           node --check scripts/generate-sbom.mjs
           node --check scripts/build-search-index-v2.mjs
           node --check scripts/copy-assets.mjs
+          node --check scripts/registry-distribution.mjs
+          node --check scripts/provider-adapter-pack.mjs
+          node --check scripts/provider-adapter-publish.mjs
 
   client-bridge-matrix:
     name: Client Runtime (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Stable contract gate
+      - name: Verify public contract
         run: npm run contract:check
+      - name: Runtime Platform cross-platform tests
+        run: npm run runtime:test
       - name: Production compatibility tests
         run: npm run test:production-v2
       - name: Runtime completion tests
@@ -129,12 +141,19 @@ jobs:
         run: node runtime/dsh.mjs version
       - name: Protocol registration plan
         run: node bin/dsh.mjs host registration
-      - name: Runtime syntax smoke
+      - name: Runtime entrypoint smoke
+        shell: bash
         run: |
           node --check bin/dsh.mjs
+          node --check bin/dsh-core.mjs
           node --check runtime/control-cli.mjs
           node --check runtime/execution.mjs
           node --check runtime/transaction.mjs
           node --check runtime/resolver.mjs
           node --check runtime/preflight.mjs
+          node --check runtime/client-bridge.mjs
+          node --check runtime/client-host.mjs
+          node --check runtime/provider-cli.mjs
+          node --check runtime/provider-store.mjs
           node --check scripts/check-contract.mjs
+          node --check scripts/provider-adapter-pack.mjs

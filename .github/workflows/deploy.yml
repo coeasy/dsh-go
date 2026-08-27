@@ -80,7 +80,9 @@ jobs:
           test -f site/dist/catalog/plugins.json
           test -f site/dist/catalog/registry-v3.json
           test -f site/dist/catalog/schema-v3.json
+          test -f site/dist/catalog/provider-adapters.json
           node -e "const r=require('./site/dist/catalog/registry-v3.json'); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length) process.exit(1)"
+          node -e "const r=require('./site/dist/catalog/provider-adapters.json'); if(r.registry_version!==1 || !r.generated?.content_hash || !Array.isArray(r.providers) || r.generated.count!==r.providers.length) process.exit(1)"
       - name: Deploy to Cloudflare Pages
         if: ${{ steps.registry.outputs.ready == 'true' }}
         id: cloudflare

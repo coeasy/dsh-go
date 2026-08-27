@@ -127,6 +127,36 @@ jobs:
           cmp dist/provider-adapter-sbom.spdx.json .dsh-repro/provider-adapter-sbom.spdx.json
           cmp dist/SHA256SUMS .dsh-repro/SHA256SUMS
 
+      - name: Bind immutable release tag to source commit
+        env:
+          TAG: ${{ steps.pack.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git check-ref-format "refs/tags/$TAG"
+
+          remote_tag="$(git ls-remote --tags origin "refs/tags/$TAG" | awk 'NR == 1 { print $1 }')"
+          if [ -n "$remote_tag" ]; then
+            remote_target="$(git ls-remote --tags origin "refs/tags/$TAG^{}" | awk 'NR == 1 { print $1 }')"
+            if [ -z "$remote_target" ]; then remote_target="$remote_tag"; fi
+            if [ "$remote_target" != "$GITHUB_SHA" ]; then
+              echo "immutable Provider Adapter tag $TAG already points to $remote_target, expected $GITHUB_SHA" >&2
+              exit 1
+            fi
+          else
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
+
+          verified_target="$(git ls-remote --tags origin "refs/tags/$TAG^{}" | awk 'NR == 1 { print $1 }')"
+          if [ -z "$verified_target" ]; then
+            verified_target="$(git ls-remote --tags origin "refs/tags/$TAG" | awk 'NR == 1 { print $1 }')"
+          fi
+          if [ "$verified_target" != "$GITHUB_SHA" ]; then
+            echo "immutable Provider Adapter tag verification failed: $TAG -> ${verified_target:-<missing>}, expected $GITHUB_SHA" >&2
+            exit 1
+          fi
+
       - name: Attest immutable release artifact provenance
         uses: actions/attest@v4
         with:
@@ -155,11 +185,23 @@ jobs:
           )
           if gh release view "$TAG" >/dev/null 2>&1; then
             mkdir -p .dsh-existing-release
-            gh release download "$TAG" --pattern provider-adapter-release.json --dir .dsh-existing-release
-            cmp dist/provider-adapter-release.json .dsh-existing-release/provider-adapter-release.json
-            gh release upload "$TAG" "${assets[@]}" --clobber
+            existing_names="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+            missing=()
+            for asset in "${assets[@]}"; do
+              name="${asset#dist/}"
+              if grep -Fqx -- "$name" <<<"$existing_names"; then
+                gh release download "$TAG" --pattern "$name" --dir .dsh-existing-release
+                cmp "$asset" ".dsh-existing-release/$name"
+              else
+                missing+=("$asset")
+              fi
+            done
+            if ((${#missing[@]} > 0)); then
+              gh release upload "$TAG" "${missing[@]}"
+            fi
           else
             gh release create "$TAG" "${assets[@]}" \
+              --verify-tag \
               --title "$ADAPTER_ID $ADAPTER_VERSION" \
               --notes "Immutable DSH Provider Adapter release $ADAPTER_ID@$ADAPTER_VERSION. Artifact digest and release identity are recorded in provider-adapter-release.json."
           fi
