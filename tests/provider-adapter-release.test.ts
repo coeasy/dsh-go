@@ -13,7 +13,8 @@ describe('Provider Adapter release workflow contracts', () => {
     expect(workflow).toContain('uses: actions/attest@v4');
     expect(workflow).toContain('sbom-path: dist/provider-adapter-sbom.spdx.json');
     expect(workflow).toContain('Create or verify immutable GitHub Release');
-    expect(workflow).toContain('repository_dispatch');
+    expect(workflow).toContain('event_type:"provider-adapter-release"');
+    expect(workflow).toContain('repos/$MARKETPLACE_REPOSITORY/dispatches');
   });
 
   it('ingests marketplace releases through source-bound idempotent registry PRs', async () => {
