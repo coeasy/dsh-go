@@ -1,0 +1,101 @@
+name: Provider Adapter Marketplace Ingestion
+
+on:
+  repository_dispatch:
+    types: [provider-adapter-release]
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: Public adapter repository (owner/repo)
+        required: true
+        type: string
+      tag:
+        description: Immutable GitHub Release tag
+        required: true
+        type: string
+      channel:
+        description: Registry channel
+        required: true
+        default: stable
+        type: choice
+        options: [stable, beta, nightly, dev]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: provider-adapter-marketplace-${{ github.event.client_payload.repository || inputs.repository }}-${{ github.event.client_payload.tag || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_REPOSITORY: ${{ github.event.client_payload.repository || inputs.repository }}
+      SOURCE_TAG: ${{ github.event.client_payload.tag || inputs.tag }}
+      SOURCE_CHANNEL: ${{ github.event.client_payload.channel || inputs.channel || 'stable' }}
+    steps:
+      - name: Checkout marketplace main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download immutable release descriptor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! [[ "$SOURCE_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+            echo "unsafe source repository" >&2
+            exit 1
+          fi
+          mkdir -p .dsh-provider-incoming
+          gh release download "$SOURCE_TAG" \
+            --repo "$SOURCE_REPOSITORY" \
+            --pattern provider-adapter-release.json \
+            --dir .dsh-provider-incoming
+
+      - name: Validate source identity and update registry idempotently
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="$(git hash-object catalog/provider-adapters.json)"
+          node scripts/provider-adapter-publish.mjs \
+            --registry catalog/provider-adapters.json \
+            --release .dsh-provider-incoming/provider-adapter-release.json \
+            --channel "$SOURCE_CHANNEL" \
+            --expect-repository "$SOURCE_REPOSITORY" \
+            --expect-tag "$SOURCE_TAG"
+          after="$(git hash-object catalog/provider-adapters.json)"
+          if [ "$before" = "$after" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          node -e 'const r=require("./.dsh-provider-incoming/provider-adapter-release.json"); console.log(`id=${r.id}`); console.log(`version=${r.version}`)' >> "$GITHUB_OUTPUT"
+
+      - name: Create registry pull request
+        if: steps.publish.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ADAPTER_ID: ${{ steps.publish.outputs.id }}
+          ADAPTER_VERSION: ${{ steps.publish.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="provider-adapter/${ADAPTER_ID}-${ADAPTER_VERSION}-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add -- catalog/provider-adapters.json
+          git commit -m "chore(provider): publish ${ADAPTER_ID}@${ADAPTER_VERSION}"
+          git push origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "chore(provider): publish ${ADAPTER_ID}@${ADAPTER_VERSION}" \
+            --body "Automated Provider Adapter Registry V1 ingestion from ${SOURCE_REPOSITORY}@${SOURCE_TAG}. The release descriptor is immutable and source-bound; CI must pass before merge."

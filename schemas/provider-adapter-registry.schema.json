@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeasy.github.io/dsh-go/schemas/provider-adapter-registry.schema.json",
+  "title": "DSH Provider Adapter Registry V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry_version", "schema_version", "generated", "providers"],
+  "properties": {
+    "registry_version": { "const": 1 },
+    "schema_version": { "const": "1.0.0" },
+    "generated": {
+      "type": "object",
+      "required": ["at", "count", "release_count", "content_hash"],
+      "properties": {
+        "at": { "type": ["string", "null"] },
+        "count": { "type": "integer", "minimum": 0 },
+        "release_count": { "type": "integer", "minimum": 0 },
+        "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description", "kind", "channels", "versions"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "kind": { "enum": ["llm", "mcp", "skill", "agent-runtime"] },
+          "channels": {
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+            "propertyNames": { "enum": ["stable", "beta", "nightly", "dev"] }
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["release_format", "manifest_version", "type", "id", "name", "version", "kind", "entrypoint", "files", "release", "manifest_hash", "artifact", "release_id"],
+              "properties": {
+                "release_format": { "const": 1 },
+                "type": { "const": "provider-adapter" },
+                "release_id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                "manifest_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                "artifact": {
+                  "type": "object",
+                  "required": ["kind", "algorithm", "integrity", "size", "file_name"],
+                  "properties": {
+                    "kind": { "const": "tar+gzip" },
+                    "algorithm": { "const": "sha256" },
+                    "integrity": { "type": "string", "pattern": "^sha256-[0-9a-f]{64}$" },
+                    "size": { "type": "integer", "minimum": 1 },
+                    "file_name": { "type": "string" },
+                    "url": { "type": "string", "format": "uri" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
