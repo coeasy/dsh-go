@@ -98,13 +98,13 @@ const CATEGORY_ZH: Record<string, string> = {
   </a>
 
   <div class="card-footer">
-    <span class="runtime-meta">{language || 'Unknown'}{age ? ` · ${age}` : ''}</span>
+    <span class="runtime-meta">{language || 'Unknown'}{age ? ` · updated ${age}` : ''}</span>
     <span class="actions">
       {hasDetail
         ? <a class="detail-btn" href={detailHref}>详情</a>
         : <a class="detail-btn" href={githubHref} target="_blank" rel="noreferrer">GitHub ↗</a>}
       {install_cmd && (
-        <button class="install-btn copy-cmd" type="button" data-copy-cmd={install_cmd} title={install_cmd} aria-label="复制安装命令">Install</button>
+        <button class="install-btn copy-cmd" type="button" data-copy-cmd={install_cmd} title={install_cmd} aria-label="复制安装命令">Copy install</button>
       )}
     </span>
   </div>
@@ -112,7 +112,7 @@ const CATEGORY_ZH: Record<string, string> = {
 
 <style>
   .plugin-card {
-    display: flex; flex-direction: column; min-width: 0; min-height: 238px;
+    display: flex; flex-direction: column; min-width: 0; min-height: 286px;
     border: 1px solid var(--border); border-radius: 18px; background: var(--card);
     color: var(--fg); box-shadow: var(--shadow-sm); overflow: hidden; position: relative;
     transition: transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s, border-color .18s;
@@ -123,23 +123,23 @@ const CATEGORY_ZH: Record<string, string> = {
   }
   .plugin-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: color-mix(in srgb, var(--accent) 42%, var(--border)); }
   .plugin-card:hover::before { opacity: 1; }
-  .card-main { display: flex; flex: 1; flex-direction: column; padding: 17px 17px 12px; color: inherit; min-width: 0; }
+  .card-main { display: flex; flex: 1; flex-direction: column; padding: 19px 19px 14px; color: inherit; min-width: 0; }
   .card-main:hover { text-decoration: none; }
-  .row1 { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .row1 { display: flex; align-items: center; gap: 11px; min-width: 0; }
   .avatar {
-    flex: none; width: 38px; height: 38px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 850; color: #fff;
+    flex: none; width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 850; color: #fff;
     background: linear-gradient(135deg, hsl(var(--h, 210) 70% 55%), hsl(calc(var(--h, 210) + 40) 70% 45%));
     box-shadow: 0 5px 16px hsl(var(--h, 210) 60% 50% / .22);
   }
-  .identity { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
-  .identity small { color: var(--muted); font-size: 10.5px; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .name { font-weight: 780; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .stars { margin-left: auto; flex: none; font-size: 12.5px; font-weight: 760; color: var(--amber); white-space: nowrap; }
-  .repo-id { margin: 8px 0 -2px 48px; color: var(--muted); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .desc { margin: 13px 0 14px; color: var(--muted); font-size: 12.5px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .identity { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+  .identity small { color: var(--muted); font-size: 12px; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .name { font-weight: 800; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stars { margin-left: auto; flex: none; font-size: 13px; font-weight: 800; color: var(--amber); white-space: nowrap; }
+  .repo-id { margin: 9px 0 -2px 55px; color: var(--muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .desc { margin: 14px 0 15px; color: var(--muted); font-size: 14px; line-height: 1.62; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .signals { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
-  .kind, .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 8px; font-size: 10.5px; font-weight: 750; line-height: 1.25; }
+  .kind, .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 9px; font-size: 11.5px; font-weight: 750; line-height: 1.25; }
   .kind { color: var(--accent); background: var(--accent-soft); }
   .kind.mcp { color: #7c3aed; background: color-mix(in srgb, #7c3aed 12%, transparent); }
   .kind.skill, .kind.skills { color: #0891b2; background: color-mix(in srgb, #0891b2 12%, transparent); }
@@ -147,19 +147,19 @@ const CATEGORY_ZH: Record<string, string> = {
   .badge.registry { color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, transparent); }
   .badge.version { color: var(--muted); background: var(--bg-soft); }
   .card-footer {
-    display: flex; align-items: center; gap: 10px; justify-content: space-between; min-height: 48px;
-    border-top: 1px solid var(--border); padding: 9px 12px 9px 16px; background: color-mix(in srgb, var(--bg-soft) 55%, transparent);
+    display: flex; align-items: center; gap: 11px; justify-content: space-between; min-height: 56px;
+    border-top: 1px solid var(--border); padding: 10px 13px 10px 17px; background: color-mix(in srgb, var(--bg-soft) 55%, transparent);
   }
-  .runtime-meta { min-width: 0; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .actions { display: inline-flex; flex: none; gap: 6px; }
+  .runtime-meta { min-width: 0; color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .actions { display: inline-flex; flex: none; gap: 7px; }
   .detail-btn, .install-btn {
-    display: inline-flex; align-items: center; justify-content: center; min-height: 29px; border-radius: 9px; padding: 5px 10px;
-    font-size: 11.5px; font-weight: 700; border: 1px solid var(--border); cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; min-height: 34px; border-radius: 9px; padding: 7px 11px;
+    font-size: 12px; font-weight: 750; border: 1px solid var(--border); cursor: pointer; text-decoration: none;
   }
   .detail-btn { color: var(--muted); background: var(--card); }
   .detail-btn:hover { color: var(--fg); border-color: var(--border-strong); text-decoration: none; }
   .install-btn { color: #fff; border-color: var(--accent); background: var(--accent); }
   .install-btn:hover { filter: brightness(1.04); transform: translateY(-1px); }
   .install-btn.copied { background: var(--green); border-color: var(--green); }
-  @media (max-width: 520px) { .plugin-card { min-height: 220px; } .repo-id { margin-left: 0; } }
+  @media (max-width: 620px) { .plugin-card { min-height: 0; } .repo-id { margin-left: 0; } .card-footer { align-items:flex-start; flex-direction:column; } .actions { width:100%; } .detail-btn,.install-btn { flex:1; } }
 </style>
