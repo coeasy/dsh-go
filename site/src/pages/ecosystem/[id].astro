@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { u } from '../../lib/urls';
 import { DETAIL_THRESHOLD } from '../../lib/threshold';
-import { alignRegistryItem, buildLegacyRepoIndex } from '../../lib/marketplace';
+import { alignRegistryItem, buildLegacyRepoIndex, preferAlignedVariant } from '../../lib/marketplace';
 
 function publisherVerified(item: any) {
   const owner = item?.source?.repo?.split('/')[0]?.toLowerCase();
@@ -22,14 +22,6 @@ function evidence(item: any) {
     { label: 'SBOM declared', ok: Boolean(item?.security?.sbom) },
     { label: 'License declared', ok: Boolean(item?.security?.license) },
   ];
-}
-
-function preferVariant(current: any | undefined, candidate: any) {
-  if (!current) return candidate;
-  const currentStable = (current.registry?.channel || current.registry?.release_channel || 'stable') === 'stable';
-  const candidateStable = (candidate.registry?.channel || candidate.registry?.release_channel || 'stable') === 'stable';
-  if (currentStable !== candidateStable) return candidateStable ? candidate : current;
-  return String(candidate.version).localeCompare(String(current.version), undefined, { numeric: true, sensitivity: 'base' }) > 0 ? candidate : current;
 }
 
 export async function getStaticPaths() {
@@ -49,7 +41,7 @@ export async function getStaticPaths() {
   for (const raw of registryItems) {
     const aligned = alignRegistryItem(raw, legacyIndex);
     const key = `${aligned.type}:${aligned.id}`;
-    byIdentity.set(key, preferVariant(byIdentity.get(key), aligned));
+    byIdentity.set(key, preferAlignedVariant(byIdentity.get(key), aligned));
   }
 
   const groups = new Map<string, any[]>();
