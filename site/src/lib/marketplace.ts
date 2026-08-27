@@ -8,6 +8,9 @@ export interface MarketplacePlugin {
   name?: string;
   full_name?: string;
   repo_url?: string;
+  description?: string;
+  topics?: string[];
+  category?: string;
   stars?: number;
   trend_score?: number;
   verified?: boolean;
@@ -56,9 +59,38 @@ export function isActivePlugin(plugin: MarketplacePlugin): boolean {
   return !plugin.deprecated && !plugin.disabled;
 }
 
+function normalizedDiscoveryName(value?: string): string {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_.]+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+export function isDiscoveryAggregator(plugin: MarketplacePlugin): boolean {
+  const repo = normalizeRepo(plugin.full_name || plugin.repo_url);
+  const repoName = repo.split('/').pop() || '';
+  const candidates = [plugin.slug, plugin.name, repoName]
+    .map((value) => normalizedDiscoveryName(String(value || '')))
+    .filter(Boolean);
+
+  const awesomeName = /(^|-)awesome(-|$)/;
+  const curatedName = /(^|-)curated-list(-|$)/;
+  const ecosystemListName = /(^|-)(plugins?|mcp|skills?|agents?|tools?|resources?)-(list|directory|collection)(-|$)|(^|-)(list|directory|collection)-(plugins?|mcp|skills?|agents?|tools?|resources?)(-|$)/;
+  if (candidates.some((value) => awesomeName.test(value) || curatedName.test(value) || ecosystemListName.test(value))) return true;
+
+  const topics = Array.isArray(plugin.topics) ? plugin.topics.map((topic) => normalizedDiscoveryName(topic)) : [];
+  if (topics.some((topic) => ['awesome', 'awesome-list', 'curated-list', 'resource-list'].includes(topic))) return true;
+
+  const description = String(plugin.description || '').trim().toLowerCase();
+  return /\b(awesome|curated)\s+(list|collection)\b/.test(description)
+    || /\b(collection|directory|list)\s+of\s+(plugins?|tools?|resources?|projects?|agents?|skills?|mcp)\b/.test(description);
+}
+
 export function isHomePopular(plugin: MarketplacePlugin): boolean {
   const stars = Number(plugin.stars || 0);
   return isActivePlugin(plugin)
+    && !isDiscoveryAggregator(plugin)
     && stars >= HOME_MIN_STARS
     && stars <= HOME_MAX_STARS
     && stars < HOME_HARD_MAX_STARS;

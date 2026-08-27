@@ -8,6 +8,7 @@ import {
   HOME_MIN_STARS,
   HOME_TOP_LIMIT,
   ecosystemType,
+  isDiscoveryAggregator,
   marketplaceScore,
   normalizeRepo,
 } from '../lib/marketplace';
@@ -34,8 +35,19 @@ for (const plugin of catalogPlugins) {
   if (repo) catalogByRepo.set(repo, plugin);
 }
 
+// Discovery lists resources, not Registry version rows. Keep only the latest version per type:id.
+const latestRegistryByIdentity = new Map<string, any>();
+for (const entry of registry.plugins || []) {
+  const type = ecosystemType(entry);
+  const key = `${type}:${String(entry.id || '')}`;
+  const current = latestRegistryByIdentity.get(key);
+  if (!current || String(entry.version || '').localeCompare(String(current.version || ''), undefined, { numeric: true }) > 0) {
+    latestRegistryByIdentity.set(key, entry);
+  }
+}
+
 const registryRepos = new Set<string>();
-const registryItems = (registry.plugins || []).map((entry: any) => {
+const registryItems = [...latestRegistryByIdentity.values()].map((entry: any) => {
   const repo = normalizeRepo(entry.source?.repo);
   if (repo) registryRepos.add(repo);
   const legacy = repo ? catalogByRepo.get(repo) : null;
@@ -45,29 +57,38 @@ const registryItems = (registry.plugins || []).map((entry: any) => {
   const version = String(entry.version || '0.1.0');
   const name = entry.metadata?.name || legacy?.name || entry.id;
   const description = entry.metadata?.description || legacy?.description || '';
+  const capabilities = entry.capabilities || [];
   const deepLink = new URL('dsh://install');
   deepLink.searchParams.set('id', entry.id);
   deepLink.searchParams.set('version', version);
   deepLink.searchParams.set('type', type);
+  const itemRepo = entry.source?.repo || legacy?.full_name || '';
   return {
-    key: `registry:${type}:${entry.id}:${version}`,
+    key: `registry:${type}:${entry.id}`,
     id: entry.id,
     type,
     name,
     description,
     version,
-    repo: entry.source?.repo || legacy?.full_name || '',
+    repo: itemRepo,
     stars,
     verified,
     language: legacy?.language || '',
     category: legacy?.category || type,
     updatedAt: legacy?.updated_at || '',
     trend: Number(legacy?.trend_score || 0),
-    capabilities: entry.capabilities || [],
+    capabilities,
     dependencies: Array.isArray(entry.dependencies) ? entry.dependencies.length : 0,
     commit: entry.source?.commit || '',
     registryManaged: true,
     catalogLinked: Boolean(legacy),
+    aggregator: isDiscoveryAggregator({
+      name,
+      full_name: itemRepo,
+      description,
+      topics: capabilities,
+      category: legacy?.category || type,
+    }),
     install: `dsh ${type} install ${entry.id}@${version}`,
     deepLink: deepLink.toString(),
     detail: `${u(`/ecosystem/${encodeURIComponent(entry.id)}`)}?type=${type}`,
@@ -98,6 +119,7 @@ const legacyOnlyItems = catalogPlugins
     commit: '',
     registryManaged: false,
     catalogLinked: true,
+    aggregator: isDiscoveryAggregator(plugin),
     install: plugin.install_cmd || `dsh plugin add github:${plugin.full_name}`,
     deepLink: `dsh://install?plugin=${encodeURIComponent(plugin.full_name || '')}`,
     detail: u(`/plugin/${plugin.slug}`),
@@ -112,8 +134,11 @@ const scoreOf = (item: any) => marketplaceScore({
   updated_at: item.updatedAt,
 });
 const popularItems = items
-  .filter((item: any) => item.stars >= HOME_MIN_STARS && item.stars <= HOME_MAX_STARS)
-  .sort((left: any, right: any) => scoreOf(right) - scoreOf(left) || right.stars - left.stars || left.name.localeCompare(right.name))
+  .filter((item: any) => !item.aggregator && item.stars >= HOME_MIN_STARS && item.stars <= HOME_MAX_STARS)
+  .sort((left: any, right: any) => {
+    if (left.registryManaged !== right.registryManaged) return left.registryManaged ? -1 : 1;
+    return scoreOf(right) - scoreOf(left) || right.stars - left.stars || left.name.localeCompare(right.name);
+  })
   .slice(0, HOME_TOP_LIMIT);
 const popularKeys = new Set(popularItems.map((item: any) => item.key));
 const orderedItems = [...items].sort((left: any, right: any) => {
@@ -124,71 +149,81 @@ const orderedItems = [...items].sort((left: any, right: any) => {
   return scoreOf(right) - scoreOf(left) || right.stars - left.stars || left.name.localeCompare(right.name);
 });
 
-const types = ['plugin', 'mcp', 'skill', 'agent'] as const;
+const typeCards = [
+  { type: 'plugin', label: 'Plugins', code: 'P', description: '客户端扩展、UI、工具与集成能力。' },
+  { type: 'mcp', label: 'MCP Servers', code: 'M', description: '标准化工具、数据源与外部服务连接。' },
+  { type: 'skill', label: 'Skills', code: 'S', description: '可复用能力、提示与执行单元。' },
+  { type: 'agent', label: 'Agents', code: 'A', description: '面向任务的自动化、协作与工作流。' },
+] as const;
+const types = typeCards.map((item) => item.type);
 const counts = Object.fromEntries(types.map((type) => [type, items.filter((item: any) => item.type === type).length]));
 const registryCount = registryItems.length;
-const legacyOnlyCount = legacyOnlyItems.length;
-const linkedCount = registryItems.filter((item: any) => item.catalogLinked).length;
+const aggregatorCount = items.filter((item: any) => item.aggregator).length;
 const giantCount = items.filter((item: any) => item.stars > 10000).length;
 const updatedAt = registry.generated?.at || catalog.meta?.updated_at;
 const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) : '—';
 ---
 
 <section class:list={['market-hero', compactHero && 'compact']}>
-  <span class="eyebrow">DSH Plugin Marketplace · Registry V3 · Catalog aligned</span>
+  <span class="eyebrow">DSH Plugin Marketplace · Registry V3</span>
   <h1>Discover and install the <span class="grad-text">DSH Ecosystem</span></h1>
-  <p>Plugin、MCP、Skill、Agent 统一发现、版本对齐和本地安装。更大的信息密度、更清晰的安装入口，并同时展示 Registry 版本、GitHub 来源、能力标签与更新时间。</p>
+  <p>Plugin、MCP、Skill、Agent 一站式发现、版本对齐与本地安装。</p>
   <div class="hero-actions">
     <a class="primary" href="#market-grid">Explore Top {HOME_TOP_LIMIT}</a>
     <button class="secondary" type="button" data-show-all>Browse all packages</button>
   </div>
   <div class="metrics">
-    <span><b>{items.length}</b><i>All packages</i></span>
-    <span><b>{popularItems.length}</b><i>Top100 popular</i></span>
-    <span><b>{registryCount}</b><i>Registry managed</i></span>
-    <span><b>{legacyOnlyCount}</b><i>Catalog only</i></span>
-    <span><b>{linkedCount}</b><i>Catalog ↔ Registry linked</i></span>
-    <span><b>{updatedLabel}</b><i>Updated</i></span>
+    <span><b>{items.length}</b><i>packages</i></span>
+    <span><b>{registryCount}</b><i>Registry V3</i></span>
+    <span><b>{popularItems.length}</b><i>recommended</i></span>
+    <span><b>{updatedLabel}</b><i>updated</i></span>
   </div>
 </section>
 
-<section class="install-flow" aria-label="installation guide">
-  <div class="flow-intro">
-    <span class="flow-kicker">One-click or exact CLI</span>
-    <h2>安装前先看清来源，安装后再按提示激活</h2>
-    <p>参考成熟插件市场的详情优先设计，把“从哪里来、装哪个版本、如何安装、是否需要重启”放到同一条路径里。</p>
+<section class="category-section" aria-labelledby="ecosystem-categories">
+  <div class="section-heading">
+    <div>
+      <span class="section-kicker">Browse by ecosystem type</span>
+      <h2 id="ecosystem-categories">按生态类型发现资源</h2>
+    </div>
+    <span class="section-note">首页只展示独立可用资源；聚合列表不进入推荐。</span>
   </div>
-  <div class="flow-grid">
-    <div><b>01</b><strong>Browse & search</strong><span>按类型、能力、GitHub 仓库、Verified / Registry 状态快速筛选。</span></div>
-    <div><b>02</b><strong>Review details</strong><span>详情页展示安装版本、固定 commit、权限、安全证据与兼容性。</span></div>
-    <div><b>03</b><strong>Install locally</strong><span>使用 Open in DSH，或复制页面生成的精确 CLI 命令执行本地安装。</span></div>
-    <div><b>04</b><strong>Activate safely</strong><span>安装不会自动重启客户端；仅在提示 restart-required 时手动重启。</span></div>
+  <div class="category-grid">
+    {typeCards.map((item) => (
+      <button class={`category-card ${item.type}`} type="button" data-category-filter={item.type}>
+        <span class="category-icon">{item.code}</span>
+        <span class="category-copy">
+          <strong>{item.label}</strong>
+          <small>{item.description}</small>
+        </span>
+        <span class="category-count">{counts[item.type]}</span>
+      </button>
+    ))}
   </div>
 </section>
 
-<section class="alignment-strip" aria-label="marketplace data alignment">
-  <div><strong>Registry is install authority</strong><span>type、version、commit、capabilities 以 Registry V3 为准。</span></div>
-  <div><strong>Catalog enriches discovery</strong><span>原始 dsh-plugin 提供 stars、语言、分类和 GitHub 展示信息。</span></div>
-  <div><strong>Top100 discovery policy</strong><span>{HOME_MIN_STARS}–{fmtK(HOME_MAX_STARS)} stars；{giantCount} 个 1w+ 仓库默认不推荐。</span></div>
+<section class="market-facts" aria-label="marketplace discovery policy">
+  <div><strong>Top100 · {HOME_MIN_STARS}–{fmtK(HOME_MAX_STARS)} stars</strong><span>排除 {giantCount} 个 1w+ 仓库与 {aggregatorCount} 个 awesome / 聚合列表项目。</span></div>
+  <div><strong>Registry V3 = 安装权威</strong><span>type、version、commit、capabilities 以 Registry 为准。</span></div>
+  <div><strong>本地安装</strong><span>Open in DSH 或复制精确 CLI；需要时再手动重启。</span></div>
 </section>
 
 <section class="market-toolbar" aria-label="marketplace filters">
   <div class="search-wrap">
     <span aria-hidden="true">⌕</span>
-    <input id="market-search" type="search" placeholder="搜索 package、GitHub repo、type、capability…" autocomplete="off" />
+    <input id="market-search" type="search" placeholder="搜索 package、GitHub repo、capability…" autocomplete="off" />
     <kbd>/</kbd>
   </div>
   <div class="filter-row">
-    <button class="market-filter active" type="button" data-market-filter="popular">Popular <small>{popularItems.length}</small></button>
+    <button class="market-filter active" type="button" data-market-filter="popular">Recommended <small>{popularItems.length}</small></button>
     <button class="market-filter" type="button" data-market-filter="all">All <small>{items.length}</small></button>
-    {types.map((type) => <button class="market-filter" type="button" data-market-filter={type}>{type.toUpperCase()} <small>{counts[type]}</small></button>)}
     <label class="check-filter"><input id="market-verified" type="checkbox" /> Verified</label>
     <label class="check-filter"><input id="market-registry" type="checkbox" /> Registry only</label>
   </div>
 </section>
 
 <div class="result-line">
-  <span id="market-count">{popularItems.length} 个 Top100 热门生态条目</span>
+  <span id="market-count">{popularItems.length} 个推荐生态资源</span>
   <span class="result-links"><a href={u('/profiles')}>Profiles / Bundles</a><a href={u('/trending')}>Trending</a><a href={apiUrl('/api/v1/search')}>Search API ↗</a></span>
 </div>
 
@@ -203,6 +238,7 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
         data-popular={String(popular)}
         data-verified={String(item.verified)}
         data-registry={String(item.registryManaged)}
+        data-aggregator={String(item.aggregator)}
         data-search={`${item.type}:${item.id} ${item.name} ${item.repo} ${item.description} ${item.language} ${item.category} ${(item.capabilities || []).join(' ')}`.toLowerCase()}
         hidden={!popular}
       >
@@ -234,7 +270,7 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
     );
   })}
 </section>
-<div id="market-empty" class="empty" hidden>没有匹配的生态条目。</div>
+<div id="market-empty" class="empty" hidden>没有匹配的生态资源。</div>
 
 <script>
   const search = document.querySelector<HTMLInputElement>('#market-search');
@@ -244,6 +280,7 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
   const empty = document.querySelector<HTMLElement>('#market-empty');
   const cards = [...document.querySelectorAll<HTMLElement>('.market-card')];
   const filters = [...document.querySelectorAll<HTMLButtonElement>('[data-market-filter]')];
+  const categories = [...document.querySelectorAll<HTMLButtonElement>('[data-category-filter]')];
   const showAll = document.querySelector<HTMLButtonElement>('[data-show-all]');
   let activeFilter = 'popular';
 
@@ -262,13 +299,14 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
       card.hidden = !show;
       if (show) visible += 1;
     }
-    if (count) count.textContent = `${visible} 个生态条目`;
+    if (count) count.textContent = `${visible} 个生态资源`;
     if (empty) empty.hidden = visible !== 0;
   }
 
   function setFilter(filter: string) {
     activeFilter = filter;
     for (const button of filters) button.classList.toggle('active', button.dataset.marketFilter === filter);
+    for (const button of categories) button.classList.toggle('active', button.dataset.categoryFilter === filter);
     applyFilters();
   }
 
@@ -276,6 +314,10 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
   verified?.addEventListener('change', applyFilters);
   registryOnly?.addEventListener('change', applyFilters);
   for (const button of filters) button.addEventListener('click', () => setFilter(button.dataset.marketFilter || 'popular'));
+  for (const button of categories) button.addEventListener('click', () => {
+    setFilter(button.dataset.categoryFilter || 'all');
+    document.querySelector('.market-toolbar')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
   showAll?.addEventListener('click', () => {
     setFilter('all');
     document.querySelector('#market-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -299,12 +341,14 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
 </script>
 
 <style>
-  .market-hero{text-align:center;padding:58px 0 34px}.market-hero.compact{padding-top:34px}.eyebrow{color:var(--accent);font-size:12px;font-weight:850;letter-spacing:.09em;text-transform:uppercase}.market-hero h1{margin:12px auto 14px;max-width:1100px;font-size:clamp(44px,5.3vw,78px);line-height:1.01;letter-spacing:-.055em}.market-hero p{max-width:960px;margin:0 auto;color:var(--muted);font-size:17px;line-height:1.7}.hero-actions{display:flex;justify-content:center;gap:11px;flex-wrap:wrap;margin:27px 0}.primary,.secondary,.ghost,.install{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:11px;padding:10px 15px;font:750 13.5px/1.25 inherit;text-decoration:none;cursor:pointer;min-height:40px}.primary,.install{background:var(--accent);border-color:var(--accent);color:#fff}.secondary,.ghost{background:var(--card);color:var(--fg)}.primary:hover,.secondary:hover,.ghost:hover,.install:hover{text-decoration:none;transform:translateY(-1px)}.metrics{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.metrics span{display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--border);border-radius:999px;background:var(--card);padding:7px 12px;box-shadow:var(--shadow-sm)}.metrics b{font-size:13px}.metrics i{font-style:normal;color:var(--muted);font-size:11.5px}
-  .install-flow{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,2.2fr);gap:18px;border:1px solid var(--border);border-radius:20px;background:var(--card);padding:22px;margin:4px 0 18px;box-shadow:var(--shadow-sm)}.flow-intro{padding:4px 4px 4px 2px}.flow-kicker{color:var(--accent);font-size:11.5px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.flow-intro h2{font-size:22px;line-height:1.3;margin:7px 0}.flow-intro p{color:var(--muted);font-size:13.5px;margin:0;line-height:1.65}.flow-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.flow-grid div{display:flex;flex-direction:column;gap:5px;border:1px solid var(--border);border-radius:14px;background:var(--bg-soft);padding:14px;min-width:0}.flow-grid b{color:var(--accent);font-size:11px}.flow-grid strong{font-size:14px}.flow-grid span{color:var(--muted);font-size:12.5px;line-height:1.55}
-  .alignment-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:var(--border);margin:0 0 30px}.alignment-strip div{display:flex;flex-direction:column;gap:5px;background:var(--card);padding:17px 19px}.alignment-strip strong{font-size:13.5px}.alignment-strip span{color:var(--muted);font-size:12.5px;line-height:1.55}
-  .market-toolbar{display:grid;gap:12px;margin-bottom:13px}.search-wrap{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;border:1px solid var(--border);border-radius:15px;background:var(--card);padding:0 14px;box-shadow:var(--shadow-sm)}.search-wrap>span{font-size:22px;color:var(--muted)}.search-wrap input{width:100%;border:0;outline:0;background:transparent;color:var(--fg);padding:14px 0;font:500 15px/1.4 inherit}.search-wrap kbd{border:1px solid var(--border);border-bottom-width:2px;border-radius:7px;background:var(--bg-soft);color:var(--muted);padding:2px 7px;font-size:11px}.filter-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.market-filter{border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--muted);padding:7px 12px;font-size:13px;cursor:pointer;min-height:36px}.market-filter small{margin-left:3px}.market-filter.active{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--border));color:var(--accent);font-weight:800}.check-filter{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-left:5px}.check-filter input{width:16px;height:16px}.result-line{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:12.5px;margin:11px 0 14px}.result-links{display:flex;gap:13px;flex-wrap:wrap}
+  .market-hero{text-align:center;padding:38px 0 22px}.market-hero.compact{padding-top:26px}.eyebrow{color:var(--accent);font-size:12px;font-weight:850;letter-spacing:.09em;text-transform:uppercase}.market-hero h1{margin:8px auto 9px;max-width:1180px;font-size:clamp(40px,3.8vw,58px);line-height:1.05;letter-spacing:-.05em}.market-hero p{max-width:none;margin:0 auto;color:color-mix(in srgb,var(--fg) 66%,var(--muted));font-size:16px;line-height:1.55;font-weight:540}.hero-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px 0}.primary,.secondary,.ghost,.install{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:11px;padding:10px 15px;font:750 13.5px/1.25 inherit;text-decoration:none;cursor:pointer;min-height:40px}.primary,.install{background:var(--accent);border-color:var(--accent);color:#fff}.secondary,.ghost{background:var(--card);color:var(--fg)}.primary:hover,.secondary:hover,.ghost:hover,.install:hover{text-decoration:none;transform:translateY(-1px)}.metrics{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}.metrics span{display:inline-flex;align-items:baseline;gap:5px;border:1px solid var(--border);border-radius:999px;background:var(--card);padding:5px 10px;box-shadow:var(--shadow-sm)}.metrics b{font-size:12.5px}.metrics i{font-style:normal;color:var(--muted);font-size:11px}
+  .category-section{margin:10px 0 16px}.section-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:11px}.section-kicker{display:block;color:var(--accent);font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}.section-heading h2{margin:3px 0 0;font-size:21px;letter-spacing:-.02em}.section-note{color:var(--muted);font-size:12.5px;text-align:right}.category-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.category-card{--category-a:#2563eb;--category-b:#06b6d4;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;text-align:left;border:1px solid color-mix(in srgb,var(--category-a) 19%,var(--border));border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--category-a) 7%,var(--card)),color-mix(in srgb,var(--category-b) 4%,var(--card)));padding:14px 15px;color:var(--fg);cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .16s,border-color .16s,box-shadow .16s}.category-card.mcp{--category-a:#7c3aed;--category-b:#c026d3}.category-card.skill{--category-a:#0891b2;--category-b:#10b981}.category-card.agent{--category-a:#db2777;--category-b:#f97316}.category-card:hover,.category-card.active{transform:translateY(-2px);border-color:color-mix(in srgb,var(--category-a) 48%,var(--border));box-shadow:0 10px 25px color-mix(in srgb,var(--category-a) 12%,transparent)}.category-icon{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--category-a),var(--category-b));color:#fff;font-weight:900;font-size:15px;box-shadow:0 6px 16px color-mix(in srgb,var(--category-a) 20%,transparent)}.category-copy{display:flex;flex-direction:column;min-width:0}.category-copy strong{font-size:14.5px}.category-copy small{color:color-mix(in srgb,var(--fg) 57%,var(--muted));font-size:11.5px;line-height:1.45;margin-top:2px}.category-count{display:inline-flex;align-items:center;justify-content:center;min-width:38px;border-radius:999px;padding:4px 8px;background:var(--card);border:1px solid color-mix(in srgb,var(--category-a) 18%,var(--border));color:var(--category-a);font-size:11.5px;font-weight:850}
+  .market-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;overflow:hidden;border:1px solid var(--border);border-radius:15px;background:var(--border);margin:0 0 18px}.market-facts div{display:flex;flex-direction:column;gap:2px;background:var(--card);padding:11px 14px}.market-facts strong{font-size:12.5px}.market-facts span{color:var(--muted);font-size:11.5px;line-height:1.45}
+  .market-toolbar{display:grid;gap:10px;margin-bottom:11px}.search-wrap{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;border:1px solid var(--border);border-radius:15px;background:var(--card);padding:0 14px;box-shadow:var(--shadow-sm)}.search-wrap>span{font-size:22px;color:var(--muted)}.search-wrap input{width:100%;border:0;outline:0;background:transparent;color:var(--fg);padding:13px 0;font:500 15px/1.4 inherit}.search-wrap kbd{border:1px solid var(--border);border-bottom-width:2px;border-radius:7px;background:var(--bg-soft);color:var(--muted);padding:2px 7px;font-size:11px}.filter-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.market-filter{border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--muted);padding:7px 12px;font-size:13px;cursor:pointer;min-height:36px}.market-filter small{margin-left:3px}.market-filter.active{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--border));color:var(--accent);font-weight:800}.check-filter{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-left:5px}.check-filter input{width:16px;height:16px}.result-line{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:12.5px;margin:9px 0 13px}.result-links{display:flex;gap:13px;flex-wrap:wrap}
   .market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;scroll-margin-top:96px}.market-card{display:flex;flex-direction:column;min-width:0;min-height:328px;border:1px solid var(--border);border-radius:18px;background:var(--card);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .16s,box-shadow .16s,border-color .16s}.market-card:hover{transform:translateY(-3px);border-color:var(--border-strong);box-shadow:var(--shadow-md)}.market-card[hidden]{display:none}.card-main{display:flex;flex:1;flex-direction:column;min-width:0;padding:18px 18px 14px;color:inherit}.card-main:hover{text-decoration:none}.card-top{display:flex;align-items:center;gap:6px;min-width:0}.kind,.source,.verified,.meta-row span,.caps span{display:inline-flex;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:750;white-space:nowrap}.kind{color:var(--accent);background:var(--accent-soft)}.kind.mcp{color:#7c3aed;background:color-mix(in srgb,#7c3aed 12%,transparent)}.kind.skill{color:#0891b2;background:color-mix(in srgb,#0891b2 12%,transparent)}.kind.agent{color:#db2777;background:color-mix(in srgb,#db2777 12%,transparent)}.source{color:var(--muted);background:var(--bg-soft)}.source.registry{color:var(--accent)}.source.catalog{color:var(--amber)}.verified{color:var(--green);background:color-mix(in srgb,var(--green) 12%,transparent)}.stars{margin-left:auto;color:var(--amber);font-size:12px;font-weight:800;white-space:nowrap}.market-card h2{margin:12px 0 2px;font-size:17px;line-height:1.35;overflow-wrap:anywhere}.repo{margin:0;color:var(--muted);font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.description{color:var(--muted);font-size:13.5px;line-height:1.6;min-height:86px;margin:12px 0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}.meta-row,.caps{display:flex;gap:6px;flex-wrap:wrap}.meta-row{margin-top:auto}.meta-row span,.caps span{color:var(--muted);background:var(--bg-soft);font-weight:650}.caps{margin-top:7px}.caps span{max-width:100%;overflow:hidden;text-overflow:ellipsis}.card-actions{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap;border-top:1px solid var(--border);padding:10px 12px;background:color-mix(in srgb,var(--bg-soft) 38%,transparent)}.card-actions .ghost,.card-actions .install{padding:7px 10px;font-size:12px;min-height:34px}.empty{text-align:center;color:var(--muted);padding:50px 0;font-size:14px}
   @media(min-width:1700px){.market-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
-  @media(max-width:1120px){.install-flow{grid-template-columns:1fr}.flow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media(max-width:760px){.market-hero{padding-top:34px}.market-hero h1{font-size:clamp(38px,12vw,56px)}.market-hero p{font-size:15px}.alignment-strip{grid-template-columns:1fr}.result-line{flex-direction:column;gap:5px}.check-filter{margin-left:0}.flow-grid{grid-template-columns:1fr}.market-grid{grid-template-columns:1fr}.market-card{min-height:0}}
+  @media(min-width:980px){.market-hero p{white-space:nowrap}}
+  @media(max-width:1040px){.category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.market-facts{grid-template-columns:1fr}.section-heading{align-items:flex-start;flex-direction:column;gap:4px}.section-note{text-align:left}}
+  @media(max-width:760px){.market-hero{padding-top:30px}.market-hero h1{font-size:clamp(36px,11vw,52px)}.market-hero p{font-size:15px}.result-line{flex-direction:column;gap:5px}.check-filter{margin-left:0}.market-grid{grid-template-columns:1fr}.market-card{min-height:0}}
+  @media(max-width:560px){.category-grid{grid-template-columns:1fr}.category-card{padding:13px}.metrics span:nth-child(2){display:none}}
 </style>
