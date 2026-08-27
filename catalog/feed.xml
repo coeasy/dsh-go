@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 27 Aug 2026 12:40:05 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 27 Aug 2026 17:39:24 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -61,6 +61,13 @@
       <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-27T10:08:53Z</guid>
       <pubDate>Thu, 27 Aug 2026 10:08:53 GMT</pubDate>
       <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
+    </item>
+    <item>
+      <title>🆕 主题选择器</title>
+      <link>https://github.com/yhPrime/dsh-theme-picker</link>
+      <guid isPermaLink="false">yhPrime/dsh-theme-picker@2026-08-27T14:26:11Z</guid>
+      <pubDate>Thu, 27 Aug 2026 14:26:11 GMT</pubDate>
+      <description>dsh theme picker DeepSeek Harness 主题选择插件 —— 在设置面板中添加「主题」页面：统一管理应用主题与已安装的主题插件，同一时间仅一个主题生效，其余自动禁用。 A theme picker plugin for DeepSeek Harness: adds a Themes page to the Settings panel. It manages both a</description>
     </item>
     <item>
       <title>🆕 dsh-fresh-start</title>
@@ -133,13 +140,6 @@
       <description>DSH TUI 本地音乐播放器插件：/music 全屏场景，扫描本地目录，ffplay/afplay 出声，退出场景音乐不中断</description>
     </item>
     <item>
-      <title>🆕 dsh-element-inspector</title>
-      <link>https://github.com/muyuanjin/dsh-element-inspector</link>
-      <guid isPermaLink="false">muyuanjin/dsh-element-inspector@2026-08-20T12:58:46Z</guid>
-      <pubDate>Thu, 20 Aug 2026 12:58:46 GMT</pubDate>
-      <description>dsh element inspector English 简体中文 Inspect a DeepSeek Harness UI element, identify whether it belongs to the DSH interface or an installed plugin, and export or hide the selection. [!NOTE] This is an </description>
-    </item>
-    <item>
       <title>🆕 Herdr 状态上报</title>
       <link>https://github.com/FUSU123fusu/dsh-tui-herdr</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-herdr@2026-08-21T11:25:39Z</guid>
@@ -182,6 +182,13 @@
       <description>使用真实浏览器的自动化 MCP server：导航、点击、填表、截图、执行 JS，以无障碍树快照为 agent 提供页面视野。</description>
     </item>
     <item>
+      <title>🆕 dsh-element-inspector</title>
+      <link>https://github.com/muyuanjin/dsh-element-inspector</link>
+      <guid isPermaLink="false">muyuanjin/dsh-element-inspector@2026-08-20T12:58:46Z</guid>
+      <pubDate>Thu, 20 Aug 2026 12:58:46 GMT</pubDate>
+      <description>dsh element inspector English 简体中文 Inspect a DeepSeek Harness UI element, identify whether it belongs to the DSH interface or an installed plugin, and export or hide the selection. [!NOTE] This is an </description>
+    </item>
+    <item>
       <title>🆕 Subagent Viewer</title>
       <link>https://github.com/FUSU123fusu/dsh-tui-subagents</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-subagents@2026-08-17T12:50:52Z</guid>
@@ -208,13 +215,6 @@
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-jobs@2026-08-17T12:51:04Z</guid>
       <pubDate>Mon, 17 Aug 2026 12:51:04 GMT</pubDate>
       <description>dsh tui jobs 适用于 dsh TUI（dshtui.com）的社区插件。 dsh TUI 的后台任务面板： /jobs 列出当前所有可见的后台任务（bash、子 agent 等），状态变化实时刷新，可查看已完成任务的输出、取消运行中的任务。补齐官方 WebUI 有而 TUI 没有的任务列表面。 English below. 用法 列表：↑/↓ 选择 · Enter 查看详情与输出 · </description>
-    </item>
-    <item>
-      <title>🆕 Model Switch</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-model-switch</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-model-switch@2026-08-17T12:51:35Z</guid>
-      <pubDate>Mon, 17 Aug 2026 12:51:35 GMT</pubDate>
-      <description>dsh tui model switch 适用于 dsh TUI（dshtui.com）的社区插件。 让子代理用另一套模型跑——主会话模型不变。机制参考 lincong1987/dsh model switch（MIT）重写为 TUI 原生：设置走 dsh settings 服务（ model switch 命名空间），在 TUI 的 /settings 屏「模型路由」区块直接编辑。 Per st</description>
     </item>
   </channel>
 </rss>
