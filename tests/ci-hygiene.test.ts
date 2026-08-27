@@ -19,17 +19,21 @@ describe('CI and deployment hygiene', () => {
     }
 
     const runtime = workflow('runtime-platform.yml');
-    expect(runtime).toContain('os: [ubuntu-latest, windows-latest, macos-latest]');
+    expect(runtime).toContain('name: Runtime regression (ubuntu)');
+    expect(runtime).toContain('runs-on: ubuntu-latest');
+    expect(runtime).toContain('os: [windows-latest, macos-latest]');
     expect(runtime).toContain('npm run runtime:test');
     expect(runtime).toContain('npm run test:production-v2');
     expect(runtime).toContain('npm run completion:test');
     expect(runtime).toContain('npm run runtime:check');
-    expect(runtime).toContain('npm test');
+    expect(runtime).not.toContain('cd site');
+    expect(runtime).not.toContain('site/package-lock.json');
 
     const ci = workflow('ci.yml');
     expect(ci).toContain('npm run typecheck');
     expect(ci).toContain('npm run lint');
     expect(ci).toContain('npm test');
+    expect(ci).toContain('cd site && npm run check');
   });
 
   it('keeps the release freeze gate fail-closed and reproducible', () => {

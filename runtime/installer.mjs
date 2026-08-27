@@ -9,6 +9,8 @@ import { assertCompatibility } from './compatibility.mjs';
 import { assertPermissionConsent, inspectPermissions } from './permissions.mjs';
 import { hasDeclaredSupplyChainEvidence, verifySecurityEvidence } from './supply-chain-verifier.mjs';
 import { verifySupplyChainIdentity } from './supply-chain-identity.mjs';
+import { installReleaseArtifact, isReleaseArtifact } from './artifact-installer.mjs';
+import { discoverReleaseArtifact } from './release-discovery.mjs';
 
 const exec = promisify(execFile);
 
@@ -60,11 +62,23 @@ function identityFailures(report) {
     .map((item) => `${item.kind}:${item.status}`);
 }
 
-export async function installPackage(pkg, options = {}) {
-  const type = assertPackageType(pkg?.type || 'plugin');
-  assertNotYanked({ ...pkg, type });
+export async function installPackage(inputPackage, options = {}) {
+  const type = assertPackageType(inputPackage?.type || 'plugin');
+  assertNotYanked({ ...inputPackage, type });
+  const sourceVerification = verifyResolvedPackage({ ...inputPackage, type });
+  if (!sourceVerification.ok) throw new Error('runtime package verification failed: ' + sourceVerification.errors.join('; '));
+
+  let pkg = inputPackage;
+  if (!isReleaseArtifact(pkg.artifact) && options.releaseDiscovery !== false && !options.repositoryUrl) {
+    const discovered = await discoverReleaseArtifact({ ...pkg, type }, {
+      timeout: options.releaseDiscoveryTimeout,
+      strict: options.releaseDiscoveryStrict === true,
+    });
+    if (discovered) pkg = { ...pkg, artifact: { ...pkg.artifact, ...discovered } };
+  }
   const verification = verifyResolvedPackage({ ...pkg, type });
   if (!verification.ok) throw new Error('runtime package verification failed: ' + verification.errors.join('; '));
+
   const compatibility = assertCompatibility(pkg, options.environment);
   const permissions = inspectPermissions(pkg.permissions);
   if (!options.dryRun) {
@@ -77,6 +91,8 @@ export async function installPackage(pkg, options = {}) {
   const target = join(root, safePackageId(pkg.id));
   const backup = target + '.backup';
   const evidenceDeclared = hasDeclaredSupplyChainEvidence(pkg.security);
+  const releaseArtifact = isReleaseArtifact(pkg.artifact);
+  const installSource = releaseArtifact ? 'release-archive' : 'git-source';
   const plan = {
     id: pkg.id,
     type,
@@ -86,6 +102,10 @@ export async function installPackage(pkg, options = {}) {
     commit: pkg.commit,
     target,
     backup,
+    install_source: installSource,
+    artifact_url: releaseArtifact ? pkg.artifact.url : null,
+    artifact_digest: releaseArtifact ? pkg.artifact.digest : null,
+    release_tag: releaseArtifact ? pkg.artifact.release_tag || null : null,
     restart_required: true,
     compatibility,
     permissions,
@@ -98,12 +118,19 @@ export async function installPackage(pkg, options = {}) {
   await rm(temp, { recursive: true, force: true });
 
   try {
-    await mkdir(temp, { recursive: true });
-    await git(['init', '-q'], temp);
-    await git(['remote', 'add', 'origin', options.repositoryUrl || 'https://github.com/' + pkg.repo + '.git'], temp);
-    await git(['fetch', '--depth', '1', 'origin', pkg.commit], temp);
-    await git(['checkout', '--detach', '-q', 'FETCH_HEAD'], temp);
-    await verifyInstalledCommit(temp, pkg.commit);
+    let artifactVerification = null;
+    if (releaseArtifact) {
+      artifactVerification = await installReleaseArtifact(pkg.artifact, temp, {
+        timeout: options.artifactTimeout,
+      });
+    } else {
+      await mkdir(temp, { recursive: true });
+      await git(['init', '-q'], temp);
+      await git(['remote', 'add', 'origin', options.repositoryUrl || 'https://github.com/' + pkg.repo + '.git'], temp);
+      await git(['fetch', '--depth', '1', 'origin', pkg.commit], temp);
+      await git(['checkout', '--detach', '-q', 'FETCH_HEAD'], temp);
+      await verifyInstalledCommit(temp, pkg.commit);
+    }
 
     let evidenceReport = null;
     if (evidenceDeclared) {
@@ -141,6 +168,13 @@ export async function installPackage(pkg, options = {}) {
       channel: pkg.channel || 'stable',
       source: pkg.source,
       artifact: pkg.artifact,
+      installation: {
+        source: installSource,
+        artifact_digest_verified: artifactVerification?.verified === true,
+        artifact_digest: artifactVerification?.digest || null,
+        artifact_url: artifactVerification?.url || null,
+        verified_at: new Date().toISOString(),
+      },
       runtime: pkg.runtime,
       capabilities: pkg.capabilities || [],
       dependencies: pkg.dependencies || [],
@@ -180,6 +214,7 @@ export async function installPackage(pkg, options = {}) {
     await rename(temp, target);
     return {
       ...plan,
+      artifact_verified: artifactVerification?.verified === true,
       supply_chain: {
         declared: evidenceDeclared,
         checked: evidenceDeclared,
