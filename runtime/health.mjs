@@ -4,6 +4,7 @@ import { assertPackageType, normalizePackageDependency, packageKey } from './pac
 import { readInstallLock, verifyInstalledCommit } from './verifier.mjs';
 import { hasDeclaredSupplyChainEvidence, verifySecurityEvidence } from './supply-chain-verifier.mjs';
 import { verifySupplyChainIdentity } from './supply-chain-identity.mjs';
+import { isReleaseArtifact } from './artifact-installer.mjs';
 
 async function exists(path) {
   try {
@@ -69,14 +70,23 @@ export async function checkRuntimePackageHealth(pkg, options = {}) {
   }
 
   if (lock && options.verifyCommit !== false) {
-    try {
-      await verifyInstalledCommit(target, lock.source.commit);
-      checks.commit = true;
-    } catch {
-      checks.commit = false;
+    if (isReleaseArtifact(lock.artifact)) {
+      const expected = String(lock.artifact?.digest || '').toLowerCase();
+      const verified = String(lock.installation?.artifact_digest || '').toLowerCase();
+      checks.commit = Boolean(lock.source?.commit && lock.installation?.artifact_digest_verified === true && expected && verified === expected);
+      checks.artifact = checks.commit;
+    } else {
+      try {
+        await verifyInstalledCommit(target, lock.source.commit);
+        checks.commit = true;
+      } catch {
+        checks.commit = false;
+      }
+      checks.artifact = true;
     }
   } else {
     checks.commit = Boolean(lock);
+    checks.artifact = Boolean(lock);
   }
 
   let manifest = null;
@@ -143,7 +153,7 @@ export async function checkRuntimePackageHealth(pkg, options = {}) {
     if (missing.length) warnings.push(...missing.map((dependency) => `dependency:${packageKey(dependency.type, dependency.id)}`));
   }
 
-  const critical = ['type', 'id', 'version', 'source', 'state', 'path', 'lock', 'lock_type', 'lock_id', 'lock_version', 'commit', 'supply_chain'];
+  const critical = ['type', 'id', 'version', 'source', 'state', 'path', 'lock', 'lock_type', 'lock_id', 'lock_version', 'commit', 'artifact', 'supply_chain'];
   const failed = critical.filter((name) => checks[name] === false);
   return {
     status: failed.length ? 'failed' : warnings.length ? 'warning' : 'healthy',
