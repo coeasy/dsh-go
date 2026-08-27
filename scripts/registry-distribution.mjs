@@ -1,12 +1,5 @@
 #!/usr/bin/env node
-/**
- * Physical Registry V3 distribution layer.
- *
- * Registry V3 remains the logical data contract. This module only changes how
- * the registry is published: one compact index, 256 deterministic shards,
- * package-level records, and a delta manifest. Generated distribution files are
- * build artifacts and intentionally do not live in Git history.
- */
+/** Registry V3 physical distribution: compact index + 256 shards + delta. */
 import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,24 +35,15 @@ function semanticEtag(hash) {
 }
 
 function validateRegistryInput(registry) {
-  if (registry?.registry_version !== 3 || !Array.isArray(registry?.plugins)) {
-    throw new Error('Registry Distribution requires Registry V3');
-  }
-  if (!registry?.generated?.content_hash) {
-    throw new Error('Registry Distribution requires registry.generated.content_hash');
-  }
+  if (registry?.registry_version !== 3 || !Array.isArray(registry?.plugins)) throw new Error('Registry Distribution requires Registry V3');
+  if (!registry?.generated?.content_hash) throw new Error('Registry Distribution requires registry.generated.content_hash');
 }
 
 function packageGroups(registry) {
   const groups = new Map();
   registry.plugins.forEach((record, ordinal) => {
     const key = distributionPackageKey(record);
-    const current = groups.get(key) || {
-      key,
-      type: inferPackageType(record),
-      id: record.id,
-      entries: [],
-    };
+    const current = groups.get(key) || { key, type: inferPackageType(record), id: record.id, entries: [] };
     current.entries.push({ ordinal, package: record });
     groups.set(key, current);
   });
@@ -69,20 +53,11 @@ function packageGroups(registry) {
 function packageDescriptor(group) {
   const records = group.entries.map((entry) => entry.package);
   const contentHash = sha256(stableStringify(records));
-  const objectHash = distributionPackageHash(group.key);
-  const prefix = objectHash.slice(0, DISTRIBUTION_PREFIX_CHARS);
   return {
-    key: group.key,
-    type: group.type,
-    id: group.id,
-    object_hash: objectHash,
-    prefix,
-    path: `packages/${prefix}/${objectHash}.json`,
+    prefix: distributionShardPrefix(group.key),
     content_hash: contentHash,
     etag: semanticEtag(contentHash),
-    versions: records.map((record) => String(record.version || '0.1.0')),
     count: records.length,
-    ordinals: group.entries.map((entry) => entry.ordinal),
   };
 }
 
@@ -94,7 +69,6 @@ export function buildDistributionDelta(registry, previousRegistry = null) {
     : new Map();
   const currentHashes = new Map([...currentGroups.entries()].map(([key, group]) => [key, packageDescriptor(group).content_hash]));
   const previousHashes = new Map([...previousGroups.entries()].map(([key, group]) => [key, packageDescriptor(group).content_hash]));
-
   const changed = [];
   for (const [key, contentHash] of [...currentHashes.entries()].sort(([a], [b]) => a.localeCompare(b))) {
     if (previousHashes.get(key) !== contentHash) changed.push({ key, content_hash: contentHash });
@@ -103,7 +77,6 @@ export function buildDistributionDelta(registry, previousRegistry = null) {
   const fromHash = previousRegistry?.generated?.content_hash || null;
   const toHash = registry.generated.content_hash;
   const payloadHash = sha256(stableStringify({ fromHash, toHash, changed, removed }));
-
   return {
     format: DISTRIBUTION_FORMAT,
     distribution_version: DISTRIBUTION_VERSION,
@@ -115,25 +88,20 @@ export function buildDistributionDelta(registry, previousRegistry = null) {
     etag: semanticEtag(payloadHash),
     changed,
     removed,
-    counts: {
-      changed: changed.length,
-      removed: removed.length,
-      current_packages: currentGroups.size,
-    },
+    counts: { changed: changed.length, removed: removed.length, current_packages: currentGroups.size },
   };
 }
 
 export function buildRegistryDistribution(registry, options = {}) {
   validateRegistryInput(registry);
   const groups = packageGroups(registry);
-  const descriptors = new Map();
   const shardEntries = new Map(Array.from({ length: DISTRIBUTION_SHARD_COUNT }, (_, index) => [index.toString(16).padStart(2, '0'), []]));
+  const packages = {};
 
   for (const [key, group] of groups) {
     const descriptor = packageDescriptor(group);
-    descriptors.set(key, descriptor);
-    const shardPrefix = distributionShardPrefix(key);
-    const shard = shardEntries.get(shardPrefix);
+    packages[key] = descriptor;
+    const shard = shardEntries.get(descriptor.prefix);
     for (const entry of group.entries) shard.push(entry);
   }
 
@@ -154,47 +122,13 @@ export function buildRegistryDistribution(registry, options = {}) {
     };
     const text = `${JSON.stringify(payload)}\n`;
     shardFiles.set(prefix, text);
-    shards.push({
-      prefix,
-      path: `shards/${prefix}.json`,
-      count: entries.length,
-      content_hash: contentHash,
-      etag: payload.etag,
-      bytes: Buffer.byteLength(text),
-    });
-  }
-
-  const packages = {};
-  const packageFiles = new Map();
-  for (const [key, descriptor] of [...descriptors.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-    const group = groups.get(key);
-    packages[key] = descriptor;
-    const payload = {
-      format: DISTRIBUTION_FORMAT,
-      distribution_version: DISTRIBUTION_VERSION,
-      registry_version: 3,
-      key,
-      type: descriptor.type,
-      id: descriptor.id,
-      count: descriptor.count,
-      content_hash: descriptor.content_hash,
-      etag: descriptor.etag,
-      entries: group.entries,
-    };
-    packageFiles.set(descriptor.path, `${JSON.stringify(payload)}\n`);
+    shards.push({ prefix, path: `shards/${prefix}.json`, count: entries.length, content_hash: contentHash, etag: payload.etag, bytes: Buffer.byteLength(text) });
   }
 
   const suppliedDelta = options.delta;
   const delta = suppliedDelta?.to_content_hash === registry.generated.content_hash
     ? suppliedDelta
     : buildDistributionDelta(registry, options.previousRegistry || null);
-
-  const registryHeader = {
-    registry_version: registry.registry_version,
-    schema_version: registry.schema_version,
-    defaults: registry.defaults || {},
-    generated: registry.generated || {},
-  };
   const indexPayload = {
     format: DISTRIBUTION_FORMAT,
     distribution_version: DISTRIBUTION_VERSION,
@@ -205,23 +139,21 @@ export function buildRegistryDistribution(registry, options = {}) {
     etag: semanticEtag(registry.generated.content_hash),
     count: registry.plugins.length,
     package_count: groups.size,
-    registry_header: registryHeader,
-    legacy: {
-      path: '../registry-v3.json',
-      content_hash: registry.generated.content_hash,
-      count: registry.plugins.length,
+    registry_header: {
+      registry_version: registry.registry_version,
+      schema_version: registry.schema_version,
+      defaults: registry.defaults || {},
+      generated: registry.generated || {},
     },
-    shard_strategy: {
-      algorithm: 'sha256',
-      prefix_chars: DISTRIBUTION_PREFIX_CHARS,
-      count: DISTRIBUTION_SHARD_COUNT,
-      path_template: 'shards/{prefix}.json',
-    },
+    legacy: { path: '../registry-v3.json', content_hash: registry.generated.content_hash, count: registry.plugins.length },
+    shard_strategy: { algorithm: 'sha256', prefix_chars: DISTRIBUTION_PREFIX_CHARS, count: DISTRIBUTION_SHARD_COUNT, path_template: 'shards/{prefix}.json' },
     shards,
     package_strategy: {
       algorithm: 'sha256',
       key_format: '<type>:<lowercase-id>',
-      path_template: 'packages/{prefix}/{sha256(key)}.json',
+      materialization: 'dynamic',
+      endpoint_template: '/api/v1/registry/packages/{type}/{id}',
+      fallback: 'shard-projection',
     },
     packages,
     delta: {
@@ -233,15 +165,7 @@ export function buildRegistryDistribution(registry, options = {}) {
       removed: delta.counts?.removed || 0,
     },
   };
-
-  return {
-    index: indexPayload,
-    indexText: `${JSON.stringify(indexPayload)}\n`,
-    shardFiles,
-    packageFiles,
-    delta,
-    deltaText: `${JSON.stringify(delta)}\n`,
-  };
+  return { index: indexPayload, indexText: `${JSON.stringify(indexPayload)}\n`, shardFiles, delta, deltaText: `${JSON.stringify(delta)}\n` };
 }
 
 async function exists(path) {
@@ -273,22 +197,20 @@ export async function writeRegistryDistribution(registry, outDir, options = {}) 
   const target = resolve(outDir);
   await rm(target, { recursive: true, force: true });
   await mkdir(target, { recursive: true });
-
   await writeMapConcurrently(
     [...distribution.shardFiles.entries()].map(([prefix, content]) => [`shards/${prefix}.json`, content]),
     target,
     options.concurrency,
   );
-  await writeMapConcurrently(distribution.packageFiles.entries(), target, options.concurrency);
   await atomicWrite(resolve(target, 'delta.json'), distribution.deltaText);
   await atomicWrite(resolve(target, 'index.json'), distribution.indexText);
-
   return {
     out_dir: target,
     content_hash: distribution.index.content_hash,
     shards: distribution.index.shards.length,
     packages: distribution.index.package_count,
     records: distribution.index.count,
+    static_files: distribution.index.shards.length + 2,
     delta_changed: distribution.delta.counts?.changed || 0,
     delta_removed: distribution.delta.counts?.removed || 0,
   };
@@ -307,7 +229,7 @@ async function main() {
   const registry = JSON.parse(await readFile(registryFile, 'utf8'));
   const delta = await exists(deltaFile) ? JSON.parse(await readFile(deltaFile, 'utf8')) : null;
   const result = await writeRegistryDistribution(registry, outDir, { delta });
-  console.log(`[registry-distribution] records=${result.records} packages=${result.packages} shards=${result.shards} hash=${result.content_hash} delta=${result.delta_changed}/${result.delta_removed}`);
+  console.log(`[registry-distribution] records=${result.records} packages=${result.packages} shards=${result.shards} static_files=${result.static_files} hash=${result.content_hash} delta=${result.delta_changed}/${result.delta_removed}`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
