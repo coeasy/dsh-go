@@ -74,8 +74,10 @@ export function isDiscoveryAggregator(plugin: MarketplacePlugin): boolean {
     .map((value) => normalizedDiscoveryName(String(value || '')))
     .filter(Boolean);
 
-  const aggregatorName = /(^|-)(awesome|curated-list|resource-list|resources-list|collection|directory)(-|$)/;
-  if (candidates.some((value) => aggregatorName.test(value))) return true;
+  const awesomeName = /(^|-)awesome(-|$)/;
+  const curatedName = /(^|-)curated-list(-|$)/;
+  const ecosystemListName = /(^|-)(plugins?|mcp|skills?|agents?|tools?|resources?)-(list|directory|collection)(-|$)|(^|-)(list|directory|collection)-(plugins?|mcp|skills?|agents?|tools?|resources?)(-|$)/;
+  if (candidates.some((value) => awesomeName.test(value) || curatedName.test(value) || ecosystemListName.test(value))) return true;
 
   const topics = Array.isArray(plugin.topics) ? plugin.topics.map((topic) => normalizedDiscoveryName(topic)) : [];
   if (topics.some((topic) => ['awesome', 'awesome-list', 'curated-list', 'resource-list'].includes(topic))) return true;
