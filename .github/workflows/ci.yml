@@ -49,6 +49,9 @@ jobs:
           npm test
           cd site && npm run check
 
+      - name: Build marketplace site
+        run: cd site && npm run build
+
       - name: Syntax check runtime scripts
         run: |
           node --check scripts/sync-v3.mjs
