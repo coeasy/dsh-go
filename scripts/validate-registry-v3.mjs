@@ -13,6 +13,26 @@ const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const RUNTIMES = new Set(['plugin', 'mcp', 'skill', 'agent']);
 const MANIFESTS = new Set(['dsh-package.json', 'dsh-plugin.json', 'dsh-mcp.json', 'dsh-skill.json', 'dsh-agent.json']);
 const PERMISSIONS = new Set(['filesystem.read', 'filesystem.write', 'network', 'network.unrestricted', 'shell', 'secrets.read', 'mcp.tools', 'process.spawn']);
+const ARTIFACT_KINDS = new Set(['git-source', 'release-archive']);
+const RELEASE_FORMATS = new Set(['tgz', 'tar.gz']);
+const SHA256_RE = /^sha256-[0-9a-f]{64}$/i;
+
+function validateArtifact(id, artifact, errors) {
+  const kind = artifact?.kind;
+  if (!ARTIFACT_KINDS.has(kind)) errors.push(`${id}: unsupported artifact.kind ${kind || '<missing>'}`);
+  if (artifact?.algorithm !== 'sha256') errors.push(`${id}: artifact.algorithm must be sha256`);
+  if (artifact?.integrity_scope !== 'source-identity') errors.push(`${id}: artifact.integrity_scope must be source-identity`);
+  if (kind !== 'release-archive') return;
+  let url = null;
+  try { url = new URL(String(artifact?.url || '')); } catch { errors.push(`${id}: release artifact.url must be a valid URL`); }
+  if (url && url.protocol !== 'https:') errors.push(`${id}: release artifact.url must use https`);
+  if (!SHA256_RE.test(String(artifact?.digest || ''))) errors.push(`${id}: release artifact.digest must be sha256-<64 hex>`);
+  if (!RELEASE_FORMATS.has(String(artifact?.format || ''))) errors.push(`${id}: release artifact.format must be tgz or tar.gz`);
+  if (artifact?.strip_components !== undefined) {
+    const strip = Number(artifact.strip_components);
+    if (!Number.isInteger(strip) || strip < 0 || strip > 8) errors.push(`${id}: artifact.strip_components must be an integer between 0 and 8`);
+  }
+}
 
 export function validateRegistry(data) {
   const errors = [];
@@ -44,7 +64,7 @@ export function validateRegistry(data) {
     if (!plugin?.source?.ref) errors.push(`${id}: missing source.ref`);
     if (!isCommitSha(plugin?.source?.commit)) errors.push(`${id}: invalid source.commit`);
 
-    if (plugin?.artifact?.integrity_scope !== 'source-identity') errors.push(`${id}: artifact.integrity_scope must be source-identity`);
+    validateArtifact(id, plugin?.artifact, errors);
     if (plugin?.artifact?.integrity !== artifactIntegrity(plugin)) errors.push(`${id}: artifact integrity mismatch`);
 
     const runtime = plugin?.runtime?.type;
