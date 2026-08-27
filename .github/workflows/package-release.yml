@@ -3,11 +3,6 @@ name: Ecosystem Package Release
 on:
   workflow_call:
     inputs:
-      tag:
-        description: Release tag; defaults to v<package-version>
-        required: false
-        default: ''
-        type: string
       channel:
         description: Marketplace channel
         required: false
@@ -72,17 +67,27 @@ jobs:
           path: .dsh-toolkit
           persist-credentials: false
 
+      - name: Validate and audit package source
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .dsh-toolkit/runtime/dsh.mjs package validate "$GITHUB_WORKSPACE"
+          node .dsh-toolkit/runtime/dsh.mjs package audit "$GITHUB_WORKSPACE"
+
       - name: Pack deterministic DSH package release
         id: pack
         env:
-          TAG_INPUT: ${{ inputs.tag }}
           CHANNEL_INPUT: ${{ inputs.channel }}
         shell: bash
         run: |
           set -euo pipefail
-          args=(--root "$GITHUB_WORKSPACE" --out-dir "$GITHUB_WORKSPACE/dist" --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --channel "$CHANNEL_INPUT" --github-output "$GITHUB_OUTPUT")
-          if [ -n "$TAG_INPUT" ]; then args+=(--tag "$TAG_INPUT"); fi
-          node .dsh-toolkit/scripts/package-release-pack.mjs "${args[@]}"
+          node .dsh-toolkit/scripts/package-release-pack.mjs \
+            --root "$GITHUB_WORKSPACE" \
+            --out-dir "$GITHUB_WORKSPACE/dist" \
+            --repository "$GITHUB_REPOSITORY" \
+            --commit "$GITHUB_SHA" \
+            --channel "$CHANNEL_INPUT" \
+            --github-output "$GITHUB_OUTPUT"
 
       - name: Rebuild and prove release reproducibility
         env:
@@ -102,6 +107,16 @@ jobs:
           cmp dist/dsh-package-release.json .dsh-repro/dsh-package-release.json
           cmp dist/dsh-package-sbom.cdx.json .dsh-repro/dsh-package-sbom.cdx.json
           cmp dist/SHA256SUMS .dsh-repro/SHA256SUMS
+
+      - name: Enforce canonical discoverable release tag
+        env:
+          TAG: ${{ steps.pack.outputs.tag }}
+          PACKAGE_VERSION: ${{ steps.pack.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED="v$PACKAGE_VERSION"
+          [ "$TAG" = "$EXPECTED" ] || { echo "DSH package releases must use canonical tag $EXPECTED" >&2; exit 1; }
 
       - name: Bind immutable release tag to source commit
         env:
