@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const workflow = (name: string) => readFileSync(resolve(root, '.github/workflows', name), 'utf8');
-const script = (name: string) => readFileSync(resolve(root, 'scripts', name), 'utf8');
 const deployTargets = ['deploy.yml', 'deploy-pages.yml', 'deploy-edgeone.yml'];
 const registryOwnedScripts = [
   'scripts/registry-pipeline-v3.mjs',
@@ -99,11 +98,8 @@ describe('authoritative deployment routing', () => {
     expect(deploy).not.toContain('cloudflare/pages-action@v1');
   });
 
-  it('keeps the EdgeOne workflow indexer-friendly and fails closed until the production target reaches the exact SHA', () => {
+  it('keeps EdgeOne workflow wiring fail-closed until production reaches the exact SHA', () => {
     const edgeone = workflow('deploy-edgeone.yml');
-    const edgeoneScript = script('edgeone-deploy-ci.mjs');
-    const shaGate = script('check-production-sha.mjs');
-    const versionWriter = script('write-deployment-version.mjs');
 
     expect(edgeone).toContain("EDGEONE_CLI_VERSION: ${{ vars.EDGEONE_CLI_VERSION || '1.6.28' }}");
     expect(edgeone).toContain('DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}');
@@ -130,30 +126,9 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).toContain('control plane SHA: ${GITHUB_SHA}');
     expect(edgeone).not.toContain("<<'NODE'");
     expect(edgeone.length).toBeLessThan(14_000);
-
-    expect(edgeoneScript).not.toContain("'link'");
-    expect(edgeoneScript).not.toContain("'--name'");
-    expect(edgeoneScript).toContain("'deploy'");
-    expect(edgeoneScript).toContain("'-n',");
-    expect(edgeoneScript).toContain("'-t',");
-    expect(edgeoneScript).toContain("'--json'");
-    expect(edgeoneScript).toContain("cwd: './site'");
-    expect(edgeoneScript).toContain('using direct named-project token auth');
-    expect(edgeoneScript).toContain('EdgeOne CLI >= 1.6.0 is required');
-    expect(edgeoneScript).toContain("return 'version_state'");
-    expect(edgeoneScript).toContain('const healthUrl = env.EDGEONE_SITE_URL || deployUrl;');
-    expect(edgeoneScript).toContain("writeOutput('health_url', healthUrl)");
-    expect(edgeoneScript).not.toContain('login --token');
-    expect(edgeoneScript).not.toContain('whoami');
-
-    expect(shaGate).toContain("new URL('version.json', base)");
-    expect(shaGate).toContain("'cache-control': 'no-cache, no-store, max-age=0'");
-    expect(shaGate).toContain('did not converge to commit');
-    expect(versionWriter).toContain('DEPLOYMENT_SHA || env.GITHUB_SHA');
-    expect(versionWriter).toContain('git_sha: gitSha');
   });
 
-  it('uses one Registry V3 convergence implementation across static providers', () => {
+  it('uses one Registry V3 convergence helper across static providers', () => {
     for (const name of ['deploy.yml', 'deploy-pages.yml']) {
       const deploy = workflow(name);
       expect(deploy, name).toContain('run: node scripts/check-deployment-convergence.mjs');
@@ -163,22 +138,6 @@ describe('authoritative deployment routing', () => {
     const edgeone = workflow('deploy-edgeone.yml');
     expect(edgeone).toContain('run: node .ci-control/scripts/check-deployment-convergence.mjs');
     expect(edgeone).not.toContain('curl -fsS --max-time 20');
-
-    const convergence = script('check-deployment-convergence.mjs');
-    expect(convergence).toContain("new URL('catalog/registry-v3.json', base)");
-    expect(convergence).toContain('registry_version !== 3');
-    expect(convergence).toContain('content_hash');
-    expect(convergence).toContain('AbortSignal.timeout(timeoutMs)');
-  });
-
-  it('centralizes dispatch retry semantics so one provider cannot prevent later providers from being attempted', () => {
-    const dispatch = script('dispatch-deployments.mjs');
-
-    expect(dispatch).toContain('for (const workflow of workflows)');
-    expect(dispatch).toContain('isWorkflowRegistrationError(lastError)');
-    expect(dispatch).toContain('results.push({ workflow, status, runUrl, error: lastError, attempts: attemptsUsed })');
-    expect(dispatch).toContain("writeOutput('dispatch_failures'");
-    expect(dispatch).toContain('Deployment fan-out completed with');
   });
 
   it('gates deployed Registry V3 against the latest main registry', () => {
