@@ -20,7 +20,11 @@ const verifiedRate = stats.total ? ((Number(stats.verified) / Number(stats.total
 ---
 
 <Layout title="统计 · DSH Go" description="DSH 插件市场统计数据">
-  <h1 data-i18n="stats_title" class="grad-text page-title">统计</h1>
+  <section class="stats-head">
+    <span>Marketplace analytics</span>
+    <h1 data-i18n="stats_title" class="grad-text page-title">统计</h1>
+    <p>从分类、语言、许可证和验证状态快速了解当前插件生态结构。</p>
+  </section>
   <div class="cards">
     <div class="card"><div class="num grad-text">{stats.total || 0}</div><div class="label" data-i18n="stat_total">插件总数</div></div>
     <div class="card"><div class="num grad-text">{stats.verified || 0}</div><div class="label" data-i18n="stat_verified">已验证</div></div>
@@ -28,49 +32,43 @@ const verifiedRate = stats.total ? ((Number(stats.verified) / Number(stats.total
     <div class="card"><div class="num grad-text">{byLanguage.length}</div><div class="label" data-i18n="stat_langs">使用语言数</div></div>
   </div>
 
-  <h2 data-i18n="stats_cat">分类分布</h2>
-  <div class="bars">
-    {byCategory.map(([k, v]) => (
-      <div class="bar-row"><span class="bar-label" data-i18n-cat={k}>{k}</span><div class="bar-track"><div class="bar-fill" style={`width:${(Number(v) / maxCat) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
-    ))}
-  </div>
+  <section class="stats-section">
+    <h2 data-i18n="stats_cat">分类分布</h2>
+    <div class="bars">
+      {byCategory.map(([k, v]) => (
+        <div class="bar-row"><span class="bar-label" data-i18n-cat={k}>{k}</span><div class="bar-track"><div class="bar-fill" style={`width:${(Number(v) / maxCat) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
+      ))}
+    </div>
+  </section>
 
-  <h2 data-i18n="stats_lang">语言分布 Top 10</h2>
-  <div class="bars">
-    {byLanguage.map(([k, v]) => (
-      <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill alt" style={`width:${(Number(v) / maxLang) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
-    ))}
-  </div>
+  <section class="stats-section">
+    <h2 data-i18n="stats_lang">语言分布 Top 10</h2>
+    <div class="bars">
+      {byLanguage.map(([k, v]) => (
+        <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill alt" style={`width:${(Number(v) / maxLang) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
+      ))}
+    </div>
+  </section>
 
-  <h2 data-i18n="stats_lic">许可证分布</h2>
-  <div class="bars">
-    {byLicense.map(([k, v]) => (
-      <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill alt2" style={`width:${(Number(v) / maxLic) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
-    ))}
-  </div>
+  <section class="stats-section">
+    <h2 data-i18n="stats_lic">许可证分布</h2>
+    <div class="bars">
+      {byLicense.map(([k, v]) => (
+        <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill alt2" style={`width:${(Number(v) / maxLic) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
+      ))}
+    </div>
+  </section>
 
   <p class="updated" data-i18n="stats_updated" data-time={meta.updated_at ? new Date(meta.updated_at).toLocaleString('zh-CN') : '—'}>数据更新于 {meta.updated_at ? new Date(meta.updated_at).toLocaleString('zh-CN') : '—'}</p>
 </Layout>
 
 <style>
-  .page-title { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0 24px; }
-  .card {
-    border: 1px solid var(--border); border-radius: var(--radius, 14px); padding: 20px 16px;
-    text-align: center; background: var(--card); box-shadow: var(--shadow-sm);
-    transition: transform .15s, box-shadow .15s;
-  }
-  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-  .num { font-size: 30px; font-weight: 800; }
-  .label { color: var(--muted); font-size: 13px; margin-top: 4px; }
-  h2 { font-size: 18px; margin: 28px 0 12px; }
-  .bars { display: flex; flex-direction: column; gap: 8px; }
-  .bar-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
-  .bar-label { width: 120px; color: var(--muted); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bar-track { flex: 1; background: var(--bg-soft); border-radius: 6px; height: 18px; overflow: hidden; }
-  .bar-fill { height: 100%; background: var(--grad-accent); border-radius: 6px; transition: width .6s cubic-bezier(.2,.7,.3,1); }
-  .bar-fill.alt { background: linear-gradient(90deg, #16a34a, #4ade80); }
-  .bar-fill.alt2 { background: linear-gradient(90deg, #d97706, #fbbf24); }
-  .bar-val { width: 44px; color: var(--muted); font-weight: 600; }
-  .updated { color: var(--muted); font-size: 13px; margin-top: 24px; }
+  .stats-head{text-align:center;padding:32px 0 18px}.stats-head>span{color:var(--accent);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.page-title { font-size: clamp(34px,4vw,46px); font-weight: 850; letter-spacing: -.035em; margin:6px 0 4px }.stats-head p{margin:0 auto;color:var(--muted);font-size:15.5px;max-width:720px}
+  .cards { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; margin: 18px auto 28px; max-width:1320px }
+  .card { border: 1px solid var(--border); border-radius: 16px; padding: 25px 20px; text-align: center; background: var(--card); box-shadow: var(--shadow-sm); transition: transform .15s, box-shadow .15s; }
+  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }.num { font-size: 36px; font-weight: 850; }.label { color: var(--muted); font-size: 14px; margin-top: 5px; }
+  .stats-section{max-width:1320px;margin:0 auto 28px;border:1px solid var(--border);border-radius:16px;background:var(--card);padding:20px 22px;box-shadow:var(--shadow-sm)}
+  h2 { font-size: 20px; margin: 0 0 15px; }.bars { display: flex; flex-direction: column; gap: 10px; }.bar-row { display: flex; align-items: center; gap: 12px; font-size: 14px; }.bar-label { width: 150px; color: var(--muted); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.bar-track { flex: 1; background: var(--bg-soft); border-radius: 7px; height: 22px; overflow: hidden; }.bar-fill { height: 100%; background: var(--grad-accent); border-radius: 7px; transition: width .6s cubic-bezier(.2,.7,.3,1); }.bar-fill.alt { background: linear-gradient(90deg, #16a34a, #4ade80); }.bar-fill.alt2 { background: linear-gradient(90deg, #d97706, #fbbf24); }.bar-val { width: 52px; color: var(--muted); font-weight: 700; }.updated { max-width:1320px;margin:0 auto;color: var(--muted); font-size: 14px; }
+  @media(max-width:860px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.bar-label{width:110px}}
+  @media(max-width:520px){.cards{grid-template-columns:1fr 1fr;gap:10px}.card{padding:18px 10px}.num{font-size:30px}.stats-section{padding:16px}.bar-label{width:86px;font-size:12.5px}.bar-row{gap:8px}.bar-val{width:38px}}
 </style>
