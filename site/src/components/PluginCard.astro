@@ -18,22 +18,30 @@ interface Props {
   full_name?: string;
   install_cmd?: string;
   language?: string;
+  href?: string;
+  version?: string;
+  type?: 'plugin' | 'mcp' | 'skill' | 'agent';
+  identity?: string;
+  capabilities?: string[];
+  variant?: 'plugin' | 'ecosystem';
 }
 
-const { slug, name, description, stars, category, verified, trend, tags, isNew, created, updated, full_name, install_cmd, language } = Astro.props;
+const {
+  slug, name, description, stars, category, verified, trend, tags, isNew, created, updated,
+  full_name, install_cmd, language, href, version, type = 'plugin', identity, capabilities = [],
+  variant = 'plugin',
+} = Astro.props;
 
-// 是否生成了静态详情页（与 plugin/[slug].astro 的 getStaticPaths 门槛保持一致）
-const hasDetail = stars >= DETAIL_THRESHOLD;
-const cardHref = hasDetail ? u(`/plugin/${slug}`) : `https://github.com/${full_name || slug}`;
+const hasDetail = Boolean(href) || stars >= DETAIL_THRESHOLD;
+const cardHref = href || (hasDetail ? u(`/plugin/${slug}`) : `https://github.com/${full_name || slug}`);
 const repoName = full_name?.split('/').pop() || '';
 const showRepoIdentity = Boolean(full_name && repoName && name.trim().toLowerCase() !== repoName.toLowerCase());
+const typeLabel = type === 'mcp' ? 'MCP' : type === 'skill' ? 'SKILL' : type === 'agent' ? 'AGENT' : 'PLUGIN';
 
-// 按名称 hash 生成头像渐变色相（稳定、无外部依赖）
 const hash = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
 const hue = hash % 360;
 const initial = (name || '?').trim().charAt(0).toUpperCase();
 
-// 相对时间（静态生成时刻计算，构建后固定）
 function relTime(iso?: string): string {
   if (!iso) return '';
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 864e5);
@@ -53,10 +61,11 @@ const CATEGORY_ZH: Record<string, string> = {
 ---
 
 <a
-  class="plugin-card"
+  class:list={['plugin-card', variant === 'ecosystem' && 'ecosystem-card']}
   href={cardHref}
   data-href={cardHref}
   data-category={category}
+  data-type={type}
   data-verified={verified ? 'true' : 'false'}
   data-is-new={isNew ? 'true' : 'false'}
   data-trend={trend}
@@ -67,6 +76,8 @@ const CATEGORY_ZH: Record<string, string> = {
   data-language={language || ''}
   data-created={created}
   data-updated={updated}
+  data-version={version || ''}
+  data-identity={identity || ''}
   data-cmd={install_cmd}
 >
   <div class="row1">
@@ -76,11 +87,15 @@ const CATEGORY_ZH: Record<string, string> = {
     <span class="stars" title={String(stars)}>★ {fmtK(stars)}</span>
   </div>
   {showRepoIdentity && <div class="repo-id" title={full_name}>GitHub: {full_name}</div>}
-  <div class="desc">{description}</div>
+  {identity && !showRepoIdentity && <div class="repo-id" title={identity}>{identity}</div>}
+  <div class="desc">{description || '暂无描述'}</div>
   <div class="meta">
+    <span class={`badge kind ${type}`}>{typeLabel}</span>
+    {version && <span class="badge version">v{version}</span>}
     <span class="badge gray" data-i18n-cat={category}>{CATEGORY_ZH[category] || category}</span>
     {verified && <span class="badge green" data-i18n="pl_verified">✓ verified</span>}
     {isNew && <span class="badge amber" data-i18n="pl_new">新</span>}
+    {capabilities.slice(0, 2).map((capability) => <span class="badge cap">{capability}</span>)}
     <span class="spacer"></span>
     {install_cmd && (
       <button class="copy-cmd" type="button" data-copy-cmd={install_cmd} title={install_cmd} data-i18n-aria="pl_copy_cmd" aria-label="copy install command">⬇</button>
@@ -96,9 +111,8 @@ const CATEGORY_ZH: Record<string, string> = {
     padding: 15px 16px 13px; background: var(--card, #fff);
     color: var(--fg); box-shadow: var(--shadow-sm, 0 1px 2px rgb(15 23 42 / .05));
     transition: transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s, border-color .18s;
-    position: relative; overflow: hidden;
+    position: relative; overflow: hidden; min-width: 0;
   }
-  /* 顶部渐变描边（hover 亮起） */
   .plugin-card::before {
     content: ''; position: absolute; inset: 0 0 auto 0; height: 2px;
     background: var(--grad-accent, linear-gradient(135deg,#2563eb,#7c3aed));
@@ -110,6 +124,7 @@ const CATEGORY_ZH: Record<string, string> = {
     text-decoration: none;
   }
   .plugin-card:hover::before { opacity: 1; }
+  .ecosystem-card { min-height: 188px; }
 
   .row1 { display: flex; align-items: center; gap: 9px; }
   .avatar {
@@ -137,6 +152,13 @@ const CATEGORY_ZH: Record<string, string> = {
     min-height: 38px;
   }
   .meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: auto; }
+  .badge.kind { font-weight: 800; letter-spacing: .02em; }
+  .badge.kind.plugin { color: var(--accent); background: var(--accent-soft); }
+  .badge.kind.mcp { color: #7c3aed; background: color-mix(in srgb, #7c3aed 12%, transparent); }
+  .badge.kind.skill { color: #0891b2; background: color-mix(in srgb, #0891b2 12%, transparent); }
+  .badge.kind.agent { color: #db2777; background: color-mix(in srgb, #db2777 12%, transparent); }
+  .badge.version { color: var(--fg); background: var(--bg-soft); border: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .badge.cap { color: var(--muted); background: var(--bg-soft); }
   .spacer { flex: 1; }
   .age { font-size: 11.5px; color: var(--muted, #64748b); opacity: .8; }
   .copy-cmd {
