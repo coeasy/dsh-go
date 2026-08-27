@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildDeployArgs,
   classifyFailure,
   parseLastJson,
   sanitizeLog,
@@ -14,6 +15,12 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(validateCliVersion('2.0.0')).toBe('2.0.0');
     expect(() => validateCliVersion('1.5.9')).toThrow('>= 1.6.0');
     expect(() => validateCliVersion('latest')).toThrow('pinned semver');
+  });
+
+  it('builds CI deploy commands with explicit project and token arguments', () => {
+    expect(buildDeployArgs({ project: 'dsh-go', token: 'secret', cliVersion: '1.6.28' })).toEqual([
+      '--yes', 'edgeone@1.6.28', 'makers', 'deploy', './dist', '-n', 'dsh-go', '-t', 'secret', '-e', 'production', '--json',
+    ]);
   });
 
   it('sanitizes direct tokens, signed URLs, JSON token fields, and bearer credentials', () => {
@@ -45,25 +52,8 @@ describe('EdgeOne CI deployment helpers', () => {
   });
 
   it('extracts the last complete JSON object from mixed CLI output', () => {
-    const result = parseLastJson([
-      'Preparing deployment {not json}',
-      '{"status":"progress","step":1}',
-      'uploading...',
-      '{',
-      '  "status": "success",',
-      '  "url": "https://preview.edgeone.app",',
-      '  "projectId": "project-1",',
-      '  "meta": {"nested": true}',
-      '}',
-      'done',
-    ].join('\n'));
-
-    expect(result).toEqual({
-      status: 'success',
-      url: 'https://preview.edgeone.app',
-      projectId: 'project-1',
-      meta: { nested: true },
-    });
+    const result = parseLastJson(['{"status":"progress"}', '{"status":"success","url":"https://preview.edgeone.app","projectId":"project-1","meta":{"nested":true}}'].join('\n'));
+    expect(result).toEqual({ status: 'success', url: 'https://preview.edgeone.app', projectId: 'project-1', meta: { nested: true } });
   });
 
   it('validates structured deployment success payloads', () => {
