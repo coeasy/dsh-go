@@ -25,7 +25,6 @@ const params = [
   ['created_after / updated_after', '按时间过滤（ISO 时间字符串）'],
 ];
 
-// 使用 set:html 渲染代码块，避免 Astro 解析模板字面量
 const curlExample = `<span>curl "https://dsh-go.pages.dev/api/v1/plugins?category=web-ui&verified=true&sort=stars"</span>
 <span>curl "https://dsh-go.pages.dev/api/v1/search?q=vision&limit=10"</span>
 <span>curl -H "If-None-Match: a1b2c3d4e5f60718" https://dsh-go.pages.dev/api/v1/plugins</span>
@@ -55,60 +54,51 @@ const etagHtml = `<span>// 浏览器 / Node.js（把 API_BASE 换成实际的 Ba
 ---
 
 <Layout title="API 文档 · DSH Go" description="DSH Go 开放 API 参考">
-  <h1 data-i18n="doc_title">API 文档</h1>
-  <p data-i18n="doc_intro">公开、免费、CORS 全开、无需认证，支持 <code>If-None-Match</code> ETag 协商缓存。数据每日 08:18 自动同步。</p>
+  <article class="docs-page">
+    <header class="docs-head">
+      <span>Developer platform</span>
+      <h1 data-i18n="doc_title">API 文档</h1>
+      <p data-i18n="doc_intro">公开、免费、CORS 全开、无需认证，支持 <code>If-None-Match</code> ETag 协商缓存。数据每日 08:18 自动同步。</p>
+    </header>
 
-  <h2 data-i18n="doc_basics">基础信息</h2>
-  <ul>
-    <li data-i18n="doc_baseurl" data-base={BASE}>Base URL: <code>{BASE}</code></li>
-    <li data-i18n="doc_openapi">规范文件：<a href={u('/openapi.json')} target="_blank">/openapi.json</a>（可导入 Postman / Apifox）</li>
-    <li data-i18n="doc_fresh" data-api-url={BASE}>数据新鲜度：<a href="/api/v1/meta" target="_blank">/api/v1/meta</a></li>
-    <li data-i18n="doc_ratelimit">速率限制：每 IP 每 10 秒 20 次（Cloudflare WAF 免费规则）</li>
-  </ul>
+    <section class="doc-section">
+      <h2 data-i18n="doc_basics">基础信息</h2>
+      <ul>
+        <li data-i18n="doc_baseurl" data-base={BASE}>Base URL: <code>{BASE}</code></li>
+        <li data-i18n="doc_openapi">规范文件：<a href={u('/openapi.json')} target="_blank">/openapi.json</a>（可导入 Postman / Apifox）</li>
+        <li data-i18n="doc_fresh" data-api-url={BASE}>数据新鲜度：<a href="/api/v1/meta" target="_blank">/api/v1/meta</a></li>
+        <li data-i18n="doc_ratelimit">速率限制：每 IP 每 10 秒 20 次（Cloudflare WAF 免费规则）</li>
+      </ul>
+    </section>
 
-  <h2 data-i18n="doc_endpoints">端点一览</h2>
-  <table class="table">
-    <thead><tr><th data-i18n="th_method">方法</th><th data-i18n="th_path">路径</th><th data-i18n="th_desc">说明</th></tr></thead>
-    <tbody>
-      {endpoints.map((e) => (
-        <tr><td class="m">{e.method}</td><td><code>{e.path}</code></td><td>{e.desc}</td></tr>
-      ))}
-    </tbody>
-  </table>
+    <section class="doc-section">
+      <h2 data-i18n="doc_endpoints">端点一览</h2>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th data-i18n="th_method">方法</th><th data-i18n="th_path">路径</th><th data-i18n="th_desc">说明</th></tr></thead>
+        <tbody>{endpoints.map((e) => (<tr><td class="m">{e.method}</td><td><code>{e.path}</code></td><td>{e.desc}</td></tr>))}</tbody>
+      </table></div>
+    </section>
 
-  <h2 data-i18n="doc_params">常用参数（/api/v1/plugins）</h2>
-  <table class="table">
-    <thead><tr><th data-i18n="th_param">参数</th><th data-i18n="th_desc2">说明</th></tr></thead>
-    <tbody>{params.map(([k, v]) => <tr><td><code>{k}</code></td><td>{v}</td></tr>)}</tbody>
-  </table>
+    <section class="doc-section">
+      <h2 data-i18n="doc_params">常用参数（/api/v1/plugins）</h2>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th data-i18n="th_param">参数</th><th data-i18n="th_desc2">说明</th></tr></thead>
+        <tbody>{params.map(([k, v]) => <tr><td><code>{k}</code></td><td>{v}</td></tr>)}</tbody>
+      </table></div>
+    </section>
 
-  <h2 data-i18n="doc_examples">调用示例</h2>
-  <pre><code set:html={curlExample}></code></pre>
+    <section class="doc-section"><h2 data-i18n="doc_examples">调用示例</h2><pre><code set:html={curlExample}></code></pre></section>
 
-  <h2 data-i18n="doc_resp">响应格式</h2>
-  <p data-i18n="doc_resp_text">列表端点返回 <code>&#123; meta, pagination, plugins &#125;</code>；详情返回 <code>&#123; plugin, related, meta &#125;</code>；错误统一为 <code>&#123; error: &#123; code, message &#125; &#125;</code>。</p>
+    <section class="doc-section"><h2 data-i18n="doc_resp">响应格式</h2><p data-i18n="doc_resp_text">列表端点返回 <code>&#123; meta, pagination, plugins &#125;</code>；详情返回 <code>&#123; plugin, related, meta &#125;</code>；错误统一为 <code>&#123; error: &#123; code, message &#125; &#125;</code>。</p></section>
 
-  <h2 data-i18n="doc_data">数据下载与订阅</h2>
-  <ul>
-    <li data-i18n="doc_raw">原始全量数据：<a href={u('/catalog/plugins.json')} target="_blank">/catalog/plugins.json</a></li>
-    <li data-i18n="doc_rss">RSS 订阅：<a href={u('/feed.xml')} target="_blank">/feed.xml</a></li>
-  </ul>
+    <section class="doc-section"><h2 data-i18n="doc_data">数据下载与订阅</h2><ul><li data-i18n="doc_raw">原始全量数据：<a href={u('/catalog/plugins.json')} target="_blank">/catalog/plugins.json</a></li><li data-i18n="doc_rss">RSS 订阅：<a href={u('/feed.xml')} target="_blank">/feed.xml</a></li></ul></section>
 
-  <h2 data-i18n="doc_mcp">MCP 接入（Claude Desktop）</h2>
-  <p data-i18n="doc_mcp_text">在 Claude Desktop 配置文件中添加以下 MCP Server，即可让 Claude 直接查询 DSH 插件目录：</p>
-  <pre><code set:html={mcpConfigHtml}></code></pre>
+    <section class="doc-section"><h2 data-i18n="doc_mcp">MCP 接入（Claude Desktop）</h2><p data-i18n="doc_mcp_text">在 Claude Desktop 配置文件中添加以下 MCP Server，即可让 Claude 直接查询 DSH 插件目录：</p><pre><code set:html={mcpConfigHtml}></code></pre></section>
 
-  <h2 data-i18n="doc_etag">带 ETag 的增量轮询（节省流量）</h2>
-  <p data-i18n="doc_etag_text">客户端缓存 <code>ETag</code>，下次请求带 <code>If-None-Match</code>，数据未变时服务器返回 <code>304</code> 而不传输任何内容。</p>
-  <pre><code set:html={etagHtml}></code></pre>
+    <section class="doc-section"><h2 data-i18n="doc_etag">带 ETag 的增量轮询（节省流量）</h2><p data-i18n="doc_etag_text">客户端缓存 <code>ETag</code>，下次请求带 <code>If-None-Match</code>，数据未变时服务器返回 <code>304</code> 而不传输任何内容。</p><pre><code set:html={etagHtml}></code></pre></section>
+  </article>
 </Layout>
 
 <style>
-  .table { border-collapse: collapse; width: 100%; }
-  .table th, .table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
-  .table th { color: var(--muted); font-weight: 500; }
-  .table .m { font-weight: 700; color: var(--accent); width: 70px; }
-  pre { background: var(--accent-soft); border: 1px solid var(--border); border-radius: 10px; padding: 14px; overflow-x: auto; font-size: 13px; }
-  pre code { display: block; white-space: pre-wrap; }
-  code { font-size: 13px; }
+  .docs-page{max-width:1280px;margin:0 auto}.docs-head{text-align:center;padding:34px 0 20px}.docs-head>span{color:var(--accent);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.docs-head h1{font-size:clamp(36px,4.5vw,50px);letter-spacing:-.04em;margin:7px 0}.docs-head p{max-width:860px;margin:0 auto;color:var(--muted);font-size:16px;line-height:1.7}.docs-head code{font-size:.92em}.doc-section{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:22px 24px;margin:0 0 18px;box-shadow:var(--shadow-sm)}.doc-section h2{font-size:21px;margin:0 0 14px}.doc-section p,.doc-section li{font-size:14.5px;line-height:1.7;color:var(--muted)}.doc-section li+li{margin-top:5px}.table-wrap{overflow-x:auto}.table { border-collapse: collapse; width: 100%; min-width:680px }.table th, .table td { text-align: left; padding: 11px 13px; border-bottom: 1px solid var(--border); font-size: 14.5px; }.table th { color: var(--muted); font-weight: 700; }.table .m { font-weight: 800; color: var(--accent); width: 78px; }pre { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; padding: 16px; overflow-x: auto; font-size: 13.5px; line-height:1.65 }pre code { display: block; white-space: pre-wrap; }code { font-size: 13.5px; }@media(max-width:600px){.doc-section{padding:17px}.docs-head p{font-size:15px}}
 </style>
