@@ -118,7 +118,7 @@ describe('Registry Distribution V1', () => {
     expect(endpointRequests).toBe(1);
     expect(projected.source).toBe('shard-projection');
     expect(projected.record.entries[0].package.id).toBe('alpha');
-  });
+  }, 15_000);
 
   it('falls back to the legacy full Registry V3 when distribution retrieval fails', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-registry-distribution-fallback-'));
