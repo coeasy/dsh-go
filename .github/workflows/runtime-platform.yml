@@ -17,6 +17,7 @@ on:
       - "scripts/verify-package-evidence.mjs"
       - "scripts/registry-distribution.mjs"
       - "scripts/validate-registry-v3.mjs"
+      - "scripts/package-release-pack.mjs"
       - "scripts/provider-adapter-pack.mjs"
       - "scripts/provider-adapter-publish.mjs"
       - "tests/runtime-platform/**"
@@ -26,6 +27,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/runtime-platform.yml"
+      - ".github/workflows/package-release.yml"
   workflow_dispatch:
 
 permissions:
@@ -84,6 +86,8 @@ jobs:
           node --check runtime/execution.mjs
           node --check runtime/cli.mjs
           node --check runtime/installer.mjs
+          node --check runtime/artifact-installer.mjs
+          node --check runtime/release-discovery.mjs
           node --check runtime/loader.mjs
           node --check runtime/registry.mjs
           node --check runtime/resolver.mjs
@@ -98,6 +102,7 @@ jobs:
           node --check scripts/package-security-audit.mjs
           node --check scripts/generate-sbom.mjs
           node --check scripts/registry-distribution.mjs
+          node --check scripts/package-release-pack.mjs
           node --check scripts/provider-adapter-pack.mjs
           node --check scripts/provider-adapter-publish.mjs
 
@@ -145,7 +150,10 @@ jobs:
           node --check runtime/preflight.mjs
           node --check runtime/client-bridge.mjs
           node --check runtime/client-host.mjs
+          node --check runtime/artifact-installer.mjs
+          node --check runtime/release-discovery.mjs
           node --check runtime/provider-cli.mjs
           node --check runtime/provider-store.mjs
           node --check scripts/check-contract.mjs
+          node --check scripts/package-release-pack.mjs
           node --check scripts/provider-adapter-pack.mjs
