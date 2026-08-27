@@ -27,7 +27,7 @@ const TARGET_DIR = resolve(ROOT, 'site/public/catalog');
 const SCRIPTS_SRC = resolve(ROOT, 'site/src/scripts');
 const SCRIPTS_DST = resolve(ROOT, 'site/public/scripts');
 const INSTALL_DIR = resolve(ROOT, 'site/public/install');
-const DETAIL_THRESHOLD = 200;
+const DETAIL_THRESHOLD = 100;
 async function exists(path) { try { await access(path); return true; } catch { return false; } }
 
 function shTemplate(installCmd) {
