@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -65,7 +66,7 @@ describe('Provider Adapter Release V1', () => {
     const source = { repository: 'coeasy/demo-provider', commit: 'a'.repeat(40), tag: 'v0.1.0' };
     const first = await buildProviderAdapterPackage(manifestFile, source);
     const second = await buildProviderAdapterPackage(manifestFile, source);
-    expect(first.archive.equals(second.archive)).toBe(true);
+    expect(Buffer.compare(first.archive, second.archive)).toBe(0);
     expect(first.release).toEqual(second.release);
     expect(first.sbom).toEqual(second.sbom);
     expect(first.release.artifact.integrity).toMatch(/^sha256-[0-9a-f]{64}$/);
