@@ -3,11 +3,22 @@ name: Branch Hygiene
 on:
   pull_request:
     types: [closed]
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/branch-hygiene.yml"
   workflow_dispatch:
+    inputs:
+      cleanup_workflow_runs:
+        description: "Delete completed Actions runs whose workflow file no longer exists"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
   pull-requests: read
+  actions: write
 
 jobs:
   delete-merged-head:
@@ -88,4 +99,75 @@ jobs:
             echo "### Historical branch cleanup"
             echo "- deleted: $deleted"
             echo "- preserved: $preserved"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  cleanup-obsolete-workflow-runs:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.cleanup_workflow_runs == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Delete completed runs for removed workflow files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          active_paths="$(
+            gh api "repos/$GITHUB_REPOSITORY/contents/.github/workflows?ref=$GITHUB_SHA" \
+              --jq '.[] | select(.type == "file") | .path'
+          )"
+
+          test -n "$active_paths" || {
+            echo "No active workflow files found; refusing destructive cleanup."
+            exit 1
+          }
+
+          stale_file="$(mktemp)"
+          : > "$stale_file"
+          page=1
+
+          while :; do
+            payload="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?per_page=100&page=$page")"
+            count="$(jq '.workflow_runs | length' <<<"$payload")"
+            [ "$count" -gt 0 ] || break
+
+            while IFS=$'\t' read -r run_id workflow_path status; do
+              [ -n "$run_id" ] || continue
+              [ "$status" = "completed" ] || continue
+              case "$workflow_path" in
+                .github/workflows/*)
+                  if ! grep -Fxq "$workflow_path" <<<"$active_paths"; then
+                    printf '%s\t%s\n' "$run_id" "$workflow_path" >> "$stale_file"
+                  fi
+                  ;;
+              esac
+            done < <(jq -r '.workflow_runs[] | [.id, .path, .status] | @tsv' <<<"$payload")
+
+            [ "$count" -eq 100 ] || break
+            page=$((page + 1))
+          done
+
+          sort -u -o "$stale_file" "$stale_file"
+          stale_count="$(wc -l < "$stale_file" | tr -d ' ')"
+          deleted=0
+
+          echo "Active workflow files:"
+          printf '%s\n' "$active_paths"
+          echo "Completed runs belonging to removed workflow files: $stale_count"
+
+          while IFS=$'\t' read -r run_id workflow_path; do
+            [ -n "$run_id" ] || continue
+            echo "delete obsolete workflow run: id=$run_id path=$workflow_path"
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/actions/runs/$run_id"
+            deleted=$((deleted + 1))
+          done < "$stale_file"
+
+          {
+            echo "### Obsolete Actions workflow-run cleanup"
+            echo "- active workflow files preserved: $(printf '%s\n' "$active_paths" | wc -l | tr -d ' ')"
+            echo "- obsolete completed runs deleted: $deleted"
+            echo "- policy: delete only runs whose .github/workflows file no longer exists at $GITHUB_SHA"
           } >> "$GITHUB_STEP_SUMMARY"
