@@ -1,0 +1,183 @@
+name: Ecosystem Package Release
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag; defaults to v<package-version>
+        required: false
+        default: ''
+        type: string
+      channel:
+        description: Marketplace channel
+        required: false
+        default: stable
+        type: string
+      marketplace_repository:
+        description: DSH marketplace repository to refresh after release
+        required: false
+        default: coeasy/dsh-go
+        type: string
+    secrets:
+      marketplace_token:
+        description: Token or GitHub App token allowed to dispatch marketplace sync
+        required: false
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: dsh-package-release-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout package source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve immutable DSH toolkit SHA
+        id: toolkit
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const url = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
+          const token = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+          if (!url || !token) throw new Error('OIDC token endpoint is unavailable');
+          fetch(url + (url.includes('?') ? '&' : '?') + 'audience=dsh-package-release', {
+            headers: { Authorization: 'bearer ' + token },
+          }).then(async (response) => {
+            if (!response.ok) throw new Error('OIDC token request failed: ' + response.status);
+            const body = await response.json();
+            const payload = JSON.parse(Buffer.from(body.value.split('.')[1], 'base64url').toString('utf8'));
+            const sha = payload.job_workflow_sha || payload.workflow_sha;
+            if (!/^[0-9a-f]{40}$/i.test(String(sha || ''))) throw new Error('called workflow SHA is unavailable in OIDC claims');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'sha=' + sha + '\n');
+          }).catch((error) => { console.error(error); process.exit(1); });
+          NODE
+
+      - name: Checkout pinned DSH release toolkit
+        uses: actions/checkout@v7
+        with:
+          repository: coeasy/dsh-go
+          ref: ${{ steps.toolkit.outputs.sha }}
+          path: .dsh-toolkit
+          persist-credentials: false
+
+      - name: Pack deterministic DSH package release
+        id: pack
+        env:
+          TAG_INPUT: ${{ inputs.tag }}
+          CHANNEL_INPUT: ${{ inputs.channel }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--root "$GITHUB_WORKSPACE" --out-dir "$GITHUB_WORKSPACE/dist" --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --channel "$CHANNEL_INPUT" --github-output "$GITHUB_OUTPUT")
+          if [ -n "$TAG_INPUT" ]; then args+=(--tag "$TAG_INPUT"); fi
+          node .dsh-toolkit/scripts/package-release-pack.mjs "${args[@]}"
+
+      - name: Rebuild and prove release reproducibility
+        env:
+          TAG: ${{ steps.pack.outputs.tag }}
+          CHANNEL_INPUT: ${{ inputs.channel }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .dsh-toolkit/scripts/package-release-pack.mjs \
+            --root "$GITHUB_WORKSPACE" \
+            --out-dir "$GITHUB_WORKSPACE/.dsh-repro" \
+            --repository "$GITHUB_REPOSITORY" \
+            --commit "$GITHUB_SHA" \
+            --channel "$CHANNEL_INPUT" \
+            --tag "$TAG"
+          cmp "dist/${{ steps.pack.outputs.archive_name }}" ".dsh-repro/${{ steps.pack.outputs.archive_name }}"
+          cmp dist/dsh-package-release.json .dsh-repro/dsh-package-release.json
+          cmp dist/dsh-package-sbom.cdx.json .dsh-repro/dsh-package-sbom.cdx.json
+          cmp dist/SHA256SUMS .dsh-repro/SHA256SUMS
+
+      - name: Bind immutable release tag to source commit
+        env:
+          TAG: ${{ steps.pack.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git check-ref-format "refs/tags/$TAG"
+          remote_tag="$(git ls-remote --tags origin "refs/tags/$TAG" | awk 'NR == 1 { print $1 }')"
+          if [ -n "$remote_tag" ]; then
+            remote_target="$(git ls-remote --tags origin "refs/tags/$TAG^{}" | awk 'NR == 1 { print $1 }')"
+            if [ -z "$remote_target" ]; then remote_target="$remote_tag"; fi
+            [ "$remote_target" = "$GITHUB_SHA" ] || { echo "immutable tag $TAG already points to $remote_target, expected $GITHUB_SHA" >&2; exit 1; }
+          else
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
+
+      - name: Attest package artifact provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/${{ steps.pack.outputs.archive_name }}
+
+      - name: Attest package SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/${{ steps.pack.outputs.archive_name }}
+          sbom-path: dist/dsh-package-sbom.cdx.json
+
+      - name: Create or verify immutable GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.pack.outputs.tag }}
+          PACKAGE_ID: ${{ steps.pack.outputs.id }}
+          PACKAGE_VERSION: ${{ steps.pack.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assets=(
+            "dist/${{ steps.pack.outputs.archive_name }}"
+            "dist/dsh-package-release.json"
+            "dist/dsh-package-sbom.cdx.json"
+            "dist/SHA256SUMS"
+          )
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            mkdir -p .dsh-existing-release
+            existing_names="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+            missing=()
+            for asset in "${assets[@]}"; do
+              name="${asset#dist/}"
+              if grep -Fqx -- "$name" <<<"$existing_names"; then
+                gh release download "$TAG" --pattern "$name" --dir .dsh-existing-release
+                cmp "$asset" ".dsh-existing-release/$name"
+              else
+                missing+=("$asset")
+              fi
+            done
+            if ((${#missing[@]} > 0)); then gh release upload "$TAG" "${missing[@]}"; fi
+          else
+            gh release create "$TAG" "${assets[@]}" \
+              --verify-tag \
+              --title "$PACKAGE_ID $PACKAGE_VERSION" \
+              --notes "Immutable DSH ecosystem package release $PACKAGE_ID@$PACKAGE_VERSION. dsh-package-release.json binds the artifact digest to this source commit."
+          fi
+
+      - name: Refresh marketplace Registry V3
+        env:
+          GH_TOKEN: ${{ secrets.marketplace_token }}
+          MARKETPLACE_REPOSITORY: ${{ inputs.marketplace_repository }}
+          TAG: ${{ steps.pack.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "marketplace_token not configured; release is complete, marketplace refresh was not dispatched"
+            exit 0
+          fi
+          payload="$(jq -nc --arg repository "$GITHUB_REPOSITORY" --arg tag "$TAG" '{event_type:"sync-plugins",client_payload:{mode:"incremental",repository:$repository,tag:$tag}}')"
+          printf '%s' "$payload" | gh api --method POST "repos/$MARKETPLACE_REPOSITORY/dispatches" --input -
