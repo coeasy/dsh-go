@@ -50,15 +50,17 @@ describe('release artifact runtime path', () => {
         strip_components: 1,
       },
     };
-    const fetchMock = vi.fn(async (url: string) => new Response(JSON.stringify(descriptor), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    }));
+    const fetchMock = vi.fn(async (url: string) => {
+      expect(url).toContain(RELEASE_DESCRIPTOR_NAME);
+      return new Response(JSON.stringify(descriptor), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    });
     vi.stubGlobal('fetch', fetchMock);
 
     const artifact = await discoverReleaseArtifact(pkg);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(String(fetchMock.mock.calls[0][0])).toContain(RELEASE_DESCRIPTOR_NAME);
     expect(artifact).toMatchObject({ kind: 'release-archive', digest, release_tag: 'v0.1.0' });
   });
 
