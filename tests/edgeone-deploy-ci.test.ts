@@ -1,12 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildDeployArgs,
+  checkCliContract,
   classifyFailure,
+  deployEdgeOne,
   parseLastJson,
   sanitizeLog,
   validateCliVersion,
   validateDeployResult,
 } from '../scripts/edgeone-deploy-ci.mjs';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('EdgeOne CI deployment helpers', () => {
   it('requires a pinned supported CLI version', () => {
@@ -17,10 +23,87 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(() => validateCliVersion('latest')).toThrow('pinned semver');
   });
 
-  it('builds CI deploy commands with explicit project and token arguments', () => {
-    expect(buildDeployArgs({ project: 'dsh-go', token: 'secret', cliVersion: '1.6.28' })).toEqual([
+  it('builds the direct named-project deployment contract', () => {
+    const args = buildDeployArgs({ project: 'dsh-go', token: 'secret', cliVersion: '1.6.28' });
+
+    expect(args).toEqual([
       '--yes', 'edgeone@1.6.28', 'makers', 'deploy', './dist', '-n', 'dsh-go', '-t', 'secret', '-e', 'production', '--json',
     ]);
+    expect(args).not.toContain('link');
+    expect(args).not.toContain('--name');
+  });
+
+  it('executes exactly one direct deploy without the legacy link preflight', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const calls: Array<{
+      command: string;
+      args: string[];
+      options: { timeoutMs?: number; cwd?: string; env?: Record<string, string> };
+    }> = [];
+    const execute = async (
+      command: string,
+      args: string[],
+      options: { timeoutMs?: number; cwd?: string; env?: Record<string, string> } = {},
+    ) => {
+      calls.push({ command, args, options });
+      return {
+        code: 0,
+        stdout: JSON.stringify({
+          status: 'success',
+          url: 'https://deployment.edgeone.example',
+          projectId: 'project-1',
+        }),
+        stderr: '',
+        timedOut: false,
+      };
+    };
+
+    const result = await deployEdgeOne({
+      env: {
+        EDGEONE_API_TOKEN: 'test-token',
+        EDGEONE_PROJECT: 'dsh-go',
+        EDGEONE_CLI_VERSION: '1.6.28',
+        EDGEONE_DEPLOY_RETRIES: '1',
+        EDGEONE_ATTEMPT_TIMEOUT_SECONDS: '30',
+        EDGEONE_SITE_URL: 'https://stable.edgeone.example',
+      },
+      execute,
+      wait: async () => undefined,
+    });
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({
+      command: 'npx',
+      args: buildDeployArgs({ project: 'dsh-go', token: 'test-token', cliVersion: '1.6.28' }),
+      options: {
+        timeoutMs: 30_000,
+        cwd: './site',
+      },
+    });
+    expect(calls[0].args).not.toContain('link');
+    expect(calls[0].args).not.toContain('--name');
+    expect(calls[0].options.env?.PAGES_SOURCE).toBe('skills');
+    expect(result.healthUrl).toBe('https://stable.edgeone.example');
+  });
+
+  it('checks only the supported makers deploy CLI surface', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const calls: Array<{ command: string; args: string[] }> = [];
+    const execute = async (command: string, args: string[]) => {
+      calls.push({ command, args });
+      return { code: 0, stdout: '', stderr: '', timedOut: false };
+    };
+
+    await checkCliContract({
+      env: { EDGEONE_CLI_VERSION: '1.6.28' },
+      execute,
+    });
+
+    expect(calls).toEqual([{
+      command: 'npx',
+      args: ['--yes', 'edgeone@1.6.28', 'makers', 'deploy', '--help'],
+    }]);
+    expect(calls.flatMap((call) => call.args)).not.toContain('link');
   });
 
   it('sanitizes direct tokens, signed URLs, JSON token fields, and bearer credentials', () => {
