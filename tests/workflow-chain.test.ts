@@ -131,12 +131,14 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).not.toContain("<<'NODE'");
     expect(edgeone.length).toBeLessThan(14_000);
 
-    expect(edgeoneScript).toContain("'link'");
-    expect(edgeoneScript).toContain("'--name'");
+    expect(edgeoneScript).not.toContain("'link'");
+    expect(edgeoneScript).not.toContain("'--name'");
+    expect(edgeoneScript).toContain("'deploy'");
+    expect(edgeoneScript).toContain("'-n',");
     expect(edgeoneScript).toContain("'-t',");
     expect(edgeoneScript).toContain("'--json'");
     expect(edgeoneScript).toContain("cwd: './site'");
-    expect(edgeoneScript).toContain('using linked-project token auth');
+    expect(edgeoneScript).toContain('using direct named-project token auth');
     expect(edgeoneScript).toContain('EdgeOne CLI >= 1.6.0 is required');
     expect(edgeoneScript).toContain("return 'version_state'");
     expect(edgeoneScript).toContain('const healthUrl = env.EDGEONE_SITE_URL || deployUrl;');

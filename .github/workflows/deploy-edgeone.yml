@@ -201,7 +201,7 @@ jobs:
           echo "- production target fallback: CLI production deployment URL when EDGEONE_SITE_URL is unset" >> "$GITHUB_STEP_SUMMARY"
           echo "- project: ${EDGEONE_PROJECT}" >> "$GITHUB_STEP_SUMMARY"
           echo "- CLI: edgeone@${EDGEONE_CLI_VERSION}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- auth mode: explicit project link + per-invocation token (-t)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- auth mode: direct named-project CI deploy (-n + -t)" >> "$GITHUB_STEP_SUMMARY"
           echo "- failure class: ${{ steps.edgeone.outputs.failure_class || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- project id: ${{ steps.edgeone.outputs.project_id || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- console URL: ${{ steps.edgeone.outputs.console_url || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"

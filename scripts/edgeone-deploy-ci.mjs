@@ -112,6 +112,23 @@ export function validateDeployResult(result) {
   return result;
 }
 
+export function buildDeployArgs({ project, token, cliVersion, directory = './dist' }) {
+  return [
+    '--yes',
+    `edgeone@${cliVersion}`,
+    'makers',
+    'deploy',
+    directory,
+    '-n',
+    project,
+    '-t',
+    token,
+    '-e',
+    'production',
+    '--json',
+  ];
+}
+
 function parseBoundedInt(value, name, fallback, min, max) {
   if (value === undefined || value === null || value === '') return fallback;
   if (!/^\d+$/.test(String(value))) throw new Error(`${name} must be an integer`);
@@ -173,6 +190,12 @@ function writeOutput(name, value) {
   appendFileSync(outputFile, `${name}=${String(value)}\n`);
 }
 
+function writeStepSummary(lines) {
+  const summaryFile = process.env.GITHUB_STEP_SUMMARY;
+  if (!summaryFile) return;
+  appendFileSync(summaryFile, `${lines.join('\n')}\n`);
+}
+
 function annotationValue(value) {
   return String(value).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A').slice(0, 900);
 }
@@ -187,36 +210,6 @@ function edgeOneProcessEnv(env) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function bindProject({ project, token, cliVersion, timeoutSeconds, env, execute }) {
-  console.log(`Binding EdgeOne project "${project}" before artifact upload`);
-  const result = await execute('npx', [
-    '--yes',
-    `edgeone@${cliVersion}`,
-    'makers',
-    'link',
-    '--name',
-    project,
-    '-t',
-    token,
-  ], {
-    timeoutMs: timeoutSeconds * 1_000,
-    env: edgeOneProcessEnv(env),
-    cwd: './site',
-  });
-
-  if (result.code === 0) {
-    console.log('EdgeOne project binding verified');
-    return;
-  }
-
-  const combined = `${result.stdout || ''}\n${result.stderr || ''}`;
-  const safe = sanitizeLog(tailLines(combined) || `EdgeOne CLI link exited with status ${result.code}`, token);
-  const failureClass = classifyFailure(safe, result.code, result.timedOut);
-  writeOutput('failure_class', failureClass);
-  console.error(`::error title=EdgeOne project link failure [${failureClass}]::${annotationValue(safe)}`);
-  throw new Error(`EdgeOne project link failed [${failureClass}]: ${safe}`);
-}
-
 export async function deployEdgeOne({ env = process.env, execute = runProcess, wait = sleep } = {}) {
   const token = env.EDGEONE_API_TOKEN || '';
   if (!token) throw new Error('EDGEONE_API_TOKEN is required');
@@ -227,25 +220,14 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   const timeoutSeconds = parseBoundedInt(env.EDGEONE_ATTEMPT_TIMEOUT_SECONDS, 'EDGEONE_ATTEMPT_TIMEOUT_SECONDS', DEFAULT_TIMEOUT_SECONDS, 30, 300);
 
   console.log(`::add-mask::${token}`);
-  await bindProject({ project, token, cliVersion, timeoutSeconds, env, execute });
-
   let lastError = 'EdgeOne deployment did not start';
   let failureClass = 'api';
+  let attemptsMade = 0;
 
   for (let attempt = 1; attempt <= retries; attempt += 1) {
-    console.log(`EdgeOne deployment attempt ${attempt}/${retries} using linked-project token auth`);
-    const args = [
-      '--yes',
-      `edgeone@${cliVersion}`,
-      'makers',
-      'deploy',
-      './dist',
-      '-t',
-      token,
-      '-e',
-      'production',
-      '--json',
-    ];
+    attemptsMade = attempt;
+    console.log(`EdgeOne deployment attempt ${attempt}/${retries} using direct named-project token auth`);
+    const args = buildDeployArgs({ project, token, cliVersion });
     const result = await execute('npx', args, {
       timeoutMs: timeoutSeconds * 1_000,
       env: edgeOneProcessEnv(env),
@@ -269,6 +251,14 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
         writeOutput('project_id', projectId);
         writeOutput('console_url', consoleUrl);
         writeOutput('health_url', healthUrl);
+        writeStepSummary([
+          '#### EdgeOne CLI deployment diagnostics',
+          `- project: ${project}`,
+          `- CLI: edgeone@${cliVersion}`,
+          '- auth mode: direct named-project CI deploy (`-n` + `-t`)',
+          '- failure class: none',
+          `- attempts: ${attemptsMade}/${retries}`,
+        ]);
         console.log(`EdgeOne deployment accepted: project=${projectId}`);
         return { deployment, healthUrl };
       } catch (error) {
@@ -300,22 +290,28 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   }
 
   writeOutput('failure_class', failureClass);
+  writeStepSummary([
+    '#### EdgeOne CLI deployment diagnostics',
+    `- project: ${project}`,
+    `- CLI: edgeone@${cliVersion}`,
+    '- auth mode: direct named-project CI deploy (`-n` + `-t`)',
+    `- failure class: ${failureClass}`,
+    `- attempts: ${attemptsMade}/${retries}`,
+  ]);
   console.error(`::error title=EdgeOne deployment failure [${failureClass}]::${annotationValue(lastError)}`);
   throw new Error(`EdgeOne deployment failed after retry policy [${failureClass}]: ${lastError}`);
 }
 
 export async function checkCliContract({ env = process.env, execute = runProcess } = {}) {
   const cliVersion = validateCliVersion(env.EDGEONE_CLI_VERSION || DEFAULT_CLI_VERSION);
-  for (const command of ['link', 'deploy']) {
-    const result = await execute('npx', ['--yes', `edgeone@${cliVersion}`, 'makers', command, '--help'], {
-      timeoutMs: 120_000,
-      env: edgeOneProcessEnv(env),
-    });
-    if (result.code !== 0) {
-      throw new Error(`EdgeOne CLI ${command} contract check failed: ${sanitizeLog(tailLines(`${result.stdout}\n${result.stderr}`), env.EDGEONE_API_TOKEN || '')}`);
-    }
+  const result = await execute('npx', ['--yes', `edgeone@${cliVersion}`, 'makers', 'deploy', '--help'], {
+    timeoutMs: 120_000,
+    env: edgeOneProcessEnv(env),
+  });
+  if (result.code !== 0) {
+    throw new Error(`EdgeOne CLI deploy contract check failed: ${sanitizeLog(tailLines(`${result.stdout}\n${result.stderr}`), env.EDGEONE_API_TOKEN || '')}`);
   }
-  console.log(`EdgeOne CLI contract verified: edgeone@${cliVersion} makers link/deploy`);
+  console.log(`EdgeOne CLI contract verified: edgeone@${cliVersion} makers deploy`);
 }
 
 async function main() {
