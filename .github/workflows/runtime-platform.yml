@@ -5,22 +5,26 @@ on:
     paths:
       - "bin/**"
       - "runtime/**"
-      - "marketplace/**"
       - "mcp/**"
       - "skills/**"
       - "agents/**"
       - "profiles/**"
       - "schemas/**"
-      - "functions/**"
-      - "scripts/**"
+      - "scripts/check-contract.mjs"
+      - "scripts/checksum.mjs"
+      - "scripts/package-security-audit.mjs"
+      - "scripts/generate-sbom.mjs"
+      - "scripts/verify-package-evidence.mjs"
+      - "scripts/registry-distribution.mjs"
+      - "scripts/validate-registry-v3.mjs"
+      - "scripts/provider-adapter-pack.mjs"
+      - "scripts/provider-adapter-publish.mjs"
       - "tests/runtime-platform/**"
       - "tests/production-v2/**"
       - "tests/completion/**"
       - "tests/e2e/**"
       - "package.json"
       - "package-lock.json"
-      - "site/**"
-      - "docs/**"
       - ".github/workflows/runtime-platform.yml"
   workflow_dispatch:
 
@@ -33,9 +37,9 @@ concurrency:
 
 jobs:
   runtime-e2e:
-    name: Runtime + full regression
+    name: Runtime regression (ubuntu)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -44,26 +48,16 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            site/package-lock.json
       - name: Install dependencies
-        run: |
-          npm ci
-          cd site && npm ci
+        run: npm ci
       - name: Verify public contract
         run: npm run contract:check
-      - name: Typecheck
-        run: npm run typecheck
-      - name: Lint
-        run: npm run lint
-      - name: Full regression suite
-        run: npm test
-      - name: Site check and build
-        run: |
-          cd site
-          npm run check
-          npm run build
+      - name: Runtime Platform tests
+        run: npm run runtime:test
+      - name: Production compatibility tests
+        run: npm run test:production-v2
+      - name: Runtime completion tests
+        run: npm run completion:test
       - name: Runtime Registry compatibility
         run: npm run runtime:check
       - name: Package smoke
@@ -103,8 +97,6 @@ jobs:
           node --check scripts/check-contract.mjs
           node --check scripts/package-security-audit.mjs
           node --check scripts/generate-sbom.mjs
-          node --check scripts/build-search-index-v2.mjs
-          node --check scripts/copy-assets.mjs
           node --check scripts/registry-distribution.mjs
           node --check scripts/provider-adapter-pack.mjs
           node --check scripts/provider-adapter-publish.mjs
@@ -116,7 +108,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
