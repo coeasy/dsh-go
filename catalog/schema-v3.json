@@ -32,10 +32,27 @@
             "ref": { "type": "string", "minLength": 1 }, "commit": { "type": "string", "pattern": "^[0-9a-fA-F]{40}$" },
             "updated_at": { "type": "string" }, "archive_url": { "type": "string", "format": "uri" }
           } },
-          "artifact": { "type": "object", "required": ["kind", "algorithm", "integrity_scope", "integrity"], "properties": {
-            "kind": { "type": "string", "const": "git-source" }, "algorithm": { "type": "string", "const": "sha256" },
-            "integrity_scope": { "type": "string", "const": "source-identity" }, "integrity": { "type": "string", "pattern": "^sha256-[0-9a-f]{64}$" }
-          } },
+          "artifact": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "algorithm", "integrity_scope", "integrity"],
+            "properties": {
+              "kind": { "type": "string", "enum": ["git-source", "release-archive"] },
+              "algorithm": { "type": "string", "const": "sha256" },
+              "integrity_scope": { "type": "string", "const": "source-identity" },
+              "integrity": { "type": "string", "pattern": "^sha256-[0-9a-f]{64}$" },
+              "url": { "type": "string", "format": "uri", "pattern": "^https://" },
+              "digest": { "type": "string", "pattern": "^sha256-[0-9a-f]{64}$" },
+              "format": { "type": "string", "enum": ["tgz", "tar.gz"] },
+              "strip_components": { "type": "integer", "minimum": 0, "maximum": 8 }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "kind": { "const": "release-archive" } }, "required": ["kind"] },
+                "then": { "required": ["url", "digest", "format"] }
+              }
+            ]
+          },
           "runtime": { "type": "object", "required": ["type", "activation"], "properties": {
             "type": { "type": "string", "enum": ["plugin", "mcp", "skill", "agent"] }, "activation": { "type": "string", "const": "restart-required" }
           } },
