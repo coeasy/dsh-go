@@ -1,0 +1,53 @@
+/* High-specificity typography layer for the resource list.
+ * It intentionally overrides the older component-scoped compact values.
+ */
+.market-grid .market-card h2 {
+  font-size:20px !important;
+  line-height:1.32 !important;
+  margin-top:14px !important;
+  font-weight:850 !important;
+}
+.market-grid .market-card .repo {
+  font-size:13px !important;
+  line-height:1.5 !important;
+  font-weight:650 !important;
+}
+.market-grid .market-card .description {
+  color:color-mix(in srgb,var(--fg) 86%,var(--muted)) !important;
+  font-size:16px !important;
+  line-height:1.7 !important;
+  min-height:110px !important;
+  margin:14px 0 16px !important;
+  font-weight:520 !important;
+  -webkit-line-clamp:4 !important;
+}
+.market-grid .market-card .kind,
+.market-grid .market-card .source,
+.market-grid .market-card .verified,
+.market-grid .market-card .meta-row span,
+.market-grid .market-card .caps span {
+  font-size:12px !important;
+  line-height:1.35 !important;
+}
+.market-grid .market-card .stars { font-size:13.5px !important; }
+.market-grid .market-card .card-main { padding:21px 21px 17px !important; }
+.market-grid .market-card .card-actions { padding:12px 14px !important; }
+.market-grid .market-card .card-actions .ghost,
+.market-grid .market-card .card-actions .install {
+  min-height:38px !important;
+  padding:8px 12px !important;
+  font-size:13px !important;
+  font-weight:780 !important;
+}
+@media (min-width:1280px) {
+  .market-grid .market-card { min-height:378px !important; }
+}
+@media (min-width:900px) and (max-width:1279px) {
+  .market-grid .market-card { min-height:365px !important; }
+}
+@media (max-width:639px) {
+  .market-grid .market-card .description {
+    min-height:0 !important;
+    font-size:15.5px !important;
+  }
+}

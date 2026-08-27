@@ -1,0 +1,182 @@
+---
+// Presentation overrides shared by the Marketplace homepage and /ecosystem alias.
+// Keep discovery/data logic in UnifiedMarketplace; this component only owns responsive visual balance.
+---
+
+<style is:global>
+  /* The resource list is the primary content: make package text readable before adding more columns. */
+  .market-card h2 {
+    font-size: 19px !important;
+    line-height: 1.35 !important;
+    margin-top: 13px !important;
+  }
+
+  .market-card .repo {
+    font-size: 12.5px !important;
+    line-height: 1.5 !important;
+  }
+
+  .market-card .description {
+    color: color-mix(in srgb, var(--fg) 74%, var(--muted)) !important;
+    font-size: 15.5px !important;
+    line-height: 1.68 !important;
+    min-height: 104px !important;
+    margin: 13px 0 15px !important;
+    -webkit-line-clamp: 4 !important;
+  }
+
+  .market-card .kind,
+  .market-card .source,
+  .market-card .verified,
+  .market-card .meta-row span,
+  .market-card .caps span {
+    font-size: 11.5px !important;
+    line-height: 1.35 !important;
+  }
+
+  .market-card .stars {
+    font-size: 13px !important;
+  }
+
+  .market-card .card-main {
+    padding: 20px 20px 16px !important;
+    text-decoration: none !important;
+  }
+
+  .market-card .card-main,
+  .market-card .card-main * {
+    text-decoration: none !important;
+  }
+
+  .market-card .card-actions {
+    padding: 11px 14px !important;
+  }
+
+  .market-card .card-actions .ghost,
+  .market-card .card-actions .install {
+    font-size: 12.5px !important;
+    min-height: 36px !important;
+    padding: 8px 11px !important;
+  }
+
+  @media (min-width: 1100px) {
+    /* Keep the hero compact and single-line on desktop instead of consuming two rows. */
+    .market-hero {
+      padding: 34px 0 24px !important;
+    }
+
+    .market-hero.compact {
+      padding-top: 26px !important;
+    }
+
+    .market-hero h1 {
+      max-width: none !important;
+      margin: 8px auto 10px !important;
+      font-size: clamp(40px, 3.4vw, 56px) !important;
+      line-height: 1.08 !important;
+      letter-spacing: -.045em !important;
+      white-space: nowrap !important;
+    }
+
+    .market-hero p {
+      max-width: 1040px !important;
+      font-size: 15.5px !important;
+      line-height: 1.6 !important;
+    }
+
+    .market-hero .hero-actions {
+      margin: 20px 0 !important;
+    }
+
+    .market-hero .metrics span {
+      padding: 6px 11px !important;
+    }
+
+    /* The guide remains useful but should not visually outweigh the packages below it. */
+    .install-flow {
+      grid-template-columns: minmax(250px, .72fr) minmax(0, 2.28fr) !important;
+      gap: 14px !important;
+      padding: 18px !important;
+      margin-bottom: 15px !important;
+    }
+
+    .flow-intro h2 {
+      font-size: 19px !important;
+      margin: 5px 0 !important;
+    }
+
+    .flow-intro p {
+      font-size: 12.75px !important;
+      line-height: 1.55 !important;
+    }
+
+    .flow-grid div {
+      padding: 12px !important;
+    }
+
+    .flow-grid strong {
+      font-size: 13.5px !important;
+    }
+
+    .flow-grid span {
+      font-size: 12px !important;
+      line-height: 1.5 !important;
+    }
+
+    .alignment-strip {
+      margin-bottom: 22px !important;
+    }
+  }
+
+  /* Four readable cards are preferable to five narrow cards on normal desktop screens. */
+  @media (min-width: 1280px) {
+    .market-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      gap: 18px !important;
+    }
+
+    .market-card {
+      min-height: 360px !important;
+    }
+  }
+
+  @media (min-width: 900px) and (max-width: 1279px) {
+    .market-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    .market-card {
+      min-height: 350px !important;
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 899px) {
+    .market-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 1099px) {
+    .market-hero h1 {
+      max-width: 900px !important;
+      font-size: clamp(36px, 7vw, 50px) !important;
+      line-height: 1.08 !important;
+      white-space: normal !important;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .market-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .market-card {
+      min-height: 0 !important;
+    }
+
+    .market-card .description {
+      min-height: 0 !important;
+      font-size: 15px !important;
+    }
+  }
+</style>
