@@ -144,8 +144,10 @@ jobs:
           test -f site/dist/catalog/plugins.json
           test -f site/dist/catalog/registry-v3.json
           test -f site/dist/catalog/schema-v3.json
+          test -f site/dist/catalog/provider-adapters.json
           node -e "const fs=require('node:fs'); const v=JSON.parse(fs.readFileSync('site/dist/version.json','utf8')); if(v.git_sha !== process.env.DEPLOYMENT_SHA) process.exit(1)"
           node -e "const fs=require('node:fs'); const r=JSON.parse(fs.readFileSync('site/dist/catalog/registry-v3.json','utf8')); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length) process.exit(1)"
+          node -e "const fs=require('node:fs'); const r=JSON.parse(fs.readFileSync('site/dist/catalog/provider-adapters.json','utf8')); if(r.registry_version!==1 || !r.generated?.content_hash || !Array.isArray(r.providers) || r.generated.count!==r.providers.length) process.exit(1)"
 
       - name: Verify EdgeOne CLI contract
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
