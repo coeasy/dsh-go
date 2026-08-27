@@ -1,0 +1,188 @@
+name: Provider Adapter Release
+
+on:
+  workflow_call:
+    inputs:
+      manifest:
+        description: Provider Adapter manifest path
+        required: false
+        default: provider-adapter.json
+        type: string
+      channel:
+        description: Marketplace channel override (stable/beta/nightly/dev)
+        required: false
+        default: ''
+        type: string
+      tag:
+        description: Release tag; defaults to v<adapter-version>
+        required: false
+        default: ''
+        type: string
+      marketplace_repository:
+        description: Repository that owns the Provider Adapter marketplace registry
+        required: false
+        default: coeasy/dsh-go
+        type: string
+    secrets:
+      marketplace_token:
+        description: Token or GitHub App token allowed to dispatch marketplace ingestion
+        required: false
+  workflow_dispatch:
+    inputs:
+      manifest:
+        description: Provider Adapter manifest path
+        required: true
+        default: provider-adapter.json
+        type: string
+      channel:
+        description: Marketplace channel override (stable/beta/nightly/dev)
+        required: false
+        default: ''
+        type: string
+      tag:
+        description: Release tag; defaults to v<adapter-version>
+        required: false
+        default: ''
+        type: string
+      marketplace_repository:
+        description: Marketplace repository
+        required: true
+        default: coeasy/dsh-go
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: provider-adapter-release-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout adapter source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve immutable called-workflow toolkit SHA
+        id: toolkit
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const url = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
+          const token = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+          if (!url || !token) throw new Error('OIDC token endpoint is unavailable');
+          fetch(url + (url.includes('?') ? '&' : '?') + 'audience=dsh-provider-release', {
+            headers: { Authorization: 'bearer ' + token },
+          }).then(async (response) => {
+            if (!response.ok) throw new Error('OIDC token request failed: ' + response.status);
+            const body = await response.json();
+            const payload = JSON.parse(Buffer.from(body.value.split('.')[1], 'base64url').toString('utf8'));
+            const sha = payload.job_workflow_sha || payload.workflow_sha;
+            if (!/^[0-9a-f]{40}$/i.test(String(sha || ''))) throw new Error('called workflow SHA is unavailable in OIDC claims');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'sha=' + sha + '\n');
+          }).catch((error) => { console.error(error); process.exit(1); });
+          NODE
+
+      - name: Checkout pinned DSH release toolkit
+        uses: actions/checkout@v4
+        with:
+          repository: coeasy/dsh-go
+          ref: ${{ steps.toolkit.outputs.sha }}
+          path: .dsh-toolkit
+          persist-credentials: false
+
+      - name: Pack deterministic Provider Adapter release
+        id: pack
+        env:
+          MANIFEST: ${{ inputs.manifest }}
+          TAG_INPUT: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=("$MANIFEST" --out-dir dist --repository "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --github-output "$GITHUB_OUTPUT")
+          if [ -n "$TAG_INPUT" ]; then args+=(--tag "$TAG_INPUT"); fi
+          node .dsh-toolkit/scripts/provider-adapter-pack.mjs "${args[@]}"
+
+      - name: Rebuild and prove byte-for-byte reproducibility
+        env:
+          MANIFEST: ${{ inputs.manifest }}
+          TAG: ${{ steps.pack.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .dsh-toolkit/scripts/provider-adapter-pack.mjs "$MANIFEST" \
+            --out-dir .dsh-repro \
+            --repository "$GITHUB_REPOSITORY" \
+            --commit "$GITHUB_SHA" \
+            --tag "$TAG"
+          cmp "dist/${{ steps.pack.outputs.archive_name }}" ".dsh-repro/${{ steps.pack.outputs.archive_name }}"
+          cmp dist/provider-adapter-release.json .dsh-repro/provider-adapter-release.json
+          cmp dist/provider-adapter-sbom.spdx.json .dsh-repro/provider-adapter-sbom.spdx.json
+          cmp dist/SHA256SUMS .dsh-repro/SHA256SUMS
+
+      - name: Attest immutable release artifact provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/${{ steps.pack.outputs.archive_name }}
+
+      - name: Attest Provider Adapter SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/${{ steps.pack.outputs.archive_name }}
+          sbom-path: dist/provider-adapter-sbom.spdx.json
+
+      - name: Create or verify immutable GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.pack.outputs.tag }}
+          ADAPTER_ID: ${{ steps.pack.outputs.id }}
+          ADAPTER_VERSION: ${{ steps.pack.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assets=(
+            "dist/${{ steps.pack.outputs.archive_name }}"
+            "dist/provider-adapter-release.json"
+            "dist/provider-adapter-sbom.spdx.json"
+            "dist/SHA256SUMS"
+          )
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            mkdir -p .dsh-existing-release
+            gh release download "$TAG" --pattern provider-adapter-release.json --dir .dsh-existing-release
+            cmp dist/provider-adapter-release.json .dsh-existing-release/provider-adapter-release.json
+            gh release upload "$TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$TAG" "${assets[@]}" \
+              --title "$ADAPTER_ID $ADAPTER_VERSION" \
+              --notes "Immutable DSH Provider Adapter release $ADAPTER_ID@$ADAPTER_VERSION. Artifact digest and release identity are recorded in provider-adapter-release.json."
+          fi
+
+      - name: Dispatch marketplace ingestion
+        env:
+          GH_TOKEN: ${{ secrets.marketplace_token }}
+          MARKETPLACE_REPOSITORY: ${{ inputs.marketplace_repository }}
+          TAG: ${{ steps.pack.outputs.tag }}
+          CHANNEL_INPUT: ${{ inputs.channel }}
+          MANIFEST_CHANNEL: ${{ steps.pack.outputs.channel }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "marketplace_token not configured; immutable release is complete, marketplace ingestion was not dispatched"
+            exit 0
+          fi
+          channel="$CHANNEL_INPUT"
+          if [ -z "$channel" ]; then channel="$MANIFEST_CHANNEL"; fi
+          payload="$(jq -nc \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg tag "$TAG" \
+            --arg channel "$channel" \
+            '{event_type:"provider-adapter-release",client_payload:{repository:$repository,tag:$tag,channel:$channel}}')"
+          printf '%s' "$payload" | gh api --method POST "repos/$MARKETPLACE_REPOSITORY/dispatches" --input -
