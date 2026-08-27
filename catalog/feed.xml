@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 27 Aug 2026 10:26:57 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 27 Aug 2026 12:40:05 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -98,6 +98,13 @@
       <description></description>
     </item>
     <item>
+      <title>🆕 dsh-pro-vision-std</title>
+      <link>https://github.com/lasdrder0705/dsh-pro-vision-std</link>
+      <guid isPermaLink="false">lasdrder0705/dsh-pro-vision-std@2026-08-27T08:18:13Z</guid>
+      <pubDate>Thu, 27 Aug 2026 08:18:13 GMT</pubDate>
+      <description>dsh pro vision std 中文 · English Compatible with dsh std Community v0.15. A portable ModelProvider that lets DeepSeek V4 Pro handle image attachments. Images are first captioned by deepseek v4 flash vi</description>
+    </item>
+    <item>
       <title>🆕 dsh-ua-headers</title>
       <link>https://github.com/fplj-fplj/dsh-ua-headers</link>
       <guid isPermaLink="false">fplj-fplj/dsh-ua-headers@2026-08-24T16:27:49Z</guid>
@@ -110,13 +117,6 @@
       <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-26T13:40:31Z</guid>
       <pubDate>Wed, 26 Aug 2026 13:40:31 GMT</pubDate>
       <description>dsh tui mcp manager 面向 dsh TUI 的原生 MCP Server 管理插件。输入 /mcp manager 后，管理器通过宿主提供的 managed dialog 显示为聊天界面上的浮窗，并直接编辑当前 profile 的 cordis.patch.yml 。 功能 浮窗即时显示服务器状态；连接中的工具数显示为 ... ，可用 ↻ 刷新 获取最新数量。 添加、复制、编辑、</description>
-    </item>
-    <item>
-      <title>🆕 dsh-pro-vision-std</title>
-      <link>https://github.com/lasdrder0705/dsh-pro-vision-std</link>
-      <guid isPermaLink="false">lasdrder0705/dsh-pro-vision-std@2026-08-27T08:18:13Z</guid>
-      <pubDate>Thu, 27 Aug 2026 08:18:13 GMT</pubDate>
-      <description>dsh pro vision std 中文 · English Compatible with dsh std Community v0.15. A dsh std rewrite of dsh pro vision. Separate repository: the original Cordis llm/stream interceptor is not replaced. This pack</description>
     </item>
     <item>
       <title>🆕 dsh-chat-zone-std</title>
