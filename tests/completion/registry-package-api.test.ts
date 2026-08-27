@@ -45,14 +45,15 @@ async function call(distribution: any, type: string, id: string, ifNoneMatch?: s
 describe('Registry package projection API', () => {
   it('projects a package record with the descriptor hash and supports 304', async () => {
     const distribution = buildRegistryDistribution(registry([packageRecord('alpha'), packageRecord('bravo', 'mcp')]));
+    const packages = distribution.index.packages as Record<string, { content_hash: string; etag: string }>;
     const first = await call(distribution, 'plugin', 'alpha');
     expect(first.status).toBe(200);
     const body: any = await first.json();
     expect(body.key).toBe('plugin:alpha');
     expect(body.entries).toHaveLength(1);
-    expect(body.content_hash).toBe(distribution.index.packages['plugin:alpha'].content_hash);
+    expect(body.content_hash).toBe(packages['plugin:alpha'].content_hash);
     const etag = first.headers.get('ETag');
-    expect(etag).toBe(distribution.index.packages['plugin:alpha'].etag);
+    expect(etag).toBe(packages['plugin:alpha'].etag);
     const second = await call(distribution, 'plugin', 'alpha', etag || undefined);
     expect(second.status).toBe(304);
   });
