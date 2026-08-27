@@ -1,0 +1,291 @@
+---
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { apiUrl, u } from '../lib/urls';
+import { fmtK } from '../lib/format';
+import {
+  HOME_MAX_STARS,
+  HOME_MIN_STARS,
+  HOME_TOP_LIMIT,
+  ecosystemType,
+  marketplaceScore,
+  normalizeRepo,
+} from '../lib/marketplace';
+
+interface Props {
+  compactHero?: boolean;
+}
+
+const { compactHero = false } = Astro.props;
+
+let catalog: any = { meta: {}, plugins: [] };
+let registry: any = { plugins: [] };
+try {
+  catalog = JSON.parse(readFileSync(resolve('..', 'catalog', 'plugins.json'), 'utf8'));
+} catch { /* catalog is optional during isolated site checks */ }
+try {
+  registry = JSON.parse(readFileSync(resolve('..', 'catalog', 'registry-v3.json'), 'utf8'));
+} catch { /* registry is optional during isolated site checks */ }
+
+const catalogPlugins = (catalog.plugins || []).filter((plugin: any) => !plugin.deprecated && !plugin.disabled);
+const catalogByRepo = new Map<string, any>();
+for (const plugin of catalogPlugins) {
+  const repo = normalizeRepo(plugin.full_name || plugin.repo_url);
+  if (repo) catalogByRepo.set(repo, plugin);
+}
+
+const registryRepos = new Set<string>();
+const registryItems = (registry.plugins || []).map((entry: any) => {
+  const repo = normalizeRepo(entry.source?.repo);
+  if (repo) registryRepos.add(repo);
+  const legacy = repo ? catalogByRepo.get(repo) : null;
+  const type = ecosystemType(entry);
+  const stars = Number(legacy?.stars ?? entry.metadata?.stars ?? 0);
+  const verified = entry.metadata?.verified === true || legacy?.verified === true;
+  const version = String(entry.version || '0.1.0');
+  const name = entry.metadata?.name || legacy?.name || entry.id;
+  const description = entry.metadata?.description || legacy?.description || '';
+  const deepLink = new URL('dsh://install');
+  deepLink.searchParams.set('id', entry.id);
+  deepLink.searchParams.set('version', version);
+  deepLink.searchParams.set('type', type);
+  return {
+    key: `registry:${type}:${entry.id}:${version}`,
+    id: entry.id,
+    type,
+    name,
+    description,
+    version,
+    repo: entry.source?.repo || legacy?.full_name || '',
+    stars,
+    verified,
+    language: legacy?.language || '',
+    category: legacy?.category || type,
+    updatedAt: legacy?.updated_at || '',
+    trend: Number(legacy?.trend_score || 0),
+    capabilities: entry.capabilities || [],
+    dependencies: Array.isArray(entry.dependencies) ? entry.dependencies.length : 0,
+    commit: entry.source?.commit || '',
+    registryManaged: true,
+    catalogLinked: Boolean(legacy),
+    install: `dsh ${type} install ${entry.id}@${version}`,
+    deepLink: deepLink.toString(),
+    detail: `${u(`/ecosystem/${encodeURIComponent(entry.id)}`)}?type=${type}`,
+  };
+});
+
+const legacyOnlyItems = catalogPlugins
+  .filter((plugin: any) => {
+    const repo = normalizeRepo(plugin.full_name || plugin.repo_url);
+    return repo && !registryRepos.has(repo);
+  })
+  .map((plugin: any) => ({
+    key: `catalog:plugin:${plugin.slug || plugin.full_name}`,
+    id: plugin.slug || plugin.full_name,
+    type: 'plugin' as const,
+    name: plugin.name || plugin.full_name,
+    description: plugin.description || '',
+    version: '',
+    repo: plugin.full_name || normalizeRepo(plugin.repo_url),
+    stars: Number(plugin.stars || 0),
+    verified: plugin.verified === true,
+    language: plugin.language || '',
+    category: plugin.category || 'plugin',
+    updatedAt: plugin.updated_at || '',
+    trend: Number(plugin.trend_score || 0),
+    capabilities: plugin.topics || [],
+    dependencies: 0,
+    commit: '',
+    registryManaged: false,
+    catalogLinked: true,
+    install: plugin.install_cmd || `dsh plugin add github:${plugin.full_name}`,
+    deepLink: `dsh://install?plugin=${encodeURIComponent(plugin.full_name || '')}`,
+    detail: u(`/plugin/${plugin.slug}`),
+  }));
+
+const items = [...registryItems, ...legacyOnlyItems];
+const scoreOf = (item: any) => marketplaceScore({
+  name: item.name,
+  stars: item.stars,
+  trend_score: item.trend,
+  verified: item.verified,
+  updated_at: item.updatedAt,
+});
+const popularItems = items
+  .filter((item: any) => item.stars >= HOME_MIN_STARS && item.stars <= HOME_MAX_STARS)
+  .sort((left: any, right: any) => scoreOf(right) - scoreOf(left) || right.stars - left.stars || left.name.localeCompare(right.name))
+  .slice(0, HOME_TOP_LIMIT);
+const popularKeys = new Set(popularItems.map((item: any) => item.key));
+const orderedItems = [...items].sort((left: any, right: any) => {
+  const leftPopular = popularKeys.has(left.key);
+  const rightPopular = popularKeys.has(right.key);
+  if (leftPopular !== rightPopular) return leftPopular ? -1 : 1;
+  if (left.registryManaged !== right.registryManaged) return left.registryManaged ? -1 : 1;
+  return scoreOf(right) - scoreOf(left) || right.stars - left.stars || left.name.localeCompare(right.name);
+});
+
+const types = ['plugin', 'mcp', 'skill', 'agent'] as const;
+const counts = Object.fromEntries(types.map((type) => [type, items.filter((item: any) => item.type === type).length]));
+const registryCount = registryItems.length;
+const legacyOnlyCount = legacyOnlyItems.length;
+const linkedCount = registryItems.filter((item: any) => item.catalogLinked).length;
+const giantCount = items.filter((item: any) => item.stars > 10000).length;
+const updatedAt = registry.generated?.at || catalog.meta?.updated_at;
+const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) : '—';
+---
+
+<section class:list={['market-hero', compactHero && 'compact']}>
+  <span class="eyebrow">DSH Plugin Marketplace · Registry V3 · Catalog aligned</span>
+  <h1>One <span class="grad-text">DSH Ecosystem</span></h1>
+  <p>Plugin、MCP、Skill、Agent 统一发现、版本对齐和本地安装。首页默认展示 100–5000 stars 的 Top100 热门生态，不让 1w+ 巨型仓库垄断推荐位。</p>
+  <div class="hero-actions">
+    <a class="primary" href="#market-grid">Explore Top {HOME_TOP_LIMIT}</a>
+    <button class="secondary" type="button" data-show-all>Browse all packages</button>
+  </div>
+  <div class="metrics">
+    <span><b>{items.length}</b><i>All packages</i></span>
+    <span><b>{popularItems.length}</b><i>Top100 popular</i></span>
+    <span><b>{registryCount}</b><i>Registry managed</i></span>
+    <span><b>{legacyOnlyCount}</b><i>Catalog only</i></span>
+    <span><b>{linkedCount}</b><i>Catalog ↔ Registry linked</i></span>
+    <span><b>{updatedLabel}</b><i>Updated</i></span>
+  </div>
+</section>
+
+<section class="alignment-strip" aria-label="marketplace data alignment">
+  <div><strong>Registry is install authority</strong><span>type、version、commit、capabilities 以 Registry V3 为准。</span></div>
+  <div><strong>Catalog enriches discovery</strong><span>原始 dsh-plugin 提供 stars、语言、分类和 GitHub 展示信息。</span></div>
+  <div><strong>Top100 discovery policy</strong><span>{HOME_MIN_STARS}–{fmtK(HOME_MAX_STARS)} stars；{giantCount} 个 1w+ 仓库默认不推荐。</span></div>
+</section>
+
+<section class="market-toolbar" aria-label="marketplace filters">
+  <div class="search-wrap">
+    <span aria-hidden="true">⌕</span>
+    <input id="market-search" type="search" placeholder="搜索 package、GitHub repo、type、capability…" autocomplete="off" />
+    <kbd>/</kbd>
+  </div>
+  <div class="filter-row">
+    <button class="market-filter active" type="button" data-market-filter="popular">Popular <small>{popularItems.length}</small></button>
+    <button class="market-filter" type="button" data-market-filter="all">All <small>{items.length}</small></button>
+    {types.map((type) => <button class="market-filter" type="button" data-market-filter={type}>{type.toUpperCase()} <small>{counts[type]}</small></button>)}
+    <label class="check-filter"><input id="market-verified" type="checkbox" /> Verified</label>
+    <label class="check-filter"><input id="market-registry" type="checkbox" /> Registry only</label>
+  </div>
+</section>
+
+<div class="result-line">
+  <span id="market-count">{popularItems.length} 个 Top100 热门生态条目</span>
+  <span class="result-links"><a href={u('/profiles')}>Profiles / Bundles</a><a href={u('/trending')}>Trending</a><a href={apiUrl('/api/v1/search')}>Search API ↗</a></span>
+</div>
+
+<section id="market-grid" class="market-grid">
+  {orderedItems.map((item: any) => {
+    const popular = popularKeys.has(item.key);
+    return (
+      <article
+        class="market-card"
+        data-type={item.type}
+        data-popular={String(popular)}
+        data-verified={String(item.verified)}
+        data-registry={String(item.registryManaged)}
+        data-search={`${item.type}:${item.id} ${item.name} ${item.repo} ${item.description} ${item.language} ${item.category} ${(item.capabilities || []).join(' ')}`.toLowerCase()}
+        hidden={!popular}
+      >
+        <a class="card-main" href={item.detail}>
+          <div class="card-top">
+            <span class={`kind ${item.type}`}>{item.type.toUpperCase()}</span>
+            {item.registryManaged ? <span class="source registry">Registry v{item.version}</span> : <span class="source catalog">Catalog only</span>}
+            {item.verified && <span class="verified">✓</span>}
+            <span class="stars">{item.stars > 0 ? `★ ${fmtK(item.stars)}` : 'New'}</span>
+          </div>
+          <h2>{item.name}</h2>
+          <p class="repo">{item.repo || `${item.type}:${item.id}`}</p>
+          <p class="description">{item.description || '暂无描述'}</p>
+          <div class="meta-row">
+            {item.language && <span>{item.language}</span>}
+            {item.dependencies > 0 && <span>{item.dependencies} deps</span>}
+            {item.commit && <span title={item.commit}>commit {item.commit.slice(0, 8)}</span>}
+            {item.catalogLinked && item.registryManaged && <span>Catalog linked</span>}
+          </div>
+          <div class="caps">{(item.capabilities || []).slice(0, 5).map((capability: string) => <span>{capability}</span>)}</div>
+        </a>
+        <div class="card-actions">
+          <a class="ghost" href={item.detail}>Details</a>
+          <a class="install" href={item.deepLink}>Install</a>
+          <button class="ghost" type="button" data-copy-command={item.install}>Copy</button>
+        </div>
+      </article>
+    );
+  })}
+</section>
+<div id="market-empty" class="empty" hidden>没有匹配的生态条目。</div>
+
+<script>
+  const search = document.querySelector<HTMLInputElement>('#market-search');
+  const verified = document.querySelector<HTMLInputElement>('#market-verified');
+  const registryOnly = document.querySelector<HTMLInputElement>('#market-registry');
+  const count = document.querySelector<HTMLElement>('#market-count');
+  const empty = document.querySelector<HTMLElement>('#market-empty');
+  const cards = [...document.querySelectorAll<HTMLElement>('.market-card')];
+  const filters = [...document.querySelectorAll<HTMLButtonElement>('[data-market-filter]')];
+  const showAll = document.querySelector<HTMLButtonElement>('[data-show-all]');
+  let activeFilter = 'popular';
+
+  function applyFilters() {
+    const keyword = (search?.value || '').trim().toLowerCase();
+    const verifiedOnly = verified?.checked === true;
+    const registryRequired = registryOnly?.checked === true;
+    let visible = 0;
+    for (const card of cards) {
+      const typeMatch = activeFilter === 'all'
+        || (activeFilter === 'popular' ? card.dataset.popular === 'true' : card.dataset.type === activeFilter);
+      const searchMatch = !keyword || (card.dataset.search || '').includes(keyword);
+      const verifiedMatch = !verifiedOnly || card.dataset.verified === 'true';
+      const registryMatch = !registryRequired || card.dataset.registry === 'true';
+      const show = typeMatch && searchMatch && verifiedMatch && registryMatch;
+      card.hidden = !show;
+      if (show) visible += 1;
+    }
+    if (count) count.textContent = `${visible} 个生态条目`;
+    if (empty) empty.hidden = visible !== 0;
+  }
+
+  function setFilter(filter: string) {
+    activeFilter = filter;
+    for (const button of filters) button.classList.toggle('active', button.dataset.marketFilter === filter);
+    applyFilters();
+  }
+
+  search?.addEventListener('input', applyFilters);
+  verified?.addEventListener('change', applyFilters);
+  registryOnly?.addEventListener('change', applyFilters);
+  for (const button of filters) button.addEventListener('click', () => setFilter(button.dataset.marketFilter || 'popular'));
+  showAll?.addEventListener('click', () => {
+    setFilter('all');
+    document.querySelector('#market-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === '/' && document.activeElement !== search) {
+      event.preventDefault();
+      search?.focus();
+    }
+  });
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-copy-command]')) {
+    button.addEventListener('click', async () => {
+      const command = button.dataset.copyCommand || '';
+      try { await navigator.clipboard.writeText(command); }
+      catch { window.prompt('复制本地安装命令', command); }
+      const previous = button.textContent;
+      button.textContent = 'Copied';
+      window.setTimeout(() => { button.textContent = previous; }, 1200);
+    });
+  }
+</script>
+
+<style>
+  .market-hero{text-align:center;padding:48px 0 30px}.market-hero.compact{padding-top:30px}.eyebrow{color:var(--accent);font-size:10.5px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.market-hero h1{margin:10px auto 12px;max-width:900px;font-size:clamp(38px,6vw,68px);line-height:1.02;letter-spacing:-.055em}.market-hero p{max-width:780px;margin:0 auto;color:var(--muted);font-size:14px}.hero-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin:23px 0}.primary,.secondary,.ghost,.install{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:10px;padding:8px 12px;font:700 11.5px/1.25 inherit;text-decoration:none;cursor:pointer}.primary,.install{background:var(--accent);border-color:var(--accent);color:#fff}.secondary,.ghost{background:var(--card);color:var(--fg)}.primary:hover,.secondary:hover,.ghost:hover,.install:hover{text-decoration:none;transform:translateY(-1px)}.metrics{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}.metrics span{display:inline-flex;align-items:baseline;gap:5px;border:1px solid var(--border);border-radius:999px;background:var(--card);padding:5px 10px;box-shadow:var(--shadow-sm)}.metrics b{font-size:11.5px}.metrics i{font-style:normal;color:var(--muted);font-size:9.5px}
+  .alignment-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--border);margin:4px 0 28px}.alignment-strip div{display:flex;flex-direction:column;gap:4px;background:var(--card);padding:15px 17px}.alignment-strip strong{font-size:11.5px}.alignment-strip span{color:var(--muted);font-size:10.8px;line-height:1.5}
+  .market-toolbar{display:grid;gap:10px;margin-bottom:12px}.search-wrap{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:9px;border:1px solid var(--border);border-radius:14px;background:var(--card);padding:0 12px;box-shadow:var(--shadow-sm)}.search-wrap>span{font-size:18px;color:var(--muted)}.search-wrap input{width:100%;border:0;outline:0;background:transparent;color:var(--fg);padding:12px 0;font:inherit}.search-wrap kbd{border:1px solid var(--border);border-bottom-width:2px;border-radius:6px;background:var(--bg-soft);color:var(--muted);padding:1px 6px;font-size:10px}.filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.market-filter{border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--muted);padding:5px 10px;font-size:11.5px;cursor:pointer}.market-filter small{margin-left:2px}.market-filter.active{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--border));color:var(--accent);font-weight:750}.check-filter{display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:11px;margin-left:4px}.result-line{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:10.8px;margin:10px 0 12px}.result-links{display:flex;gap:11px;flex-wrap:wrap}
+  .market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:13px;scroll-margin-top:90px}.market-card{display:flex;flex-direction:column;min-width:0;min-height:254px;border:1px solid var(--border);border-radius:17px;background:var(--card);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .16s,box-shadow .16s,border-color .16s}.market-card:hover{transform:translateY(-2px);border-color:var(--border-strong);box-shadow:var(--shadow-md)}.market-card[hidden]{display:none}.card-main{display:flex;flex:1;flex-direction:column;min-width:0;padding:15px 16px 12px;color:inherit}.card-main:hover{text-decoration:none}.card-top{display:flex;align-items:center;gap:5px;min-width:0}.kind,.source,.verified,.meta-row span,.caps span{display:inline-flex;border-radius:999px;padding:2px 7px;font-size:9.8px;font-weight:750;white-space:nowrap}.kind{color:var(--accent);background:var(--accent-soft)}.kind.mcp{color:#7c3aed;background:color-mix(in srgb,#7c3aed 12%,transparent)}.kind.skill{color:#0891b2;background:color-mix(in srgb,#0891b2 12%,transparent)}.kind.agent{color:#db2777;background:color-mix(in srgb,#db2777 12%,transparent)}.source{color:var(--muted);background:var(--bg-soft)}.source.registry{color:var(--accent)}.source.catalog{color:var(--amber)}.verified{color:var(--green);background:color-mix(in srgb,var(--green) 12%,transparent)}.stars{margin-left:auto;color:var(--amber);font-size:10.8px;font-weight:800;white-space:nowrap}.market-card h2{margin:10px 0 1px;font-size:15px;overflow-wrap:anywhere}.repo{margin:0;color:var(--muted);font:10px ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.description{color:var(--muted);font-size:11.8px;line-height:1.5;min-height:53px;margin:10px 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.meta-row,.caps{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto}.meta-row span,.caps span{color:var(--muted);background:var(--bg-soft);font-weight:650}.caps{margin-top:6px}.card-actions{display:flex;justify-content:flex-end;gap:6px;border-top:1px solid var(--border);padding:8px 10px}.card-actions .ghost,.card-actions .install{padding:6px 9px;font-size:10.5px}.empty{text-align:center;color:var(--muted);padding:46px 0}
+  @media(max-width:760px){.market-hero{padding-top:30px}.alignment-strip{grid-template-columns:1fr}.result-line{flex-direction:column;gap:4px}.check-filter{margin-left:0}.market-grid{grid-template-columns:1fr}}
+</style>
