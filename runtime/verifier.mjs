@@ -4,6 +4,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { artifactIntegrity } from '../scripts/checksum.mjs';
 import { assertPackageType } from './package-model.mjs';
+import { isReleaseArtifact, validateReleaseArtifact } from './artifact-installer.mjs';
 
 const exec = promisify(execFile);
 const COMMIT_RE = /^[0-9a-f]{40}$/i;
@@ -25,6 +26,12 @@ export function verifyResolvedPackage(pkg) {
   if (pkg?.version && pkg?.repo && pkg?.commit) {
     const canonical = { version: pkg.version, source: { provider: 'github', repo: pkg.repo, commit: pkg.commit } };
     if (pkg?.integrity !== artifactIntegrity(canonical)) errors.push('source identity integrity mismatch');
+  }
+  if (isReleaseArtifact(pkg?.artifact)) {
+    const release = validateReleaseArtifact(pkg.artifact);
+    if (!release.ok) errors.push(...release.errors);
+  } else if (pkg?.artifact?.kind && pkg.artifact.kind !== 'git-source') {
+    errors.push(`unsupported artifact kind: ${pkg.artifact.kind}`);
   }
   return { ok: errors.length === 0, errors };
 }
