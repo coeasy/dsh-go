@@ -53,8 +53,12 @@ async function main() {
   if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error('commit must be an immutable 40-character SHA');
 
   const manifest = found.manifest;
+  if (!manifest.id || !/^[A-Za-z0-9_.-]+$/.test(manifest.id)) throw new Error('package manifest id is required and must be release-safe');
+  if (!manifest.type || !['plugin', 'mcp', 'skill', 'agent'].includes(manifest.type)) throw new Error('package manifest type is required');
+  if (!manifest.version) throw new Error('package manifest version is required');
   const tag = option('--tag', `v${manifest.version}`);
   const channel = option('--channel', 'stable');
+  if (!['stable', 'beta', 'nightly', 'dev'].includes(channel)) throw new Error(`unsupported release channel: ${channel}`);
   const archiveName = `${safeName(manifest.id)}-${manifest.version}.tgz`;
   const archiveFile = join(outDir, archiveName);
   const descriptorFile = join(outDir, 'dsh-package-release.json');
