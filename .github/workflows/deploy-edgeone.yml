@@ -17,7 +17,8 @@ concurrency:
 
 env:
   DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}
-  EDGEONE_PROJECT: ${{ vars.EDGEONE_PROJECT || 'dsh-go' }}
+  EDGEONE_PROJECT: dsh-go
+  EDGEONE_EXPECTED_PROJECT: dsh-go
   EDGEONE_CLI_VERSION: ${{ vars.EDGEONE_CLI_VERSION || '1.6.28' }}
   EDGEONE_DEPLOY_RETRIES: ${{ vars.EDGEONE_DEPLOY_RETRIES || '3' }}
   EDGEONE_ATTEMPT_TIMEOUT_SECONDS: ${{ vars.EDGEONE_ATTEMPT_TIMEOUT_SECONDS || '240' }}
@@ -200,6 +201,7 @@ jobs:
           echo "- stable production URL configured: ${{ steps.edgeone-config.outputs.site_url_configured || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- production target fallback: CLI production deployment URL when EDGEONE_SITE_URL is unset" >> "$GITHUB_STEP_SUMMARY"
           echo "- project: ${EDGEONE_PROJECT}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- expected project: ${EDGEONE_EXPECTED_PROJECT}" >> "$GITHUB_STEP_SUMMARY"
           echo "- CLI: edgeone@${EDGEONE_CLI_VERSION}" >> "$GITHUB_STEP_SUMMARY"
           echo "- auth mode: direct named-project CI deploy (-n + -t)" >> "$GITHUB_STEP_SUMMARY"
           echo "- failure class: ${{ steps.edgeone.outputs.failure_class || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"

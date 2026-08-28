@@ -22,6 +22,15 @@ export function validateCliVersion(value) {
   return value;
 }
 
+export function resolveProject(env = process.env) {
+  const project = env.EDGEONE_PROJECT || DEFAULT_PROJECT;
+  const expectedProject = env.EDGEONE_EXPECTED_PROJECT || DEFAULT_PROJECT;
+  if (project !== expectedProject) {
+    throw new Error(`EdgeOne project mismatch: expected=${expectedProject} actual=${project}`);
+  }
+  return project;
+}
+
 export function sanitizeLog(value, token = '') {
   let text = String(value ?? '');
   if (token) text = text.split(token).join('***');
@@ -214,7 +223,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   const token = env.EDGEONE_API_TOKEN || '';
   if (!token) throw new Error('EDGEONE_API_TOKEN is required');
 
-  const project = env.EDGEONE_PROJECT || DEFAULT_PROJECT;
+  const project = resolveProject(env);
   const cliVersion = validateCliVersion(env.EDGEONE_CLI_VERSION || DEFAULT_CLI_VERSION);
   const retries = parseBoundedInt(env.EDGEONE_DEPLOY_RETRIES, 'EDGEONE_DEPLOY_RETRIES', DEFAULT_RETRIES, 1, 5);
   const timeoutSeconds = parseBoundedInt(env.EDGEONE_ATTEMPT_TIMEOUT_SECONDS, 'EDGEONE_ATTEMPT_TIMEOUT_SECONDS', DEFAULT_TIMEOUT_SECONDS, 30, 300);

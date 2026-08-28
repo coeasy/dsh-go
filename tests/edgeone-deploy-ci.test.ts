@@ -5,6 +5,7 @@ import {
   classifyFailure,
   deployEdgeOne,
   parseLastJson,
+  resolveProject,
   sanitizeLog,
   validateCliVersion,
   validateDeployResult,
@@ -21,6 +22,18 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(validateCliVersion('2.0.0')).toBe('2.0.0');
     expect(() => validateCliVersion('1.5.9')).toThrow('>= 1.6.0');
     expect(() => validateCliVersion('latest')).toThrow('pinned semver');
+  });
+
+  it('pins deployment to the canonical EdgeOne project', () => {
+    expect(resolveProject({
+      EDGEONE_PROJECT: 'dsh-go',
+      EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+    })).toBe('dsh-go');
+    expect(resolveProject({})).toBe('dsh-go');
+    expect(() => resolveProject({
+      EDGEONE_PROJECT: 'dsh',
+      EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+    })).toThrow('EdgeOne project mismatch: expected=dsh-go actual=dsh');
   });
 
   it('builds the direct named-project deployment contract', () => {
@@ -62,6 +75,7 @@ describe('EdgeOne CI deployment helpers', () => {
       env: {
         EDGEONE_API_TOKEN: 'test-token',
         EDGEONE_PROJECT: 'dsh-go',
+        EDGEONE_EXPECTED_PROJECT: 'dsh-go',
         EDGEONE_CLI_VERSION: '1.6.28',
         EDGEONE_DEPLOY_RETRIES: '1',
         EDGEONE_ATTEMPT_TIMEOUT_SECONDS: '30',
@@ -84,6 +98,22 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(calls[0].args).not.toContain('--name');
     expect(calls[0].options.env?.PAGES_SOURCE).toBe('skills');
     expect(result.healthUrl).toBe('https://stable.edgeone.example');
+  });
+
+  it('fails before invoking the CLI when the project drifts from canonical production', async () => {
+    const execute = vi.fn(async () => ({ code: 0, stdout: '', stderr: '', timedOut: false }));
+
+    await expect(deployEdgeOne({
+      env: {
+        EDGEONE_API_TOKEN: 'test-token',
+        EDGEONE_PROJECT: 'dsh',
+        EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+      },
+      execute,
+      wait: async () => undefined,
+    })).rejects.toThrow('EdgeOne project mismatch: expected=dsh-go actual=dsh');
+
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it('checks only the supported makers deploy CLI surface', async () => {
