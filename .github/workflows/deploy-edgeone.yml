@@ -160,7 +160,17 @@ jobs:
         env:
           EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
           EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}
+          EDGEONE_DIAGNOSTIC_FILE: ${{ runner.temp }}/edgeone-deploy-diagnostic.json
         run: node .ci-control/scripts/edgeone-deploy-ci.mjs
+
+      - name: Upload sanitized EdgeOne deploy diagnostic
+        if: ${{ failure() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeone-deploy-diagnostic
+          path: ${{ runner.temp }}/edgeone-deploy-diagnostic.json
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Verify deployment URL SHA
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.deploy_url != '' }}
