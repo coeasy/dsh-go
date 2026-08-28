@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
@@ -205,6 +205,16 @@ function writeStepSummary(lines) {
   appendFileSync(summaryFile, `${lines.join('\n')}\n`);
 }
 
+export function writeDiagnostic(env, payload, token = '') {
+  const diagnosticFile = env.EDGEONE_DIAGNOSTIC_FILE;
+  if (!diagnosticFile) return;
+  const safePayload = {
+    ...payload,
+    error: payload.error ? sanitizeLog(payload.error, token) : undefined,
+  };
+  writeFileSync(diagnosticFile, `${JSON.stringify(safePayload, null, 2)}\n`, { mode: 0o600 });
+}
+
 function annotationValue(value) {
   return String(value).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A').slice(0, 900);
 }
@@ -307,6 +317,14 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     `- failure class: ${failureClass}`,
     `- attempts: ${attemptsMade}/${retries}`,
   ]);
+  writeDiagnostic(env, {
+    status: 'failure',
+    project,
+    cli_version: cliVersion,
+    failure_class: failureClass,
+    attempts: attemptsMade,
+    error: lastError,
+  }, token);
   console.error(`::error title=EdgeOne deployment failure [${failureClass}]::${annotationValue(lastError)}`);
   throw new Error(`EdgeOne deployment failed after retry policy [${failureClass}]: ${lastError}`);
 }
