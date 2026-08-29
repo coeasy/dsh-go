@@ -177,6 +177,8 @@ jobs:
           retention-days: 7
 
       - name: Verify deployment URL SHA
+        id: deploy-url-sha
+        continue-on-error: true
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.deploy_url != '' }}
         env:
           DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.deploy_url }}
@@ -188,32 +190,62 @@ jobs:
         run: node .ci-control/scripts/check-production-sha.mjs
 
       - name: Upload deployment URL SHA diagnostic
-        if: ${{ failure() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.deploy_url != '' }}
+        if: ${{ always() && steps.deploy-url-sha.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: edgeone-deploy-url-sha-diagnostic
           path: ${{ runner.temp }}/edgeone-deploy-url-sha-diagnostic.json
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
 
       - name: Production target SHA Verify
-        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.health_url != '' }}
+        id: production-sha
+        continue-on-error: true
+        if: ${{ always() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outcome == 'success' && steps.edgeone.outputs.health_url != '' }}
         env:
           DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}
           EXPECTED_DEPLOYMENT_SHA: ${{ env.DEPLOYMENT_SHA }}
           DEPLOY_LABEL: Tencent EdgeOne production target
           DEPLOY_SHA_ATTEMPTS: "12"
           DEPLOY_SHA_DELAY_MS: "10000"
+          DEPLOY_SHA_DIAGNOSTIC_FILE: ${{ runner.temp }}/edgeone-production-sha-diagnostic.json
         run: node .ci-control/scripts/check-production-sha.mjs
 
+      - name: Upload production SHA diagnostic
+        if: ${{ always() && steps.production-sha.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeone-production-sha-diagnostic
+          path: ${{ runner.temp }}/edgeone-production-sha-diagnostic.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Production Registry V3 convergence gate
-        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.health_url != '' }}
+        id: production-convergence
+        continue-on-error: true
+        if: ${{ always() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outcome == 'success' && steps.edgeone.outputs.health_url != '' }}
         env:
           DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}
           DEPLOY_LABEL: Tencent EdgeOne production target
           DEPLOY_CONVERGENCE_ATTEMPTS: "12"
           DEPLOY_CONVERGENCE_DELAY_MS: "10000"
         run: node .ci-control/scripts/check-deployment-convergence.mjs
+
+      - name: Enforce production post-deploy gates
+        if: ${{ always() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outcome == 'success' }}
+        env:
+          PRODUCTION_SHA_OUTCOME: ${{ steps.production-sha.outcome }}
+          PRODUCTION_CONVERGENCE_OUTCOME: ${{ steps.production-convergence.outcome }}
+        run: |
+          set -euo pipefail
+          if [ "$PRODUCTION_SHA_OUTCOME" != "success" ]; then
+            echo "::error::Production SHA gate failed; inspect edgeone-production-sha-diagnostic"
+            exit 1
+          fi
+          if [ "$PRODUCTION_CONVERGENCE_OUTCOME" != "success" ]; then
+            echo "::error::Production Registry V3 convergence gate failed"
+            exit 1
+          fi
 
       - name: EdgeOne summary
         if: always()
@@ -231,4 +263,7 @@ jobs:
           echo "- failure class: ${{ steps.edgeone.outputs.failure_class || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- project id: ${{ steps.edgeone.outputs.project_id || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- console URL: ${{ steps.edgeone.outputs.console_url || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- gate: deployment URL SHA -> production target SHA -> Registry V3 convergence" >> "$GITHUB_STEP_SUMMARY"
+          echo "- deployment URL SHA gate: ${{ steps.deploy-url-sha.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- production SHA gate: ${{ steps.production-sha.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- production convergence gate: ${{ steps.production-convergence.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- authoritative gate: production target SHA + Registry V3 convergence" >> "$GITHUB_STEP_SUMMARY"
