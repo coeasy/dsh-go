@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { appendFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const DEFAULT_ATTEMPTS = 12;
@@ -65,6 +66,13 @@ function parseArgs(argv) {
     index += 1;
   }
   return result;
+}
+
+function writeGithubOutput(name, value) {
+  const outputFile = process.env.GITHUB_OUTPUT;
+  if (!outputFile) return;
+  const safeValue = String(value ?? '').replaceAll('\r', ' ').replaceAll('\n', ' ').slice(0, 1000);
+  appendFileSync(outputFile, `${name}=${safeValue}\n`);
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -134,7 +142,17 @@ async function main() {
   const delayMs = parsePositiveInt(args['delay-ms'] || process.env.DEPLOY_SHA_DELAY_MS, 'delay-ms', DEFAULT_DELAY_MS, 0, 120_000);
   const timeoutMs = parsePositiveInt(args['timeout-ms'] || process.env.DEPLOY_SHA_TIMEOUT_MS, 'timeout-ms', DEFAULT_TIMEOUT_MS, 1_000, 120_000);
 
-  await checkProductionSha({ baseUrl, expectedSha, label, attempts, delayMs, timeoutMs });
+  try {
+    const result = await checkProductionSha({ baseUrl, expectedSha, label, attempts, delayMs, timeoutMs });
+    writeGithubOutput('actual_sha', result.actualSha);
+    writeGithubOutput('version_url', safeDisplayUrl(result.versionUrl));
+    writeGithubOutput('problem', 'none');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    writeGithubOutput('actual_sha', '');
+    writeGithubOutput('problem', message);
+    throw error;
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
