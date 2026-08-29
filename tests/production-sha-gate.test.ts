@@ -1,3 +1,6 @@
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   buildVersionUrl,
@@ -17,6 +20,7 @@ type ShaGateOptions = {
   attempts?: number;
   delayMs?: number;
   timeoutMs?: number;
+  diagnosticFile?: string;
   fetchImpl?: (input: URL | RequestInfo, init?: RequestInit) => Promise<Response>;
   log?: (...args: unknown[]) => void;
   wait?: (ms: number) => Promise<void>;
@@ -100,5 +104,44 @@ describe('production SHA deployment gate', () => {
       log: () => undefined,
       wait: async () => undefined,
     })).rejects.toThrow(`did not converge to commit ${SHA}`);
+  });
+
+  it('records a sanitized HTTP failure diagnostic without signed query parameters', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'dsh-sha-gate-'));
+    const diagnosticFile = join(directory, 'sha-diagnostic.json');
+
+    try {
+      await expect(runShaGate({
+        baseUrl: 'https://preview.edgeone.cool/path?eo_token=secret&eo_time=123',
+        expectedSha: SHA,
+        attempts: 1,
+        delayMs: 0,
+        timeoutMs: 1_000,
+        diagnosticFile,
+        nonceFactory: (attempt) => attempt,
+        fetchImpl: async () => ({
+          ok: false,
+          status: 401,
+          url: 'https://preview.edgeone.cool/path/version.json?eo_token=secret&eo_time=123',
+          headers: new Headers({ 'content-type': 'text/html; charset=utf-8' }),
+          json: async () => ({}),
+        } as Response),
+        log: () => undefined,
+        wait: async () => undefined,
+      })).rejects.toThrow('HTTP 401');
+
+      const diagnostic = JSON.parse(readFileSync(diagnosticFile, 'utf8')) as Record<string, unknown>;
+      expect(diagnostic.status).toBe('failure');
+      expect(diagnostic.expected_sha).toBe(SHA);
+      expect(diagnostic.http_status).toBe(401);
+      expect(diagnostic.content_type).toBe('text/html; charset=utf-8');
+      expect(diagnostic.problem).toBe('HTTP 401');
+      expect(diagnostic.request_url).toBe('https://preview.edgeone.cool/path/version.json');
+      expect(diagnostic.response_url).toBe('https://preview.edgeone.cool/path/version.json');
+      expect(JSON.stringify(diagnostic)).not.toContain('secret');
+      expect(JSON.stringify(diagnostic)).not.toContain('eo_token');
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

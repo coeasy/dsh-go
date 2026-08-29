@@ -184,7 +184,17 @@ jobs:
           DEPLOY_LABEL: Tencent EdgeOne deployment URL
           DEPLOY_SHA_ATTEMPTS: "6"
           DEPLOY_SHA_DELAY_MS: "5000"
+          DEPLOY_SHA_DIAGNOSTIC_FILE: ${{ runner.temp }}/edgeone-deploy-url-sha-diagnostic.json
         run: node .ci-control/scripts/check-production-sha.mjs
+
+      - name: Upload deployment URL SHA diagnostic
+        if: ${{ failure() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.deploy_url != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeone-deploy-url-sha-diagnostic
+          path: ${{ runner.temp }}/edgeone-deploy-url-sha-diagnostic.json
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Production target SHA Verify
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outputs.health_url != '' }}
