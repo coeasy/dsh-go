@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const DEFAULT_ATTEMPTS = 12;
@@ -69,6 +70,20 @@ function parseArgs(argv) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function responseDisplayUrl(response, fallbackUrl) {
+  const value = response?.url || fallbackUrl;
+  try {
+    return safeDisplayUrl(value);
+  } catch {
+    return safeDisplayUrl(fallbackUrl);
+  }
+}
+
+export function writeShaDiagnostic(file, payload) {
+  if (!file) return;
+  writeFileSync(file, `${JSON.stringify(payload, null, 2)}\n`, { mode: 0o600 });
+}
+
 export async function checkProductionSha({
   baseUrl,
   expectedSha,
@@ -76,6 +91,7 @@ export async function checkProductionSha({
   attempts = DEFAULT_ATTEMPTS,
   delayMs = DEFAULT_DELAY_MS,
   timeoutMs = DEFAULT_TIMEOUT_MS,
+  diagnosticFile = '',
   fetchImpl = fetch,
   log = console.log,
   wait = sleep,
@@ -90,6 +106,20 @@ export async function checkProductionSha({
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     lastUrl = buildVersionUrl(baseUrl, nonceFactory(attempt));
+    const observation = {
+      status: 'attempt',
+      label,
+      attempt,
+      attempts,
+      expected_sha: expected,
+      request_url: safeDisplayUrl(lastUrl),
+      response_url: '',
+      http_status: null,
+      content_type: '',
+      actual_sha: '',
+      problem: '',
+    };
+
     try {
       const response = await fetchImpl(lastUrl, {
         headers: {
@@ -101,12 +131,19 @@ export async function checkProductionSha({
         signal: AbortSignal.timeout(timeoutMs),
       });
 
+      observation.response_url = responseDisplayUrl(response, lastUrl);
+      observation.http_status = Number.isInteger(response.status) ? response.status : null;
+      observation.content_type = response.headers?.get?.('content-type') || '';
+
       if (!response.ok) {
         lastProblem = `HTTP ${response.status}`;
       } else {
         const metadata = await response.json();
         const actual = deployedVersionSha(metadata);
+        observation.actual_sha = actual;
         if (actual === expected) {
+          observation.status = 'success';
+          writeShaDiagnostic(diagnosticFile, observation);
           log(`${label} SHA verified: ${expected}`);
           return { expectedSha: expected, actualSha: actual, versionUrl: lastUrl, metadata };
         }
@@ -115,6 +152,10 @@ export async function checkProductionSha({
     } catch (error) {
       lastProblem = error instanceof Error ? error.message : String(error);
     }
+
+    observation.problem = lastProblem;
+    observation.status = attempt === attempts ? 'failure' : 'retrying';
+    writeShaDiagnostic(diagnosticFile, observation);
 
     if (attempt < attempts) {
       log(`${label} SHA not converged (${attempt}/${attempts}): ${lastProblem}`);
@@ -133,8 +174,9 @@ async function main() {
   const attempts = parsePositiveInt(args.attempts || process.env.DEPLOY_SHA_ATTEMPTS, 'attempts', DEFAULT_ATTEMPTS, 1, 30);
   const delayMs = parsePositiveInt(args['delay-ms'] || process.env.DEPLOY_SHA_DELAY_MS, 'delay-ms', DEFAULT_DELAY_MS, 0, 120_000);
   const timeoutMs = parsePositiveInt(args['timeout-ms'] || process.env.DEPLOY_SHA_TIMEOUT_MS, 'timeout-ms', DEFAULT_TIMEOUT_MS, 1_000, 120_000);
+  const diagnosticFile = args['diagnostic-file'] || process.env.DEPLOY_SHA_DIAGNOSTIC_FILE || '';
 
-  await checkProductionSha({ baseUrl, expectedSha, label, attempts, delayMs, timeoutMs });
+  await checkProductionSha({ baseUrl, expectedSha, label, attempts, delayMs, timeoutMs, diagnosticFile });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
