@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 29 Aug 2026 01:47:25 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 29 Aug 2026 12:41:59 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -21,18 +21,18 @@
       <description>ego browser — 看得见的 Agent 浏览器 &lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshfind.com/zh/plugins/Fisfzy/ego browser?ref=badge&quot; &lt;img src=&quot;https://dshfind.com/api/badge/Fisfzy/eg</description>
     </item>
     <item>
-      <title>🆕 DeepRead</title>
-      <link>https://github.com/xiehuan123/dsh-deepread</link>
-      <guid isPermaLink="false">xiehuan123/dsh-deepread@2026-08-22T08:07:53Z</guid>
-      <pubDate>Sat, 22 Aug 2026 08:07:53 GMT</pubDate>
-      <description>📖 DeepRead — Evidence first reading for AI agents 中文官网 English 中文 Turn long articles, books, PDFs, and document sets into traceable claims, evidence, confidence levels, knowledge maps, and review que</description>
-    </item>
-    <item>
       <title>🆕 dsh-lark-bot</title>
       <link>https://github.com/PlutoKeating/dsh-lark-bot</link>
       <guid isPermaLink="false">PlutoKeating/dsh-lark-bot@2026-08-25T15:57:37Z</guid>
       <pubDate>Tue, 25 Aug 2026 15:57:37 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; dsh lark bot&lt;/h1 &lt;p align=&quot;center&quot; 🌏 &lt;a href=&quot;README EN.md&quot; English&lt;/a · 🌐 官网wiki &lt;a href=&quot;https://dsh lark bot.arr2018.dpdns.</description>
+    </item>
+    <item>
+      <title>🆕 DeepRead</title>
+      <link>https://github.com/xiehuan123/dsh-deepread</link>
+      <guid isPermaLink="false">xiehuan123/dsh-deepread@2026-08-22T08:07:53Z</guid>
+      <pubDate>Sat, 22 Aug 2026 08:07:53 GMT</pubDate>
+      <description>📖 DeepRead — Evidence first reading for AI agents 中文官网 English 中文 Turn long articles, books, PDFs, and document sets into traceable claims, evidence, confidence levels, knowledge maps, and review que</description>
     </item>
     <item>
       <title>🆕 dsh-tui-vscode (VS Code companion)</title>
@@ -110,6 +110,13 @@
       <guid isPermaLink="false">yejiming/dsh-ppt@2026-08-25T14:57:15Z</guid>
       <pubDate>Tue, 25 Aug 2026 14:57:15 GMT</pubDate>
       <description>PPT design preset and editable PPTX production tools for DeepSeek Harness</description>
+    </item>
+    <item>
+      <title>🆕 dsh-github-installer</title>
+      <link>https://github.com/yhPrime/dsh-github-installer</link>
+      <guid isPermaLink="false">yhPrime/dsh-github-installer@2026-08-29T11:04:31Z</guid>
+      <pubDate>Sat, 29 Aug 2026 11:04:31 GMT</pubDate>
+      <description>dsh github installer 基于 dsh std 标准化协议的插件管理器 —— 粘贴 GitHub 仓库网址 / npm 包名 / 其他 Git 仓库地址，即可安装；支持卸载与更新。 A dsh std standard component for managing plugins — install from a GitHub repo URL, npm package name,</description>
     </item>
     <item>
       <title>🆕 dsh-ua-headers</title>
@@ -208,13 +215,6 @@
       <guid isPermaLink="false">muyuanjin/dsh-element-inspector@2026-08-20T12:58:46Z</guid>
       <pubDate>Thu, 20 Aug 2026 12:58:46 GMT</pubDate>
       <description>dsh element inspector English 简体中文 Inspect a DeepSeek Harness UI element, identify whether it belongs to the DSH interface or an installed plugin, and export or hide the selection. [!NOTE] This is an </description>
-    </item>
-    <item>
-      <title>🆕 Plugin Market</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-market</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-market@2026-08-17T12:50:40Z</guid>
-      <pubDate>Mon, 17 Aug 2026 12:50:40 GMT</pubDate>
-      <description>dsh tui market English below dsh TUI 的插件市场插件：在 TUI 里用 /market 浏览、搜索、安装、移除 dsh 插件，不用离开终端。 功能 /market — 浏览生态精选列表（分页，多选安装，可直接进搜索） /market search &lt;关键词 — 按 GitHub topic:dsh plugin 搜索全网插件 /market all （或 </description>
     </item>
   </channel>
 </rss>
