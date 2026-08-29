@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 29 Aug 2026 12:41:59 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 29 Aug 2026 16:48:12 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -91,6 +91,13 @@
       <description>&lt;h1 align=&quot;center&quot; cc dsh notifier&lt;/h1 &lt;p align=&quot;center&quot; &lt;strong Windows desktop notifications for Claude Code and DeepSeek Harness sessions&lt;/strong &lt;br / &lt;em </description>
     </item>
     <item>
+      <title>🆕 Web Bridge</title>
+      <link>https://github.com/JohnXu22786/browser-automation</link>
+      <guid isPermaLink="false">JohnXu22786/browser-automation@2026-08-29T16:46:41Z</guid>
+      <pubDate>Sat, 29 Aug 2026 16:46:41 GMT</pubDate>
+      <description>简体中文 Web Bridge — Browser Automation MCP Server (dsh plugin) Web Bridge is an automation MCP server that uses a real browser . It gives agents a browser&apos;s eyes and hands: open web pages, read pag</description>
+    </item>
+    <item>
       <title>🆕 写作工作台</title>
       <link>https://github.com/nousag/dsh-writing-desk</link>
       <guid isPermaLink="false">nousag/dsh-writing-desk@2026-08-24T05:39:57Z</guid>
@@ -112,10 +119,17 @@
       <description>PPT design preset and editable PPTX production tools for DeepSeek Harness</description>
     </item>
     <item>
+      <title>🆕 dsh-overleaf</title>
+      <link>https://github.com/gychen-NJU/dsh-overleaf</link>
+      <guid isPermaLink="false">gychen-NJU/dsh-overleaf@2026-08-29T16:31:30Z</guid>
+      <pubDate>Sat, 29 Aug 2026 16:31:30 GMT</pubDate>
+      <description>dsh overleaf English 中文 An embedded Overleaf workbench plugin for DeepSeek Harness (DSH) Web. It adds a fourth tab next to Chat / Trajectory / Context on the session page: the tab loads your Overleaf </description>
+    </item>
+    <item>
       <title>🆕 dsh-github-installer</title>
       <link>https://github.com/yhPrime/dsh-github-installer</link>
-      <guid isPermaLink="false">yhPrime/dsh-github-installer@2026-08-29T11:04:31Z</guid>
-      <pubDate>Sat, 29 Aug 2026 11:04:31 GMT</pubDate>
+      <guid isPermaLink="false">yhPrime/dsh-github-installer@2026-08-29T16:09:15Z</guid>
+      <pubDate>Sat, 29 Aug 2026 16:09:15 GMT</pubDate>
       <description>dsh github installer 基于 dsh std 标准化协议的插件管理器 —— 粘贴 GitHub 仓库网址 / npm 包名 / 其他 Git 仓库地址，即可安装；支持卸载与更新。 A dsh std standard component for managing plugins — install from a GitHub repo URL, npm package name,</description>
     </item>
     <item>
@@ -175,13 +189,6 @@
       <description>@deepseek ai/dsh win desktop DeepSeek Harness Windows Desktop Plugin — A zero dependency DSH plugin that bridges Windows desktop sessions via a local HTTP API. Install with a single node command, no p</description>
     </item>
     <item>
-      <title>🆕 Web Bridge</title>
-      <link>https://github.com/JohnXu22786/browser-automation</link>
-      <guid isPermaLink="false">JohnXu22786/browser-automation@2026-08-17T00:59:25Z</guid>
-      <pubDate>Mon, 17 Aug 2026 00:59:25 GMT</pubDate>
-      <description>使用真实浏览器的自动化 MCP server：导航、点击、填表、截图、执行 JS，以无障碍树快照为 agent 提供页面视野。</description>
-    </item>
-    <item>
       <title>🆕 DSH Music Player (TUI)</title>
       <link>https://github.com/heshuren371/dsh-music-player-tui</link>
       <guid isPermaLink="false">heshuren371/dsh-music-player-tui@2026-08-21T12:06:33Z</guid>
@@ -208,13 +215,6 @@
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-herdr@2026-08-21T11:25:39Z</guid>
       <pubDate>Fri, 21 Aug 2026 11:25:39 GMT</pubDate>
       <description></description>
-    </item>
-    <item>
-      <title>🆕 dsh-element-inspector</title>
-      <link>https://github.com/muyuanjin/dsh-element-inspector</link>
-      <guid isPermaLink="false">muyuanjin/dsh-element-inspector@2026-08-20T12:58:46Z</guid>
-      <pubDate>Thu, 20 Aug 2026 12:58:46 GMT</pubDate>
-      <description>dsh element inspector English 简体中文 Inspect a DeepSeek Harness UI element, identify whether it belongs to the DSH interface or an installed plugin, and export or hide the selection. [!NOTE] This is an </description>
     </item>
   </channel>
 </rss>

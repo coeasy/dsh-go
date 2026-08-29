@@ -1,25 +1,15 @@
 {
   "last_sync": {
-    "at": "2026-08-29T12:41:59.101Z",
+    "at": "2026-08-29T16:48:12.601Z",
     "mode": "incremental",
-    "duration_ms": 55855,
-    "scanned": 1175,
-    "included": 864,
+    "duration_ms": 55445,
+    "scanned": 1314,
+    "included": 1000,
     "skipped": 44,
     "data_changed": true,
     "errors": []
   },
   "history": [
-    {
-      "at": "2026-08-25T07:56:30.153Z",
-      "mode": "full",
-      "duration_ms": 252580,
-      "scanned": 4240,
-      "included": 3291,
-      "skipped": 104,
-      "data_changed": true,
-      "errors": []
-    },
     {
       "at": "2026-08-25T08:23:38.520Z",
       "mode": "full",
@@ -309,18 +299,28 @@
       "skipped": 44,
       "data_changed": true,
       "errors": []
+    },
+    {
+      "at": "2026-08-29T16:48:12.601Z",
+      "mode": "incremental",
+      "duration_ms": 55445,
+      "scanned": 1314,
+      "included": 1000,
+      "skipped": 44,
+      "data_changed": true,
+      "errors": []
     }
   ],
   "registry_version": 3,
   "registry": {
     "schema_version": "3.0.0",
     "path": "catalog/registry-v3.json",
-    "count": 12616,
-    "excluded_count": 55,
-    "source_catalog_etag": "a6b1880d0c7af241",
-    "content_hash": "a920cb1411273d8ba9a3ee644c599ab84999bd7e9fb47856b3ce30c33b20d4cd",
+    "count": 12665,
+    "excluded_count": 54,
+    "source_catalog_etag": "28607c4f9577c74c",
+    "content_hash": "d35d5c1237e3bde54b74c4c25624d22715683c7b3687dd43cc1e15e1c2c74fdc",
     "schema_hash": "00fadb12a825831def3298e2cebdd5676e380688bb0ce78e3a194e8136062ae8",
-    "generated_at": "2026-08-29T12:42:51.702Z",
+    "generated_at": "2026-08-29T16:48:36.526Z",
     "discovery_mode": "complete",
     "discovery_transport": "graphql-topic",
     "discovered_count": 12483,
@@ -330,10 +330,10 @@
       "delta_path": "catalog/distribution-delta.json",
       "shard_count": 256,
       "package_records": true,
-      "content_hash": "a920cb1411273d8ba9a3ee644c599ab84999bd7e9fb47856b3ce30c33b20d4cd",
-      "delta_content_hash": "2c3f171eef066a0b5b62acc224ca50d50c0d0c662e18856df889497a183bee2c",
-      "delta_changed": 12509,
-      "delta_removed": 44
+      "content_hash": "d35d5c1237e3bde54b74c4c25624d22715683c7b3687dd43cc1e15e1c2c74fdc",
+      "delta_content_hash": "c0d236ddcb669773067b882e303d493b697c9975e9645c191bf9fff1de4daa0b",
+      "delta_changed": 12241,
+      "delta_removed": 14
     }
   },
   "pipeline": {
@@ -341,13 +341,13 @@
     "verified": true,
     "frozen": true,
     "registry_changed": true,
-    "run_at": "2026-08-29T12:42:52.660Z",
-    "source_catalog_etag": "a6b1880d0c7af241",
+    "run_at": "2026-08-29T16:48:37.712Z",
+    "source_catalog_etag": "28607c4f9577c74c",
     "mode": "incremental",
-    "input_count": 12624,
-    "output_count": 12616,
-    "excluded_count": 55,
+    "input_count": 12673,
+    "output_count": 12665,
+    "excluded_count": 54,
     "distribution_version": 1,
-    "distribution_delta_hash": "2c3f171eef066a0b5b62acc224ca50d50c0d0c662e18856df889497a183bee2c"
+    "distribution_delta_hash": "c0d236ddcb669773067b882e303d493b697c9975e9645c191bf9fff1de4daa0b"
   }
 }
