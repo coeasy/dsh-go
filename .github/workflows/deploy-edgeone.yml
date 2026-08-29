@@ -110,7 +110,10 @@ jobs:
 
       - name: Build static EdgeOne site
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
-        run: cd site && npm run build
+        run: |
+          cd site
+          npm run build
+          cp package.json dist/package.json
         env:
           PUBLIC_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}
           PUBLIC_API_URL: ${{ vars.EDGEONE_SITE_URL }}
@@ -141,6 +144,7 @@ jobs:
         run: |
           set -euo pipefail
           test -f site/dist/index.html
+          test -f site/dist/package.json
           test -f site/dist/version.json
           test -f site/dist/catalog/plugins.json
           test -f site/dist/catalog/registry-v3.json
