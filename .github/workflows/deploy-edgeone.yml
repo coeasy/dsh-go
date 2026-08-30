@@ -169,7 +169,7 @@ jobs:
 
       - name: Upload sanitized EdgeOne deploy diagnostic
         if: ${{ failure() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: edgeone-deploy-diagnostic
           path: ${{ runner.temp }}/edgeone-deploy-diagnostic.json
@@ -191,7 +191,7 @@ jobs:
 
       - name: Upload deployment URL SHA diagnostic
         if: ${{ always() && steps.deploy-url-sha.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: edgeone-deploy-url-sha-diagnostic
           path: ${{ runner.temp }}/edgeone-deploy-url-sha-diagnostic.json
@@ -213,7 +213,7 @@ jobs:
 
       - name: Upload production SHA diagnostic
         if: ${{ always() && steps.production-sha.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: edgeone-production-sha-diagnostic
           path: ${{ runner.temp }}/edgeone-production-sha-diagnostic.json
