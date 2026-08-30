@@ -76,7 +76,7 @@
     "check": "npm run contract:check && npm run typecheck && npm run lint && npm test && cd site && npm run check"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260825.1",
+    "@cloudflare/workers-types": "^5.20260827.1",
     "@types/node": "^22.10.0",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
