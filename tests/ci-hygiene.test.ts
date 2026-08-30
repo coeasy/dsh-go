@@ -88,6 +88,8 @@ describe('CI and deployment hygiene', () => {
     const edgeoneConfig = readFileSync(join(root, 'site', 'public', 'edgeone.json'), 'utf8');
     expect(edgeone).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.app' }}");
     expect(edgeone).toContain('Require stable EdgeOne production URL');
+    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}');
+    expect(edgeone).not.toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}');
     expect(edgeone).toContain('production target: ${EDGEONE_SITE_URL}');
     expect(edgeone).toContain('site/dist/edgeone.json');
     expect(edgeoneConfig).toContain('"source": "/version.json"');
@@ -95,7 +97,7 @@ describe('CI and deployment hygiene', () => {
     expect(edgeone).not.toContain('production target fallback: CLI production deployment URL');
   });
 
-  it('monitors Provider Adapter Registry convergence across every production host', () => {
+  it('monitors Provider Adapter Registry convergence across every production host without env-sized Registry payloads', () => {
     const monitor = workflow('monitor.yml');
     expect(monitor).toContain('/api/v1/providers?per_page=1');
     expect(monitor).toContain('PROVIDER_MAIN_HASH');
@@ -103,6 +105,10 @@ describe('CI and deployment hygiene', () => {
     expect(monitor).toContain('/catalog/provider-adapters.json');
     expect(monitor).toContain('Provider Adapter Registry converged');
     expect(monitor).toContain('Enforce final production smoke gates');
+    expect(monitor).toContain('SMOKE_DIR=$(mktemp -d)');
+    expect(monitor).toContain('$SMOKE_DIR/registry.json');
+    expect(monitor).not.toContain('REGISTRY="$REGISTRY"');
+    expect(monitor).not.toContain('META="$META"');
     expect(monitor).not.toContain('optional EdgeOne');
   });
 
