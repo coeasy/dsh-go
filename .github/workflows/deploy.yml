@@ -83,6 +83,32 @@ jobs:
           test -f site/dist/catalog/provider-adapters.json
           node -e "const r=require('./site/dist/catalog/registry-v3.json'); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length) process.exit(1)"
           node -e "const r=require('./site/dist/catalog/provider-adapters.json'); if(r.registry_version!==1 || !r.generated?.content_hash || !Array.isArray(r.providers) || r.generated.count!==r.providers.length) process.exit(1)"
+      - name: Prepare Cloudflare Pages artifact
+        if: ${{ steps.registry.outputs.ready == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .deploy/cloudflare
+          mkdir -p .deploy
+          cp -a site/dist .deploy/cloudflare
+
+          # catalog/plugins.json is a build-time compatibility export. The Astro
+          # pages are already rendered and Registry V3 is the authoritative
+          # runtime source, so do not upload this >25 MiB file to Cloudflare.
+          rm -f .deploy/cloudflare/catalog/plugins.json
+
+          test -f .deploy/cloudflare/index.html
+          test -f .deploy/cloudflare/catalog/registry-v3.json
+          test -f .deploy/cloudflare/catalog/schema-v3.json
+          test -f .deploy/cloudflare/catalog/provider-adapters.json
+          test ! -f .deploy/cloudflare/catalog/plugins.json
+
+          oversized=$(find .deploy/cloudflare -type f -size +26214400c -print)
+          if [ -n "$oversized" ]; then
+            echo "::error::Cloudflare Pages artifact contains files larger than 25 MiB:"
+            printf '%s\n' "$oversized"
+            exit 1
+          fi
       - name: Deploy to Cloudflare Pages
         if: ${{ steps.registry.outputs.ready == 'true' }}
         id: cloudflare
@@ -91,7 +117,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: >-
-            pages deploy site/dist
+            pages deploy .deploy/cloudflare
             --project-name=${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}
             --branch=main
             --commit-hash=${{ inputs.commit_sha || github.sha }}
@@ -109,3 +135,4 @@ jobs:
           echo "### Cloudflare Pages" >> "$GITHUB_STEP_SUMMARY"
           echo "- revision: ${{ inputs.commit_sha || github.sha }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- deployment URL: ${{ steps.cloudflare.outputs.deployment-url || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- artifact: provider-specific staging (legacy catalog/plugins.json excluded)" >> "$GITHUB_STEP_SUMMARY"

@@ -67,6 +67,23 @@ describe('CI and deployment hygiene', () => {
     }
   });
 
+  it('uses a Cloudflare-specific artifact that enforces the Pages single-file limit', () => {
+    const deploy = workflow('deploy.yml');
+    expect(deploy).toContain('Prepare Cloudflare Pages artifact');
+    expect(deploy).toContain('rm -f .deploy/cloudflare/catalog/plugins.json');
+    expect(deploy).toContain('find .deploy/cloudflare -type f -size +26214400c');
+    expect(deploy).toContain('pages deploy .deploy/cloudflare');
+    expect(deploy).toContain('site/dist/catalog/plugins.json');
+  });
+
+  it('keeps EdgeOne production verification on a stable target instead of the CLI URL', () => {
+    const edgeone = workflow('deploy-edgeone.yml');
+    expect(edgeone).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.app' }}");
+    expect(edgeone).toContain('Require stable EdgeOne production URL');
+    expect(edgeone).toContain('production target: ${EDGEONE_SITE_URL}');
+    expect(edgeone).not.toContain('production target fallback: CLI production deployment URL');
+  });
+
   it('monitors Provider Adapter Registry convergence across production hosts', () => {
     const monitor = workflow('monitor.yml');
     expect(monitor).toContain('/api/v1/providers?per_page=1');

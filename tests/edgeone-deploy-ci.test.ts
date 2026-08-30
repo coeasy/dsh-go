@@ -46,7 +46,7 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(args).not.toContain('--name');
   });
 
-  it('executes exactly one direct deploy without the legacy link preflight', async () => {
+  it('executes exactly one direct deploy and keeps the stable production URL authoritative', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const calls: Array<{
       command: string;
@@ -98,6 +98,22 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(calls[0].args).not.toContain('--name');
     expect(calls[0].options.env?.PAGES_SOURCE).toBe('skills');
     expect(result.healthUrl).toBe('https://stable.edgeone.example');
+  });
+
+  it('fails before invoking the CLI when the stable production URL is missing', async () => {
+    const execute = vi.fn(async () => ({ code: 0, stdout: '', stderr: '', timedOut: false }));
+
+    await expect(deployEdgeOne({
+      env: {
+        EDGEONE_API_TOKEN: 'test-token',
+        EDGEONE_PROJECT: 'dsh-go',
+        EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+      },
+      execute,
+      wait: async () => undefined,
+    })).rejects.toThrow('EDGEONE_SITE_URL is required for authoritative production verification');
+
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it('fails before invoking the CLI when the project drifts from canonical production', async () => {
