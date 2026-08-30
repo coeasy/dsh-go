@@ -120,7 +120,8 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).toContain('run: node .ci-control/scripts/edgeone-deploy-ci.mjs --check');
     expect(edgeone).toContain('run: node .ci-control/scripts/check-production-sha.mjs');
     expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.deploy_url }}');
-    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}');
+    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}');
+    expect(edgeone).not.toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}');
     expect(edgeone).toContain('Production Registry V3 convergence gate');
     expect(edgeone).not.toContain('production target fallback: CLI production deployment URL');
     expect(edgeone).toContain('production target: ${EDGEONE_SITE_URL}');
