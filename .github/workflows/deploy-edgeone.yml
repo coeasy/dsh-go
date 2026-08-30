@@ -68,7 +68,6 @@ jobs:
           else
             echo "token_configured=false" >> "$GITHUB_OUTPUT"
           fi
-
           if [ -n "$EDGEONE_SITE_URL" ]; then
             echo "site_url_configured=true" >> "$GITHUB_OUTPUT"
           else
@@ -86,6 +85,23 @@ jobs:
         run: |
           echo "::error::EDGEONE_SITE_URL is required for authoritative production verification"
           exit 1
+
+      - name: Checkout current deployment control plane
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: .ci-control
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify deployment control revision
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          CONTROL=$(git -C .ci-control rev-parse HEAD)
+          [ "$CONTROL" = "${GITHUB_SHA}" ] || { echo "Deployment control revision mismatch: expected=${GITHUB_SHA} actual=${CONTROL}"; exit 1; }
 
       - name: Setup Node.js
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
@@ -114,6 +130,10 @@ jobs:
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
         run: npm run copy-assets
 
+      - name: Prepare deployment identity before build
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
+        run: node .ci-control/scripts/write-deployment-version.mjs site/public/version.json
+
       - name: Build static EdgeOne site
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
         run: |
@@ -124,27 +144,6 @@ jobs:
           PUBLIC_SITE_URL: ${{ env.EDGEONE_SITE_URL }}
           PUBLIC_API_URL: ${{ env.EDGEONE_SITE_URL }}
 
-      - name: Checkout current deployment control plane
-        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.sha }}
-          path: .ci-control
-          fetch-depth: 1
-          persist-credentials: false
-
-      - name: Verify deployment control revision
-        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          CONTROL=$(git -C .ci-control rev-parse HEAD)
-          [ "$CONTROL" = "${GITHUB_SHA}" ] || { echo "Deployment control revision mismatch: expected=${GITHUB_SHA} actual=${CONTROL}"; exit 1; }
-
-      - name: Stamp exact deployment SHA
-        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
-        run: node .ci-control/scripts/write-deployment-version.mjs site/dist/version.json
-
       - name: Verify build output
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
         run: |
@@ -152,13 +151,27 @@ jobs:
           test -f site/dist/index.html
           test -f site/dist/package.json
           test -f site/dist/version.json
+          test -f site/dist/edgeone.json
           test -f site/dist/catalog/plugins.json
+          test -f site/dist/catalog/catalog-v3/index.json
           test -f site/dist/catalog/registry-v3.json
           test -f site/dist/catalog/schema-v3.json
           test -f site/dist/catalog/provider-adapters.json
           node -e "const fs=require('node:fs'); const v=JSON.parse(fs.readFileSync('site/dist/version.json','utf8')); if(v.git_sha !== process.env.DEPLOYMENT_SHA) process.exit(1)"
-          node -e "const fs=require('node:fs'); const r=JSON.parse(fs.readFileSync('site/dist/catalog/registry-v3.json','utf8')); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length) process.exit(1)"
-          node -e "const fs=require('node:fs'); const r=JSON.parse(fs.readFileSync('site/dist/catalog/provider-adapters.json','utf8')); if(r.registry_version!==1 || !r.generated?.content_hash || !Array.isArray(r.providers) || r.generated.count!==r.providers.length) process.exit(1)"
+          node -e "const fs=require('node:fs'); const r=JSON.parse(fs.readFileSync('site/dist/catalog/registry-v3.json','utf8')); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length || fs.statSync('site/dist/catalog/registry-v3.json').size>25165824) process.exit(1)"
+          node -e "const r=require('./site/dist/catalog/provider-adapters.json'); if(r.registry_version!==1 || !r.generated?.content_hash || !Array.isArray(r.providers) || r.generated.count!==r.providers.length) process.exit(1)"
+
+      - name: Validate EdgeOne static file limits
+        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          oversized=$(find site/dist -type f -size +26214400c -print)
+          if [ -n "$oversized" ]; then
+            echo "::error::EdgeOne artifact contains files larger than 25 MiB:"
+            printf '%s\n' "$oversized"
+            exit 1
+          fi
 
       - name: Verify EdgeOne CLI contract
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' }}
@@ -189,7 +202,7 @@ jobs:
           DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.deploy_url }}
           EXPECTED_DEPLOYMENT_SHA: ${{ env.DEPLOYMENT_SHA }}
           DEPLOY_LABEL: Tencent EdgeOne deployment URL
-          DEPLOY_SHA_ATTEMPTS: "6"
+          DEPLOY_SHA_ATTEMPTS: "12"
           DEPLOY_SHA_DELAY_MS: "5000"
           DEPLOY_SHA_DIAGNOSTIC_FILE: ${{ runner.temp }}/edgeone-deploy-url-sha-diagnostic.json
         run: node .ci-control/scripts/check-production-sha.mjs
@@ -211,7 +224,7 @@ jobs:
           DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}
           EXPECTED_DEPLOYMENT_SHA: ${{ env.DEPLOYMENT_SHA }}
           DEPLOY_LABEL: Tencent EdgeOne production target
-          DEPLOY_SHA_ATTEMPTS: "12"
+          DEPLOY_SHA_ATTEMPTS: "18"
           DEPLOY_SHA_DELAY_MS: "10000"
           DEPLOY_SHA_DIAGNOSTIC_FILE: ${{ runner.temp }}/edgeone-production-sha-diagnostic.json
         run: node .ci-control/scripts/check-production-sha.mjs
@@ -232,7 +245,7 @@ jobs:
         env:
           DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}
           DEPLOY_LABEL: Tencent EdgeOne production target
-          DEPLOY_CONVERGENCE_ATTEMPTS: "12"
+          DEPLOY_CONVERGENCE_ATTEMPTS: "18"
           DEPLOY_CONVERGENCE_DELAY_MS: "10000"
         run: node .ci-control/scripts/check-deployment-convergence.mjs
 

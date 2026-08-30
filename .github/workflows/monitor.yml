@@ -4,107 +4,208 @@ on:
   schedule:
     - cron: "5 * * * *"
   workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "Exact release SHA to verify"
+        required: false
+        type: string
 
 permissions:
   contents: read
 
+concurrency:
+  group: production-smoke-${{ inputs.commit_sha || github.sha }}
+  cancel-in-progress: false
+
+env:
+  DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}
+  SITE_URL: ${{ vars.SITE_URL || 'https://dsh-go.pages.dev' }}
+  GITHUB_PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+  EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.app' }}
+
 jobs:
   health-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
-      - name: Checkout main registries
+      - name: Checkout exact release revision
         uses: actions/checkout@v7
         with:
-          ref: main
+          ref: ${{ env.DEPLOYMENT_SHA }}
           fetch-depth: 1
-      - name: Require SITE_URL
-        run: |
-          [ -n "$SITE_URL" ] || { echo "SITE_URL repository variable is missing"; exit 1; }
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
-      - name: Check site and public APIs
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
-        run: |
-          curl -fsS --max-time 20 "${SITE_URL}/" >/dev/null
-          curl -fsS --max-time 20 "${SITE_URL}/api/v1/health" >/dev/null
-          curl -fsS --max-time 20 "${SITE_URL}/api/v1/registry" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);if(r.registry_version!==3||!r.generated?.content_hash||!r.plugins?.length)process.exit(1)})"
-          curl -fsS --max-time 20 "${SITE_URL}/api/v1/providers?per_page=1" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const r=JSON.parse(d);if(r.meta?.registry_version!==1||!r.meta?.content_hash||typeof r.meta?.count!=='number')process.exit(1)})"
-      - name: Check data freshness and deployed registry convergence
-        env:
-          SITE_URL: ${{ vars.SITE_URL }}
+
+      - name: Verify release revision
+        shell: bash
         run: |
           set -euo pipefail
+          ACTUAL=$(git rev-parse HEAD)
+          [ "$ACTUAL" = "$DEPLOYMENT_SHA" ] || { echo "Release revision mismatch: expected=$DEPLOYMENT_SHA actual=$ACTUAL"; exit 1; }
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Check Cloudflare runtime APIs
+        id: cloudflare-api
+        continue-on-error: true
+        env:
+          BASE_URL: ${{ env.SITE_URL }}
+        run: |
+          set -euo pipefail
+          BASE_URL="${BASE_URL%/}"
           MAIN_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
           MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
           PROVIDER_MAIN_HASH=$(node -p "require('./catalog/provider-adapters.json').generated.content_hash")
           PROVIDER_MAIN_COUNT=$(node -p "require('./catalog/provider-adapters.json').providers.length")
-          UPDATED=""
-          for attempt in 1 2 3 4 5 6 7 8 9; do
-            META=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/meta")
-            UPDATED=$(printf '%s' "$META" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).last_sync.at))")
-            META_HASH=$(printf '%s' "$META" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).registry.content_hash))")
-            REGISTRY=$(curl -fsS --max-time 20 "${SITE_URL}/catalog/registry-v3.json")
-            REG_HASH=$(printf '%s' "$REGISTRY" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).generated.content_hash))")
-            REG_COUNT=$(printf '%s' "$REGISTRY" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).plugins.length))")
-            API_HASH=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/registry" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).generated.content_hash))")
-            PROVIDERS=$(curl -fsS --max-time 20 "${SITE_URL}/api/v1/providers?per_page=1")
-            PROVIDER_API_HASH=$(printf '%s' "$PROVIDERS" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).meta.content_hash))")
-            PROVIDER_API_COUNT=$(printf '%s' "$PROVIDERS" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>console.log(JSON.parse(d).meta.count))")
-            if [ "$META_HASH" = "$MAIN_HASH" ] && [ "$REG_HASH" = "$MAIN_HASH" ] && [ "$API_HASH" = "$MAIN_HASH" ] && [ "$REG_COUNT" = "$MAIN_COUNT" ] && [ "$PROVIDER_API_HASH" = "$PROVIDER_MAIN_HASH" ] && [ "$PROVIDER_API_COUNT" = "$PROVIDER_MAIN_COUNT" ]; then
-              AGE_H=$(( ( $(date +%s) - $(date -d "$UPDATED" +%s) ) / 3600 ))
-              [ "$AGE_H" -lt 36 ] || { echo "Data is stale: ${AGE_H}h"; exit 1; }
-              echo "Registries converged with main, data age=${AGE_H}h, packages=${REG_COUNT}, providers=${PROVIDER_API_COUNT}, registry_hash=${MAIN_HASH}, provider_hash=${PROVIDER_MAIN_HASH}"
+          curl -fsS --max-time 20 "${BASE_URL}/" >/dev/null
+          curl -fsS --max-time 20 "${BASE_URL}/api/v1/health" >/dev/null
+          for attempt in $(seq 1 18); do
+            META=$(curl -fsS --max-time 20 "${BASE_URL}/api/v1/meta?__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}") || true
+            REGISTRY=$(curl -fsS --max-time 20 "${BASE_URL}/api/v1/registry?__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}") || true
+            PROVIDERS=$(curl -fsS --max-time 20 "${BASE_URL}/api/v1/providers?per_page=1&__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}") || true
+            if META="$META" REGISTRY="$REGISTRY" PROVIDERS="$PROVIDERS" MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "try{const m=JSON.parse(process.env.META);const r=JSON.parse(process.env.REGISTRY);const p=JSON.parse(process.env.PROVIDERS);const updated=Date.parse(m.last_sync?.at||'');const age=(Date.now()-updated)/3600000;if(m.registry?.content_hash!==process.env.MAIN_HASH||r.generated?.content_hash!==process.env.MAIN_HASH||String(r.plugins?.length)!==process.env.MAIN_COUNT||p.meta?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.meta?.count)!==process.env.PROVIDER_MAIN_COUNT||!Number.isFinite(age)||age>=36)process.exit(1)}catch{process.exit(1)}"; then
+              echo "Cloudflare runtime registries converged with main release SHA ${DEPLOYMENT_SHA}"
               exit 0
             fi
-            echo "Registries not converged (attempt ${attempt}/9): registry main=${MAIN_HASH}/${MAIN_COUNT}, meta=${META_HASH}, catalog=${REG_HASH}/${REG_COUNT}, api=${API_HASH}; provider main=${PROVIDER_MAIN_HASH}/${PROVIDER_MAIN_COUNT}, api=${PROVIDER_API_HASH}/${PROVIDER_API_COUNT}"
+            echo "Cloudflare runtime not converged (${attempt}/18)"
             sleep 10
           done
-          echo "Deployed Registry V3 did not converge to main; Provider Adapter Registry convergence is also required"
+          echo "Deployed Registry V3 did not converge to main release revision"
           exit 1
-      - name: Check GitHub Pages registry convergence
+
+      - name: Check Cloudflare exact SHA
+        id: cloudflare-sha
+        continue-on-error: true
+        if: always()
         env:
-          GITHUB_PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+          DEPLOY_BASE_URL: ${{ env.SITE_URL }}
+          EXPECTED_DEPLOYMENT_SHA: ${{ env.DEPLOYMENT_SHA }}
+          DEPLOY_LABEL: Cloudflare Pages final smoke
+          DEPLOY_SHA_ATTEMPTS: "18"
+          DEPLOY_SHA_DELAY_MS: "10000"
+        run: node scripts/check-production-sha.mjs
+
+      - name: Check Cloudflare Registry V3
+        id: cloudflare-registry
+        continue-on-error: true
+        if: always()
+        env:
+          DEPLOY_BASE_URL: ${{ env.SITE_URL }}
+          DEPLOY_LABEL: Cloudflare Pages final smoke
+          DEPLOY_CONVERGENCE_ATTEMPTS: "18"
+          DEPLOY_CONVERGENCE_DELAY_MS: "10000"
+        run: node scripts/check-deployment-convergence.mjs
+
+      - name: Check GitHub Pages exact SHA
+        id: pages-sha
+        continue-on-error: true
+        if: always()
+        env:
+          DEPLOY_BASE_URL: ${{ env.GITHUB_PAGES_URL }}
+          EXPECTED_DEPLOYMENT_SHA: ${{ env.DEPLOYMENT_SHA }}
+          DEPLOY_LABEL: GitHub Pages final smoke
+          DEPLOY_SHA_ATTEMPTS: "18"
+          DEPLOY_SHA_DELAY_MS: "10000"
+        run: node scripts/check-production-sha.mjs
+
+      - name: Check GitHub Pages Registry V3
+        id: pages-registry
+        continue-on-error: true
+        if: always()
+        env:
+          DEPLOY_BASE_URL: ${{ env.GITHUB_PAGES_URL }}
+          DEPLOY_LABEL: GitHub Pages final smoke
+          DEPLOY_CONVERGENCE_ATTEMPTS: "18"
+          DEPLOY_CONVERGENCE_DELAY_MS: "10000"
+        run: node scripts/check-deployment-convergence.mjs
+
+      - name: Check EdgeOne exact SHA
+        id: edgeone-sha
+        continue-on-error: true
+        if: always()
+        env:
+          DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}
+          EXPECTED_DEPLOYMENT_SHA: ${{ env.DEPLOYMENT_SHA }}
+          DEPLOY_LABEL: Tencent EdgeOne final smoke
+          DEPLOY_SHA_ATTEMPTS: "30"
+          DEPLOY_SHA_DELAY_MS: "10000"
+        run: node scripts/check-production-sha.mjs
+
+      - name: Check EdgeOne Registry V3
+        id: edgeone-registry
+        continue-on-error: true
+        if: always()
+        env:
+          DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}
+          DEPLOY_LABEL: Tencent EdgeOne final smoke
+          DEPLOY_CONVERGENCE_ATTEMPTS: "18"
+          DEPLOY_CONVERGENCE_DELAY_MS: "10000"
+        run: node scripts/check-deployment-convergence.mjs
+
+      - name: Check Provider Adapter Registry on all static targets
+        id: providers
+        continue-on-error: true
+        if: always()
         run: |
           set -euo pipefail
-          MAIN_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
-          MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
           PROVIDER_MAIN_HASH=$(node -p "require('./catalog/provider-adapters.json').generated.content_hash")
           PROVIDER_MAIN_COUNT=$(node -p "require('./catalog/provider-adapters.json').providers.length")
-          for attempt in 1 2 3 4 5 6; do
-            if curl -fsS --max-time 20 "${GITHUB_PAGES_URL}/catalog/registry-v3.json" -o /tmp/github-pages-registry.json && curl -fsS --max-time 20 "${GITHUB_PAGES_URL}/catalog/provider-adapters.json" -o /tmp/github-pages-providers.json; then
-              if MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "const r=require('/tmp/github-pages-registry.json');const p=require('/tmp/github-pages-providers.json');if(r.generated?.content_hash!==process.env.MAIN_HASH||String(r.plugins?.length)!==process.env.MAIN_COUNT||p.generated?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.providers?.length)!==process.env.PROVIDER_MAIN_COUNT)process.exit(1)"; then
-                echo "GitHub Pages registries converged with main"
-                exit 0
+          for BASE in "$SITE_URL" "$GITHUB_PAGES_URL" "$EDGEONE_SITE_URL"; do
+            BASE="${BASE%/}"
+            matched=false
+            for attempt in $(seq 1 18); do
+              if curl -fsS --max-time 20 "${BASE}/catalog/provider-adapters.json?__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}" -o /tmp/providers.json; then
+                if PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "const p=require('/tmp/providers.json');if(p.generated?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.providers?.length)!==process.env.PROVIDER_MAIN_COUNT)process.exit(1)"; then
+                  echo "Provider Adapter Registry converged: ${BASE}"
+                  matched=true
+                  break
+                fi
               fi
-            fi
-            sleep 10
+              sleep 10
+            done
+            [ "$matched" = true ] || { echo "Provider Adapter Registry did not converge: ${BASE}"; exit 1; }
           done
-          echo "GitHub Pages registries did not converge to main"
-          exit 1
-      - name: Check optional EdgeOne registry convergence
+
+      - name: Enforce final production smoke gates
+        if: always()
         env:
-          EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}
+          CLOUDFLARE_API: ${{ steps.cloudflare-api.outcome }}
+          CLOUDFLARE_SHA: ${{ steps.cloudflare-sha.outcome }}
+          CLOUDFLARE_REGISTRY: ${{ steps.cloudflare-registry.outcome }}
+          PAGES_SHA: ${{ steps.pages-sha.outcome }}
+          PAGES_REGISTRY: ${{ steps.pages-registry.outcome }}
+          EDGEONE_SHA: ${{ steps.edgeone-sha.outcome }}
+          EDGEONE_REGISTRY: ${{ steps.edgeone-registry.outcome }}
+          PROVIDERS: ${{ steps.providers.outcome }}
         run: |
           set -euo pipefail
-          if [ -z "$EDGEONE_SITE_URL" ]; then
-            echo "EDGEONE_SITE_URL is not configured; skipping scheduled EdgeOne health check"
-            exit 0
-          fi
-          MAIN_HASH=$(node -p "require('./catalog/registry-v3.json').generated.content_hash")
-          MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
-          PROVIDER_MAIN_HASH=$(node -p "require('./catalog/provider-adapters.json').generated.content_hash")
-          PROVIDER_MAIN_COUNT=$(node -p "require('./catalog/provider-adapters.json').providers.length")
-          BASE_URL="${EDGEONE_SITE_URL%/}"
-          for attempt in 1 2 3 4 5 6; do
-            if curl -fsS --max-time 20 "${BASE_URL}/catalog/registry-v3.json" -o /tmp/edgeone-registry.json && curl -fsS --max-time 20 "${BASE_URL}/catalog/provider-adapters.json" -o /tmp/edgeone-providers.json; then
-              if MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "const r=require('/tmp/edgeone-registry.json');const p=require('/tmp/edgeone-providers.json');if(r.generated?.content_hash!==process.env.MAIN_HASH||String(r.plugins?.length)!==process.env.MAIN_COUNT||p.generated?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.providers?.length)!==process.env.PROVIDER_MAIN_COUNT)process.exit(1)"; then
-                echo "EdgeOne registries converged with main"
-                exit 0
-              fi
+          failed=0
+          for item in \
+            "Cloudflare API:$CLOUDFLARE_API" \
+            "Cloudflare SHA:$CLOUDFLARE_SHA" \
+            "Cloudflare Registry:$CLOUDFLARE_REGISTRY" \
+            "GitHub Pages SHA:$PAGES_SHA" \
+            "GitHub Pages Registry:$PAGES_REGISTRY" \
+            "EdgeOne SHA:$EDGEONE_SHA" \
+            "EdgeOne Registry:$EDGEONE_REGISTRY" \
+            "Provider registries:$PROVIDERS"; do
+            label=${item%%:*}
+            outcome=${item#*:}
+            if [ "$outcome" != "success" ]; then
+              echo "::error::Final smoke gate failed: ${label}=${outcome}"
+              failed=1
             fi
-            sleep 10
           done
-          echo "EdgeOne registries did not converge to main"
-          exit 1
+          [ "$failed" -eq 0 ] || exit 1
+          echo "All production targets converged to ${DEPLOYMENT_SHA}"
+
+      - name: Final smoke summary
+        if: always()
+        run: |
+          echo "### Final production smoke" >> "$GITHUB_STEP_SUMMARY"
+          echo "- release SHA: ${DEPLOYMENT_SHA}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Cloudflare: ${{ steps.cloudflare-sha.outcome || 'skipped' }} / ${{ steps.cloudflare-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- GitHub Pages: ${{ steps.pages-sha.outcome || 'skipped' }} / ${{ steps.pages-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- EdgeOne: ${{ steps.edgeone-sha.outcome || 'skipped' }} / ${{ steps.edgeone-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Provider Adapter Registry: ${{ steps.providers.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"

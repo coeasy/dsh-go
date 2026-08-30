@@ -50,7 +50,6 @@ jobs:
           SHA=$(git rev-parse HEAD)
           SYNC_OWNED=false
           GENERATED_CATALOG=false
-
           if [ "${{ github.event_name }}" = "push" ]; then
             BEFORE="${{ github.event.before }}"
             if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
@@ -61,10 +60,8 @@ jobs:
           else
             printf '%s\n' '.github/workflows/deploy-router.yml' > /tmp/changed-files
           fi
-
           echo "Changed files:"
           cat /tmp/changed-files
-
           while IFS= read -r path; do
             case "$path" in
               scripts/sync*.mjs|scripts/registry-pipeline-v3.mjs|scripts/registry-v3-builder.mjs|scripts/repository-identity.mjs|scripts/github-discovery.mjs|scripts/checksum.mjs|scripts/validate-registry-v3.mjs|catalog/schema-v3.json|catalog/overrides.json|.github/workflows/sync.yml)
@@ -75,7 +72,6 @@ jobs:
                 ;;
             esac
           done < /tmp/changed-files
-
           echo "sync_owned=$SYNC_OWNED" >> "$GITHUB_OUTPUT"
           echo "generated_catalog=$GENERATED_CATALOG" >> "$GITHUB_OUTPUT"
           echo "revision=$SHA" >> "$GITHUB_OUTPUT"
@@ -99,20 +95,20 @@ jobs:
           TARGET="${{ inputs.target || 'all' }}"
           case "$TARGET" in
             all)
-              WORKFLOWS="deploy.yml deploy-pages.yml deploy-edgeone.yml"
-              LABEL="Cloudflare Pages, GitHub Pages, Tencent EdgeOne"
+              WORKFLOWS="deploy.yml deploy-pages.yml deploy-edgeone.yml monitor.yml"
+              LABEL="Cloudflare Pages, GitHub Pages, Tencent EdgeOne, final production smoke"
               ;;
             cloudflare)
-              WORKFLOWS="deploy.yml"
-              LABEL="Cloudflare Pages"
+              WORKFLOWS="deploy.yml monitor.yml"
+              LABEL="Cloudflare Pages + final production smoke"
               ;;
             github-pages)
-              WORKFLOWS="deploy-pages.yml"
-              LABEL="GitHub Pages"
+              WORKFLOWS="deploy-pages.yml monitor.yml"
+              LABEL="GitHub Pages + final production smoke"
               ;;
             edgeone)
-              WORKFLOWS="deploy-edgeone.yml"
-              LABEL="Tencent EdgeOne"
+              WORKFLOWS="deploy-edgeone.yml monitor.yml"
+              LABEL="Tencent EdgeOne + final production smoke"
               ;;
             *)
               echo "Unknown deployment target: $TARGET"

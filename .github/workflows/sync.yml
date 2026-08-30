@@ -111,14 +111,14 @@ jobs:
           git push || { echo "Push raced with another commit; rebasing once"; git pull --rebase; git push; }
           echo "pushed=true" >> "$GITHUB_OUTPUT"
           echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: Dispatch deployment workflows for authoritative revision
+      - name: Dispatch deployment workflows and final smoke for authoritative revision
         id: dispatch
         if: github.event_name == 'push' || (steps.publish.outputs.pushed == 'true' && steps.diff.outputs.data_changed == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEPLOY_REVISION: ${{ steps.publish.outputs.commit_sha }}
-          DEPLOY_WORKFLOWS: deploy.yml deploy-pages.yml deploy-edgeone.yml
-          DEPLOY_LABEL: Cloudflare Pages, GitHub Pages, Tencent EdgeOne
+          DEPLOY_WORKFLOWS: deploy.yml deploy-pages.yml deploy-edgeone.yml monitor.yml
+          DEPLOY_LABEL: Cloudflare Pages, GitHub Pages, Tencent EdgeOne, final production smoke
           DEPLOY_DISPATCH_RETRIES: "5"
           DEPLOY_DISPATCH_RETRY_DELAY_MS: "5000"
         run: node scripts/dispatch-deployments.mjs
@@ -131,7 +131,7 @@ jobs:
           fi
           echo "- generated commit pushed: ${{ steps.publish.outputs.pushed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- deploy-worthy data changed: ${{ steps.diff.outputs.data_changed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- deployment workflows dispatched: ${{ steps.dispatch.outputs.dispatched || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- release workflows dispatched: ${{ steps.dispatch.outputs.dispatched || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- dispatch failures: ${{ steps.dispatch.outputs.dispatch_failures || 'none' }}" >> "$GITHUB_STEP_SUMMARY"
           if [ -n "${{ steps.publish.outputs.commit_sha }}" ]; then
             echo "- authoritative revision: ${{ steps.publish.outputs.commit_sha }}" >> "$GITHUB_STEP_SUMMARY"
