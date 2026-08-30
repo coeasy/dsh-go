@@ -5,44 +5,44 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 30 Aug 2026 11:55:28 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 30 Aug 2026 16:48:40 GMT</lastBuildDate>
     <item>
-      <title>🆕 DSH Data Agent</title>
+      <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
       <guid isPermaLink="false">omdsh-dev/dsh-data-agent@2026-08-27T04:46:41Z</guid>
       <pubDate>Thu, 27 Aug 2026 04:46:41 GMT</pubDate>
       <description>DSH Data Agent · 用对话分析数据与商业洞察 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;assets/banner.webp&quot; alt=&quot;DSH Data Agent Banner&quot; width=&quot;100%&quot; &lt;/p &lt;p align=&quot</description>
     </item>
     <item>
-      <title>🆕 ego-browser</title>
+      <title>🔄 ego-browser</title>
       <link>https://github.com/Fisfzy/dsh-ego-browser</link>
       <guid isPermaLink="false">Fisfzy/dsh-ego-browser@2026-08-28T15:55:58Z</guid>
       <pubDate>Fri, 28 Aug 2026 15:55:58 GMT</pubDate>
       <description>ego browser — 看得见的 Agent 浏览器 &lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshfind.com/zh/plugins/Fisfzy/ego browser?ref=badge&quot; &lt;img src=&quot;https://dshfind.com/api/badge/Fisfzy/eg</description>
     </item>
     <item>
-      <title>🆕 DeepRead</title>
+      <title>🔄 DeepRead</title>
       <link>https://github.com/xiehuan123/dsh-deepread</link>
       <guid isPermaLink="false">xiehuan123/dsh-deepread@2026-08-30T05:45:59Z</guid>
       <pubDate>Sun, 30 Aug 2026 05:45:59 GMT</pubDate>
       <description>📖 DeepRead — Make AI reading traceable Website · Real outputs · English · 中文 Turn articles, books, PDFs, and document sets into claims you can trace back to evidence and source locations. DeepRead is</description>
     </item>
     <item>
-      <title>🆕 dsh-lark-bot</title>
+      <title>🔄 dsh-lark-bot</title>
       <link>https://github.com/PlutoKeating/dsh-lark-bot</link>
       <guid isPermaLink="false">PlutoKeating/dsh-lark-bot@2026-08-25T15:57:37Z</guid>
       <pubDate>Tue, 25 Aug 2026 15:57:37 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; dsh lark bot&lt;/h1 &lt;p align=&quot;center&quot; 🌏 &lt;a href=&quot;README EN.md&quot; English&lt;/a · 🌐 官网wiki &lt;a href=&quot;https://dsh lark bot.arr2018.dpdns.</description>
     </item>
     <item>
-      <title>🆕 dsh-tui-vscode (VS Code companion)</title>
+      <title>🔄 dsh-tui-vscode (VS Code companion)</title>
       <link>https://github.com/baobaolaodie/dsh-tui-vscode</link>
       <guid isPermaLink="false">baobaolaodie/dsh-tui-vscode@2026-08-25T20:46:39Z</guid>
       <pubDate>Tue, 25 Aug 2026 20:46:39 GMT</pubDate>
       <description>&lt;! BEAUTIFIED &lt;h1 align=&quot;center&quot; dsh tui vscode&lt;/h1 &lt;p align=&quot;center&quot; &lt;strong dsh TUI 的 VS Code companion 扩展——体验与 Claude Code 官方 VS Code 扩展几乎一致&lt;/strong &lt;br / &</description>
     </item>
     <item>
-      <title>🆕 NoLetMe</title>
+      <title>🔄 NoLetMe</title>
       <link>https://github.com/Yuer6327/NoLetMe</link>
       <guid isPermaLink="false">Yuer6327/NoLetMe@2026-08-28T02:42:54Z</guid>
       <pubDate>Fri, 28 Aug 2026 02:42:54 GMT</pubDate>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 DSH-ReasonixUI</title>
       <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-30T04:31:26Z</guid>
-      <pubDate>Sun, 30 Aug 2026 04:31:26 GMT</pubDate>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-30T15:16:00Z</guid>
+      <pubDate>Sun, 30 Aug 2026 15:16:00 GMT</pubDate>
       <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
@@ -161,14 +161,14 @@
       <description>A DSH visual workbench for Obsidian-style knowledge spaces and local Comfy MCP workflows.</description>
     </item>
     <item>
-      <title>🆕 Track Bridge</title>
+      <title>🔄 Track Bridge</title>
       <link>https://github.com/fakechris/dsh-track</link>
       <guid isPermaLink="false">fakechris/dsh-track@2026-08-20T23:52:37Z</guid>
       <pubDate>Thu, 20 Aug 2026 23:52:37 GMT</pubDate>
       <description>dsh track · Track Bridge English 中文 DeepSeek Harness 的嵌入式任务管理引擎 —— 把「念头、决策、任务」变成结构化、可追溯、可折叠的数据。 捕获零摩擦，决策留痕迹，任务有生命周期。数据全部在 harness 内部（session 事件 + storage KV），零外部依赖。 状态 Active · 测试 240 passing · 构建 pnp</description>
     </item>
     <item>
-      <title>🆕 dsh-agent-messaging</title>
+      <title>🔄 dsh-agent-messaging</title>
       <link>https://github.com/happyren/dsh-agent-messaging</link>
       <guid isPermaLink="false">happyren/dsh-agent-messaging@2026-08-15T13:05:24Z</guid>
       <pubDate>Sat, 15 Aug 2026 13:05:24 GMT</pubDate>
@@ -203,7 +203,7 @@
       <description>dsh tui subagents dsh TUI 的子 agent 会话视图： /subagents 列出当前会话的子 agent，Enter 进入全屏轨迹视图， 实时 跟着子 agent 的思考、工具调用和回复滚动；对 可续（continuable） 子 agent 可以直接发消息纠偏、中断当前轮。对应上游 issue dsh TUI 223。 English below. 用法 轨迹视图按键</description>
     </item>
     <item>
-      <title>🆕 Webhook 通知</title>
+      <title>🔄 Webhook 通知</title>
       <link>https://github.com/FUSU123fusu/dsh-tui-webhook</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-webhook@2026-08-17T12:52:20Z</guid>
       <pubDate>Mon, 17 Aug 2026 12:52:20 GMT</pubDate>
