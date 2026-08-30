@@ -219,9 +219,9 @@ jobs:
       - name: Production target SHA Verify
         id: production-sha
         continue-on-error: true
-        if: ${{ always() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outcome == 'success' && steps.edgeone.outputs.health_url != '' }}
+        if: ${{ always() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' && steps.edgeone.outcome == 'success' }}
         env:
-          DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}
+          DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}
           EXPECTED_DEPLOYMENT_SHA: ${{ env.DEPLOYMENT_SHA }}
           DEPLOY_LABEL: Tencent EdgeOne production target
           DEPLOY_SHA_ATTEMPTS: "18"
@@ -241,9 +241,9 @@ jobs:
       - name: Production Registry V3 convergence gate
         id: production-convergence
         continue-on-error: true
-        if: ${{ always() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outcome == 'success' && steps.edgeone.outputs.health_url != '' }}
+        if: ${{ always() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone-config.outputs.site_url_configured == 'true' && steps.edgeone.outcome == 'success' }}
         env:
-          DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}
+          DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}
           DEPLOY_LABEL: Tencent EdgeOne production target
           DEPLOY_CONVERGENCE_ATTEMPTS: "18"
           DEPLOY_CONVERGENCE_DELAY_MS: "10000"
