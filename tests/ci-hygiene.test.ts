@@ -67,32 +67,43 @@ describe('CI and deployment hygiene', () => {
     }
   });
 
-  it('publishes a compact catalog plus bounded shards and enforces the Cloudflare single-file limit', () => {
+  it('publishes bounded catalog artifacts and enforces provider file limits', () => {
     const deploy = workflow('deploy.yml');
+    const edgeone = workflow('deploy-edgeone.yml');
+    const gate = readFileSync(join(root, 'scripts', 'deploy-gate-v3.mjs'), 'utf8');
     expect(deploy).toContain('site/dist/catalog/plugins.json');
     expect(deploy).toContain('site/dist/catalog/catalog-v3/index.json');
     expect(deploy).toContain('Validate Cloudflare Pages file limits');
     expect(deploy).toContain('find site/dist -type f -size +26214400c');
     expect(deploy).toContain('pages deploy site/dist');
+    expect(edgeone).toContain('Validate EdgeOne static file limits');
+    expect(edgeone).toContain('find site/dist -type f -size +26214400c');
+    expect(gate).toContain('MAX_PUBLIC_REGISTRY_BYTES = 24 * 1024 * 1024');
+    expect(gate).toContain('registry-v3.json exceeds the 24 MiB public single-file budget');
     expect(deploy).not.toContain('rm -f .deploy/cloudflare/catalog/plugins.json');
   });
 
-  it('keeps EdgeOne production verification on a stable target instead of the CLI URL', () => {
+  it('keeps EdgeOne production verification on a stable target and native upload config', () => {
     const edgeone = workflow('deploy-edgeone.yml');
+    const edgeoneConfig = readFileSync(join(root, 'site', 'public', 'edgeone.json'), 'utf8');
     expect(edgeone).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.app' }}");
     expect(edgeone).toContain('Require stable EdgeOne production URL');
     expect(edgeone).toContain('production target: ${EDGEONE_SITE_URL}');
+    expect(edgeone).toContain('site/dist/edgeone.json');
+    expect(edgeoneConfig).toContain('"source": "/version.json"');
+    expect(edgeoneConfig).toContain('no-store, no-cache, must-revalidate');
     expect(edgeone).not.toContain('production target fallback: CLI production deployment URL');
   });
 
-  it('monitors Provider Adapter Registry convergence across production hosts', () => {
+  it('monitors Provider Adapter Registry convergence across every production host', () => {
     const monitor = workflow('monitor.yml');
     expect(monitor).toContain('/api/v1/providers?per_page=1');
     expect(monitor).toContain('PROVIDER_MAIN_HASH');
     expect(monitor).toContain('PROVIDER_MAIN_COUNT');
     expect(monitor).toContain('/catalog/provider-adapters.json');
-    expect(monitor).toContain('GitHub Pages registries converged with main');
-    expect(monitor).toContain('EdgeOne registries converged with main');
+    expect(monitor).toContain('Provider Adapter Registry converged');
+    expect(monitor).toContain('Enforce final production smoke gates');
+    expect(monitor).not.toContain('optional EdgeOne');
   });
 
   it('automatically removes merged same-repository branches and preserves a safe manual cleanup', () => {
