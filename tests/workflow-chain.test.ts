@@ -18,7 +18,6 @@ const registryOwnedScripts = [
 describe('authoritative deployment routing', () => {
   it('keeps Registry Sync narrow, incremental, and complete over Registry-producing code', () => {
     const sync = workflow('sync.yml');
-
     expect(sync).toContain('- "scripts/sync*.mjs"');
     for (const path of registryOwnedScripts) expect(sync, path).toContain(`- "${path}"`);
     expect(sync).toContain('- "catalog/schema-v3.json"');
@@ -29,7 +28,6 @@ describe('authoritative deployment routing', () => {
 
   it('dispatches every deployment target with the authoritative Sync revision through the resilient fan-out helper', () => {
     const sync = workflow('sync.yml');
-
     expect(sync).toContain('actions: write');
     expect(sync).toContain('commit_sha=$(git rev-parse HEAD)');
     expect(sync).toContain("if: github.event_name == 'push' || (steps.publish.outputs.pushed == 'true' && steps.diff.outputs.data_changed == 'true')");
@@ -43,7 +41,6 @@ describe('authoritative deployment routing', () => {
 
   it('routes ordinary pushes directly but defers every Registry-owned producer path', () => {
     const router = workflow('deploy-router.yml');
-
     expect(router).toContain('push:');
     expect(router).toContain('scripts/sync*.mjs');
     for (const path of registryOwnedScripts) expect(router, path).toContain(path);
@@ -62,7 +59,6 @@ describe('authoritative deployment routing', () => {
 
   it('supports selective manual redeploys without changing push fan-out', () => {
     const router = workflow('deploy-router.yml');
-
     expect(router).toContain('target:');
     expect(router).toContain('- cloudflare');
     expect(router).toContain('- github-pages');
@@ -91,25 +87,25 @@ describe('authoritative deployment routing', () => {
 
   it('uses the supported Cloudflare Wrangler action instead of deprecated pages-action', () => {
     const deploy = workflow('deploy.yml');
-
     expect(deploy).toContain('uses: cloudflare/wrangler-action@v4');
     expect(deploy).toContain('pages deploy site/dist');
+    expect(deploy).toContain('site/dist/catalog/catalog-v3/index.json');
     expect(deploy).toContain('--commit-hash=${{ inputs.commit_sha || github.sha }}');
     expect(deploy).not.toContain('cloudflare/pages-action@v1');
   });
 
   it('keeps EdgeOne workflow wiring fail-closed until production reaches the exact SHA', () => {
     const edgeone = workflow('deploy-edgeone.yml');
-
     expect(edgeone).toContain("EDGEONE_CLI_VERSION: ${{ vars.EDGEONE_CLI_VERSION || '1.6.28' }}");
+    expect(edgeone).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.app' }}");
     expect(edgeone).toContain('DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}');
     expect(edgeone).toContain('secrets.EDGEONE_API_TOKEN');
     expect(edgeone).toContain('token_configured=false');
     expect(edgeone).toContain('site_url_configured=false');
     expect(edgeone).toContain('EDGEONE_API_TOKEN secret is required for production deployment');
-    expect(edgeone).not.toContain('EDGEONE_SITE_URL repository variable is required for production SHA verification');
-    expect(edgeone).not.toContain("steps.edgeone-config.outputs.site_url_configured == 'true'");
-    expect(edgeone).toContain('PUBLIC_SITE_URL: ${{ vars.EDGEONE_SITE_URL }}');
+    expect(edgeone).toContain('EDGEONE_SITE_URL is required for authoritative production verification');
+    expect(edgeone).toContain("steps.edgeone-config.outputs.site_url_configured == 'true'");
+    expect(edgeone).toContain('PUBLIC_SITE_URL: ${{ env.EDGEONE_SITE_URL }}');
     expect(edgeone).toContain('Checkout current deployment control plane');
     expect(edgeone).toContain('ref: ${{ github.sha }}');
     expect(edgeone).toContain('path: .ci-control');
@@ -121,11 +117,12 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).toContain('run: node .ci-control/scripts/check-production-sha.mjs');
     expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.deploy_url }}');
     expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}');
-    expect(edgeone).toContain('production target fallback: CLI production deployment URL when EDGEONE_SITE_URL is unset');
+    expect(edgeone).not.toContain('production target fallback: CLI production deployment URL');
+    expect(edgeone).toContain('production target: ${EDGEONE_SITE_URL}');
     expect(edgeone).toContain('Production Registry V3 convergence gate');
     expect(edgeone).toContain('control plane SHA: ${GITHUB_SHA}');
     expect(edgeone).not.toContain("<<'NODE'");
-    expect(edgeone.length).toBeLessThan(14_000);
+    expect(edgeone.length).toBeLessThan(18_000);
   });
 
   it('uses one Registry V3 convergence helper across static providers', () => {
@@ -134,7 +131,6 @@ describe('authoritative deployment routing', () => {
       expect(deploy, name).toContain('run: node scripts/check-deployment-convergence.mjs');
       expect(deploy, name).not.toContain('curl -fsS --max-time 20');
     }
-
     const edgeone = workflow('deploy-edgeone.yml');
     expect(edgeone).toContain('run: node .ci-control/scripts/check-deployment-convergence.mjs');
     expect(edgeone).not.toContain('curl -fsS --max-time 20');
@@ -142,7 +138,6 @@ describe('authoritative deployment routing', () => {
 
   it('gates deployed Registry V3 against the latest main registry', () => {
     const monitor = workflow('monitor.yml');
-
     expect(monitor).toContain('uses: actions/checkout@v7');
     expect(monitor).toContain('ref: main');
     expect(monitor).toContain('MAIN_HASH=');

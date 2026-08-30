@@ -67,13 +67,14 @@ describe('CI and deployment hygiene', () => {
     }
   });
 
-  it('uses a Cloudflare-specific artifact that enforces the Pages single-file limit', () => {
+  it('publishes a compact catalog plus bounded shards and enforces the Cloudflare single-file limit', () => {
     const deploy = workflow('deploy.yml');
-    expect(deploy).toContain('Prepare Cloudflare Pages artifact');
-    expect(deploy).toContain('rm -f .deploy/cloudflare/catalog/plugins.json');
-    expect(deploy).toContain('find .deploy/cloudflare -type f -size +26214400c');
-    expect(deploy).toContain('pages deploy .deploy/cloudflare');
     expect(deploy).toContain('site/dist/catalog/plugins.json');
+    expect(deploy).toContain('site/dist/catalog/catalog-v3/index.json');
+    expect(deploy).toContain('Validate Cloudflare Pages file limits');
+    expect(deploy).toContain('find site/dist -type f -size +26214400c');
+    expect(deploy).toContain('pages deploy site/dist');
+    expect(deploy).not.toContain('rm -f .deploy/cloudflare/catalog/plugins.json');
   });
 
   it('keeps EdgeOne production verification on a stable target instead of the CLI URL', () => {

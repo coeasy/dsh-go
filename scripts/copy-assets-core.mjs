@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-/** Build-time asset copier + install-script/search-index/registry-distribution generator. */
+/** Build-time asset copier + compact catalog/install/search/registry distribution generator. */
 import { mkdir, cp, readFile, access, writeFile, readdir, unlink } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { buildSearchIndex } from './build-search-index-v2.mjs';
 import { writeRegistryDistribution } from './registry-distribution.mjs';
+import { buildLegacyPublicCatalog, writeCatalogDistribution } from './catalog-distribution.mjs';
 
 function findRoot() {
   const bases = [process.cwd(), dirname(fileURLToPath(import.meta.url))];
@@ -27,7 +28,6 @@ const TARGET_DIR = resolve(ROOT, 'site/public/catalog');
 const SCRIPTS_SRC = resolve(ROOT, 'site/src/scripts');
 const SCRIPTS_DST = resolve(ROOT, 'site/public/scripts');
 const INSTALL_DIR = resolve(ROOT, 'site/public/install');
-// Keep generated installers aligned with the Marketplace detail-page floor.
 const DETAIL_THRESHOLD = 100;
 async function exists(path) { try { await access(path); return true; } catch { return false; } }
 
@@ -86,12 +86,34 @@ async function genRegistryDistribution() {
   console.log(`Generated Registry Distribution V1 (${result.records} records, ${result.packages} packages, ${result.shards} shards, hash=${result.content_hash})`);
 }
 
+async function genCatalogDistribution() {
+  const catalogFile = resolve(CATALOG_DIR, 'plugins.json');
+  if (!(await exists(catalogFile))) { console.warn('Missing plugins.json; skipping Catalog Distribution'); return; }
+  const catalog = JSON.parse(await readFile(catalogFile, 'utf8'));
+  const distribution = await writeCatalogDistribution(catalog, resolve(TARGET_DIR, 'catalog-v3'), {
+    maxShardBytes: Number(process.env.CATALOG_SHARD_MAX_BYTES || 2 * 1024 * 1024),
+  });
+  const legacy = buildLegacyPublicCatalog(catalog);
+  await writeFile(resolve(TARGET_DIR, 'plugins.json'), legacy.text, 'utf8');
+  console.log(`Generated Catalog Distribution V1 (${distribution.count} records, ${distribution.shards} shards, max=${distribution.max_shard_bytes} bytes)`);
+  console.log(`Generated compact legacy plugins.json (${legacy.bytes} bytes, readme_excerpt<=${legacy.excerptLimit}, description<=${legacy.descriptionLimit})`);
+}
+
+async function copyJsonMinified(file) {
+  const src = resolve(CATALOG_DIR, file);
+  if (!(await exists(src))) return false;
+  const data = JSON.parse(await readFile(src, 'utf8'));
+  await writeFile(resolve(TARGET_DIR, file), `${JSON.stringify(data)}\n`, 'utf8');
+  console.log(`Minified ${file} -> site/public/catalog/`);
+  return true;
+}
+
 async function main() {
   await mkdir(TARGET_DIR, { recursive: true });
-  for (const file of ['plugins.json', 'meta.json', 'registry-v3.json', 'schema-v3.json']) {
-    const src = resolve(CATALOG_DIR, file);
-    if (await exists(src)) { await cp(src, resolve(TARGET_DIR, file)); console.log(`Copied ${file} -> site/public/catalog/`); }
-    else if (file === 'registry-v3.json') console.warn('Missing registry-v3.json; run npm run registry:migrate or npm run sync first');
+  await genCatalogDistribution();
+  for (const file of ['meta.json', 'registry-v3.json', 'schema-v3.json', 'provider-adapters.json']) {
+    const copied = await copyJsonMinified(file);
+    if (!copied && file === 'registry-v3.json') console.warn('Missing registry-v3.json; run npm run registry:migrate or npm run sync first');
   }
   await genRegistryDistribution();
   await genSearchIndex();
