@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 29 Aug 2026 21:00:04 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 30 Aug 2026 10:00:05 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -21,18 +21,18 @@
       <description>ego browser — 看得见的 Agent 浏览器 &lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshfind.com/zh/plugins/Fisfzy/ego browser?ref=badge&quot; &lt;img src=&quot;https://dshfind.com/api/badge/Fisfzy/eg</description>
     </item>
     <item>
+      <title>🆕 DeepRead</title>
+      <link>https://github.com/xiehuan123/dsh-deepread</link>
+      <guid isPermaLink="false">xiehuan123/dsh-deepread@2026-08-30T05:45:59Z</guid>
+      <pubDate>Sun, 30 Aug 2026 05:45:59 GMT</pubDate>
+      <description>📖 DeepRead — Make AI reading traceable Website · Real outputs · English · 中文 Turn articles, books, PDFs, and document sets into claims you can trace back to evidence and source locations. DeepRead is</description>
+    </item>
+    <item>
       <title>🆕 dsh-lark-bot</title>
       <link>https://github.com/PlutoKeating/dsh-lark-bot</link>
       <guid isPermaLink="false">PlutoKeating/dsh-lark-bot@2026-08-25T15:57:37Z</guid>
       <pubDate>Tue, 25 Aug 2026 15:57:37 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; dsh lark bot&lt;/h1 &lt;p align=&quot;center&quot; 🌏 &lt;a href=&quot;README EN.md&quot; English&lt;/a · 🌐 官网wiki &lt;a href=&quot;https://dsh lark bot.arr2018.dpdns.</description>
-    </item>
-    <item>
-      <title>🆕 DeepRead</title>
-      <link>https://github.com/xiehuan123/dsh-deepread</link>
-      <guid isPermaLink="false">xiehuan123/dsh-deepread@2026-08-22T08:07:53Z</guid>
-      <pubDate>Sat, 22 Aug 2026 08:07:53 GMT</pubDate>
-      <description>📖 DeepRead — Evidence first reading for AI agents 中文官网 English 中文 Turn long articles, books, PDFs, and document sets into traceable claims, evidence, confidence levels, knowledge maps, and review que</description>
     </item>
     <item>
       <title>🆕 dsh-tui-vscode (VS Code companion)</title>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 DSH-ReasonixUI</title>
       <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-29T17:16:55Z</guid>
-      <pubDate>Sat, 29 Aug 2026 17:16:55 GMT</pubDate>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-30T04:31:26Z</guid>
+      <pubDate>Sun, 30 Aug 2026 04:31:26 GMT</pubDate>
       <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
@@ -112,6 +112,13 @@
       <description>PPT design preset and editable PPTX production tools for DeepSeek Harness</description>
     </item>
     <item>
+      <title>🆕 dsh-tui-mcp-manager</title>
+      <link>https://github.com/0N3-0/dsh-tui-mcp-manager</link>
+      <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-30T06:17:26Z</guid>
+      <pubDate>Sun, 30 Aug 2026 06:17:26 GMT</pubDate>
+      <description>dsh tui mcp manager English 中文 在 dsh TUI 中集中管理 MCP 服务器、Set、工具与运行状态。 无需离开终端，输入 /mcp manager 即可打开全屏界面。 安装 需要 Node.js ^22.19 =24 和 dsh TUI =0.9.3 &lt;0.10.0 。 进入 TUI 后运行 /mcp manager 。界面语言跟随 dsh TUI，可用 /</description>
+    </item>
+    <item>
       <title>🆕 dsh-overleaf</title>
       <link>https://github.com/gychen-NJU/dsh-overleaf</link>
       <guid isPermaLink="false">gychen-NJU/dsh-overleaf@2026-08-29T16:51:27Z</guid>
@@ -138,13 +145,6 @@
       <guid isPermaLink="false">lasdrder0705/dsh-pro-vision-std@2026-08-27T08:18:13Z</guid>
       <pubDate>Thu, 27 Aug 2026 08:18:13 GMT</pubDate>
       <description>dsh pro vision std 中文 · English Compatible with dsh std Community v0.15. A portable ModelProvider that lets DeepSeek V4 Pro handle image attachments. Images are first captioned by deepseek v4 flash vi</description>
-    </item>
-    <item>
-      <title>🆕 dsh-tui-mcp-manager</title>
-      <link>https://github.com/0N3-0/dsh-tui-mcp-manager</link>
-      <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-28T10:03:29Z</guid>
-      <pubDate>Fri, 28 Aug 2026 10:03:29 GMT</pubDate>
-      <description>dsh tui mcp manager 面向 dsh TUI 的原生 MCP Server 管理插件。输入 /mcp manager 后，管理器通过宿主提供的 managed dialog 显示为聊天界面上的浮窗，并直接编辑当前 profile 的 cordis.patch.yml 。 功能 浮窗即时显示服务器状态；连接中的工具数显示为 ... ，可用 ↻ 刷新 获取最新数量。 添加、复制、编辑、</description>
     </item>
     <item>
       <title>🆕 dsh-chat-zone-std</title>
