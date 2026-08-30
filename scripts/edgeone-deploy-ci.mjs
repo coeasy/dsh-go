@@ -234,6 +234,10 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   if (!token) throw new Error('EDGEONE_API_TOKEN is required');
 
   const project = resolveProject(env);
+  const healthUrl = String(env.EDGEONE_SITE_URL || '').trim();
+  if (!healthUrl) {
+    throw new Error('EDGEONE_SITE_URL is required for authoritative production verification');
+  }
   const cliVersion = validateCliVersion(env.EDGEONE_CLI_VERSION || DEFAULT_CLI_VERSION);
   const retries = parseBoundedInt(env.EDGEONE_DEPLOY_RETRIES, 'EDGEONE_DEPLOY_RETRIES', DEFAULT_RETRIES, 1, 5);
   const timeoutSeconds = parseBoundedInt(env.EDGEONE_ATTEMPT_TIMEOUT_SECONDS, 'EDGEONE_ATTEMPT_TIMEOUT_SECONDS', DEFAULT_TIMEOUT_SECONDS, 30, 300);
@@ -261,7 +265,6 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
         const deployUrl = deployment.url;
         const projectId = String(deployment.projectId);
         const consoleUrl = typeof deployment.consoleUrl === 'string' ? deployment.consoleUrl : '';
-        const healthUrl = env.EDGEONE_SITE_URL || deployUrl;
 
         console.log(`::add-mask::${deployUrl}`);
         if (healthUrl.includes('?')) console.log(`::add-mask::${healthUrl}`);
@@ -275,6 +278,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
           `- project: ${project}`,
           `- CLI: edgeone@${cliVersion}`,
           '- auth mode: direct named-project CI deploy (`-n` + `-t`)',
+          '- production health target: stable EDGEONE_SITE_URL',
           '- failure class: none',
           `- attempts: ${attemptsMade}/${retries}`,
         ]);

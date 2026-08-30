@@ -78,11 +78,24 @@ jobs:
         run: |
           test -f site/dist/index.html
           test -f site/dist/catalog/plugins.json
+          test -f site/dist/catalog/catalog-v3/index.json
           test -f site/dist/catalog/registry-v3.json
           test -f site/dist/catalog/schema-v3.json
           test -f site/dist/catalog/provider-adapters.json
+          node -e "const fs=require('node:fs'); const c=require('./site/dist/catalog/plugins.json'); const i=require('./site/dist/catalog/catalog-v3/index.json'); if(i.format!=='dsh-catalog-distribution'||i.distribution_version!==1||i.count!==c.meta.count||!Array.isArray(i.shards)||!i.shards.length) process.exit(1); if(fs.statSync('site/dist/catalog/plugins.json').size>25165824) process.exit(1)"
           node -e "const r=require('./site/dist/catalog/registry-v3.json'); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length) process.exit(1)"
           node -e "const r=require('./site/dist/catalog/provider-adapters.json'); if(r.registry_version!==1 || !r.generated?.content_hash || !Array.isArray(r.providers) || r.generated.count!==r.providers.length) process.exit(1)"
+      - name: Validate Cloudflare Pages file limits
+        if: ${{ steps.registry.outputs.ready == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          oversized=$(find site/dist -type f -size +26214400c -print)
+          if [ -n "$oversized" ]; then
+            echo "::error::Cloudflare Pages artifact contains files larger than 25 MiB:"
+            printf '%s\n' "$oversized"
+            exit 1
+          fi
       - name: Deploy to Cloudflare Pages
         if: ${{ steps.registry.outputs.ready == 'true' }}
         id: cloudflare
@@ -109,3 +122,4 @@ jobs:
           echo "### Cloudflare Pages" >> "$GITHUB_STEP_SUMMARY"
           echo "- revision: ${{ inputs.commit_sha || github.sha }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- deployment URL: ${{ steps.cloudflare.outputs.deployment-url || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- catalog: compact compatibility export + bounded Catalog Distribution V1 shards" >> "$GITHUB_STEP_SUMMARY"
