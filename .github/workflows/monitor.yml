@@ -58,13 +58,15 @@ jobs:
           MAIN_COUNT=$(node -p "require('./catalog/registry-v3.json').plugins.length")
           PROVIDER_MAIN_HASH=$(node -p "require('./catalog/provider-adapters.json').generated.content_hash")
           PROVIDER_MAIN_COUNT=$(node -p "require('./catalog/provider-adapters.json').providers.length")
+          SMOKE_DIR=$(mktemp -d)
+          trap 'rm -rf "$SMOKE_DIR"' EXIT
           curl -fsS --max-time 20 "${BASE_URL}/" >/dev/null
           curl -fsS --max-time 20 "${BASE_URL}/api/v1/health" >/dev/null
           for attempt in $(seq 1 18); do
-            META=$(curl -fsS --max-time 20 "${BASE_URL}/api/v1/meta?__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}") || true
-            REGISTRY=$(curl -fsS --max-time 20 "${BASE_URL}/api/v1/registry?__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}") || true
-            PROVIDERS=$(curl -fsS --max-time 20 "${BASE_URL}/api/v1/providers?per_page=1&__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}") || true
-            if META="$META" REGISTRY="$REGISTRY" PROVIDERS="$PROVIDERS" MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "try{const m=JSON.parse(process.env.META);const r=JSON.parse(process.env.REGISTRY);const p=JSON.parse(process.env.PROVIDERS);const updated=Date.parse(m.last_sync?.at||'');const age=(Date.now()-updated)/3600000;if(m.registry?.content_hash!==process.env.MAIN_HASH||r.generated?.content_hash!==process.env.MAIN_HASH||String(r.plugins?.length)!==process.env.MAIN_COUNT||p.meta?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.meta?.count)!==process.env.PROVIDER_MAIN_COUNT||!Number.isFinite(age)||age>=36)process.exit(1)}catch{process.exit(1)}"; then
+            if curl -fsS --max-time 20 "${BASE_URL}/api/v1/meta?__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}" -o "$SMOKE_DIR/meta.json" \
+              && curl -fsS --max-time 20 "${BASE_URL}/api/v1/registry?__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}" -o "$SMOKE_DIR/registry.json" \
+              && curl -fsS --max-time 20 "${BASE_URL}/api/v1/providers?per_page=1&__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}" -o "$SMOKE_DIR/providers.json" \
+              && SMOKE_DIR="$SMOKE_DIR" MAIN_HASH="$MAIN_HASH" MAIN_COUNT="$MAIN_COUNT" PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "const fs=require('node:fs');try{const dir=process.env.SMOKE_DIR;const m=JSON.parse(fs.readFileSync(dir+'/meta.json','utf8'));const r=JSON.parse(fs.readFileSync(dir+'/registry.json','utf8'));const p=JSON.parse(fs.readFileSync(dir+'/providers.json','utf8'));const updated=Date.parse(m.last_sync?.at||'');const age=(Date.now()-updated)/3600000;if(m.registry?.content_hash!==process.env.MAIN_HASH||r.generated?.content_hash!==process.env.MAIN_HASH||String(r.plugins?.length)!==process.env.MAIN_COUNT||p.meta?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.meta?.count)!==process.env.PROVIDER_MAIN_COUNT||!Number.isFinite(age)||age>=36)process.exit(1)}catch{process.exit(1)}"; then
               echo "Cloudflare runtime registries converged with main release SHA ${DEPLOYMENT_SHA}"
               exit 0
             fi
