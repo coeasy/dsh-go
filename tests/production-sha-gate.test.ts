@@ -40,13 +40,45 @@ describe('production SHA deployment gate', () => {
     expect(() => validateExpectedSha('g'.repeat(40))).toThrow('40-character commit SHA');
   });
 
-  it('builds a cache-busted version URL while preserving signed query parameters', () => {
+  it('preserves signed EdgeOne access parameters without changing the signed URL', () => {
     const url = buildVersionUrl('https://preview.edgeone.app/base?eo_token=secret#fragment', 1);
 
     expect(url.pathname).toBe('/base/version.json');
+    expect(url.search).toBe('?eo_token=secret');
     expect(url.searchParams.get('eo_token')).toBe('secret');
-    expect(url.searchParams.get('__dsh_sha_gate')).toBe('1');
+    expect(url.searchParams.get('__dsh_sha_gate')).toBeNull();
     expect(safeDisplayUrl(url)).toBe('https://preview.edgeone.app/base/version.json');
+  });
+
+  it('cache-busts unsigned provider URLs', () => {
+    const url = buildVersionUrl('https://dsh.example.com', 1);
+
+    expect(url.searchParams.get('__dsh_sha_gate')).toBe('1');
+  });
+
+  it('passes the signed EdgeOne URL unchanged to the fetcher', async () => {
+    const requested: URL[] = [];
+
+    await runShaGate({
+      baseUrl: 'https://preview.edgeone.cool/path?eo_token=a%2Bb&eo_time=123&sig=a%20b',
+      expectedSha: SHA,
+      attempts: 1,
+      delayMs: 0,
+      timeoutMs: 1_000,
+      nonceFactory: () => 1,
+      fetchImpl: async (input) => {
+        requested.push(new URL(String(input)));
+        return new Response(JSON.stringify({ git_sha: SHA }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      },
+      log: () => undefined,
+      wait: async () => undefined,
+    });
+
+    expect(requested[0].pathname).toBe('/path/version.json');
+    expect(requested[0].search).toBe('?eo_token=a%2Bb&eo_time=123&sig=a%20b');
   });
 
   it('matches only the exact deployed git_sha', () => {

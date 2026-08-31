@@ -364,7 +364,7 @@ export async function rollbackInstalledProviderAdapter(id, version = null, optio
     const provider = findStateProvider(state, id);
     if (!provider) throw new Error(`provider adapter is not installed: ${id}`);
     const from = provider.active_version;
-    let target = version ? String(version) : provider.history.at(-1);
+    const target = version ? String(version) : provider.history.at(-1);
     if (!target) throw new Error(`provider adapter has no rollback target: ${id}`);
     const installed = provider.installed.find((item) => item.version === target);
     if (!installed) throw new Error(`provider adapter rollback target is not installed: ${id}@${target}`);

@@ -245,12 +245,11 @@ async function remoteMcpRequest(url, payload, descriptor, sessionId, timeoutMs) 
 async function invokeRemoteMcp(record, descriptor, tool, input, timeoutMs) {
   if (!descriptor.url) throw new Error('remote MCP transport requires url');
   assertNetworkExecution(record, descriptor.url);
-  let sessionId;
   const initialized = await remoteMcpRequest(descriptor.url, {
     jsonrpc: '2.0', id: 1, method: 'initialize',
     params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'dsh-go', version: '0.1.0' } },
-  }, descriptor, sessionId, timeoutMs);
-  sessionId = initialized.sessionId;
+  }, descriptor, undefined, timeoutMs);
+  const sessionId = initialized.sessionId;
   await remoteMcpRequest(descriptor.url, { jsonrpc: '2.0', method: 'notifications/initialized' }, descriptor, sessionId, timeoutMs);
   const result = await remoteMcpRequest(descriptor.url, { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: tool, arguments: input || {} } }, descriptor, sessionId, timeoutMs);
   return result.data;

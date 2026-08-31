@@ -254,9 +254,6 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
 
   const project = resolveProject(env);
   const healthUrl = String(env.EDGEONE_SITE_URL || '').trim();
-  if (!healthUrl) {
-    throw new Error('EDGEONE_SITE_URL is required for authoritative production verification');
-  }
   const cliVersion = validateCliVersion(env.EDGEONE_CLI_VERSION || DEFAULT_CLI_VERSION);
   const retries = parseBoundedInt(env.EDGEONE_DEPLOY_RETRIES, 'EDGEONE_DEPLOY_RETRIES', DEFAULT_RETRIES, 1, 5);
   const timeoutSeconds = parseBoundedInt(env.EDGEONE_ATTEMPT_TIMEOUT_SECONDS, 'EDGEONE_ATTEMPT_TIMEOUT_SECONDS', DEFAULT_TIMEOUT_SECONDS, 30, 300);
@@ -301,7 +298,11 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
         writeOutput('project_id', projectId);
         writeOutput('deployment_id', deploymentId);
         writeOutput('console_url', consoleUrl);
-        writeOutput('health_url', healthUrl);
+        // Without a configured custom domain, the CLI-returned production URL
+        // is the only authoritative URL available. It may contain EdgeOne's
+        // signed eo_token/eo_time query and must be passed through unchanged.
+        const verificationUrl = healthUrl || deployUrl;
+        writeOutput('health_url', verificationUrl);
 
         if (expectedSha) {
           console.log(`EdgeOne CLI accepted deployment=${deploymentId}; verifying deployment URL before declaring success`);
@@ -331,13 +332,13 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
           `- deployment id: ${deploymentId}`,
           `- CLI: edgeone@${cliVersion}`,
           '- auth mode: direct named-project CI deploy (`-n` + `-t`)',
-          '- production health target: stable EDGEONE_SITE_URL',
+          `- production health target: ${healthUrl ? 'configured EDGEONE_SITE_URL' : 'CLI production URL'}`,
           `- deployment URL verified: ${expectedSha ? 'yes' : 'not requested'}`,
           '- failure class: none',
           `- attempts: ${attemptsMade}/${retries}`,
         ]);
         console.log(`EdgeOne deployment verified: project=${projectId} deployment=${deploymentId}`);
-        return { deployment, healthUrl };
+        return { deployment, healthUrl: verificationUrl };
       } catch (error) {
         if (failureClass !== 'deployment_unavailable') {
           lastError = sanitizeLog(`${error instanceof Error ? error.message : String(error)}\n${tailLines(combined)}`, token);
