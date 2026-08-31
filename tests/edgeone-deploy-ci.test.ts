@@ -65,6 +65,7 @@ describe('EdgeOne CI deployment helpers', () => {
           status: 'success',
           url: 'https://deployment.edgeone.example',
           projectId: 'project-1',
+          deploymentId: 'deployment-1',
         }),
         stderr: '',
         timedOut: false,
@@ -98,6 +99,52 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(calls[0].args).not.toContain('--name');
     expect(calls[0].options.env?.PAGES_SOURCE).toBe('skills');
     expect(result.healthUrl).toBe('https://stable.edgeone.example');
+  });
+
+  it('retries an accepted deployment when its returned URL is not readable', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    let deployment = 0;
+    const execute = vi.fn(async () => {
+      deployment += 1;
+      return {
+        code: 0,
+        stdout: JSON.stringify({
+          status: 'success',
+          url: `https://deployment-${deployment}.edgeone.example?eo_token=secret`,
+          projectId: 'project-1',
+          deploymentId: `deployment-${deployment}`,
+        }),
+        stderr: '',
+        timedOut: false,
+      };
+    });
+    const verifyDeployment = vi.fn()
+      .mockRejectedValueOnce(new Error('HTTP 404'))
+      .mockResolvedValueOnce({ expectedSha: 'a'.repeat(40), actualSha: 'a'.repeat(40) });
+    const wait = vi.fn(async () => undefined);
+
+    const result = await deployEdgeOne({
+      env: {
+        EDGEONE_API_TOKEN: 'test-token',
+        EDGEONE_PROJECT: 'dsh-go',
+        EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+        EDGEONE_DEPLOY_RETRIES: '2',
+        EDGEONE_ATTEMPT_TIMEOUT_SECONDS: '30',
+        EDGEONE_DEPLOY_VERIFY_ATTEMPTS: '1',
+        EDGEONE_DEPLOY_VERIFY_DELAY_MS: '0',
+        EDGEONE_SITE_URL: 'https://stable.edgeone.example',
+        DEPLOYMENT_SHA: 'a'.repeat(40),
+      },
+      execute,
+      verifyDeployment,
+      wait,
+    });
+
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(verifyDeployment).toHaveBeenCalledTimes(2);
+    expect(wait).toHaveBeenCalledWith(10_000);
+    expect(result.deployment.deploymentId).toBe('deployment-2');
   });
 
   it('fails before invoking the CLI when the stable production URL is missing', async () => {
@@ -181,13 +228,14 @@ describe('EdgeOne CI deployment helpers', () => {
   });
 
   it('extracts the last complete JSON object from mixed CLI output', () => {
-    const result = parseLastJson(['{"status":"progress"}', '{"status":"success","url":"https://preview.edgeone.app","projectId":"project-1","meta":{"nested":true}}'].join('\n'));
-    expect(result).toEqual({ status: 'success', url: 'https://preview.edgeone.app', projectId: 'project-1', meta: { nested: true } });
+    const result = parseLastJson(['{"status":"progress"}', '{"status":"success","url":"https://preview.edgeone.app","projectId":"project-1","deploymentId":"deployment-1","meta":{"nested":true}}'].join('\n'));
+    expect(result).toEqual({ status: 'success', url: 'https://preview.edgeone.app', projectId: 'project-1', deploymentId: 'deployment-1', meta: { nested: true } });
   });
 
   it('validates structured deployment success payloads', () => {
-    expect(validateDeployResult({ status: 'success', url: 'https://example.com', projectId: 123 }).projectId).toBe(123);
-    expect(() => validateDeployResult({ status: 'success', url: '', projectId: 123 })).toThrow('invalid success payload');
-    expect(() => validateDeployResult({ status: 'error', url: 'https://example.com', projectId: 123 })).toThrow('invalid success payload');
+    expect(validateDeployResult({ status: 'success', url: 'https://example.com', projectId: 123, deploymentId: 'dp-1' }).projectId).toBe(123);
+    expect(() => validateDeployResult({ status: 'success', url: '', projectId: 123, deploymentId: 'dp-1' })).toThrow('invalid success payload');
+    expect(() => validateDeployResult({ status: 'success', url: 'https://example.com', projectId: 123 })).toThrow('invalid success payload');
+    expect(() => validateDeployResult({ status: 'error', url: 'https://example.com', projectId: 123, deploymentId: 'dp-1' })).toThrow('invalid success payload');
   });
 });
