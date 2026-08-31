@@ -147,27 +147,42 @@ jobs:
 
       - name: Check Provider Adapter Registry on all static targets
         id: providers
-        continue-on-error: true
         if: always()
+        shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
           PROVIDER_MAIN_HASH=$(node -p "require('./catalog/provider-adapters.json').generated.content_hash")
           PROVIDER_MAIN_COUNT=$(node -p "require('./catalog/provider-adapters.json').providers.length")
-          for BASE in "$SITE_URL" "$GITHUB_PAGES_URL" "$EDGEONE_SITE_URL"; do
+          failed=0
+          for TARGET in \
+            "cloudflare|$SITE_URL" \
+            "github_pages|$GITHUB_PAGES_URL" \
+            "edgeone|$EDGEONE_SITE_URL"; do
+            target=${TARGET%%|*}
+            BASE=${TARGET#*|}
             BASE="${BASE%/}"
-            matched=false
+            outcome=failure
             for attempt in $(seq 1 18); do
               if curl -fsS --max-time 20 "${BASE}/catalog/provider-adapters.json?__dsh_smoke=${DEPLOYMENT_SHA}-${attempt}" -o /tmp/providers.json; then
                 if PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "const p=require('/tmp/providers.json');if(p.generated?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.providers?.length)!==process.env.PROVIDER_MAIN_COUNT)process.exit(1)"; then
-                  echo "Provider Adapter Registry converged: ${BASE}"
-                  matched=true
+                  echo "Provider Adapter Registry converged: ${target} ${BASE}"
+                  outcome=success
                   break
                 fi
               fi
               sleep 10
             done
-            [ "$matched" = true ] || { echo "Provider Adapter Registry did not converge: ${BASE}"; exit 1; }
+            echo "${target}=${outcome}" >> "$GITHUB_OUTPUT"
+            if [ "$outcome" != "success" ]; then
+              echo "::error::Provider Adapter Registry did not converge: ${target} ${BASE}"
+              failed=1
+            fi
           done
+          if [ "$failed" -eq 0 ]; then
+            echo "aggregate=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "aggregate=failure" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Enforce final production smoke gates
         if: always()
@@ -179,7 +194,9 @@ jobs:
           PAGES_REGISTRY: ${{ steps.pages-registry.outcome }}
           EDGEONE_SHA: ${{ steps.edgeone-sha.outcome }}
           EDGEONE_REGISTRY: ${{ steps.edgeone-registry.outcome }}
-          PROVIDERS: ${{ steps.providers.outcome }}
+          PROVIDERS_CLOUDFLARE: ${{ steps.providers.outputs.cloudflare }}
+          PROVIDERS_PAGES: ${{ steps.providers.outputs.github_pages }}
+          PROVIDERS_EDGEONE: ${{ steps.providers.outputs.edgeone }}
         run: |
           set -euo pipefail
           failed=0
@@ -191,7 +208,9 @@ jobs:
             "GitHub Pages Registry:$PAGES_REGISTRY" \
             "EdgeOne SHA:$EDGEONE_SHA" \
             "EdgeOne Registry:$EDGEONE_REGISTRY" \
-            "Provider registries:$PROVIDERS"; do
+            "Provider Cloudflare:$PROVIDERS_CLOUDFLARE" \
+            "Provider GitHub Pages:$PROVIDERS_PAGES" \
+            "Provider EdgeOne:$PROVIDERS_EDGEONE"; do
             label=${item%%:*}
             outcome=${item#*:}
             if [ "$outcome" != "success" ]; then
@@ -210,4 +229,6 @@ jobs:
           echo "- Cloudflare: ${{ steps.cloudflare-sha.outcome || 'skipped' }} / ${{ steps.cloudflare-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- GitHub Pages: ${{ steps.pages-sha.outcome || 'skipped' }} / ${{ steps.pages-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- EdgeOne: ${{ steps.edgeone-sha.outcome || 'skipped' }} / ${{ steps.edgeone-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Provider Adapter Registry: ${{ steps.providers.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Provider Adapter Registry (Cloudflare): ${{ steps.providers.outputs.cloudflare || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Provider Adapter Registry (GitHub Pages): ${{ steps.providers.outputs.github_pages || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Provider Adapter Registry (EdgeOne): ${{ steps.providers.outputs.edgeone || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
