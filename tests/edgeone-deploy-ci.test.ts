@@ -41,7 +41,7 @@ describe('EdgeOne CI deployment helpers', () => {
     const args = buildDeployArgs({ project: 'dsh-go', token: 'secret', cliVersion: '1.6.28' });
 
     expect(args).toEqual([
-      '--yes', 'edgeone@1.6.28', 'makers', 'deploy', './dist', '-n', 'dsh-go', '-t', 'secret', '-e', 'production', '--json',
+      '--yes', 'edgeone@1.6.28', 'makers', 'deploy', '.', '-n', 'dsh-go', '-t', 'secret', '-e', 'production', '--json',
     ]);
     expect(args).not.toContain('link');
     expect(args).not.toContain('--name');
@@ -93,7 +93,7 @@ describe('EdgeOne CI deployment helpers', () => {
       args: buildDeployArgs({ project: 'dsh-go', token: 'test-token', cliVersion: '1.6.28' }),
       options: {
         timeoutMs: 30_000,
-        cwd: './site',
+        cwd: './site/dist',
       },
     });
     expect(calls[0].args).not.toContain('link');
@@ -207,6 +207,18 @@ describe('EdgeOne CI deployment helpers', () => {
     });
 
     expect(url).toBe('https://preview.edgeone.cool?eo_token=signed&eo_time=123');
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('preserves the CLI public URL for TLD preset deployments', async () => {
+    const fetchImpl = vi.fn();
+    const url = await resolveDeploymentUrl({
+      deployment: { type: 'preset', isTld: 1, url: 'https://dsh-go.edgeone.cool' },
+      token: 'test-token',
+      fetchImpl,
+    });
+
+    expect(url).toBe('https://dsh-go.edgeone.cool');
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
