@@ -268,7 +268,9 @@ export async function resolveDeploymentUrl({ deployment, token, env = process.en
   // The CLI marks TLD preset domains as public and deliberately omits the
   // enciphered query. Preserve that contract; signing them can turn a valid
   // public site URL into an invalid site URL.
-  if (deployment?.type !== 'preset' || deployment?.isTld === 1 || hasSignedAccessQuery(rawUrl)) return rawUrl;
+  // EdgeOne may label a preset host as a TLD while still requiring the
+  // signed eo_token/eo_time query for the deployment URL to be readable.
+  if (deployment?.type !== 'preset' || hasSignedAccessQuery(rawUrl)) return rawUrl;
 
   const url = new URL(rawUrl);
   let lastError = 'no response received';

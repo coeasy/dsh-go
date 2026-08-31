@@ -210,16 +210,25 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it('preserves the CLI public URL for TLD preset deployments', async () => {
-    const fetchImpl = vi.fn();
+  it('signs unsigned TLD preset URLs before verification', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      Code: 0,
+      Data: { Response: { Token: 'signed', Timestamp: 123 } },
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
     const url = await resolveDeploymentUrl({
       deployment: { type: 'preset', isTld: 1, url: 'https://dsh-go.edgeone.cool' },
       token: 'test-token',
       fetchImpl,
     });
 
-    expect(url).toBe('https://dsh-go.edgeone.cool');
-    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(fetchImpl).toHaveBeenCalledWith('https://pages-api.edgeone.ai/v1', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ Action: 'DescribePagesEncipherToken', Text: 'dsh-go.edgeone.cool' }),
+    }));
+    expect(url).toBe('https://dsh-go.edgeone.cool/?eo_token=signed&eo_time=123');
   });
 
   it('fails before invoking the CLI when the project drifts from canonical production', async () => {
