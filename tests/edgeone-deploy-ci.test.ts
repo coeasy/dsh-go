@@ -6,6 +6,7 @@ import {
   deployEdgeOne,
   parseLastJson,
   resolveProject,
+  resolveDeploymentUrl,
   sanitizeLog,
   validateCliVersion,
   validateDeployResult,
@@ -152,13 +153,22 @@ describe('EdgeOne CI deployment helpers', () => {
       code: 0,
       stdout: JSON.stringify({
         status: 'success',
-        url: 'https://dsh-go.edgeone.cool?eo_token=signed&eo_time=123',
+        url: 'https://dsh-go.edgeone.cool',
+        type: 'preset',
         projectId: 'project-1',
         deploymentId: 'deployment-1',
       }),
       stderr: '',
       timedOut: false,
     }));
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      Code: 0,
+      Data: { Response: { Token: 'signed', Timestamp: 123 } },
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }));
+    const verifyDeployment = vi.fn().mockResolvedValue({ expectedSha: 'a'.repeat(40), actualSha: 'a'.repeat(40) });
 
     const result = await deployEdgeOne({
       env: {
@@ -167,13 +177,37 @@ describe('EdgeOne CI deployment helpers', () => {
         EDGEONE_EXPECTED_PROJECT: 'dsh-go',
         EDGEONE_DEPLOY_RETRIES: '1',
         EDGEONE_ATTEMPT_TIMEOUT_SECONDS: '30',
+        EDGEONE_DEPLOY_VERIFY_ATTEMPTS: '1',
+        EDGEONE_DEPLOY_VERIFY_DELAY_MS: '0',
+        DEPLOYMENT_SHA: 'a'.repeat(40),
       },
       execute,
       wait: async () => undefined,
+      fetchImpl,
+      verifyDeployment,
     });
 
     expect(execute).toHaveBeenCalledTimes(1);
-    expect(result.healthUrl).toBe('https://dsh-go.edgeone.cool?eo_token=signed&eo_time=123');
+    expect(fetchImpl).toHaveBeenCalledWith('https://pages-api.cloud.tencent.com/v1', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ Action: 'DescribePagesEncipherToken', Text: 'dsh-go.edgeone.cool' }),
+    }));
+    expect(verifyDeployment).toHaveBeenCalledWith(expect.objectContaining({
+      baseUrl: 'https://dsh-go.edgeone.cool/?eo_token=signed&eo_time=123',
+    }));
+    expect(result.healthUrl).toBe('https://dsh-go.edgeone.cool/?eo_token=signed&eo_time=123');
+  });
+
+  it('does not alter an already signed preset URL', async () => {
+    const fetchImpl = vi.fn();
+    const url = await resolveDeploymentUrl({
+      deployment: { type: 'preset', url: 'https://preview.edgeone.cool?eo_token=signed&eo_time=123' },
+      token: 'test-token',
+      fetchImpl,
+    });
+
+    expect(url).toBe('https://preview.edgeone.cool?eo_token=signed&eo_time=123');
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 
   it('fails before invoking the CLI when the project drifts from canonical production', async () => {

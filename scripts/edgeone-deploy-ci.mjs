@@ -13,6 +13,10 @@ const DEFAULT_TIMEOUT_SECONDS = 240;
 const DEFAULT_VERIFY_ATTEMPTS = 6;
 const DEFAULT_VERIFY_DELAY_MS = 5_000;
 const MAX_CAPTURE_BYTES = 2 * 1024 * 1024;
+const EDGEONE_API_ENDPOINTS = Object.freeze({
+  china: 'https://pages-api.cloud.tencent.com/v1',
+  global: 'https://pages-api.edgeone.ai/v1',
+});
 
 export function validateCliVersion(value) {
   const match = /^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/.exec(value || '');
@@ -241,6 +245,58 @@ function edgeOneProcessEnv(env) {
   return { ...env, PAGES_SOURCE: env.PAGES_SOURCE || 'skills' };
 }
 
+function hasSignedAccessQuery(value) {
+  const url = new URL(value);
+  return url.searchParams.has('eo_token') && url.searchParams.has('eo_time');
+}
+
+function apiEndpoints(env) {
+  const region = String(env.EDGEONE_PAGES_API_REGION || '').trim().toLowerCase();
+  if (region === 'china') return [EDGEONE_API_ENDPOINTS.china];
+  if (region === 'global') return [EDGEONE_API_ENDPOINTS.global];
+  return [EDGEONE_API_ENDPOINTS.china, EDGEONE_API_ENDPOINTS.global];
+}
+
+/**
+ * @param {{ deployment?: { type?: string, url?: string }, token?: string, env?: Record<string, string | undefined>, fetchImpl?: typeof fetch }} options
+ */
+export async function resolveDeploymentUrl({ deployment, token, env = process.env, fetchImpl = fetch } = {}) {
+  const rawUrl = String(deployment?.url || '');
+  if (deployment?.type !== 'preset' || hasSignedAccessQuery(rawUrl)) return rawUrl;
+
+  const url = new URL(rawUrl);
+  let lastError = 'no response received';
+  for (const endpoint of apiEndpoints(env)) {
+    try {
+      const response = await fetchImpl(endpoint, {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ Action: 'DescribePagesEncipherToken', Text: url.host }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!response.ok) {
+        lastError = `HTTP ${response.status}`;
+        continue;
+      }
+      const payload = await response.json();
+      const data = payload?.Data?.Response;
+      if (payload?.Code === 0 && typeof data?.Token === 'string' && data.Token && data.Timestamp) {
+        url.searchParams.set('eo_token', data.Token);
+        url.searchParams.set('eo_time', String(data.Timestamp));
+        return url.toString();
+      }
+      lastError = 'invalid signed URL response';
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+  }
+  throw new Error(`EdgeOne preset deployment URL is unsigned and could not be signed: ${lastError}`);
+}
+
 function exactCommitSha(value) {
   const sha = String(value || '').trim().toLowerCase();
   return /^[0-9a-f]{40}$/.test(sha) ? sha : '';
@@ -248,7 +304,7 @@ function exactCommitSha(value) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function deployEdgeOne({ env = process.env, execute = runProcess, wait = sleep, verifyDeployment = checkProductionSha } = {}) {
+export async function deployEdgeOne({ env = process.env, execute = runProcess, wait = sleep, verifyDeployment = checkProductionSha, fetchImpl = fetch } = {}) {
   const token = env.EDGEONE_API_TOKEN || '';
   if (!token) throw new Error('EDGEONE_API_TOKEN is required');
 
@@ -284,7 +340,8 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     if (result.code === 0 && parsed) {
       try {
         const deployment = validateDeployResult(parsed);
-        const deployUrl = deployment.url;
+        const deployUrl = await resolveDeploymentUrl({ deployment, token, env, fetchImpl });
+        const resolvedDeployment = { ...deployment, url: deployUrl };
         const projectId = String(deployment.projectId);
         const deploymentId = String(deployment.deploymentId);
         const consoleUrl = typeof deployment.consoleUrl === 'string' ? deployment.consoleUrl : '';
@@ -338,7 +395,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
           `- attempts: ${attemptsMade}/${retries}`,
         ]);
         console.log(`EdgeOne deployment verified: project=${projectId} deployment=${deploymentId}`);
-        return { deployment, healthUrl: verificationUrl };
+        return { deployment: resolvedDeployment, healthUrl: verificationUrl };
       } catch (error) {
         if (failureClass !== 'deployment_unavailable') {
           lastError = sanitizeLog(`${error instanceof Error ? error.message : String(error)}\n${tailLines(combined)}`, token);
