@@ -3,12 +3,15 @@
 import { appendFileSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { checkProductionSha } from './check-production-sha.mjs';
 
 const MIN_CLI_VERSION = [1, 6, 0];
 const DEFAULT_CLI_VERSION = '1.6.28';
 const DEFAULT_PROJECT = 'dsh-go';
 const DEFAULT_RETRIES = 3;
 const DEFAULT_TIMEOUT_SECONDS = 240;
+const DEFAULT_VERIFY_ATTEMPTS = 6;
+const DEFAULT_VERIFY_DELAY_MS = 5_000;
 const MAX_CAPTURE_BYTES = 2 * 1024 * 1024;
 
 export function validateCliVersion(value) {
@@ -115,7 +118,18 @@ export function parseLastJson(text) {
 }
 
 export function validateDeployResult(result) {
-  if (!result || result.status !== 'success' || typeof result.url !== 'string' || result.url.length === 0 || result.projectId === undefined || result.projectId === null || String(result.projectId).length === 0) {
+  if (
+    !result
+    || result.status !== 'success'
+    || typeof result.url !== 'string'
+    || result.url.length === 0
+    || result.projectId === undefined
+    || result.projectId === null
+    || String(result.projectId).length === 0
+    || result.deploymentId === undefined
+    || result.deploymentId === null
+    || String(result.deploymentId).length === 0
+  ) {
     throw new Error('EdgeOne CLI returned an invalid success payload');
   }
   return result;
@@ -227,9 +241,14 @@ function edgeOneProcessEnv(env) {
   return { ...env, PAGES_SOURCE: env.PAGES_SOURCE || 'skills' };
 }
 
+function exactCommitSha(value) {
+  const sha = String(value || '').trim().toLowerCase();
+  return /^[0-9a-f]{40}$/.test(sha) ? sha : '';
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function deployEdgeOne({ env = process.env, execute = runProcess, wait = sleep } = {}) {
+export async function deployEdgeOne({ env = process.env, execute = runProcess, wait = sleep, verifyDeployment = checkProductionSha } = {}) {
   const token = env.EDGEONE_API_TOKEN || '';
   if (!token) throw new Error('EDGEONE_API_TOKEN is required');
 
@@ -241,11 +260,17 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   const cliVersion = validateCliVersion(env.EDGEONE_CLI_VERSION || DEFAULT_CLI_VERSION);
   const retries = parseBoundedInt(env.EDGEONE_DEPLOY_RETRIES, 'EDGEONE_DEPLOY_RETRIES', DEFAULT_RETRIES, 1, 5);
   const timeoutSeconds = parseBoundedInt(env.EDGEONE_ATTEMPT_TIMEOUT_SECONDS, 'EDGEONE_ATTEMPT_TIMEOUT_SECONDS', DEFAULT_TIMEOUT_SECONDS, 30, 300);
+  const verifyAttempts = parseBoundedInt(env.EDGEONE_DEPLOY_VERIFY_ATTEMPTS, 'EDGEONE_DEPLOY_VERIFY_ATTEMPTS', DEFAULT_VERIFY_ATTEMPTS, 1, 12);
+  const verifyDelayMs = parseBoundedInt(env.EDGEONE_DEPLOY_VERIFY_DELAY_MS, 'EDGEONE_DEPLOY_VERIFY_DELAY_MS', DEFAULT_VERIFY_DELAY_MS, 0, 30_000);
+  const expectedSha = exactCommitSha(env.DEPLOYMENT_SHA);
 
   console.log(`::add-mask::${token}`);
   let lastError = 'EdgeOne deployment did not start';
   let failureClass = 'api';
   let attemptsMade = 0;
+  let lastDeploymentId = '';
+  let lastProjectId = '';
+  let lastConsoleUrl = '';
 
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     attemptsMade = attempt;
@@ -264,29 +289,60 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
         const deployment = validateDeployResult(parsed);
         const deployUrl = deployment.url;
         const projectId = String(deployment.projectId);
+        const deploymentId = String(deployment.deploymentId);
         const consoleUrl = typeof deployment.consoleUrl === 'string' ? deployment.consoleUrl : '';
+        lastProjectId = projectId;
+        lastDeploymentId = deploymentId;
+        lastConsoleUrl = consoleUrl;
 
         console.log(`::add-mask::${deployUrl}`);
         if (healthUrl.includes('?')) console.log(`::add-mask::${healthUrl}`);
-        writeOutput('failure_class', 'none');
         writeOutput('deploy_url', deployUrl);
         writeOutput('project_id', projectId);
+        writeOutput('deployment_id', deploymentId);
         writeOutput('console_url', consoleUrl);
         writeOutput('health_url', healthUrl);
+
+        if (expectedSha) {
+          console.log(`EdgeOne CLI accepted deployment=${deploymentId}; verifying deployment URL before declaring success`);
+          try {
+            await verifyDeployment({
+              baseUrl: deployUrl,
+              expectedSha,
+              label: `Tencent EdgeOne accepted deployment ${deploymentId}`,
+              attempts: verifyAttempts,
+              delayMs: verifyDelayMs,
+            });
+          } catch (error) {
+            lastError = sanitizeLog(
+              `EdgeOne deployment ${deploymentId} was accepted but did not become readable at the returned deployment URL: ${error instanceof Error ? error.message : String(error)}`,
+              token,
+            );
+            failureClass = 'deployment_unavailable';
+            throw new Error(lastError);
+          }
+        }
+
+        writeOutput('failure_class', 'none');
         writeStepSummary([
           '#### EdgeOne CLI deployment diagnostics',
           `- project: ${project}`,
+          `- project id: ${projectId}`,
+          `- deployment id: ${deploymentId}`,
           `- CLI: edgeone@${cliVersion}`,
           '- auth mode: direct named-project CI deploy (`-n` + `-t`)',
           '- production health target: stable EDGEONE_SITE_URL',
+          `- deployment URL verified: ${expectedSha ? 'yes' : 'not requested'}`,
           '- failure class: none',
           `- attempts: ${attemptsMade}/${retries}`,
         ]);
-        console.log(`EdgeOne deployment accepted: project=${projectId}`);
+        console.log(`EdgeOne deployment verified: project=${projectId} deployment=${deploymentId}`);
         return { deployment, healthUrl };
       } catch (error) {
-        lastError = sanitizeLog(`${error.message}\n${tailLines(combined)}`, token);
-        failureClass = 'protocol';
+        if (failureClass !== 'deployment_unavailable') {
+          lastError = sanitizeLog(`${error instanceof Error ? error.message : String(error)}\n${tailLines(combined)}`, token);
+          failureClass = 'protocol';
+        }
       }
     } else if (result.timedOut) {
       lastError = `EdgeOne CLI attempt exceeded ${timeoutSeconds}s timeout`;
@@ -303,9 +359,9 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     console.log(lastError);
     console.log(`::warning title=EdgeOne attempt ${attempt} [${failureClass}]::${annotationValue(lastError)}`);
 
-    if (attempt < retries && failureClass === 'transport') {
+    if (attempt < retries && (failureClass === 'transport' || failureClass === 'deployment_unavailable')) {
       const waitMs = attempt * 10_000;
-      console.log(`Transient EdgeOne transport failure; retrying in ${waitMs / 1_000}s`);
+      console.log(`Retryable EdgeOne ${failureClass} failure; retrying full deployment in ${waitMs / 1_000}s`);
       await wait(waitMs);
       continue;
     }
@@ -313,9 +369,14 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   }
 
   writeOutput('failure_class', failureClass);
+  if (lastProjectId) writeOutput('project_id', lastProjectId);
+  if (lastDeploymentId) writeOutput('deployment_id', lastDeploymentId);
+  if (lastConsoleUrl) writeOutput('console_url', lastConsoleUrl);
   writeStepSummary([
     '#### EdgeOne CLI deployment diagnostics',
     `- project: ${project}`,
+    `- project id: ${lastProjectId || 'n/a'}`,
+    `- deployment id: ${lastDeploymentId || 'n/a'}`,
     `- CLI: edgeone@${cliVersion}`,
     '- auth mode: direct named-project CI deploy (`-n` + `-t`)',
     `- failure class: ${failureClass}`,
@@ -324,6 +385,9 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   writeDiagnostic(env, {
     status: 'failure',
     project,
+    project_id: lastProjectId || undefined,
+    deployment_id: lastDeploymentId || undefined,
+    console_url: lastConsoleUrl || undefined,
     cli_version: cliVersion,
     failure_class: failureClass,
     attempts: attemptsMade,
