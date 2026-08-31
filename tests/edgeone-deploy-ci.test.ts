@@ -188,7 +188,7 @@ describe('EdgeOne CI deployment helpers', () => {
     });
 
     expect(execute).toHaveBeenCalledTimes(1);
-    expect(fetchImpl).toHaveBeenCalledWith('https://pages-api.cloud.tencent.com/v1', expect.objectContaining({
+    expect(fetchImpl).toHaveBeenCalledWith('https://pages-api.edgeone.ai/v1', expect.objectContaining({
       method: 'POST',
       body: JSON.stringify({ Action: 'DescribePagesEncipherToken', Text: 'dsh-go.edgeone.cool' }),
     }));

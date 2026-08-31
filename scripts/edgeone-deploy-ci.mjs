@@ -254,7 +254,10 @@ function apiEndpoints(env) {
   const region = String(env.EDGEONE_PAGES_API_REGION || '').trim().toLowerCase();
   if (region === 'china') return [EDGEONE_API_ENDPOINTS.china];
   if (region === 'global') return [EDGEONE_API_ENDPOINTS.global];
-  return [EDGEONE_API_ENDPOINTS.china, EDGEONE_API_ENDPOINTS.global];
+  // EdgeOne's Makers preset domains (including *.edgeone.cool) are served by
+  // the global Pages control plane. Prefer that endpoint when the workflow has
+  // not pinned a region, then fall back to China for accounts hosted there.
+  return [EDGEONE_API_ENDPOINTS.global, EDGEONE_API_ENDPOINTS.china];
 }
 
 /**
