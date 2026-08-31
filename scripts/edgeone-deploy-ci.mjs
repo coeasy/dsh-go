@@ -351,6 +351,18 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     if (result.code === 0 && parsed) {
       try {
         const deployment = validateDeployResult(parsed);
+        let safeCliUrl = 'n/a';
+        try {
+          const url = new URL(deployment.url);
+          url.search = '';
+          url.hash = '';
+          safeCliUrl = url.toString();
+        } catch {
+          // validateDeployResult already rejects an empty URL; keep diagnostics safe.
+        }
+        console.log(
+          `EdgeOne CLI response: type=${deployment.type || 'n/a'} isTld=${deployment.isTld ?? 'n/a'} site=${deployment.site || 'n/a'} url=${safeCliUrl}`,
+        );
         const deployUrl = await resolveDeploymentUrl({ deployment, token, env, fetchImpl });
         const resolvedDeployment = { ...deployment, url: deployUrl };
         const projectId = String(deployment.projectId);
