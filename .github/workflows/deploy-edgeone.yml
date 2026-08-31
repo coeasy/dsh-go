@@ -157,21 +157,6 @@ jobs:
           node -e "const fs=require('node:fs'); const r=JSON.parse(fs.readFileSync('site/dist/catalog/registry-v3.json','utf8')); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length || fs.statSync('site/dist/catalog/registry-v3.json').size>25165824) process.exit(1)"
           node -e "const r=require('./site/dist/catalog/provider-adapters.json'); if(r.registry_version!==1 || !r.generated?.content_hash || !Array.isArray(r.providers) || r.generated.count!==r.providers.length) process.exit(1)"
 
-      - name: Package root EdgeOne artifact
-        if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -f site/edgeone-root.zip
-          (cd site/dist && zip -qr ../edgeone-root.zip .)
-          zipinfo -1 site/edgeone-root.zip | awk '{
-            entry=$0
-            sub("^\\./", "", entry)
-            if (entry == "index.html") found=1
-          } END {
-            exit(found ? 0 : 1)
-          }'
-
       - name: Validate EdgeOne static file limits
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
         shell: bash
@@ -193,8 +178,8 @@ jobs:
         id: edgeone
         env:
           EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
-          EDGEONE_UPLOAD_PATH: ./site/edgeone-root.zip
-          EDGEONE_UPLOAD_CWD: .
+          EDGEONE_UPLOAD_MODE: auto
+          EDGEONE_UPLOAD_CWD: ./site
           EDGEONE_DIAGNOSTIC_FILE: ${{ runner.temp }}/edgeone-deploy-diagnostic.json
         run: node .ci-control/scripts/edgeone-deploy-ci.mjs
 

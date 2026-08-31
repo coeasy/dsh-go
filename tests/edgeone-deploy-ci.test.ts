@@ -68,6 +68,22 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(() => resolveUploadSpec({ EDGEONE_UPLOAD_PATH: ' ' })).toThrow('non-empty path');
   });
 
+  it('builds the auto-build EdgeOne CLI contract without a positional path', () => {
+    expect(buildDeployArgs({
+      project: 'dsh-go',
+      token: 'secret',
+      cliVersion: '1.6.28',
+      directory: '',
+    })).toEqual([
+      '--yes', 'edgeone@1.6.28', 'makers', 'deploy', '-n', 'dsh-go', '-t', 'secret', '-e', 'production', '--json',
+    ]);
+    expect(resolveUploadSpec({ EDGEONE_UPLOAD_MODE: 'auto' })).toEqual({ directory: '', cwd: './site' });
+    expect(resolveUploadSpec({
+      EDGEONE_UPLOAD_MODE: 'auto',
+      EDGEONE_UPLOAD_CWD: '.',
+    })).toEqual({ directory: '', cwd: '.' });
+  });
+
   it('executes exactly one direct deploy and uses the configured URL when available', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const calls: Array<{
