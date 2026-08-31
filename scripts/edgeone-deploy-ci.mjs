@@ -139,7 +139,7 @@ export function validateDeployResult(result) {
   return result;
 }
 
-export function buildDeployArgs({ project, token, cliVersion, directory = './dist' }) {
+export function buildDeployArgs({ project, token, cliVersion, directory = '.' }) {
   return [
     '--yes',
     `edgeone@${cliVersion}`,
@@ -261,11 +261,14 @@ function apiEndpoints(env) {
 }
 
 /**
- * @param {{ deployment?: { type?: string, url?: string }, token?: string, env?: Record<string, string | undefined>, fetchImpl?: typeof fetch }} options
+ * @param {{ deployment?: { type?: string, isTld?: number, url?: string }, token?: string, env?: Record<string, string | undefined>, fetchImpl?: typeof fetch }} options
  */
 export async function resolveDeploymentUrl({ deployment, token, env = process.env, fetchImpl = fetch } = {}) {
   const rawUrl = String(deployment?.url || '');
-  if (deployment?.type !== 'preset' || hasSignedAccessQuery(rawUrl)) return rawUrl;
+  // The CLI marks TLD preset domains as public and deliberately omits the
+  // enciphered query. Preserve that contract; signing them can turn a valid
+  // public site URL into an invalid site URL.
+  if (deployment?.type !== 'preset' || deployment?.isTld === 1 || hasSignedAccessQuery(rawUrl)) return rawUrl;
 
   const url = new URL(rawUrl);
   let lastError = 'no response received';
@@ -331,11 +334,14 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     attemptsMade = attempt;
     console.log(`EdgeOne deployment attempt ${attempt}/${retries} using direct named-project token auth`);
-    const args = buildDeployArgs({ project, token, cliVersion });
+    const args = buildDeployArgs({ project, token, cliVersion, directory: '.' });
     const result = await execute('npx', args, {
       timeoutMs: timeoutSeconds * 1_000,
       env: edgeOneProcessEnv(env),
-      cwd: './site',
+      // EdgeOne's CLI preserves a directory argument as a top-level folder
+      // when it packages it. Run from the built artifact root and upload '.'
+      // so index.html and version.json land at the site root.
+      cwd: './site/dist',
     });
     const combined = `${result.stdout || ''}\n${result.stderr || ''}`;
     const parsed = parseLastJson(combined);
