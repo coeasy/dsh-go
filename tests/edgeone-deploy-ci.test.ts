@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildDeployArgs,
   checkCliContract,
+  cliTransferDiagnostics,
   classifyFailure,
   deployEdgeOne,
   parseLastJson,
@@ -18,6 +19,16 @@ afterEach(() => {
 });
 
 describe('EdgeOne CI deployment helpers', () => {
+  it('extracts sanitized CLI transfer diagnostics', () => {
+    const result = cliTransferDiagnostics(
+      'noise\n[uploadToEdgeOneCOS] Upload successful targetPath=secret\n[cli] Upload progress: 100%',
+      'secret',
+    );
+    expect(result).toContain('Upload successful');
+    expect(result).not.toContain('secret');
+    expect(result).not.toContain('noise');
+  });
+
   it('requires a pinned supported CLI version', () => {
     expect(validateCliVersion('1.6.0')).toBe('1.6.0');
     expect(validateCliVersion('1.6.28')).toBe('1.6.28');
