@@ -26,4 +26,4 @@ jobs:
           echo "Package files:"
           find "$inspect_dir/package" -maxdepth 3 -type f -print | sort
           echo "Upload and directory handling:"
-          rg -n -C 12 "IsTld|isTld|zip|archiver|upload.*file|readdir|basename|process\.cwd|deploy" "$inspect_dir/package" | head -n 500
+          grep -RniE -C 12 "IsTld|isTld|zip|archiver|upload.*file|readdir|basename|process\.cwd|deploy" "$inspect_dir/package" | head -n 500
