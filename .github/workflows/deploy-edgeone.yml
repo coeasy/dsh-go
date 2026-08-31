@@ -164,7 +164,7 @@ jobs:
           set -euo pipefail
           rm -f site/edgeone-root.zip
           (cd site/dist && zip -qr ../edgeone-root.zip .)
-          zipinfo -1 site/edgeone-root.zip | sed 's#^\\./##' | grep -Fxq 'index.html'
+          zipinfo -1 site/edgeone-root.zip | grep -Eq '^(.\\/)?index\\.html$'
 
       - name: Validate EdgeOne static file limits
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
