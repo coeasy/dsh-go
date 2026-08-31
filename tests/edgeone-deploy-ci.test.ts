@@ -46,7 +46,7 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(args).not.toContain('--name');
   });
 
-  it('executes exactly one direct deploy and keeps the stable production URL authoritative', async () => {
+  it('executes exactly one direct deploy and uses the configured URL when available', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const calls: Array<{
       command: string;
@@ -147,20 +147,33 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(result.deployment.deploymentId).toBe('deployment-2');
   });
 
-  it('fails before invoking the CLI when the stable production URL is missing', async () => {
-    const execute = vi.fn(async () => ({ code: 0, stdout: '', stderr: '', timedOut: false }));
+  it('uses the CLI production URL when no custom production URL is configured', async () => {
+    const execute = vi.fn(async () => ({
+      code: 0,
+      stdout: JSON.stringify({
+        status: 'success',
+        url: 'https://dsh-go.edgeone.cool?eo_token=signed&eo_time=123',
+        projectId: 'project-1',
+        deploymentId: 'deployment-1',
+      }),
+      stderr: '',
+      timedOut: false,
+    }));
 
-    await expect(deployEdgeOne({
+    const result = await deployEdgeOne({
       env: {
         EDGEONE_API_TOKEN: 'test-token',
         EDGEONE_PROJECT: 'dsh-go',
         EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+        EDGEONE_DEPLOY_RETRIES: '1',
+        EDGEONE_ATTEMPT_TIMEOUT_SECONDS: '30',
       },
       execute,
       wait: async () => undefined,
-    })).rejects.toThrow('EDGEONE_SITE_URL is required for authoritative production verification');
+    });
 
-    expect(execute).not.toHaveBeenCalled();
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(result.healthUrl).toBe('https://dsh-go.edgeone.cool?eo_token=signed&eo_time=123');
   });
 
   it('fails before invoking the CLI when the project drifts from canonical production', async () => {

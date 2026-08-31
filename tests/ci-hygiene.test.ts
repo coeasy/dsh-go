@@ -86,15 +86,14 @@ describe('CI and deployment hygiene', () => {
   it('keeps EdgeOne production verification on a stable target and native upload config', () => {
     const edgeone = workflow('deploy-edgeone.yml');
     const edgeoneConfig = readFileSync(join(root, 'site', 'public', 'edgeone.json'), 'utf8');
-    expect(edgeone).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.app' }}");
-    expect(edgeone).toContain('Require stable EdgeOne production URL');
-    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}');
+    expect(edgeone).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || '' }}");
+    expect(edgeone).toContain('CLI production URL');
+    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ vars.EDGEONE_SITE_URL || steps.edgeone.outputs.deploy_url }}');
     expect(edgeone).not.toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}');
-    expect(edgeone).toContain('production target: ${EDGEONE_SITE_URL}');
+    expect(edgeone).toContain('production target: ${{ vars.EDGEONE_SITE_URL || \'CLI production URL\' }}');
     expect(edgeone).toContain('site/dist/edgeone.json');
     expect(edgeoneConfig).toContain('"source": "/version.json"');
     expect(edgeoneConfig).toContain('no-store, no-cache, must-revalidate');
-    expect(edgeone).not.toContain('production target fallback: CLI production deployment URL');
   });
 
   it('monitors Provider Adapter Registry convergence across every production host without env-sized Registry payloads', () => {
@@ -109,7 +108,7 @@ describe('CI and deployment hygiene', () => {
     expect(monitor).toContain('$SMOKE_DIR/registry.json');
     expect(monitor).not.toContain('REGISTRY="$REGISTRY"');
     expect(monitor).not.toContain('META="$META"');
-    expect(monitor).not.toContain('optional EdgeOne');
+    expect(monitor).toContain('no stable custom domain configured');
   });
 
   it('automatically removes merged same-repository branches and preserves a safe manual cleanup', () => {

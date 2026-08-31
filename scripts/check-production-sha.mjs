@@ -8,6 +8,10 @@ const DEFAULT_DELAY_MS = 10_000;
 const DEFAULT_TIMEOUT_MS = 20_000;
 const CACHE_BUSTER = '__dsh_sha_gate';
 
+function isSignedEdgeOneUrl(url) {
+  return url.searchParams.has('eo_token') || url.searchParams.has('eo_time');
+}
+
 export function validateExpectedSha(value) {
   const sha = String(value || '').trim().toLowerCase();
   if (!/^[0-9a-f]{40}$/.test(sha)) {
@@ -19,14 +23,22 @@ export function validateExpectedSha(value) {
 export function buildVersionUrl(baseUrl, nonce = Date.now()) {
   if (!baseUrl) throw new Error('A deployment base URL is required');
   const base = new URL(baseUrl);
-  const inheritedSearch = new URLSearchParams(base.search);
+  const inheritedSearch = base.search;
   base.search = '';
   base.hash = '';
   if (!base.pathname.endsWith('/')) base.pathname += '/';
 
   const versionUrl = new URL('version.json', base);
-  for (const [key, value] of inheritedSearch.entries()) versionUrl.searchParams.append(key, value);
-  versionUrl.searchParams.set(CACHE_BUSTER, String(nonce));
+  // Keep the CLI-returned EdgeOne query string intact. Its eo_token/eo_time
+  // pair is a signed access grant, so parsing and reserializing it can change
+  // the URL that EdgeOne validates.
+  versionUrl.search = inheritedSearch;
+  // EdgeOne's non-TLD preset domains use eo_token/eo_time as a signed access
+  // query. Keep that query byte-for-byte compatible with the CLI response:
+  // adding a second query parameter can make the signed URL resolve to 404.
+  // Cache-Control below is sufficient for the SHA probe. Other providers still
+  // receive a cache buster so their CDN edge is not allowed to serve stale JSON.
+  if (!isSignedEdgeOneUrl(versionUrl)) versionUrl.searchParams.set(CACHE_BUSTER, String(nonce));
   return versionUrl;
 }
 

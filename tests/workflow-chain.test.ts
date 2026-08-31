@@ -105,10 +105,10 @@ describe('authoritative deployment routing', () => {
   it('keeps EdgeOne fail-closed and makes version metadata a first-class build asset', () => {
     const edgeone = workflow('deploy-edgeone.yml');
     expect(edgeone).toContain("EDGEONE_CLI_VERSION: ${{ vars.EDGEONE_CLI_VERSION || '1.6.28' }}");
-    expect(edgeone).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.app' }}");
+    expect(edgeone).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || '' }}");
     expect(edgeone).toContain('secrets.EDGEONE_API_TOKEN');
     expect(edgeone).toContain('EDGEONE_API_TOKEN secret is required for production deployment');
-    expect(edgeone).toContain('EDGEONE_SITE_URL is required for authoritative production verification');
+    expect(edgeone).toContain('CLI production URL');
     expect(edgeone).toContain('Checkout current deployment control plane');
     expect(edgeone).toContain('ref: ${{ github.sha }}');
     expect(edgeone).toContain('path: .ci-control');
@@ -119,12 +119,10 @@ describe('authoritative deployment routing', () => {
     expect(edgeone).toContain('Validate EdgeOne static file limits');
     expect(edgeone).toContain('run: node .ci-control/scripts/edgeone-deploy-ci.mjs --check');
     expect(edgeone).toContain('run: node .ci-control/scripts/check-production-sha.mjs');
-    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.deploy_url }}');
-    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}');
+    expect(edgeone).toContain('DEPLOY_BASE_URL: ${{ vars.EDGEONE_SITE_URL || steps.edgeone.outputs.deploy_url }}');
     expect(edgeone).not.toContain('DEPLOY_BASE_URL: ${{ steps.edgeone.outputs.health_url }}');
     expect(edgeone).toContain('Production Registry V3 convergence gate');
-    expect(edgeone).not.toContain('production target fallback: CLI production deployment URL');
-    expect(edgeone).toContain('production target: ${EDGEONE_SITE_URL}');
+    expect(edgeone).toContain('production target: ${{ vars.EDGEONE_SITE_URL || \'CLI production URL\' }}');
     expect(edgeone.length).toBeLessThan(18_000);
   });
 
@@ -145,8 +143,8 @@ describe('authoritative deployment routing', () => {
     expect(monitor).toContain('DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}');
     expect(monitor).toContain('ref: ${{ env.DEPLOYMENT_SHA }}');
     expect(monitor).not.toContain('ref: main');
-    expect(monitor).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.app' }}");
-    expect(monitor).not.toContain('skipping scheduled EdgeOne health check');
+    expect(monitor).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || '' }}");
+    expect(monitor).toContain('no stable custom domain configured');
     expect(monitor).toContain('Check Cloudflare exact SHA');
     expect(monitor).toContain('Check GitHub Pages exact SHA');
     expect(monitor).toContain('Check EdgeOne exact SHA');

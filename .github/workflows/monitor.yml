@@ -21,7 +21,11 @@ env:
   DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}
   SITE_URL: ${{ vars.SITE_URL || 'https://dsh-go.pages.dev' }}
   GITHUB_PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-  EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.app' }}
+  # EdgeOne preset deployment URLs are signed and short-lived. The deploy
+  # workflow verifies that URL directly; this scheduled monitor only checks an
+  # explicitly configured stable custom domain.
+  EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || '' }}
+  EDGEONE_STABLE_CONFIGURED: ${{ vars.EDGEONE_SITE_URL != '' }}
 
 jobs:
   health-check:
@@ -125,7 +129,7 @@ jobs:
       - name: Check EdgeOne exact SHA
         id: edgeone-sha
         continue-on-error: true
-        if: always()
+        if: ${{ always() && env.EDGEONE_SITE_URL != '' }}
         env:
           DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}
           EXPECTED_DEPLOYMENT_SHA: ${{ env.DEPLOYMENT_SHA }}
@@ -137,7 +141,7 @@ jobs:
       - name: Check EdgeOne Registry V3
         id: edgeone-registry
         continue-on-error: true
-        if: always()
+        if: ${{ always() && env.EDGEONE_SITE_URL != '' }}
         env:
           DEPLOY_BASE_URL: ${{ env.EDGEONE_SITE_URL }}
           DEPLOY_LABEL: Tencent EdgeOne final smoke
@@ -154,10 +158,11 @@ jobs:
           PROVIDER_MAIN_HASH=$(node -p "require('./catalog/provider-adapters.json').generated.content_hash")
           PROVIDER_MAIN_COUNT=$(node -p "require('./catalog/provider-adapters.json').providers.length")
           failed=0
-          for TARGET in \
-            "cloudflare|$SITE_URL" \
-            "github_pages|$GITHUB_PAGES_URL" \
-            "edgeone|$EDGEONE_SITE_URL"; do
+          targets=(
+            "cloudflare|$SITE_URL"
+            "github_pages|$GITHUB_PAGES_URL"
+          )
+          for TARGET in "${targets[@]}"; do
             target=${TARGET%%|*}
             BASE=${TARGET#*|}
             BASE="${BASE%/}"
@@ -178,6 +183,29 @@ jobs:
               failed=1
             fi
           done
+          if [ -n "$EDGEONE_SITE_URL" ]; then
+            target=edgeone
+            BASE="${EDGEONE_SITE_URL%/}"
+            outcome=failure
+            for attempt in $(seq 1 18); do
+              if curl -fsS --max-time 20 "${BASE}/catalog/provider-adapters.json" -o /tmp/providers.json; then
+                if PROVIDER_MAIN_HASH="$PROVIDER_MAIN_HASH" PROVIDER_MAIN_COUNT="$PROVIDER_MAIN_COUNT" node -e "const p=require('/tmp/providers.json');if(p.generated?.content_hash!==process.env.PROVIDER_MAIN_HASH||String(p.providers?.length)!==process.env.PROVIDER_MAIN_COUNT)process.exit(1)"; then
+                  echo "Provider Adapter Registry converged: ${target} ${BASE}"
+                  outcome=success
+                  break
+                fi
+              fi
+              sleep 10
+            done
+            echo "${target}=${outcome}" >> "$GITHUB_OUTPUT"
+            if [ "$outcome" != "success" ]; then
+              echo "::error::Provider Adapter Registry did not converge: ${target} ${BASE}"
+              failed=1
+            fi
+          else
+            echo "edgeone=skipped" >> "$GITHUB_OUTPUT"
+            echo "EdgeOne Provider Adapter Registry check skipped: no stable custom domain configured"
+          fi
           if [ "$failed" -eq 0 ]; then
             echo "aggregate=success" >> "$GITHUB_OUTPUT"
           else
@@ -194,6 +222,7 @@ jobs:
           PAGES_REGISTRY: ${{ steps.pages-registry.outcome }}
           EDGEONE_SHA: ${{ steps.edgeone-sha.outcome }}
           EDGEONE_REGISTRY: ${{ steps.edgeone-registry.outcome }}
+          EDGEONE_REQUIRED: ${{ env.EDGEONE_STABLE_CONFIGURED }}
           PROVIDERS_CLOUDFLARE: ${{ steps.providers.outputs.cloudflare }}
           PROVIDERS_PAGES: ${{ steps.providers.outputs.github_pages }}
           PROVIDERS_EDGEONE: ${{ steps.providers.outputs.edgeone }}
@@ -206,11 +235,8 @@ jobs:
             "Cloudflare Registry:$CLOUDFLARE_REGISTRY" \
             "GitHub Pages SHA:$PAGES_SHA" \
             "GitHub Pages Registry:$PAGES_REGISTRY" \
-            "EdgeOne SHA:$EDGEONE_SHA" \
-            "EdgeOne Registry:$EDGEONE_REGISTRY" \
             "Provider Cloudflare:$PROVIDERS_CLOUDFLARE" \
-            "Provider GitHub Pages:$PROVIDERS_PAGES" \
-            "Provider EdgeOne:$PROVIDERS_EDGEONE"; do
+            "Provider GitHub Pages:$PROVIDERS_PAGES"; do
             label=${item%%:*}
             outcome=${item#*:}
             if [ "$outcome" != "success" ]; then
@@ -218,6 +244,18 @@ jobs:
               failed=1
             fi
           done
+          if [ "$EDGEONE_REQUIRED" = "true" ]; then
+            for item in "EdgeOne SHA:$EDGEONE_SHA" "EdgeOne Registry:$EDGEONE_REGISTRY" "Provider EdgeOne:$PROVIDERS_EDGEONE"; do
+              label=${item%%:*}
+              outcome=${item#*:}
+              if [ "$outcome" != "success" ]; then
+                echo "::error::Final smoke gate failed: ${label}=${outcome}"
+                failed=1
+              fi
+            done
+          else
+            echo "EdgeOne final smoke skipped: no stable custom domain configured"
+          fi
           [ "$failed" -eq 0 ] || exit 1
           echo "All production targets converged to ${DEPLOYMENT_SHA}"
 
@@ -228,7 +266,7 @@ jobs:
           echo "- release SHA: ${DEPLOYMENT_SHA}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Cloudflare: ${{ steps.cloudflare-sha.outcome || 'skipped' }} / ${{ steps.cloudflare-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- GitHub Pages: ${{ steps.pages-sha.outcome || 'skipped' }} / ${{ steps.pages-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- EdgeOne: ${{ steps.edgeone-sha.outcome || 'skipped' }} / ${{ steps.edgeone-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- EdgeOne stable-domain smoke: ${{ steps.edgeone-sha.outcome || 'skipped' }} / ${{ steps.edgeone-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Provider Adapter Registry (Cloudflare): ${{ steps.providers.outputs.cloudflare || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Provider Adapter Registry (GitHub Pages): ${{ steps.providers.outputs.github_pages || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Provider Adapter Registry (EdgeOne): ${{ steps.providers.outputs.edgeone || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
