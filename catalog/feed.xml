@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 31 Aug 2026 13:50:21 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 31 Aug 2026 19:10:42 GMT</lastBuildDate>
     <item>
       <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -49,21 +49,21 @@
       <description>&lt;img width=&quot;1710&quot; height=&quot;1082&quot; alt=&quot;&quot; src=&quot;https://github.com/user attachments/assets/ef968872 f49b 4183 9b20 9e9fe6846466&quot; / NoLetMe · dsh 推理轨迹面板 NoLetMe 是</description>
     </item>
     <item>
-      <title>🆕 DSH-ReasonixUI</title>
+      <title>🔄 DSH-ReasonixUI</title>
       <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-31T10:45:11Z</guid>
-      <pubDate>Mon, 31 Aug 2026 10:45:11 GMT</pubDate>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-31T16:40:54Z</guid>
+      <pubDate>Mon, 31 Aug 2026 16:40:54 GMT</pubDate>
       <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
       <title>🆕 dsh Music TUI</title>
       <link>https://github.com/Nagi-ovo/dsh-music-tui</link>
-      <guid isPermaLink="false">Nagi-ovo/dsh-music-tui@2026-08-31T00:36:15Z</guid>
-      <pubDate>Mon, 31 Aug 2026 00:36:15 GMT</pubDate>
+      <guid isPermaLink="false">Nagi-ovo/dsh-music-tui@2026-08-31T18:57:44Z</guid>
+      <pubDate>Mon, 31 Aug 2026 18:57:44 GMT</pubDate>
       <description>dsh music tui 在 dsh TUI 里查看并控制已经运行的 YesPlayMusic TUI。插件提供 /music 命令和提示框上方的紧凑音乐条，不修改 DeepSeek Harness、dsh TUI 或 YesPlayMusic 本体，也不会自动启动播放器。 能做什么 /music 或 /music show ：打开音乐条（默认隐藏） /music hide ：关闭音乐条 /mu</description>
     </item>
     <item>
-      <title>🆕 dsh-large-proj-perf</title>
+      <title>🔄 dsh-large-proj-perf</title>
       <link>https://github.com/orangeofcarl0-sys/dsh-large-proj-perf</link>
       <guid isPermaLink="false">orangeofcarl0-sys/dsh-large-proj-perf@2026-08-28T16:54:54Z</guid>
       <pubDate>Fri, 28 Aug 2026 16:54:54 GMT</pubDate>
@@ -112,6 +112,13 @@
       <description>dsh overleaf English 中文 An embedded Overleaf workbench plugin for DeepSeek Harness (DSH) Web. It adds a fourth tab next to Chat / Trajectory / Context on the session page: the tab loads your Overleaf </description>
     </item>
     <item>
+      <title>🆕 @all3cn/dsh-better-sidebar-n23</title>
+      <link>https://github.com/All3nCN/dsh-better-sidebar-N23</link>
+      <guid isPermaLink="false">All3nCN/dsh-better-sidebar-N23@2026-08-31T17:17:36Z</guid>
+      <pubDate>Mon, 31 Aug 2026 17:17:36 GMT</pubDate>
+      <description>@all3cn/dsh better sidebar n23 一个服务化的侧边栏框架 + 一套开箱即用的 DSH 完整工作台。本包是开源插件 dsh better sidebar（MIT）的社区 fork，在 @all3cn 作用域下独立发版；上游致谢见 UPSTREAM.md。 English 中文 功能一览 文件工作台 ：资源管理器（懒加载目录树、软链接按目标类型展示）+ CodeMirror</description>
+    </item>
+    <item>
       <title>🆕 dsh-tui-mcp-manager</title>
       <link>https://github.com/0N3-0/dsh-tui-mcp-manager</link>
       <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-30T06:17:26Z</guid>
@@ -124,13 +131,6 @@
       <guid isPermaLink="false">yhPrime/dsh-github-installer@2026-08-29T16:09:15Z</guid>
       <pubDate>Sat, 29 Aug 2026 16:09:15 GMT</pubDate>
       <description>dsh github installer 基于 dsh std 标准化协议的插件管理器 —— 粘贴 GitHub 仓库网址 / npm 包名 / 其他 Git 仓库地址，即可安装；支持卸载与更新。 A dsh std standard component for managing plugins — install from a GitHub repo URL, npm package name,</description>
-    </item>
-    <item>
-      <title>🆕 dsh-ua-headers</title>
-      <link>https://github.com/fplj-fplj/dsh-ua-headers</link>
-      <guid isPermaLink="false">fplj-fplj/dsh-ua-headers@2026-08-24T16:27:49Z</guid>
-      <pubDate>Mon, 24 Aug 2026 16:27:49 GMT</pubDate>
-      <description>dsh ua headers dsh TUI · 一个为 dsh TUI 生态打造的插件 一个遵循 dsh ecosystem spec（dsh std Community v0.15 / TUI Admission v0.15）的 DSH 插件：自定义所选模型调用时的 User Agent，并加入自定义请求头。 功能 自定义 UA ：匹配到的模型请求会替换 User Agent ；留空则保留 D</description>
     </item>
     <item>
       <title>🆕 dsh-pro-vision-std</title>
@@ -168,7 +168,7 @@
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/media/social card.png&quot; width=&quot;900&quot; alt=&quot;dsh agent messaging — the payments api session sends a steer to the checkout client se</description>
     </item>
     <item>
-      <title>🆕 dsh-delegate</title>
+      <title>🔄 dsh-delegate</title>
       <link>https://github.com/FEOH333/dsh-delegate</link>
       <guid isPermaLink="false">FEOH333/dsh-delegate@2026-08-24T13:27:49Z</guid>
       <pubDate>Mon, 24 Aug 2026 13:27:49 GMT</pubDate>
@@ -196,6 +196,13 @@
       <description>@deepseek ai/dsh win desktop DeepSeek Harness Windows Desktop Plugin — A zero dependency DSH plugin that bridges Windows desktop sessions via a local HTTP API. Install with a single node command, no p</description>
     </item>
     <item>
+      <title>🆕 dsh-ua-headers</title>
+      <link>https://github.com/fplj-fplj/dsh-ua-headers</link>
+      <guid isPermaLink="false">fplj-fplj/dsh-ua-headers@2026-08-24T16:27:49Z</guid>
+      <pubDate>Mon, 24 Aug 2026 16:27:49 GMT</pubDate>
+      <description>dsh ua headers dsh TUI · 一个为 dsh TUI 生态打造的插件 一个遵循 dsh ecosystem spec（dsh std Community v0.15 / TUI Admission v0.15）的 DSH 插件：自定义所选模型调用时的 User Agent，并加入自定义请求头。 功能 自定义 UA ：匹配到的模型请求会替换 User Agent ；留空则保留 D</description>
+    </item>
+    <item>
       <title>🆕 DSH Music Player (TUI)</title>
       <link>https://github.com/heshuren371/dsh-music-player-tui</link>
       <guid isPermaLink="false">heshuren371/dsh-music-player-tui@2026-08-21T12:06:33Z</guid>
@@ -208,13 +215,6 @@
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-subagents@2026-08-17T12:50:52Z</guid>
       <pubDate>Mon, 17 Aug 2026 12:50:52 GMT</pubDate>
       <description>dsh tui subagents dsh TUI 的子 agent 会话视图： /subagents 列出当前会话的子 agent，Enter 进入全屏轨迹视图， 实时 跟着子 agent 的思考、工具调用和回复滚动；对 可续（continuable） 子 agent 可以直接发消息纠偏、中断当前轮。对应上游 issue dsh TUI 223。 English below. 用法 轨迹视图按键</description>
-    </item>
-    <item>
-      <title>🔄 Webhook 通知</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-webhook</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-webhook@2026-08-17T12:52:20Z</guid>
-      <pubDate>Mon, 17 Aug 2026 12:52:20 GMT</pubDate>
-      <description>dsh tui webhook 适用于 dsh TUI（dshtui.com）的社区插件。 把 dsh TUI 的关键事件推送到 IM 机器人（飞书 / 钉钉 / 企业微信 / 任意通用 webhook）：长轮次完成、审批请求——人离开电脑也能收到提醒。 English below. 用法 配置在 /settings →「Webhook 通知」，保存后立即生效，无需重启。 设置 说明 默认 pla</description>
     </item>
   </channel>
 </rss>
