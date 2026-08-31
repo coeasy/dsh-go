@@ -151,23 +151,26 @@ export function validateDeployResult(result) {
 }
 
 export function buildDeployArgs({ project, token, cliVersion, directory = './' }) {
-  return [
+  const args = [
     '--yes',
     `edgeone@${cliVersion}`,
     'makers',
     'deploy',
-    directory,
-    '-n',
-    project,
-    '-t',
-    token,
-    '-e',
-    'production',
-    '--json',
   ];
+  if (directory) args.push(directory);
+  args.push('-n', project, '-t', token, '-e', 'production', '--json');
+  return args;
 }
 
 export function resolveUploadSpec(env = process.env) {
+  const mode = String(env.EDGEONE_UPLOAD_MODE || 'directory').trim().toLowerCase();
+  if (mode === 'auto') {
+    const cwd = String(env.EDGEONE_UPLOAD_CWD || './site').trim();
+    if (!cwd) throw new Error('EDGEONE_UPLOAD_CWD must be a non-empty path');
+    return { directory: '', cwd };
+  }
+  if (mode !== 'directory') throw new Error('EDGEONE_UPLOAD_MODE must be directory or auto');
+
   const directory = String(env.EDGEONE_UPLOAD_PATH || './').trim();
   if (!directory) throw new Error('EDGEONE_UPLOAD_PATH must be a non-empty path');
 
