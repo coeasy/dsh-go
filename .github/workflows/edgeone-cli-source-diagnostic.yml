@@ -27,22 +27,33 @@ jobs:
           import fs from 'node:fs';
           import path from 'node:path';
           const root = process.env.INSPECT_DIR + '/package';
+          const terms = [
+            'localPath must be a folder or zip file',
+            'directoryOrZip',
+            'fileOrFolder',
+            'TempBucketPath',
+            'CreatePagesDeployment',
+            'fastListFolder',
+            'Zoi=',
+            'Xoi=',
+            'Koi=',
+            'basename(t)',
+            'process.cwd()',
+            'directory(t,n)',
+            'distType',
+          ];
           for (const relative of ['edgeone-bin/edgeone.js', 'edgeone-dist/cli.js']) {
             const file = path.join(root, relative);
             const source = fs.readFileSync(file, 'utf8');
             console.log('\n=== ' + relative + ' (' + source.length + ' bytes) ===');
-            for (const term of ['createZip', 'zipSync', 'archiver', 'readdirSync', 'uploadFile', 'upload', 'isTld', 'IsTld', 'DescribePagesEncipherToken', 'eo_token', 'makers']) {
-              const positions = [];
-              let from = 0;
-              while (positions.length < 4) {
-                const index = source.toLowerCase().indexOf(term.toLowerCase(), from);
-                if (index < 0) break;
-                positions.push(index);
-                console.log('\n--- ' + term + ' @ ' + index + ' ---');
-                console.log(source.slice(Math.max(0, index - 900), index + 1800));
-                from = index + term.length;
+            for (const term of terms) {
+              const index = source.toLowerCase().indexOf(term.toLowerCase());
+              if (index < 0) {
+                console.log('\n--- ' + term + ': none ---');
+                continue;
               }
-              if (!positions.length) console.log(term + ': none');
+              console.log('\n--- ' + term + ' @ ' + index + ' ---');
+              console.log(source.slice(Math.max(0, index - 5000), index + 9000));
             }
           }
           NODE
