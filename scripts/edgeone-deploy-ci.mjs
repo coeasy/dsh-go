@@ -47,6 +47,17 @@ export function sanitizeLog(value, token = '') {
     .replace(/(authorization\s*:\s*bearer\s+)[^\s]+/gi, '$1***');
 }
 
+export function cliTransferDiagnostics(value, token = '') {
+  const lines = String(value ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const relevant = lines
+    .filter((line) => /uploadToEdgeOneCOS|uploadFiles|upload successful|file uploaded|targetPath|CreatePagesDeployment|DistType|scanning directory|found \d+ files|deployment/i.test(line))
+    .slice(-24);
+  return relevant.map((line) => sanitizeLog(line, token)).join('\n');
+}
+
 export function classifyFailure(text, status = 1, timedOut = false) {
   const value = String(text ?? '');
   if (timedOut || status === 124 || status === 137) return 'transport';
@@ -361,6 +372,11 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
       cwd: uploadSpec.cwd,
     });
     const combined = `${result.stdout || ''}\n${result.stderr || ''}`;
+    const transferDiagnostics = cliTransferDiagnostics(combined, token);
+    if (transferDiagnostics) {
+      console.log('EdgeOne CLI transfer diagnostics:');
+      console.log(transferDiagnostics);
+    }
     const parsed = parseLastJson(combined);
 
     if (result.code === 0 && parsed) {
@@ -488,6 +504,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     failure_class: failureClass,
     attempts: attemptsMade,
     error: lastError,
+    transfer_diagnostics: transferDiagnostics || undefined,
   }, token);
   console.error(`::error title=EdgeOne deployment failure [${failureClass}]::${annotationValue(lastError)}`);
   throw new Error(`EdgeOne deployment failed after retry policy [${failureClass}]: ${lastError}`);
