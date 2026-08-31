@@ -1,0 +1,29 @@
+name: EdgeOne CLI Source Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/edgeone-cli-source-diagnostic.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Inspect pinned EdgeOne CLI upload implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_archive=$(npm pack --silent edgeone@1.6.28)
+          inspect_dir=$(mktemp -d)
+          tar -xzf "$package_archive" -C "$inspect_dir"
+          echo "Package files:"
+          find "$inspect_dir/package" -maxdepth 3 -type f -print | sort
+          echo "Upload and directory handling:"
+          rg -n -C 12 "IsTld|isTld|zip|archiver|upload.*file|readdir|basename|process\.cwd|deploy" "$inspect_dir/package" | head -n 500
