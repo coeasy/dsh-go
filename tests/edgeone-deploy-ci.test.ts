@@ -7,6 +7,7 @@ import {
   parseLastJson,
   resolveProject,
   resolveDeploymentUrl,
+  resolveUploadSpec,
   sanitizeLog,
   validateCliVersion,
   validateDeployResult,
@@ -45,6 +46,15 @@ describe('EdgeOne CI deployment helpers', () => {
     ]);
     expect(args).not.toContain('link');
     expect(args).not.toContain('--name');
+  });
+
+  it('selects a root ZIP upload path without changing the default contract', () => {
+    expect(resolveUploadSpec({})).toEqual({ directory: './', cwd: './site/dist' });
+    expect(resolveUploadSpec({
+      EDGEONE_UPLOAD_PATH: './site/edgeone-root.zip',
+      EDGEONE_UPLOAD_CWD: '.',
+    })).toEqual({ directory: './site/edgeone-root.zip', cwd: '.' });
+    expect(() => resolveUploadSpec({ EDGEONE_UPLOAD_PATH: ' ' })).toThrow('non-empty path');
   });
 
   it('executes exactly one direct deploy and uses the configured URL when available', async () => {
