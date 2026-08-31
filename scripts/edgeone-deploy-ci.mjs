@@ -139,7 +139,7 @@ export function validateDeployResult(result) {
   return result;
 }
 
-export function buildDeployArgs({ project, token, cliVersion, directory = '.' }) {
+export function buildDeployArgs({ project, token, cliVersion, directory = './' }) {
   return [
     '--yes',
     `edgeone@${cliVersion}`,
@@ -334,12 +334,12 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     attemptsMade = attempt;
     console.log(`EdgeOne deployment attempt ${attempt}/${retries} using direct named-project token auth`);
-    const args = buildDeployArgs({ project, token, cliVersion, directory: '.' });
+    const args = buildDeployArgs({ project, token, cliVersion, directory: './' });
     const result = await execute('npx', args, {
       timeoutMs: timeoutSeconds * 1_000,
       env: edgeOneProcessEnv(env),
       // EdgeOne's CLI preserves a directory argument as a top-level folder
-      // when it packages it. Run from the built artifact root and upload '.'
+      // when it packages it. Run from the built artifact root and upload './'
       // so index.html and version.json land at the site root.
       cwd: './site/dist',
     });

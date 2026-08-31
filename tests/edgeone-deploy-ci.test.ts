@@ -41,7 +41,7 @@ describe('EdgeOne CI deployment helpers', () => {
     const args = buildDeployArgs({ project: 'dsh-go', token: 'secret', cliVersion: '1.6.28' });
 
     expect(args).toEqual([
-      '--yes', 'edgeone@1.6.28', 'makers', 'deploy', '.', '-n', 'dsh-go', '-t', 'secret', '-e', 'production', '--json',
+      '--yes', 'edgeone@1.6.28', 'makers', 'deploy', './', '-n', 'dsh-go', '-t', 'secret', '-e', 'production', '--json',
     ]);
     expect(args).not.toContain('link');
     expect(args).not.toContain('--name');
