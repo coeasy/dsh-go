@@ -257,6 +257,9 @@ function apiEndpoints(env) {
   return [EDGEONE_API_ENDPOINTS.china, EDGEONE_API_ENDPOINTS.global];
 }
 
+/**
+ * @param {{ deployment?: { type?: string, url?: string }, token?: string, env?: Record<string, string | undefined>, fetchImpl?: typeof fetch }} options
+ */
 export async function resolveDeploymentUrl({ deployment, token, env = process.env, fetchImpl = fetch } = {}) {
   const rawUrl = String(deployment?.url || '');
   if (deployment?.type !== 'preset' || hasSignedAccessQuery(rawUrl)) return rawUrl;
