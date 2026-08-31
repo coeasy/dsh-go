@@ -252,10 +252,15 @@ jobs:
       - name: Enforce production post-deploy gates
         if: ${{ always() && steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' && steps.edgeone.outcome == 'success' }}
         env:
+          DEPLOY_URL_SHA_OUTCOME: ${{ steps.deploy-url-sha.outcome }}
           PRODUCTION_SHA_OUTCOME: ${{ steps.production-sha.outcome }}
           PRODUCTION_CONVERGENCE_OUTCOME: ${{ steps.production-convergence.outcome }}
         run: |
           set -euo pipefail
+          if [ "$DEPLOY_URL_SHA_OUTCOME" != "success" ]; then
+            echo "::error::Deployment URL SHA gate failed; inspect edgeone-deploy-url-sha-diagnostic"
+            exit 1
+          fi
           if [ "$PRODUCTION_SHA_OUTCOME" != "success" ]; then
             echo "::error::Production SHA gate failed; inspect edgeone-production-sha-diagnostic"
             exit 1
@@ -284,4 +289,4 @@ jobs:
           echo "- deployment URL SHA gate: ${{ steps.deploy-url-sha.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- production SHA gate: ${{ steps.production-sha.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- production convergence gate: ${{ steps.production-convergence.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- authoritative gate: production target SHA + Registry V3 convergence" >> "$GITHUB_STEP_SUMMARY"
+          echo "- authoritative gate: deployment URL SHA + production target SHA + Registry V3 convergence" >> "$GITHUB_STEP_SUMMARY"
