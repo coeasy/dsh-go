@@ -50,7 +50,7 @@ export function sanitizeLog(value, token = '') {
 export function cliTransferDiagnostics(value, token = '') {
   const lines = String(value ?? '')
     .split(/\r?\n/)
-    .map((line) => line.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '').trim())
+    .map((line) => line.trim())
     .filter(Boolean);
   const relevant = lines
     .filter((line) => /uploadToEdgeOneCOS|uploadFiles|upload successful|file uploaded|targetPath|CreatePagesDeployment|DistType|scanning directory|found \d+ files|deployment/i.test(line))
