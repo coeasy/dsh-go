@@ -53,6 +53,19 @@ const mcpEndpoint = await readFile(resolve('functions/api/v1/mcp.ts'), 'utf8');
 if (!mcpEndpoint.includes("version: '0.1.0'")) errors.push('functions/api/v1/mcp.ts must report serverInfo version 0.1.0');
 const metaEndpoint = await readFile(resolve('functions/api/v1/meta.ts'), 'utf8');
 if (!metaEndpoint.includes("api_version: 'v1'")) errors.push('functions/api/v1/meta.ts must report api_version v1');
+const discovery = await json('site/public/.well-known/dsh-marketplace.json');
+if (discovery.schema !== 'dsh-marketplace-discovery.v1') errors.push('platform discovery schema must be dsh-marketplace-discovery.v1');
+if (discovery.service?.id !== 'dsh-go' || discovery.service?.mode !== 'read-only') errors.push('platform discovery service identity is invalid');
+if (discovery.registry?.version !== 3 || discovery.registry?.distribution?.version !== 1) errors.push('platform discovery registry contract is invalid');
+if (JSON.stringify(discovery.package_types) !== JSON.stringify(['plugin', 'mcp', 'skill', 'agent'])) errors.push('platform discovery package types are invalid');
+for (const path of [
+  'functions/api/v1/index.ts',
+  'functions/api/v1/capabilities.ts',
+  'functions/api/v1/registry/delta.ts',
+  'functions/api/v1/registry/packages/[type]/[id]/versions.ts',
+]) {
+  try { await access(resolve(path)); } catch { errors.push(path + ' is required by the V1 contract'); }
+}
 
 if (errors.length) {
   console.error('DSH compatibility contract failed:');

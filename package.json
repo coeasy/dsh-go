@@ -73,7 +73,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run contract:check && npm run typecheck && npm run lint && npm test && cd site && npm run check"
+    "check": "npm run contract:check && npm run typecheck && npm run lint && npm test && cd site && npm run check",
+    "platform:check": "node scripts/check-platform-discovery.mjs --file site/public/.well-known/dsh-marketplace.json"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260825.1",

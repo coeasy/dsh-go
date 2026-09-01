@@ -60,6 +60,10 @@ npm run site:dev          # 启动本地开发服务器
 
 | 端点 | 说明 |
 |---|---|
+| `GET /api/v1` | API 服务索引与安装语义 |
+| `GET /api/v1/capabilities` | 当前 Catalog/Registry/部署能力与一致性信息 |
+| `GET /api/v1/registry/delta` | Registry Distribution V1 增量变更 |
+| `GET /api/v1/registry/packages/:type/:id/versions` | 包版本、commit、artifact 与安全证据 |
 | `GET /api/v1/plugins` | 插件列表（`?category=&verified=&search=&sort=&page=&per_page=`） |
 | `GET /api/v1/plugins/:slug` | 插件详情 |
 | `GET /api/v1/search?q=` | 关键词搜索 |
@@ -71,7 +75,7 @@ npm run site:dev          # 启动本地开发服务器
 | `GET /catalog/plugins.json` | 原始全量数据 |
 | `GET /feed.xml` | RSS |
 
-> API 使用示例、参数与 MCP 接入见站内 `/docs`。
+> API 使用示例、参数与 MCP 接入见站内 `/docs`。机器客户端可先读取 `/.well-known/dsh-marketplace.json` 或 `/api/v1/capabilities`；三平台静态站点都提供同一发现契约。
 
 ## 如何收录你的插件
 
