@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
 import { DEFAULT_PLUGIN_VERSION, REGISTRY_VERSION, SCHEMA_VERSION, isCommitSha } from './registry-v3-builder.mjs';
-import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, makeRegistryInstallCmd, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_FILE = resolve(ROOT, 'catalog/registry-v3.json');
@@ -81,7 +81,9 @@ export function validateRegistry(data) {
     const repoName = repoNameFromFullName(repo);
     if (metadata.repo_name !== repoName) errors.push(`${id}: metadata.repo_name mismatch`);
     if (metadata.repo_url !== canonicalRepoUrl(repo)) errors.push(`${id}: metadata.repo_url is not canonical`);
-    if (metadata.install_cmd !== makeInstallCmd(repo, metadata.category || 'other')) errors.push(`${id}: metadata.install_cmd source mismatch`);
+    const expectedInstallCmd = makeRegistryInstallCmd(plugin);
+    const legacyInstallCmd = makeInstallCmd(repo, metadata.category || 'other');
+    if (metadata.install_cmd !== expectedInstallCmd && metadata.install_cmd !== legacyInstallCmd) errors.push(`${id}: metadata.install_cmd source mismatch`);
     if (!['github', 'dsh-package', 'dsh-plugin', 'dsh-mcp', 'dsh-skill', 'dsh-agent', 'override'].includes(metadata.metadata_source)) errors.push(`${id}: unsupported metadata_source ${metadata.metadata_source || '<missing>'}`);
     if (metadata.metadata_source === 'github' && metadata.name !== repoName) errors.push(`${id}: GitHub metadata.name must match repository name`);
     if (metadata.metadata_source === 'github' && (metadata.verified || metadata.manifest_file)) errors.push(`${id}: GitHub metadata cannot be verified or manifest-backed`);
