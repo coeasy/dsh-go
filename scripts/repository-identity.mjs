@@ -238,6 +238,7 @@ export function mergeDiscoveredRepository(current, discovered) {
     capabilities: manifestSource.capabilities || [], dependencies: manifestSource.dependencies || [], permissions: manifestSource.permissions || [],
     compatibility: manifestSource.compatibility || null, publisher: manifestSource.publisher || null, security: manifestSource.security || null,
     conflicts: manifestSource.conflicts || [], replaces: manifestSource.replaces || [], provides: manifestSource.provides || [], type_config: manifestSource.type_config || null,
+    release_tag: manifestAuthoritative ? (manifestSource.release_tag || null) : null,
     verified: manifestAuthoritative,
     category,
     tags,
