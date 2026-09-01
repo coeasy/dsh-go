@@ -4,149 +4,659 @@
     "title": "DSH Go API",
     "version": "2.3.0",
     "description": "DSH Go public read-only catalog and Registry V3 ecosystem API. Local installation and runtime mutation are never executed by this service.",
-    "license": { "name": "CC-BY-4.0" }
+    "license": {
+      "name": "CC-BY-4.0"
+    }
   },
-  "servers": [{ "url": "https://dsh-go.pages.dev" }],
+  "servers": [
+    {
+      "url": "https://dsh-go.pages.dev"
+    }
+  ],
   "tags": [
-    { "name": "Plugins", "description": "Backward-compatible plugin catalog" },
-    { "name": "Ecosystem", "description": "Registry V3 plugin/MCP/skill/agent discovery" },
-    { "name": "Metadata", "description": "Health, sync and registry metadata" },
-    { "name": "MCP", "description": "Read-only JSON-RPC discovery endpoint" }
+    {
+      "name": "Plugins",
+      "description": "Backward-compatible plugin catalog"
+    },
+    {
+      "name": "Ecosystem",
+      "description": "Registry V3 plugin/MCP/skill/agent discovery"
+    },
+    {
+      "name": "Metadata",
+      "description": "Health, sync and registry metadata"
+    },
+    {
+      "name": "MCP",
+      "description": "Read-only JSON-RPC discovery endpoint"
+    }
   ],
   "paths": {
     "/api/v1/plugins": {
       "get": {
-        "tags": ["Plugins"],
+        "tags": [
+          "Plugins"
+        ],
         "summary": "List legacy marketplace plugins",
         "parameters": [
-          { "name": "category", "in": "query", "schema": { "type": "string" } },
-          { "name": "verified", "in": "query", "schema": { "type": "boolean" } },
-          { "name": "search", "in": "query", "schema": { "type": "string" } },
-          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["stars", "trend", "updated", "created", "name"] } },
-          { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"] } },
-          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
-          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200 } }
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "verified",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "stars",
+                "trend",
+                "updated",
+                "created",
+                "name"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
         ],
-        "responses": { "200": { "description": "Plugin list" }, "304": { "description": "Not modified" }, "500": { "$ref": "#/components/responses/ServerError" } }
+        "responses": {
+          "200": {
+            "description": "Plugin list"
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
       }
     },
     "/api/v1/plugins/{slug}": {
       "get": {
-        "tags": ["Plugins"],
+        "tags": [
+          "Plugins"
+        ],
         "summary": "Get plugin detail",
-        "parameters": [{ "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Plugin detail" }, "404": { "$ref": "#/components/responses/NotFound" }, "500": { "$ref": "#/components/responses/ServerError" } }
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plugin detail"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
       }
     },
     "/api/v1/search": {
       "get": {
-        "tags": ["Plugins"],
+        "tags": [
+          "Plugins"
+        ],
         "summary": "Search legacy plugins",
         "parameters": [
-          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
         ],
-        "responses": { "200": { "description": "Search results" }, "400": { "$ref": "#/components/responses/BadRequest" }, "500": { "$ref": "#/components/responses/ServerError" } }
+        "responses": {
+          "200": {
+            "description": "Search results"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
       }
     },
-    "/api/v1/categories": { "get": { "tags": ["Plugins"], "summary": "List plugin categories", "responses": { "200": { "description": "Category counts" } } } },
-    "/api/v1/stats": { "get": { "tags": ["Plugins"], "summary": "Plugin catalog statistics", "responses": { "200": { "description": "Statistics" } } } },
-    "/api/v1/meta": { "get": { "tags": ["Metadata"], "summary": "Synchronization metadata", "responses": { "200": { "description": "Metadata" } } } },
-    "/api/v1/health": { "get": { "tags": ["Metadata"], "summary": "Health check", "responses": { "200": { "description": "Healthy" } } } },
+    "/api/v1/categories": {
+      "get": {
+        "tags": [
+          "Plugins"
+        ],
+        "summary": "List plugin categories",
+        "responses": {
+          "200": {
+            "description": "Category counts"
+          }
+        }
+      }
+    },
+    "/api/v1/stats": {
+      "get": {
+        "tags": [
+          "Plugins"
+        ],
+        "summary": "Plugin catalog statistics",
+        "responses": {
+          "200": {
+            "description": "Statistics"
+          }
+        }
+      }
+    },
+    "/api/v1/meta": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "Synchronization metadata",
+        "responses": {
+          "200": {
+            "description": "Metadata"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Healthy"
+          }
+        }
+      }
+    },
     "/api/v1/registry": {
       "get": {
-        "tags": ["Ecosystem"],
+        "tags": [
+          "Ecosystem"
+        ],
         "summary": "Download canonical Registry V3",
-        "responses": { "200": { "description": "Raw Registry V3 JSON" }, "500": { "$ref": "#/components/responses/ServerError" } }
+        "responses": {
+          "200": {
+            "description": "Raw Registry V3 JSON"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
       }
     },
     "/api/v1/ecosystem": {
       "get": {
-        "tags": ["Ecosystem"],
+        "tags": [
+          "Ecosystem"
+        ],
         "summary": "List Registry V3 ecosystem items",
         "description": "Returns plugin, MCP, skill and agent entries. The local_install field is a plan only and is never executed by the API.",
         "parameters": [
-          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["plugin", "mcp", "skill", "agent"] } },
-          { "name": "capability", "in": "query", "schema": { "type": "string" } },
-          { "name": "verified", "in": "query", "schema": { "type": "boolean" } },
-          { "name": "search", "in": "query", "schema": { "type": "string" } },
-          { "name": "channel", "in": "query", "schema": { "type": "string", "default": "stable" } },
-          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
-          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200 } }
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "plugin",
+                "mcp",
+                "skill",
+                "agent"
+              ]
+            }
+          },
+          {
+            "name": "capability",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "verified",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "stable"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
         ],
         "responses": {
           "200": {
             "description": "Paginated ecosystem entries",
-            "content": { "application/json": { "schema": { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/EcosystemItem" } } } } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/EcosystemItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
-          "304": { "description": "Not modified" },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "304": {
+            "description": "Not modified"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       }
     },
     "/api/v1/ecosystem/{id}": {
       "get": {
-        "tags": ["Ecosystem"],
+        "tags": [
+          "Ecosystem"
+        ],
         "summary": "Get one Registry V3 ecosystem item",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
-          "200": { "description": "Resolved ecosystem item and versions" },
-          "304": { "description": "Not modified" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "500": { "$ref": "#/components/responses/ServerError" }
+          "200": {
+            "description": "Resolved ecosystem item and versions"
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
         }
       }
     },
     "/api/v1/mcp": {
       "get": {
-        "tags": ["MCP"],
+        "tags": [
+          "MCP"
+        ],
         "summary": "Describe the read-only MCP endpoint",
-        "responses": { "200": { "description": "MCP endpoint metadata" } }
+        "responses": {
+          "200": {
+            "description": "MCP endpoint metadata"
+          }
+        }
       },
       "post": {
-        "tags": ["MCP"],
+        "tags": [
+          "MCP"
+        ],
         "summary": "Invoke read-only MCP JSON-RPC tools",
         "description": "Supports legacy plugin discovery plus list_ecosystem, get_ecosystem_item and plan_local_install. plan_local_install returns a command only and never mutates local state.",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "type": "object", "required": ["method"], "additionalProperties": true } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "method"
+                ],
+                "additionalProperties": true
+              }
+            }
+          }
         },
-        "responses": { "200": { "description": "JSON-RPC response" }, "413": { "$ref": "#/components/responses/PayloadTooLarge" }, "500": { "$ref": "#/components/responses/ServerError" } }
+        "responses": {
+          "200": {
+            "description": "JSON-RPC response"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "Discover API capabilities and installation semantics",
+        "responses": {
+          "200": {
+            "description": "JSON response"
+          }
+        }
+      }
+    },
+    "/api/v1/capabilities": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "Get live catalog, registry, and deployment capabilities",
+        "responses": {
+          "200": {
+            "description": "JSON response"
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/v1/registry/delta": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "Get the Registry Distribution V1 delta",
+        "responses": {
+          "200": {
+            "description": "JSON response"
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "404": {
+            "description": "Delta unavailable"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/v1/registry/packages/{type}/{id}/versions": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "List package versions and immutable release evidence",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "plugin",
+                "mcp",
+                "skill",
+                "agent"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "stable",
+                "beta",
+                "nightly",
+                "dev"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON response"
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Package not found"
+          }
+        }
+      }
+    },
+    "/.well-known/dsh-marketplace.json": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "Machine-readable marketplace discovery manifest",
+        "responses": {
+          "200": {
+            "description": "JSON response"
+          }
+        }
       }
     }
   },
   "components": {
     "responses": {
-      "BadRequest": { "description": "Invalid request" },
-      "NotFound": { "description": "Resource not found" },
-      "PayloadTooLarge": { "description": "Request body exceeds 1 MB" },
-      "ServerError": { "description": "Internal server error" }
+      "BadRequest": {
+        "description": "Invalid request"
+      },
+      "NotFound": {
+        "description": "Resource not found"
+      },
+      "PayloadTooLarge": {
+        "description": "Request body exceeds 1 MB"
+      },
+      "ServerError": {
+        "description": "Internal server error"
+      }
     },
     "schemas": {
       "EcosystemItem": {
         "type": "object",
-        "required": ["id", "name", "type", "version", "channel", "source", "local_install"],
+        "required": [
+          "id",
+          "name",
+          "type",
+          "version",
+          "channel",
+          "source",
+          "local_install"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "type": { "type": "string", "enum": ["plugin", "mcp", "skill", "agent"] },
-          "version": { "type": "string" },
-          "channel": { "type": "string" },
-          "description": { "type": "string" },
-          "verified": { "type": "boolean" },
-          "capabilities": { "type": "array", "items": { "type": "string" } },
-          "dependencies": { "type": "array", "items": {} },
-          "source": { "type": "object", "additionalProperties": true },
-          "artifact": { "type": "object", "additionalProperties": true },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "plugin",
+              "mcp",
+              "skill",
+              "agent"
+            ]
+          },
+          "version": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {}
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "artifact": {
+            "type": "object",
+            "additionalProperties": true
+          },
           "local_install": {
             "type": "object",
-            "required": ["command", "executed", "requires_local_runtime", "restart_required"],
+            "required": [
+              "command",
+              "executed",
+              "requires_local_runtime",
+              "restart_required"
+            ],
             "properties": {
-              "command": { "type": "string" },
-              "executed": { "type": "boolean", "enum": [false] },
-              "requires_local_runtime": { "type": "boolean", "enum": [true] },
-              "restart_required": { "type": "boolean", "enum": [true] }
+              "command": {
+                "type": "string"
+              },
+              "executed": {
+                "type": "boolean",
+                "enum": [
+                  false
+                ]
+              },
+              "requires_local_runtime": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              },
+              "restart_required": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              }
             }
           }
         }
