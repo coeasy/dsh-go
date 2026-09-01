@@ -51,24 +51,24 @@ jobs:
       - name: Verify Cloudflare Pages discovery
         env:
           PLATFORM_URL: ${{ env.CLOUDFLARE_URL }}
-        run: node scripts/check-platform-discovery.mjs --base-url "\$PLATFORM_URL" --label "Cloudflare Pages" --target cloudflare-pages --attempts 18 --delay-ms 10000
+        run: node scripts/check-platform-discovery.mjs --base-url "$PLATFORM_URL" --label "Cloudflare Pages" --target cloudflare-pages --attempts 18 --delay-ms 10000
 
       - name: Verify GitHub Pages discovery
         env:
           PLATFORM_URL: ${{ env.GITHUB_PAGES_URL }}
-        run: node scripts/check-platform-discovery.mjs --base-url "\$PLATFORM_URL" --label "GitHub Pages" --target github-pages --attempts 18 --delay-ms 10000
+        run: node scripts/check-platform-discovery.mjs --base-url "$PLATFORM_URL" --label "GitHub Pages" --target github-pages --attempts 18 --delay-ms 10000
 
       - name: Verify EdgeOne Pages discovery
         if: ${{ env.EDGEONE_SITE_URL != '' }}
         env:
           PLATFORM_URL: ${{ env.EDGEONE_SITE_URL }}
-        run: node scripts/check-platform-discovery.mjs --base-url "\$PLATFORM_URL" --label "EdgeOne Pages" --target edgeone-pages --attempts 18 --delay-ms 10000
+        run: node scripts/check-platform-discovery.mjs --base-url "$PLATFORM_URL" --label "EdgeOne Pages" --target edgeone-pages --attempts 18 --delay-ms 10000
 
       - name: Summary
         if: always()
         run: |
-          echo "### Platform discovery contract" >> "\$GITHUB_STEP_SUMMARY"
-          echo "- revision: ${REVISION}" >> "\$GITHUB_STEP_SUMMARY"
-          echo "- Cloudflare Pages: ${CLOUDFLARE_URL}" >> "\$GITHUB_STEP_SUMMARY"
-          echo "- GitHub Pages: ${GITHUB_PAGES_URL}" >> "\$GITHUB_STEP_SUMMARY"
-          if [ -n "${EDGEONE_SITE_URL}" ]; then echo "- EdgeOne Pages: configured stable URL checked" >> "\$GITHUB_STEP_SUMMARY"; else echo "- EdgeOne Pages: skipped (EDGEONE_SITE_URL is not configured)" >> "\$GITHUB_STEP_SUMMARY"; fi
+          echo "### Platform discovery contract" >> "$GITHUB_STEP_SUMMARY"
+          echo "- revision: ${REVISION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Cloudflare Pages: ${CLOUDFLARE_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- GitHub Pages: ${GITHUB_PAGES_URL}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${EDGEONE_SITE_URL}" ]; then echo "- EdgeOne Pages: configured stable URL checked" >> "$GITHUB_STEP_SUMMARY"; else echo "- EdgeOne Pages: skipped (EDGEONE_SITE_URL is not configured)" >> "$GITHUB_STEP_SUMMARY"; fi
