@@ -21,7 +21,7 @@ describe('first-party DSH Marketplace package layer', () => {
   it('keeps the package subdirectory independently discoverable and releaseable', async () => {
     const found = await findPackageManifest('packages/dsh-go-marketplace');
     expect(found?.valid).toBe(true);
-    expect(found?.manifest.id).toBe('dsh-go-marketplace');
+    expect(found?.manifest?.id).toBe('dsh-go-marketplace');
     const workflow = await readFile('.github/workflows/release-dsh-marketplace.yml', 'utf8');
     expect(workflow).toContain('package_path: packages/dsh-go-marketplace');
     expect(workflow).toContain('uses: ./.github/workflows/package-release.yml');
