@@ -13,6 +13,7 @@ describe('API V1 platform contract', () => {
       'functions/api/v1/registry/packages/[type]/[id]/versions.ts',
       'site/public/.well-known/dsh-marketplace.json',
       'schemas/dsh-marketplace-discovery.schema.json',
+      'site/public/schemas/dsh-marketplace-discovery.schema.json',
     ]) {
       expect(existsSync(resolve(root, path)), path).toBe(true);
     }
