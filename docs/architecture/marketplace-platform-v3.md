@@ -66,6 +66,20 @@
 
 `platform-contract.yml` 提供定时/手动契约检查；EdgeOne 没有稳定自定义域名时保持跳过，避免把一次性签名预览 URL 当成长久健康地址。
 
+### 6. 独立 DSH 插件包层
+
+仓库根目录的 `dsh-package.json` 与 `packages/dsh-go-marketplace/dsh-package.json` 保持同一份可信清单，包 ID 为 `dsh-go-marketplace`，类型为远程 MCP。Registry V3 负责解析版本、权限、来源 commit 和 release artifact；Runtime 负责本地安装、权限确认、绑定和激活。
+
+安装与激活：
+
+```bash
+dsh mcp install dsh-go-marketplace@0.1.0
+dsh startup activate
+dsh mcp start dsh-go-marketplace
+```
+
+该包只访问 `dsh-go.pages.dev` 的只读 Marketplace API，不包含 shell、文件系统、secret 或进程启动权限。独立包发布使用 `dsh-go-marketplace-v<version>` 标签，与产品版本标签隔离；`.github/workflows/release-dsh-marketplace.yml` 提供手动发布入口。
+
 ## 安装安全边界
 
 远程市场只提供：
@@ -99,5 +113,5 @@
 - 引入签名/Provenance/SBOM 的客户端验证结果；
 - 增加客户端兼容矩阵和 manifest 能力协商；
 - 依据 `delta` 做本地缓存增量更新；
-- 在明确宿主协议后提供独立 `dsh-go-marketplace` MCP/Skill 包；
+- 扩展独立包的 Skill/Agent 适配器，并保持最小权限模型；
 - 将 API schema、OpenAPI 和 runtime 类型收敛为单一生成源。
