@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 31 Aug 2026 22:56:26 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 01 Sep 2026 08:29:14 GMT</lastBuildDate>
     <item>
       <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -51,8 +51,8 @@
     <item>
       <title>🔄 DSH-ReasonixUI</title>
       <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-08-31T16:40:54Z</guid>
-      <pubDate>Mon, 31 Aug 2026 16:40:54 GMT</pubDate>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-01T02:47:30Z</guid>
+      <pubDate>Tue, 01 Sep 2026 02:47:30 GMT</pubDate>
       <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
@@ -77,11 +77,11 @@
       <description>dsh theme picker DeepSeek Harness 主题选择插件 —— 在设置面板中添加「主题」页面：统一管理应用主题与已安装的主题插件，同一时间仅一个主题生效，其余自动禁用。 A theme picker plugin for DeepSeek Harness: adds a Themes page to the Settings panel. It manages both a</description>
     </item>
     <item>
-      <title>🆕 dsh-fresh-start</title>
-      <link>https://github.com/orangeofcarl0-sys/dsh-fresh-start</link>
-      <guid isPermaLink="false">orangeofcarl0-sys/dsh-fresh-start@2026-08-25T01:02:08Z</guid>
-      <pubDate>Tue, 25 Aug 2026 01:02:08 GMT</pubDate>
-      <description>dsh fresh start DSH /fresh 命令：一键总结当前对话 → 开启新对话（自动跳转）→ 归档老对话。 用途 超大会话（数十万事件）的内存/卡顿缓解。在一个超大会话里工作一段时间后，输入 /fresh 即可把历史压缩成摘要、归档（释放 live 事件树内存）、开一个继承同 cwd 与 preset 的新对话并 自动跳转 过去继续工作——避免继续在 67 万事件的会话里反复构建上下</description>
+      <title>🔄 DSH Go Marketplace</title>
+      <link>https://github.com/coeasy/dsh-go</link>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-01T08:28:23Z</guid>
+      <pubDate>Tue, 01 Sep 2026 08:28:23 GMT</pubDate>
+      <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
     </item>
     <item>
       <title>🆕 DSH PPT</title>
@@ -98,18 +98,25 @@
       <description>简体中文 Web Bridge — Browser Automation MCP Server (dsh plugin) Web Bridge is an automation MCP server that uses a real browser . It gives agents a browser&apos;s eyes and hands: open web pages, read pag</description>
     </item>
     <item>
+      <title>🆕 @all3cn/dsh-better-sidebar-n23</title>
+      <link>https://github.com/All3nCN/dsh-better-sidebar-N23</link>
+      <guid isPermaLink="false">All3nCN/dsh-better-sidebar-N23@2026-09-01T02:43:07Z</guid>
+      <pubDate>Tue, 01 Sep 2026 02:43:07 GMT</pubDate>
+      <description>@all3cn/dsh better sidebar n23 一个服务化的侧边栏框架 + 一套开箱即用的 DSH 完整工作台。本包是开源插件 dsh better sidebar（MIT）的社区 fork，在 @all3cn 作用域下独立发版；上游致谢见 UPSTREAM.md。 English 中文 功能一览 文件工作台 ：资源管理器（懒加载目录树、软链接按目标类型展示）+ CodeMirror</description>
+    </item>
+    <item>
+      <title>🆕 dsh-tui-browser-use</title>
+      <link>https://github.com/FlameTN7/dsh-tui-browser-use</link>
+      <guid isPermaLink="false">FlameTN7/dsh-tui-browser-use@2026-09-01T03:10:24Z</guid>
+      <pubDate>Tue, 01 Sep 2026 03:10:24 GMT</pubDate>
+      <description>dsh tui browser use 简体中文 English 给 dsh tui 的 agent 装上&quot;看得见网页&quot;的浏览器自动化工具。 dsh tui browser use 是 dsh tui 的子插件（Cordis 插件），随 dsh profile dsh tui 组合加载。它向 agent 注册 21 个 browser 工具 ，用 Playwright 驱动真实</description>
+    </item>
+    <item>
       <title>🆕 dsh-overleaf</title>
       <link>https://github.com/gychen-NJU/dsh-overleaf</link>
       <guid isPermaLink="false">gychen-NJU/dsh-overleaf@2026-08-31T01:33:31Z</guid>
       <pubDate>Mon, 31 Aug 2026 01:33:31 GMT</pubDate>
       <description>dsh overleaf English 中文 An embedded Overleaf workbench plugin for DeepSeek Harness (DSH) Web. It adds a fourth tab next to Chat / Trajectory / Context on the session page: the tab loads your Overleaf </description>
-    </item>
-    <item>
-      <title>🆕 @all3cn/dsh-better-sidebar-n23</title>
-      <link>https://github.com/All3nCN/dsh-better-sidebar-N23</link>
-      <guid isPermaLink="false">All3nCN/dsh-better-sidebar-N23@2026-08-31T17:17:36Z</guid>
-      <pubDate>Mon, 31 Aug 2026 17:17:36 GMT</pubDate>
-      <description>@all3cn/dsh better sidebar n23 一个服务化的侧边栏框架 + 一套开箱即用的 DSH 完整工作台。本包是开源插件 dsh better sidebar（MIT）的社区 fork，在 @all3cn 作用域下独立发版；上游致谢见 UPSTREAM.md。 English 中文 功能一览 文件工作台 ：资源管理器（懒加载目录树、软链接按目标类型展示）+ CodeMirror</description>
     </item>
     <item>
       <title>🆕 dsh-tui-mcp-manager</title>
@@ -168,6 +175,13 @@
       <description>dsh delegate 🐋 模型感知的子代理委派工具包 — 给 DeepSeek Harness 的 subagent / subagent fork 加上：按次选模型、依赖门控、角色人设、任务花名册、审计事件与对话流卡片。 Model aware subagent delegation for DeepSeek Harness: per call models, dependency gat</description>
     </item>
     <item>
+      <title>🔄 dsh-fresh-start</title>
+      <link>https://github.com/orangeofcarl0-sys/dsh-fresh-start</link>
+      <guid isPermaLink="false">orangeofcarl0-sys/dsh-fresh-start@2026-08-25T01:02:08Z</guid>
+      <pubDate>Tue, 25 Aug 2026 01:02:08 GMT</pubDate>
+      <description>dsh fresh start DSH /fresh 命令：一键总结当前对话 → 开启新对话（自动跳转）→ 归档老对话。 用途 超大会话（数十万事件）的内存/卡顿缓解。在一个超大会话里工作一段时间后，输入 /fresh 即可把历史压缩成摘要、归档（释放 live 事件树内存）、开一个继承同 cwd 与 preset 的新对话并 自动跳转 过去继续工作——避免继续在 67 万事件的会话里反复构建上下</description>
+    </item>
+    <item>
       <title>🔄 cc-dsh-notifier</title>
       <link>https://github.com/baobaolaodie/cc-dsh-notifier</link>
       <guid isPermaLink="false">baobaolaodie/cc-dsh-notifier@2026-08-22T19:39:54Z</guid>
@@ -201,20 +215,6 @@
       <guid isPermaLink="false">fplj-fplj/dsh-ua-headers@2026-08-24T16:27:49Z</guid>
       <pubDate>Mon, 24 Aug 2026 16:27:49 GMT</pubDate>
       <description>dsh ua headers dsh TUI · 一个为 dsh TUI 生态打造的插件 一个遵循 dsh ecosystem spec（dsh std Community v0.15 / TUI Admission v0.15）的 DSH 插件：自定义所选模型调用时的 User Agent，并加入自定义请求头。 功能 自定义 UA ：匹配到的模型请求会替换 User Agent ；留空则保留 D</description>
-    </item>
-    <item>
-      <title>🆕 DSH Music Player (TUI)</title>
-      <link>https://github.com/heshuren371/dsh-music-player-tui</link>
-      <guid isPermaLink="false">heshuren371/dsh-music-player-tui@2026-08-21T12:06:33Z</guid>
-      <pubDate>Fri, 21 Aug 2026 12:06:33 GMT</pubDate>
-      <description>DSH TUI 本地音乐播放器插件：/music 全屏场景，扫描本地目录，ffplay/afplay 出声，退出场景音乐不中断</description>
-    </item>
-    <item>
-      <title>🔄 Subagent Viewer</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-subagents</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-subagents@2026-08-17T12:50:52Z</guid>
-      <pubDate>Mon, 17 Aug 2026 12:50:52 GMT</pubDate>
-      <description>dsh tui subagents dsh TUI 的子 agent 会话视图： /subagents 列出当前会话的子 agent，Enter 进入全屏轨迹视图， 实时 跟着子 agent 的思考、工具调用和回复滚动；对 可续（continuable） 子 agent 可以直接发消息纠偏、中断当前轮。对应上游 issue dsh TUI 223。 English below. 用法 轨迹视图按键</description>
     </item>
   </channel>
 </rss>
