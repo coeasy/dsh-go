@@ -17,7 +17,7 @@ export function validatePlatformDiscovery(document) {
   if (document.service?.version !== '0.1.0') errors.push('service.version must be 0.1.0');
   if (document.service?.mode !== 'read-only') errors.push('service.mode must be read-only');
   if (document.api?.version !== 'v1') errors.push('api.version must be v1');
-  if (!/^https?:\\/\\//.test(String(document.api?.base_url || ''))) errors.push('api.base_url must be an absolute URL');
+  if (!/^https?:\/\//.test(String(document.api?.base_url || ''))) errors.push('api.base_url must be an absolute URL');
   if (document.registry?.version !== 3) errors.push('registry.version must be 3');
   if (typeof document.registry?.distribution?.index_path !== 'string') errors.push('registry.distribution.index_path is required');
   if (document.registry?.distribution?.version !== 1) errors.push('registry.distribution.version must be 1');
