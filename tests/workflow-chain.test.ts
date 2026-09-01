@@ -93,6 +93,12 @@ describe('authoritative deployment routing', () => {
     }
   });
 
+  it('preserves hidden discovery directories in GitHub Pages artifacts', () => {
+    const deploy = workflow('deploy-pages.yml');
+    expect(deploy).toContain('touch site/dist/.nojekyll');
+    expect(deploy).toContain('test -f site/dist/.nojekyll');
+  });
+
   it('uses the supported Cloudflare Wrangler action instead of deprecated pages-action', () => {
     const deploy = workflow('deploy.yml');
     expect(deploy).toContain('uses: cloudflare/wrangler-action@v4');
