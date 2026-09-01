@@ -96,6 +96,7 @@ describe('authoritative deployment routing', () => {
   it('preserves hidden discovery directories in GitHub Pages artifacts', () => {
     const deploy = workflow('deploy-pages.yml');
     expect(deploy).toContain('touch site/dist/.nojekyll');
+    expect(deploy).toContain('include-hidden-files: true');
     expect(deploy).toContain('test -f site/dist/.nojekyll');
   });
 
