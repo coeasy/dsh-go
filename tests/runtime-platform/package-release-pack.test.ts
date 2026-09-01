@@ -74,4 +74,47 @@ describe('ecosystem package release packer', () => {
     expect(descriptor.artifact.url).toBe('https://github.com/owner/fixture-package/releases/download/v0.1.0/fixture-package-0.1.0.tgz');
     expect(descriptor.artifact.digest).toMatch(/^sha256-[0-9a-f]{64}$/);
   });
+
+  it('packs a nested independent package without shipping the marketplace repository', async () => {
+    const fixture = await mkdtemp(join(tmpdir(), 'dsh-nested-package-release-'));
+    const out = join(fixture, '.release');
+    const packageRoot = join(fixture, 'packages', 'nested-mcp');
+    await import('node:fs/promises').then(({ mkdir }) => mkdir(packageRoot, { recursive: true }));
+    git(fixture, ['init', '-q']);
+    git(fixture, ['config', 'user.email', 'release@test.local']);
+    git(fixture, ['config', 'user.name', 'Release Test']);
+    await writeFile(join(packageRoot, 'package.json'), JSON.stringify({ name: 'nested-mcp', version: '0.1.0' }, null, 2));
+    await writeFile(join(packageRoot, 'dsh-package.json'), JSON.stringify({
+      manifest_version: '1.0.0',
+      id: 'nested-mcp',
+      name: 'Nested MCP',
+      version: '0.1.0',
+      type: 'mcp',
+      permissions: ['network'],
+      mcp: { transport: 'streamable-http', url: 'https://example.test/mcp' },
+    }, null, 2));
+    await writeFile(join(packageRoot, 'README.md'), '# Nested MCP\n');
+    git(fixture, ['add', 'packages']);
+    git(fixture, ['commit', '-m', 'nested package release']);
+    const commit = git(fixture, ['rev-parse', 'HEAD']);
+    const script = resolve('scripts/package-release-pack.mjs');
+    execFileSync(process.execPath, [
+      script,
+      '--root', fixture,
+      '--package-path', 'packages/nested-mcp',
+      '--out-dir', out,
+      '--repository', 'owner/nested-mcp',
+      '--commit', commit,
+      '--tag', 'v0.1.0',
+      '--channel', 'stable',
+    ], { cwd: process.cwd(), stdio: 'pipe' });
+
+    const descriptor = JSON.parse(await readFile(join(out, 'dsh-package-release.json'), 'utf8'));
+    expect(descriptor.package_path).toBe('packages/nested-mcp');
+    expect(descriptor.artifact.strip_components).toBe(3);
+    const archive = join(out, 'nested-mcp-0.1.0.tgz');
+    const listing = execFileSync('tar', ['-tzf', archive], { encoding: 'utf8' });
+    expect(listing).toContain('package/packages/nested-mcp/dsh-package.json');
+    expect(listing).not.toContain('package/package.json\n');
+  });
 });
