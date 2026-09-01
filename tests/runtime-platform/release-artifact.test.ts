@@ -27,6 +27,10 @@ function resolved() {
   };
 }
 
+function packageWithDedicatedReleaseTag() {
+  return { ...resolved(), id: 'dsh-go-marketplace', release_tag: 'dsh-go-marketplace-v0.1.0' };
+}
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe('release artifact runtime path', () => {
@@ -62,6 +66,32 @@ describe('release artifact runtime path', () => {
     const artifact = await discoverReleaseArtifact(pkg);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(artifact).toMatchObject({ kind: 'release-archive', digest, release_tag: 'v0.1.0' });
+  });
+
+  it('uses a package-specific release tag when the registry declares one', async () => {
+    const pkg = packageWithDedicatedReleaseTag();
+    const descriptor = {
+      release_version: 1,
+      id: pkg.id,
+      type: pkg.type,
+      version: pkg.version,
+      repository: pkg.repo,
+      commit: pkg.commit,
+      tag: pkg.release_tag,
+      artifact: {
+        kind: 'release-archive',
+        url: 'https://github.com/owner/fixture/releases/download/dsh-go-marketplace-v0.1.0/dsh-go-marketplace-0.1.0.tgz',
+        digest: `sha256-${'a'.repeat(64)}`,
+        format: 'tgz',
+        strip_components: 3,
+      },
+    };
+    const fetchMock = vi.fn(async (url: string) => {
+      expect(url).toContain('/releases/download/dsh-go-marketplace-v0.1.0/');
+      return new Response(JSON.stringify(descriptor), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(discoverReleaseArtifact(pkg)).resolves.toMatchObject({ release_tag: pkg.release_tag });
   });
 
   it('ignores a release descriptor for a different immutable commit', async () => {
