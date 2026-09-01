@@ -6,10 +6,13 @@ describe('first-party DSH Marketplace package layer', () => {
   it('exposes a verified remote MCP manifest with a host-scoped network permission', async () => {
     const root = JSON.parse(await readFile('dsh-package.json', 'utf8'));
     const packaged = JSON.parse(await readFile('packages/dsh-go-marketplace/dsh-package.json', 'utf8'));
+    const packageMetadata = JSON.parse(await readFile('packages/dsh-go-marketplace/package.json', 'utf8'));
     expect(root).toEqual(packaged);
+    expect(root.version).toBe('0.1.2');
+    expect(packageMetadata.version).toBe(root.version);
     expect(validatePackageManifest(root, { file: 'dsh-package.json' })).toMatchObject({ valid: true });
     expect(root.type).toBe('mcp');
-    expect(root.release_tag).toBe('dsh-go-marketplace-v0.1.0');
+    expect(root.release_tag).toBe('dsh-go-marketplace-v0.1.2');
     expect(root.mcp).toMatchObject({
       transport: 'streamable-http',
       url: 'https://dsh-go.pages.dev/api/v1/mcp',
@@ -17,6 +20,7 @@ describe('first-party DSH Marketplace package layer', () => {
     expect(root.permissions).toEqual(['network']);
     expect(root.permission_policy.network.allow).toEqual(['dsh-go.pages.dev']);
     expect(root.mcp.tools).toContain('plan_local_install');
+    expect(root.compatibility.runtime).toBe('>=0.1.0');
   });
 
   it('keeps the package subdirectory independently discoverable and releaseable', async () => {
