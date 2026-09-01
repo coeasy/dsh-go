@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 01 Sep 2026 09:11:45 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 01 Sep 2026 09:33:47 GMT</lastBuildDate>
     <item>
       <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -51,8 +51,8 @@
     <item>
       <title>🔄 DSH-ReasonixUI</title>
       <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-01T02:47:30Z</guid>
-      <pubDate>Tue, 01 Sep 2026 02:47:30 GMT</pubDate>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-01T09:26:45Z</guid>
+      <pubDate>Tue, 01 Sep 2026 09:26:45 GMT</pubDate>
       <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
@@ -79,8 +79,8 @@
     <item>
       <title>🔄 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-01T09:10:16Z</guid>
-      <pubDate>Tue, 01 Sep 2026 09:10:16 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-01T09:32:52Z</guid>
+      <pubDate>Tue, 01 Sep 2026 09:32:52 GMT</pubDate>
       <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
     </item>
     <item>
