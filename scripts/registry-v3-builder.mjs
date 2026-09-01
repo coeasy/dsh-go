@@ -126,7 +126,10 @@ export function buildRegistryPlugin(legacy, normalized, commit) {
       provider: 'github', repo: normalized.repo, ref: normalized.ref, commit: commit.toLowerCase(), updated_at: legacy.updated_at || '',
       archive_url: `https://github.com/${normalized.repo}/archive/${commit.toLowerCase()}.tar.gz`,
     },
-    artifact: { kind: 'git-source', algorithm: 'sha256', integrity_scope: 'source-identity', integrity: '' },
+    artifact: {
+      kind: 'git-source', algorithm: 'sha256', integrity_scope: 'source-identity', integrity: '',
+      ...(legacy.release_tag ? { release_tag: legacy.release_tag } : {}),
+    },
     runtime: { type: runtimeType, activation: 'restart-required' },
     capabilities: inferCapabilities(legacy),
     dependencies: Array.isArray(legacy.dependencies) ? legacy.dependencies : [],
