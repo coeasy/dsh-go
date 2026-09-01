@@ -1,13 +1,24 @@
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
-import { canonicalRepoKey, canonicalRepoUrl, makeRegistryInstallCmd, normalizeStoredPlugin, repoNameFromFullName } from './repository-identity.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, isAuthoritativeDshManifest, makeRegistryInstallCmd, normalizeStoredPlugin, repoNameFromFullName } from './repository-identity.mjs';
 
 export const REGISTRY_VERSION = 3;
 export const SCHEMA_VERSION = '3.0.0';
 export const DEFAULT_PLUGIN_VERSION = '0.1.0';
+export const DSH_PACKAGE_VERSION_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const COMMIT_RE = /^[0-9a-f]{40}$/i;
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 
 export function isCommitSha(value) { return COMMIT_RE.test(String(value || '')); }
+
+export function isSupportedPackageVersion(value) {
+  return DSH_PACKAGE_VERSION_RE.test(String(value || '').trim());
+}
+
+export function packageVersionFor(legacy) {
+  const version = String(legacy?.package_version || '').trim();
+  if (legacy?.verified && isAuthoritativeDshManifest(legacy.manifest_file) && isSupportedPackageVersion(version)) return version;
+  return DEFAULT_PLUGIN_VERSION;
+}
 
 export function inferRuntimeType(plugin) {
   if (['plugin', 'mcp', 'skill', 'agent'].includes(plugin.package_type)) return plugin.package_type;
@@ -117,7 +128,7 @@ async function resolveCommits(entries, token) {
 }
 
 export function buildRegistryPlugin(legacy, normalized, commit) {
-  const version = DEFAULT_PLUGIN_VERSION;
+  const version = packageVersionFor(legacy);
   const runtimeType = inferRuntimeType(legacy);
   const record = {
     id: normalized.id,
@@ -190,7 +201,7 @@ export async function buildRegistryV3(legacyCatalog, existingRegistry = null, op
   for (const input of inputs) {
     const { legacy, normalized } = input;
     const previous = (legacy.repo_id && existingByRepoId.get(String(legacy.repo_id))) || existingByRepo.get(canonicalRepoKey(normalized.repo));
-    if (previous && previous.version === DEFAULT_PLUGIN_VERSION && isCommitSha(previous.source?.commit) && previous.artifact?.integrity === artifactIntegrity(previous) && previous.source?.ref === normalized.ref && previous.source?.updated_at === (legacy.updated_at || '')) {
+    if (previous && previous.version === packageVersionFor(legacy) && isCommitSha(previous.source?.commit) && previous.artifact?.integrity === artifactIntegrity(previous) && previous.source?.ref === normalized.ref && previous.source?.updated_at === (legacy.updated_at || '')) {
       // Reuse only the immutable commit. Rebuild source/metadata so repository renames,
       // canonical URLs, names, categories and verification state cannot remain stale.
       plugins.push(buildRegistryPlugin(legacy, normalized, previous.source.commit)); reused++; continue;

@@ -8,7 +8,7 @@ restart the DSH client remotely.
 Install it from a DSH Runtime with:
 
 ```bash
-dsh mcp install dsh-go-marketplace@0.1.0
+dsh mcp install dsh-go-marketplace@0.1.2
 dsh startup activate
 dsh mcp start dsh-go-marketplace
 ```

@@ -82,7 +82,7 @@ npm run site:dev          # 启动本地开发服务器
 本项目同时提供独立的 DSH MCP 包，可由 DSH Runtime 安装并使用：
 
 ```bash
-dsh mcp install dsh-go-marketplace@0.1.0
+dsh mcp install dsh-go-marketplace@0.1.2
 dsh startup activate
 dsh mcp start dsh-go-marketplace
 dsh mcp invoke dsh-go-marketplace search_plugins --input '{"q":"mcp","limit":10}'

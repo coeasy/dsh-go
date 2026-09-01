@@ -73,12 +73,12 @@
 安装与激活：
 
 ```bash
-dsh mcp install dsh-go-marketplace@0.1.0
+dsh mcp install dsh-go-marketplace@0.1.2
 dsh startup activate
 dsh mcp start dsh-go-marketplace
 ```
 
-该包只访问 `dsh-go.pages.dev` 的只读 Marketplace API，不包含 shell、文件系统、secret 或进程启动权限。独立包发布使用 `dsh-go-marketplace-v<version>` 标签，与产品版本标签隔离；`.github/workflows/release-dsh-marketplace.yml` 提供手动发布入口。
+该包只访问 `dsh-go.pages.dev` 的只读 Marketplace API，不包含 shell、文件系统、secret 或进程启动权限。当前包版本与产品 Release `v0.1.2` 对齐，独立包发布使用 `dsh-go-marketplace-v<version>` 标签，与产品版本标签隔离；`.github/workflows/release-dsh-marketplace.yml` 提供手动发布入口。Runtime/API 的兼容协议仍保持 `0.1.0`，不要求升级宿主客户端。
 
 ## 安装安全边界
 
@@ -105,7 +105,7 @@ dsh mcp start dsh-go-marketplace
 - 新客户端优先探测 `/.well-known/dsh-marketplace.json` 或 `/api/v1/capabilities`。
 - `catalog/plugins.json` 保留为兼容出口，Registry V3 是安装权威。
 - API 只新增端点，不改变现有字段语义。
-- 仍然以 `0.1.0` 为项目运行时和生态默认版本。
+- 项目运行时、API 和新包模板仍以 `0.1.0` 作为兼容/默认版本；已发布的可信独立包可以按产品 Release 使用自己的 SemVer 版本。
 
 ## 下一阶段扩展点
 

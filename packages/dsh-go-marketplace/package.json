@@ -1,6 +1,6 @@
 {
   "name": "dsh-go-marketplace",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Installable DSH Marketplace MCP package",
   "private": false,
   "type": "module",

@@ -31,6 +31,26 @@ describe('Registry V3', () => {
     expect(plugin.metadata.install_cmd).toBe('dsh mcp install dsh-go-marketplace@0.1.0');
   });
 
+
+  it('allows a verified DSH package to align with the product release version', () => {
+    const plugin = buildRegistryPlugin({
+      ...legacy,
+      id: 'dsh-go-marketplace', package_id: 'dsh-go-marketplace', package_type: 'mcp', package_version: '0.1.2',
+      manifest_file: 'dsh-package.json', verified: true, category: 'mcp',
+    } as any, { id: 'dsh-go-marketplace', repo: 'coeasy/dsh-go', ref: 'main' }, commit);
+    expect(plugin.version).toBe('0.1.2');
+    expect(plugin.metadata.install_cmd).toBe('dsh mcp install dsh-go-marketplace@0.1.2');
+    const registry: any = {
+      registry_version: 3,
+      schema_version: '3.0.0',
+      defaults: { plugin_version: '0.1.0' },
+      generated: { at: new Date().toISOString(), source_catalog_etag: 'abc', source_catalog_count: 1, count: 1, excluded_count: 0, discovery_mode: 'complete', discovered_count: 1, content_hash: '' },
+      plugins: [plugin],
+    };
+    registry.generated.content_hash = registryContentHash(registry);
+    expect(validateRegistry(registry).errors).toEqual([]);
+  });
+
   it('infers runtime/capabilities deterministically', () => {
     expect(inferRuntimeType({ category: 'skills' })).toBe('skill');
     expect(inferCapabilities({ category: 'agent' })).toEqual(['agent', 'plugin']);
