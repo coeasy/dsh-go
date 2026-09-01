@@ -16,6 +16,7 @@ const PERMISSIONS = new Set(['filesystem.read', 'filesystem.write', 'network', '
 const ARTIFACT_KINDS = new Set(['git-source', 'release-archive']);
 const RELEASE_FORMATS = new Set(['tgz', 'tar.gz']);
 const SHA256_RE = /^sha256-[0-9a-f]{64}$/i;
+const RELEASE_TAG_RE = /^[A-Za-z0-9_.-]{1,128}$/;
 
 function validateArtifact(id, artifact, errors) {
   const kind = artifact?.kind;
@@ -32,6 +33,7 @@ function validateArtifact(id, artifact, errors) {
     const strip = Number(artifact.strip_components);
     if (!Number.isInteger(strip) || strip < 0 || strip > 8) errors.push(`${id}: artifact.strip_components must be an integer between 0 and 8`);
   }
+  if (artifact?.release_tag !== undefined && !RELEASE_TAG_RE.test(String(artifact.release_tag))) errors.push(`${id}: artifact.release_tag is unsafe`);
 }
 
 export function validateRegistry(data) {
