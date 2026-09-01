@@ -4,7 +4,7 @@ import { canonicalRepoKey, canonicalRepoUrl, isAuthoritativeDshManifest, makeReg
 export const REGISTRY_VERSION = 3;
 export const SCHEMA_VERSION = '3.0.0';
 export const DEFAULT_PLUGIN_VERSION = '0.1.0';
-export const DSH_PACKAGE_VERSION_RE = /^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$/;
+export const DSH_PACKAGE_VERSION_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const COMMIT_RE = /^[0-9a-f]{40}$/i;
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 
