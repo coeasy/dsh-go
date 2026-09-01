@@ -1,0 +1,224 @@
+name: Release dsh-go
+run-name: Release ${{ inputs.release_tag }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Semantic version tag to publish
+        required: true
+        default: v0.1.1
+        type: string
+      commit_sha:
+        description: Exact main commit to release (defaults to the selected revision)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release-dsh-go
+  cancel-in-progress: false
+
+jobs:
+  freeze:
+    name: Release freeze gate
+    uses: ./.github/workflows/release-freeze.yml
+    with:
+      commit_sha: ${{ inputs.commit_sha || github.sha }}
+    permissions:
+      contents: read
+      actions: read
+
+  publish:
+    name: Publish GitHub Release
+    needs: freeze
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.release_tag }}
+      RELEASE_SHA: ${{ inputs.commit_sha || github.sha }}
+    steps:
+      - name: Check out exact release commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Validate release target
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release tag: $RELEASE_TAG" >&2
+            exit 1
+          fi
+
+          if [[ ! "$RELEASE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "commit_sha must be a full 40-character commit SHA" >&2
+            exit 1
+          fi
+
+          CHECKED_OUT_SHA="$(git rev-parse HEAD)"
+          if [[ "$CHECKED_OUT_SHA" != "$RELEASE_SHA" ]]; then
+            echo "Checked out $CHECKED_OUT_SHA but expected $RELEASE_SHA" >&2
+            exit 1
+          fi
+
+          CURRENT_MAIN_SHA="$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq '.sha')"
+          if [[ "$CURRENT_MAIN_SHA" != "$RELEASE_SHA" ]]; then
+            echo "Release must target the current main tip." >&2
+            echo "main=$CURRENT_MAIN_SHA requested=$RELEASE_SHA" >&2
+            exit 1
+          fi
+
+      - name: Build source release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          WORK="$RUNNER_TEMP/dsh-go-release"
+          mkdir -p "$WORK"
+          ARCHIVE="dsh-go-${RELEASE_TAG}.tar.gz"
+
+          git archive \
+            --format=tar.gz \
+            --prefix="dsh-go-${RELEASE_TAG}/" \
+            --output="$WORK/$ARCHIVE" \
+            "$RELEASE_SHA"
+
+          ARCHIVE_SHA256="$(sha256sum "$WORK/$ARCHIVE" | awk '{print $1}')"
+          WORK="$WORK" \
+          RELEASE_TAG="$RELEASE_TAG" \
+          RELEASE_SHA="$RELEASE_SHA" \
+          ARCHIVE="$ARCHIVE" \
+          ARCHIVE_SHA256="$ARCHIVE_SHA256" \
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const work = process.env.WORK;
+          const metadata = {
+            schema: 'dsh-go.release.v1',
+            repository: process.env.GITHUB_REPOSITORY,
+            tag: process.env.RELEASE_TAG,
+            commit: process.env.RELEASE_SHA,
+            artifact: process.env.ARCHIVE,
+            sha256: process.env.ARCHIVE_SHA256
+          };
+
+          fs.writeFileSync(
+            path.join(work, 'dsh-go-release.json'),
+            JSON.stringify(metadata, null, 2) + '\n'
+          );
+          NODE
+
+          cat > "$WORK/release-notes.md" <<'EOF'
+          # dsh-go release
+
+          This release was created from the exact current main commit after the repository release-freeze gate passed.
+
+          The freeze gate covers the repository Cloudflare Pages, GitHub Pages, and EdgeOne Pages deployment convergence checks.
+          EOF
+
+          (
+            cd "$WORK"
+            sha256sum "$ARCHIVE" dsh-go-release.json | sort -k2 > SHA256SUMS
+          )
+
+          {
+            echo "RELEASE_WORK=$WORK"
+            echo "RELEASE_ARCHIVE=$ARCHIVE"
+          } >> "$GITHUB_ENV"
+
+      - name: Create immutable release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG_REF="refs/tags/$RELEASE_TAG"
+          TAG_INFO="$(gh api "repos/$GITHUB_REPOSITORY/git/refs/tags/$RELEASE_TAG")" || TAG_INFO=""
+
+          if [[ -z "$TAG_INFO" ]]; then
+            gh api \
+              --method POST \
+              "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f "ref=$TAG_REF" \
+              -f "sha=$RELEASE_SHA"
+          else
+            TAG_TYPE="$(printf '%s' "$TAG_INFO" | jq -r '.object.type')"
+            TAG_OBJECT_SHA="$(printf '%s' "$TAG_INFO" | jq -r '.object.sha')"
+
+            if [[ "$TAG_TYPE" == "tag" ]]; then
+              TAG_OBJECT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$TAG_OBJECT_SHA" --jq '.object.sha')"
+            fi
+
+            if [[ "$TAG_OBJECT_SHA" != "$RELEASE_SHA" ]]; then
+              echo "Existing tag $RELEASE_TAG points to $TAG_OBJECT_SHA, expected $RELEASE_SHA." >&2
+              exit 1
+            fi
+          fi
+
+      - name: Create or update GitHub Release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            RELEASE_ID="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" --jq '.id')"
+
+            gh release upload "$RELEASE_TAG" \
+              "$RELEASE_WORK/$RELEASE_ARCHIVE" \
+              "$RELEASE_WORK/dsh-go-release.json" \
+              "$RELEASE_WORK/SHA256SUMS" \
+              --clobber
+
+            gh api \
+              --method PATCH \
+              "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
+              -F "name=$RELEASE_TAG" \
+              -F "body=$(cat "$RELEASE_WORK/release-notes.md")" \
+              -F draft=false \
+              -F prerelease=false
+          else
+            gh release create "$RELEASE_TAG" \
+              "$RELEASE_WORK/$RELEASE_ARCHIVE" \
+              "$RELEASE_WORK/dsh-go-release.json" \
+              "$RELEASE_WORK/SHA256SUMS" \
+              --title "$RELEASE_TAG" \
+              --notes-file "$RELEASE_WORK/release-notes.md" \
+              --verify-tag
+          fi
+
+      - name: Verify tag, release, and assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG_INFO="$(gh api "repos/$GITHUB_REPOSITORY/git/refs/tags/$RELEASE_TAG")"
+          TAG_TYPE="$(printf '%s' "$TAG_INFO" | jq -r '.object.type')"
+          TAG_OBJECT_SHA="$(printf '%s' "$TAG_INFO" | jq -r '.object.sha')"
+          if [[ "$TAG_TYPE" == "tag" ]]; then
+            TAG_OBJECT_SHA="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$TAG_OBJECT_SHA" --jq '.object.sha')"
+          fi
+          test "$TAG_OBJECT_SHA" = "$RELEASE_SHA"
+
+          RELEASE_JSON="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+          printf '%s' "$RELEASE_JSON" | jq -e '.draft == false and .prerelease == false' >/dev/null
+          RELEASE_ID="$(printf '%s' "$RELEASE_JSON" | jq -r '.id')"
+
+          for asset in "$RELEASE_ARCHIVE" dsh-go-release.json SHA256SUMS; do
+            size="$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate --jq ".[] | select(.name == \"$asset\") | .size" | head -n 1)"
+            if [[ -z "$size" || "$size" -le 0 ]]; then
+              echo "Missing or empty release asset: $asset" >&2
+              exit 1
+            fi
+          done
+
+          echo "Release $RELEASE_TAG is published at the exact main commit $RELEASE_SHA."
