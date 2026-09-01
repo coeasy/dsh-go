@@ -147,6 +147,7 @@ jobs:
           test -f site/dist/index.html
           test -f site/dist/package.json
           test -f site/dist/version.json
+          node scripts/check-platform-discovery.mjs --file site/dist/.well-known/dsh-marketplace.json
           test -f site/dist/edgeone.json
           test -f site/dist/catalog/plugins.json
           test -f site/dist/catalog/catalog-v3/index.json
