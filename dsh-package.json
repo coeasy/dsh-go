@@ -3,6 +3,7 @@
   "id": "dsh-go-marketplace",
   "name": "DSH Go Marketplace",
   "version": "0.1.0",
+  "release_tag": "dsh-go-marketplace-v0.1.0",
   "type": "mcp",
   "description": "Read-only DSH plugin, package, and ecosystem discovery through the dsh-go Marketplace API.",
   "category": "mcp",

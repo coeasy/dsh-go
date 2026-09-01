@@ -3,8 +3,12 @@ import { validateReleaseArtifact } from './artifact-installer.mjs';
 
 export const RELEASE_DESCRIPTOR_NAME = 'dsh-package-release.json';
 
+function defaultReleaseTag(pkg) {
+  return pkg?.release_tag || pkg?.artifact?.release_tag || (pkg?.package_path ? `${pkg.id}-v${pkg.version}` : `v${pkg.version}`);
+}
+
 function descriptorUrl(pkg, options = {}) {
-  const tag = options.tag || `v${pkg.version}`;
+  const tag = options.tag || defaultReleaseTag(pkg);
   return `https://github.com/${pkg.repo}/releases/download/${encodeURIComponent(tag)}/${RELEASE_DESCRIPTOR_NAME}`;
 }
 
@@ -57,6 +61,6 @@ export async function discoverReleaseArtifact(pkg, options = {}) {
   return {
     ...descriptor.artifact,
     discovered_from: url,
-    release_tag: descriptor.tag || `v${pkg.version}`,
+    release_tag: descriptor.tag || defaultReleaseTag(pkg),
   };
 }

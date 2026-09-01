@@ -44,7 +44,8 @@
               "url": { "type": "string", "format": "uri", "pattern": "^https://" },
               "digest": { "type": "string", "pattern": "^sha256-[0-9a-f]{64}$" },
               "format": { "type": "string", "enum": ["tgz", "tar.gz"] },
-              "strip_components": { "type": "integer", "minimum": 0, "maximum": 8 }
+              "strip_components": { "type": "integer", "minimum": 0, "maximum": 8 },
+              "release_tag": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,128}$" }
             },
             "allOf": [
               {

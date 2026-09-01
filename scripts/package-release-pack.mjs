@@ -72,7 +72,7 @@ async function main() {
   if (!manifest.id || !/^[A-Za-z0-9_.-]+$/.test(manifest.id)) throw new Error('package manifest id is required and must be release-safe');
   if (!manifest.type || !['plugin', 'mcp', 'skill', 'agent'].includes(manifest.type)) throw new Error('package manifest type is required');
   if (!manifest.version) throw new Error('package manifest version is required');
-  const tag = option('--tag', `v${manifest.version}`);
+  const tag = option('--tag', manifest.release_tag || (scope.path ? `${safeName(manifest.id)}-v${manifest.version}` : `v${manifest.version}`));
   const channel = option('--channel', 'stable');
   if (!['stable', 'beta', 'nightly', 'dev'].includes(channel)) throw new Error(`unsupported release channel: ${channel}`);
   const archiveName = `${safeName(manifest.id)}-${manifest.version}.tgz`;

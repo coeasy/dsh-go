@@ -142,6 +142,7 @@ export function sanitizeManifest(data, file = 'dsh-plugin.json') {
   if (typeof data.id === 'string' && /^[A-Za-z0-9_.-]+$/.test(data.id.trim())) clean.id = data.id.trim();
   if (typeof data.name === 'string' && data.name.trim()) clean.name = data.name.trim().slice(0, 200);
   if (typeof data.description === 'string' && data.description.trim()) clean.description = data.description.trim().slice(0, 4000);
+  if (typeof data.release_tag === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(data.release_tag.trim())) clean.release_tag = data.release_tag.trim();
   const category = normalizeCategory(data.category, '');
   if (category) clean.category = category;
   clean.tags = Array.isArray(data.tags) ? data.tags.filter((tag) => typeof tag === 'string').map((tag) => tag.trim()).filter(Boolean).slice(0, 100) : [];
@@ -306,11 +307,13 @@ export function applyManifestObservation(plugin, observation) {
     capabilities: data.capabilities || [], dependencies: data.dependencies || [], permissions: data.permissions || [],
     compatibility: data.compatibility || null, publisher: data.publisher || null, security: data.security || null,
     conflicts: data.conflicts || [], replaces: data.replaces || [], provides: data.provides || [], type_config: data.type_config || null,
+    release_tag: data.release_tag || null,
     metadata_source: data.metadata_source || manifest.file.replace(/\.json$/, ''), manifest_file: manifest.file, verified: true,
   } : {
     ...base,
     package_id: null, package_type: null, capabilities: [], dependencies: [], permissions: [], compatibility: null, publisher: null, security: null,
     conflicts: [], replaces: [], provides: [], type_config: null,
+    release_tag: null,
     name: base.repo_name, metadata_source: 'github', manifest_file: null, verified: false,
   };
   result.install_cmd = makeInstallCmd(result.full_name, result.category);
@@ -415,6 +418,7 @@ async function buildPlugin(repo, oldPlugins) {
     replaces: manifest?.data?.replaces || [],
     provides: manifest?.data?.provides || [],
     type_config: manifest?.data?.type_config || null,
+    release_tag: manifest?.data?.release_tag || null,
     has_readme: readme.has,
     readme_excerpt: readme.excerpt,
     snapshot_commit: repo.default_branch || 'main',
