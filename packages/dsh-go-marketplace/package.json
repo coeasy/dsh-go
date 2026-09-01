@@ -1,0 +1,14 @@
+{
+  "name": "dsh-go-marketplace",
+  "version": "0.1.0",
+  "description": "Installable DSH Marketplace MCP package",
+  "private": false,
+  "type": "module",
+  "files": [
+    "dsh-package.json",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

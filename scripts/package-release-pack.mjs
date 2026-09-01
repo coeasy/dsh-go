@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { basename, join, resolve } from 'node:path';
+import { basename, join, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { findPackageManifest } from '../runtime/package-manifest.mjs';
 import { generateSbom } from './generate-sbom.mjs';
@@ -27,6 +27,20 @@ async function git(root, args) {
   return stdout.trim();
 }
 
+function packageScope(root, rawPath) {
+  const raw = String(rawPath || '').trim().replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/+$/, '');
+  if (!raw || raw === '.') return { root, path: '', stripComponents: 1 };
+  if (raw.startsWith('/') || raw.split('/').some((part) => !part || part === '..')) {
+    throw new Error('package-path must be a safe repository-relative directory');
+  }
+  const packageRoot = resolve(root, raw);
+  const relativePath = relative(root, packageRoot).split(sep).join('/');
+  if (!relativePath || relativePath.startsWith('../') || relativePath.includes('/../')) {
+    throw new Error('package-path must stay inside repository root');
+  }
+  return { root: packageRoot, path: relativePath, stripComponents: relativePath.split('/').length + 1 };
+}
+
 function minimalSbom(manifest) {
   const seed = `${manifest.id}@${manifest.version}:${manifest.type}`;
   const digest = createHash('sha256').update(seed).digest('hex');
@@ -42,11 +56,13 @@ function minimalSbom(manifest) {
 
 async function main() {
   const root = resolve(option('--root', process.cwd()));
+  const scope = packageScope(root, option('--package-path', ''));
+  const packageRoot = scope.root;
   const outDir = resolve(option('--out-dir', join(root, 'dist')));
   const repository = option('--repository', process.env.GITHUB_REPOSITORY || '');
   const commit = String(option('--commit', process.env.GITHUB_SHA || await git(root, ['rev-parse', 'HEAD']))).toLowerCase();
   const githubOutput = option('--github-output', process.env.GITHUB_OUTPUT || '');
-  const found = await findPackageManifest(root);
+  const found = await findPackageManifest(packageRoot);
   if (!found) throw new Error('no DSH package manifest found');
   if (!found.valid) throw new Error(`DSH package manifest is invalid: ${found.errors.join('; ')}`);
   if (!repository.includes('/')) throw new Error('repository must be owner/name');
@@ -66,7 +82,9 @@ async function main() {
   const sumsFile = join(outDir, 'SHA256SUMS');
   await mkdir(outDir, { recursive: true });
 
-  await exec('git', ['archive', '--format=tar.gz', '--prefix=package/', `--output=${archiveFile}`, commit], {
+  const archiveArgs = ['archive', '--format=tar.gz', '--prefix=package/', `--output=${archiveFile}`, commit];
+  if (scope.path) archiveArgs.push('--', scope.path);
+  await exec('git', archiveArgs, {
     cwd: root,
     windowsHide: true,
     maxBuffer: 8 * 1024 * 1024,
@@ -83,19 +101,20 @@ async function main() {
     commit,
     tag,
     manifest_file: found.file,
+    package_path: scope.path || null,
     manifest,
     artifact: {
       kind: 'release-archive',
       url: artifactUrl,
       digest,
       format: 'tgz',
-      strip_components: 1,
+      strip_components: scope.stripComponents,
     },
   };
   await writeFile(descriptorFile, `${JSON.stringify(descriptor, null, 2)}\n`, 'utf8');
 
   let sbom;
-  try { sbom = await generateSbom(root); }
+  try { sbom = await generateSbom(packageRoot); }
   catch { sbom = minimalSbom(manifest); }
   await writeFile(sbomFile, `${JSON.stringify(sbom, null, 2)}\n`, 'utf8');
 
@@ -111,6 +130,7 @@ async function main() {
     channel,
     tag,
     commit,
+    package_path: scope.path || null,
     archive_name: archiveName,
     archive_file: archiveFile,
     artifact_digest: digest,

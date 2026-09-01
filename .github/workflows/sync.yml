@@ -14,6 +14,8 @@ on:
       - "catalog/schema-v3.json"
       - "catalog/overrides.json"
       - ".github/workflows/sync.yml"
+      - "dsh-package.json"
+      - "packages/dsh-go-marketplace/**"
   schedule:
     - cron: "18 0 * * *"
     - cron: "18 6 * * *"

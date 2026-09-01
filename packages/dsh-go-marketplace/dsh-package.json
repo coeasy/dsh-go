@@ -1,0 +1,69 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "dsh-go-marketplace",
+  "name": "DSH Go Marketplace",
+  "version": "0.1.0",
+  "type": "mcp",
+  "description": "Read-only DSH plugin and ecosystem discovery through the dsh-go Marketplace API.",
+  "category": "mcp",
+  "tags": [
+    "dsh",
+    "marketplace",
+    "mcp",
+    "registry"
+  ],
+  "capabilities": [
+    "marketplace.discovery",
+    "registry.read",
+    "install.plan"
+  ],
+  "dependencies": [],
+  "permissions": [
+    "network"
+  ],
+  "permission_policy": {
+    "network": {
+      "allow": [
+        "dsh-go.pages.dev"
+      ]
+    }
+  },
+  "compatibility": {
+    "os": [
+      "linux",
+      "darwin",
+      "win32"
+    ],
+    "arch": [
+      "x64",
+      "arm64"
+    ],
+    "node": ">=20.0.0",
+    "runtime": ">=0.1.0",
+    "client": ">=0.1.0"
+  },
+  "publisher": {
+    "provider": "github",
+    "id": "coeasy",
+    "repository_ownership": "required"
+  },
+  "security": {
+    "provenance": null,
+    "signature": null,
+    "sbom": null,
+    "license": "MIT"
+  },
+  "mcp": {
+    "transport": "streamable-http",
+    "url": "https://dsh-go.pages.dev/api/v1/mcp",
+    "tools": [
+      "list_plugins",
+      "get_plugin",
+      "list_categories",
+      "search_plugins",
+      "list_ecosystem",
+      "get_ecosystem_item",
+      "plan_local_install"
+    ]
+  }
+}

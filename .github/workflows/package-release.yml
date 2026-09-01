@@ -13,6 +13,11 @@ on:
         required: false
         default: coeasy/dsh-go
         type: string
+      package_path:
+        description: Repository-relative package directory; empty means the repository root
+        required: false
+        default: ''
+        type: string
     secrets:
       marketplace_token:
         description: Token or GitHub App token allowed to dispatch marketplace sync
@@ -68,21 +73,27 @@ jobs:
           persist-credentials: false
 
       - name: Validate and audit package source
+        env:
+          PACKAGE_PATH: ${{ inputs.package_path }}
         shell: bash
         run: |
           set -euo pipefail
-          node .dsh-toolkit/runtime/dsh.mjs package validate "$GITHUB_WORKSPACE"
-          node .dsh-toolkit/runtime/dsh.mjs package audit "$GITHUB_WORKSPACE"
+          PACKAGE_ROOT="$GITHUB_WORKSPACE"
+          if [ -n "$PACKAGE_PATH" ]; then PACKAGE_ROOT="$GITHUB_WORKSPACE/$PACKAGE_PATH"; fi
+          node .dsh-toolkit/runtime/dsh.mjs package validate "$PACKAGE_ROOT"
+          node .dsh-toolkit/runtime/dsh.mjs package audit "$PACKAGE_ROOT"
 
       - name: Pack deterministic DSH package release
         id: pack
         env:
+          PACKAGE_PATH: ${{ inputs.package_path }}
           CHANNEL_INPUT: ${{ inputs.channel }}
         shell: bash
         run: |
           set -euo pipefail
           node .dsh-toolkit/scripts/package-release-pack.mjs \
             --root "$GITHUB_WORKSPACE" \
+            --package-path "$PACKAGE_PATH" \
             --out-dir "$GITHUB_WORKSPACE/dist" \
             --repository "$GITHUB_REPOSITORY" \
             --commit "$GITHUB_SHA" \
@@ -91,6 +102,7 @@ jobs:
 
       - name: Rebuild and prove release reproducibility
         env:
+          PACKAGE_PATH: ${{ inputs.package_path }}
           TAG: ${{ steps.pack.outputs.tag }}
           CHANNEL_INPUT: ${{ inputs.channel }}
         shell: bash
@@ -98,6 +110,7 @@ jobs:
           set -euo pipefail
           node .dsh-toolkit/scripts/package-release-pack.mjs \
             --root "$GITHUB_WORKSPACE" \
+            --package-path "$PACKAGE_PATH" \
             --out-dir "$GITHUB_WORKSPACE/.dsh-repro" \
             --repository "$GITHUB_REPOSITORY" \
             --commit "$GITHUB_SHA" \
