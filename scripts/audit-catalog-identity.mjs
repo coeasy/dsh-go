@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeHttpUrl, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
+import { DSH_MANIFEST_FILES, canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeHttpUrl, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
+
+const DSH_MANIFEST_SET = new Set(DSH_MANIFEST_FILES);
 
 export function auditCatalogIdentity(data) {
   const errors = [];
@@ -22,8 +24,8 @@ export function auditCatalogIdentity(data) {
     if (plugin.repo_name !== repoName) errors.push(`${label}: repo_name mismatch (${plugin.repo_name || '<missing>'})`);
     if (plugin.repo_url !== canonicalRepoUrl(plugin.full_name)) errors.push(`${label}: non-canonical repo_url (${plugin.repo_url || '<missing>'})`);
     if (plugin.install_cmd !== makeInstallCmd(plugin.full_name, plugin.category || 'other')) errors.push(`${label}: install_cmd source mismatch`);
-    if (plugin.manifest_file && plugin.manifest_file !== 'dsh-plugin.json') errors.push(`${label}: package/non-DSH manifest used (${plugin.manifest_file})`);
-    if (plugin.verified && plugin.manifest_file !== 'dsh-plugin.json') errors.push(`${label}: verified without dsh-plugin.json`);
+    if (plugin.manifest_file && !DSH_MANIFEST_SET.has(plugin.manifest_file)) errors.push(`${label}: package/non-DSH manifest used (${plugin.manifest_file})`);
+    if (plugin.verified && !DSH_MANIFEST_SET.has(plugin.manifest_file)) errors.push(`${label}: verified without a supported DSH manifest`);
     if (plugin.metadata_source === 'github' && plugin.name !== repoName) errors.push(`${label}: GitHub-sourced name mismatch (${plugin.name})`);
     const overrideFields = normalizeOverrideFields(plugin.override_fields);
     if (plugin.metadata_source === 'override' && overrideFields.length === 0) errors.push(`${label}: override source missing field-level provenance`);

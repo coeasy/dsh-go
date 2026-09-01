@@ -42,6 +42,25 @@ describe('catalog identity audit report', () => {
     expect(report.errors).toEqual([]);
   });
 
+  it('accepts a verified dsh-package manifest record', () => {
+    const data: any = {
+      plugins: [{
+        slug: 'owner-package',
+        full_name: 'owner/package',
+        repo_name: 'package',
+        name: 'Package',
+        metadata_source: 'dsh-package',
+        category: 'mcp',
+        repo_url: 'https://github.com/owner/package',
+        install_cmd: 'dsh plugin --profile tools add github:owner/package',
+        homepage: null,
+        manifest_file: 'dsh-package.json',
+        verified: true,
+      }],
+    };
+    expect(auditCatalogIdentity(data).errors).toEqual([]);
+  });
+
   it('captures stale package metadata and API URLs as audit errors', () => {
     const data: any = { plugins: [{
       slug: 'ruvnet-ruflo',
