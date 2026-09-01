@@ -86,12 +86,16 @@ jobs:
           PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
           PUBLIC_SITE_URL: https://${{ github.event.repository.owner.login }}.github.io/${{ github.event.repository.name }}
           PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
+      - name: Preserve dot-directories on GitHub Pages
+        if: ${{ steps.registry.outputs.ready == 'true' }}
+        run: touch site/dist/.nojekyll
       - name: Verify build output
         if: ${{ steps.registry.outputs.ready == 'true' }}
         run: |
           test -f site/dist/index.html
           test -f site/dist/version.json
           node scripts/check-platform-discovery.mjs --file site/dist/.well-known/dsh-marketplace.json
+          test -f site/dist/.nojekyll
           test -f site/dist/catalog/plugins.json
           test -f site/dist/catalog/registry-v3.json
           test -f site/dist/catalog/schema-v3.json
