@@ -1,0 +1,74 @@
+name: Platform Contract
+
+on:
+  schedule:
+    - cron: "35 * * * *"
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "Exact revision whose public discovery contract should be checked"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-contract
+  cancel-in-progress: false
+
+env:
+  REVISION: \${{ inputs.commit_sha || github.sha }}
+  CLOUDFLARE_URL: \${{ vars.SITE_URL || 'https://dsh-go.pages.dev' }}
+  GITHUB_PAGES_URL: https://\${{ github.repository_owner }}.github.io/\${{ github.event.repository.name }}/
+  EDGEONE_SITE_URL: \${{ vars.EDGEONE_SITE_URL || '' }}
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout contract revision
+        uses: actions/checkout@v7
+        with:
+          ref: \${{ env.REVISION }}
+          fetch-depth: 1
+
+      - name: Verify checkout revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "\$(git rev-parse HEAD)" = "\${REVISION}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Verify local discovery manifest
+        run: node scripts/check-platform-discovery.mjs --file site/public/.well-known/dsh-marketplace.json
+
+      - name: Verify Cloudflare Pages discovery
+        env:
+          PLATFORM_URL: \${{ env.CLOUDFLARE_URL }}
+        run: node scripts/check-platform-discovery.mjs --base-url "\$PLATFORM_URL" --label "Cloudflare Pages" --target cloudflare-pages --attempts 18 --delay-ms 10000
+
+      - name: Verify GitHub Pages discovery
+        env:
+          PLATFORM_URL: \${{ env.GITHUB_PAGES_URL }}
+        run: node scripts/check-platform-discovery.mjs --base-url "\$PLATFORM_URL" --label "GitHub Pages" --target github-pages --attempts 18 --delay-ms 10000
+
+      - name: Verify EdgeOne Pages discovery
+        if: \${{ env.EDGEONE_SITE_URL != '' }}
+        env:
+          PLATFORM_URL: \${{ env.EDGEONE_SITE_URL }}
+        run: node scripts/check-platform-discovery.mjs --base-url "\$PLATFORM_URL" --label "EdgeOne Pages" --target edgeone-pages --attempts 18 --delay-ms 10000
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Platform discovery contract" >> "\$GITHUB_STEP_SUMMARY"
+          echo "- revision: \${REVISION}" >> "\$GITHUB_STEP_SUMMARY"
+          echo "- Cloudflare Pages: \${CLOUDFLARE_URL}" >> "\$GITHUB_STEP_SUMMARY"
+          echo "- GitHub Pages: \${GITHUB_PAGES_URL}" >> "\$GITHUB_STEP_SUMMARY"
+          if [ -n "\${EDGEONE_SITE_URL}" ]; then echo "- EdgeOne Pages: configured stable URL checked" >> "\$GITHUB_STEP_SUMMARY"; else echo "- EdgeOne Pages: skipped (EDGEONE_SITE_URL is not configured)" >> "\$GITHUB_STEP_SUMMARY"; fi
