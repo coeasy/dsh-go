@@ -18,6 +18,10 @@
     "install.plan"
   ],
   "dependencies": [],
+  "provides": [
+    "dsh-go-marketplace",
+    "marketplace-discovery"
+  ],
   "permissions": [
     "network"
   ],
