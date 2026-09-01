@@ -88,6 +88,7 @@ export function resolvePackage(registry, type, id, version, options = {}) {
     metadata: pkg.metadata || {},
     source: pkg.source,
     artifact: pkg.artifact,
+    release_tag: pkg.release_tag || pkg.artifact?.release_tag || null,
   };
 }
 
