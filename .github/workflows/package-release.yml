@@ -124,12 +124,17 @@ jobs:
       - name: Enforce canonical discoverable release tag
         env:
           TAG: ${{ steps.pack.outputs.tag }}
+          PACKAGE_ID: ${{ steps.pack.outputs.id }}
           PACKAGE_VERSION: ${{ steps.pack.outputs.version }}
         shell: bash
         run: |
           set -euo pipefail
-          EXPECTED="v$PACKAGE_VERSION"
-          [ "$TAG" = "$EXPECTED" ] || { echo "DSH package releases must use canonical tag $EXPECTED" >&2; exit 1; }
+          EXPECTED_DEFAULT="v$PACKAGE_VERSION"
+          EXPECTED_PACKAGE="$PACKAGE_ID-v$PACKAGE_VERSION"
+          [ "$TAG" = "$EXPECTED_DEFAULT" ] || [ "$TAG" = "$EXPECTED_PACKAGE" ] || {
+            echo "DSH package releases must use canonical tag $EXPECTED_DEFAULT or $EXPECTED_PACKAGE" >&2
+            exit 1
+          }
 
       - name: Bind immutable release tag to source commit
         env:
