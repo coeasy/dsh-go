@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const {
-  applyPluginOverride, canonicalRepoKey, canonicalRepoUrl, discoveryTopics, ensureUniquePluginSlugs, findStoredPluginForRepository, makeInstallCmd,
+  applyPluginOverride, canonicalRepoKey, canonicalRepoUrl, discoveryTopics, ensureUniquePluginSlugs, findStoredPluginForRepository, makeDshInstallCmd, makeInstallCmd,
   mergeCatalogPluginsWithDiscovery, normalizePluginCategory, normalizeStoredPlugin,
 } = await import('../scripts/repository-identity.mjs');
 const { discoveryRepoToLegacy } = await import('../scripts/github-discovery.mjs');
@@ -27,6 +27,10 @@ describe('repository identity', () => {
     expect(normalizePluginCategory('toString')).toBe('other');
     const plugin: any = normalizeStoredPlugin({ full_name: 'owner/demo', category: 'made-up' });
     expect(plugin.category).toBe('other');
+  });
+
+  it('formats a versioned DSH runtime install command', () => {
+    expect(makeDshInstallCmd('dsh-go-marketplace', 'mcp', '0.1.0')).toBe('dsh mcp install dsh-go-marketplace@0.1.0');
   });
 
   it('uses stable repo ids to reconcile renames and removes stale identity', () => {

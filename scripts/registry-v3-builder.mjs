@@ -1,5 +1,5 @@
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
-import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, normalizeStoredPlugin, repoNameFromFullName } from './repository-identity.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, makeRegistryInstallCmd, normalizeStoredPlugin, repoNameFromFullName } from './repository-identity.mjs';
 
 export const REGISTRY_VERSION = 3;
 export const SCHEMA_VERSION = '3.0.0';
@@ -139,9 +139,10 @@ export function buildRegistryPlugin(legacy, normalized, commit) {
       override_fields: Array.isArray(legacy.override_fields) ? legacy.override_fields : [],
       description: legacy.description || '', category: legacy.category || 'other', verified: Boolean(legacy.verified),
       stars: Number(legacy.stars || 0), rank: Number(legacy.rank || 0), repo_url: canonicalRepoUrl(normalized.repo),
-      install_cmd: makeInstallCmd(normalized.repo, legacy.category || 'other'), manifest_file: legacy.manifest_file || null,
+      install_cmd: '', manifest_file: legacy.manifest_file || null,
     },
   };
+  record.metadata.install_cmd = makeRegistryInstallCmd(record);
   if (Array.isArray(legacy.permissions) && legacy.permissions.length) record.permissions = legacy.permissions;
   if (legacy.compatibility && Object.keys(legacy.compatibility).length) record.compatibility = legacy.compatibility;
   if (legacy.publisher) record.publisher = legacy.publisher;

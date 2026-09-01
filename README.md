@@ -77,6 +77,19 @@ npm run site:dev          # 启动本地开发服务器
 
 > API 使用示例、参数与 MCP 接入见站内 `/docs`。机器客户端可先读取 `/.well-known/dsh-marketplace.json` 或 `/api/v1/capabilities`；三平台静态站点都提供同一发现契约。
 
+### 直接安装 DSH Marketplace MCP 插件
+
+本项目同时提供独立的 DSH MCP 包，可由 DSH Runtime 安装并使用：
+
+```bash
+dsh mcp install dsh-go-marketplace@0.1.0
+dsh startup activate
+dsh mcp start dsh-go-marketplace
+dsh mcp invoke dsh-go-marketplace search_plugins --input '{"q":"mcp","limit":10}'
+```
+
+安装前会执行 Registry、兼容性和权限预检；该包仅声明对 `dsh-go.pages.dev` 的网络访问，不会远程执行安装、shell 或重启客户端。
+
 ## 如何收录你的插件
 
 给你的 GitHub 仓库添加 `dsh-plugin` topic，下一次每日同步（或手动触发）后自动收录。

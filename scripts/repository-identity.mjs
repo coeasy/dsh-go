@@ -1,6 +1,8 @@
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 export const DSH_MANIFEST_FILES = Object.freeze(['dsh-package.json', 'dsh-plugin.json', 'dsh-mcp.json', 'dsh-skill.json', 'dsh-agent.json']);
 const DSH_MANIFEST_SET = new Set(DSH_MANIFEST_FILES);
+const DSH_PACKAGE_TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
+const DSH_VERSION_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 export function isAuthoritativeDshManifest(file) { return DSH_MANIFEST_SET.has(String(file || '')); }
 export function manifestMetadataSource(file) { return isAuthoritativeDshManifest(file) ? String(file).replace(/\.json$/, '') : 'github'; }
 export const VALID_PLUGIN_CATEGORIES = Object.freeze([
@@ -44,6 +46,24 @@ export function installProfile(category) {
 
 export function makeInstallCmd(fullName, category) {
   return `dsh plugin --profile ${installProfile(category)} add github:${fullName}`;
+}
+
+export function makeDshInstallCmd(id, type, version = '') {
+  const packageId = String(id || '').trim();
+  const packageType = String(type || '').trim().toLowerCase();
+  if (!/^[A-Za-z0-9_.-]+$/.test(packageId) || !DSH_PACKAGE_TYPES.has(packageType)) return '';
+  const packageVersion = String(version || '').trim();
+  const suffix = DSH_VERSION_RE.test(packageVersion) ? `@${packageVersion}` : '';
+  return `dsh ${packageType} install ${packageId}${suffix}`;
+}
+
+export function makeRegistryInstallCmd(record) {
+  const metadata = record?.metadata || {};
+  if (metadata.verified && isAuthoritativeDshManifest(metadata.manifest_file)) {
+    const packageCommand = makeDshInstallCmd(record?.id, record?.runtime?.type, record?.version);
+    if (packageCommand) return packageCommand;
+  }
+  return makeInstallCmd(record?.source?.repo, metadata.category || 'other');
 }
 
 export function normalizeHttpUrl(value) {
@@ -216,7 +236,6 @@ export function mergeDiscoveredRepository(current, discovered) {
     full_name: live.full_name,
     repo_name: live.repo_name,
     repo_url: canonicalRepoUrl(live.full_name),
-    install_cmd: makeInstallCmd(live.full_name, category),
     topics: live.topics || [],
     stars: Number(live.stars || 0),
     forks: Number(live.forks || 0),
@@ -235,6 +254,7 @@ export function mergeDiscoveredRepository(current, discovered) {
     manifest_file: manifestAuthoritative ? manifestSource.manifest_file : null,
     package_id: manifestSource.package_id || null,
     package_type: manifestSource.package_type || null,
+    package_version: manifestAuthoritative ? (manifestSource.package_version || null) : null,
     capabilities: manifestSource.capabilities || [], dependencies: manifestSource.dependencies || [], permissions: manifestSource.permissions || [],
     compatibility: manifestSource.compatibility || null, publisher: manifestSource.publisher || null, security: manifestSource.security || null,
     conflicts: manifestSource.conflicts || [], replaces: manifestSource.replaces || [], provides: manifestSource.provides || [], type_config: manifestSource.type_config || null,
@@ -245,6 +265,7 @@ export function mergeDiscoveredRepository(current, discovered) {
     name,
     description,
   };
+  merged.install_cmd = makeInstallCmd(live.full_name, category);
   if (hasOverrides) merged.override_fields = overrideFields;
   else delete merged.override_fields;
   delete merged._manifest_observed;

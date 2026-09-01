@@ -140,6 +140,7 @@ export function sanitizeManifest(data, file = 'dsh-plugin.json') {
   if (file === 'dsh-package.json' && !type) return null;
   const clean = {};
   if (typeof data.id === 'string' && /^[A-Za-z0-9_.-]+$/.test(data.id.trim())) clean.id = data.id.trim();
+  if (typeof data.version === 'string' && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(data.version.trim())) clean.version = data.version.trim();
   if (typeof data.name === 'string' && data.name.trim()) clean.name = data.name.trim().slice(0, 200);
   if (typeof data.description === 'string' && data.description.trim()) clean.description = data.description.trim().slice(0, 4000);
   if (typeof data.release_tag === 'string' && /^[A-Za-z0-9_.-]{1,128}$/.test(data.release_tag.trim())) clean.release_tag = data.release_tag.trim();
@@ -300,6 +301,7 @@ export function applyManifestObservation(plugin, observation) {
     ...base,
     package_id: data.id || null,
     package_type: data.type || 'plugin',
+    package_version: data.version || null,
     name: data.name || base.repo_name,
     description: data.description || base.description || '',
     category: normalizeCategory(data.category, ({ mcp: 'mcp', skill: 'skills', agent: 'agent' }[data.type] || base.category || 'other')),
@@ -311,7 +313,7 @@ export function applyManifestObservation(plugin, observation) {
     metadata_source: data.metadata_source || manifest.file.replace(/\.json$/, ''), manifest_file: manifest.file, verified: true,
   } : {
     ...base,
-    package_id: null, package_type: null, capabilities: [], dependencies: [], permissions: [], compatibility: null, publisher: null, security: null,
+    package_id: null, package_type: null, package_version: null, capabilities: [], dependencies: [], permissions: [], compatibility: null, publisher: null, security: null,
     conflicts: [], replaces: [], provides: [], type_config: null,
     release_tag: null,
     name: base.repo_name, metadata_source: 'github', manifest_file: null, verified: false,
@@ -408,6 +410,7 @@ async function buildPlugin(repo, oldPlugins) {
     manifest_file: manifest ? manifest.file : null,
     package_id: manifest?.data?.id || null,
     package_type: manifest?.data?.type || null,
+    package_version: manifest?.data?.version || null,
     capabilities: manifest?.data?.capabilities || [],
     dependencies: manifest?.data?.dependencies || [],
     permissions: manifest?.data?.permissions || [],
