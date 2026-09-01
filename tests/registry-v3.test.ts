@@ -22,6 +22,15 @@ describe('Registry V3', () => {
     expect(plugin.artifact.integrity).toBe(artifactIntegrity(plugin));
   });
 
+  it('publishes a DSH install command for manifest-backed packages', () => {
+    const plugin = buildRegistryPlugin({
+      ...legacy,
+      id: 'dsh-go-marketplace', package_id: 'dsh-go-marketplace', package_type: 'mcp', package_version: '0.1.0',
+      manifest_file: 'dsh-package.json', verified: true, category: 'mcp',
+    } as any, { id: 'dsh-go-marketplace', repo: 'coeasy/dsh-go', ref: 'main' }, commit);
+    expect(plugin.metadata.install_cmd).toBe('dsh mcp install dsh-go-marketplace@0.1.0');
+  });
+
   it('infers runtime/capabilities deterministically', () => {
     expect(inferRuntimeType({ category: 'skills' })).toBe('skill');
     expect(inferCapabilities({ category: 'agent' })).toEqual(['agent', 'plugin']);
