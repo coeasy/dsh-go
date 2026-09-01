@@ -1,5 +1,5 @@
 name: Release dsh-go
-run-name: Release ${{ inputs.release_tag || 'v0.1.1' }}
+run-name: Release ${{ inputs.release_tag || 'v0.1.2' }}
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       release_tag:
         description: Semantic version tag to publish
         required: true
-        default: v0.1.1
+        default: v0.1.2
         type: string
 
 permissions:
@@ -138,13 +138,18 @@ jobs:
           );
           NODE
 
-          cat > "$WORK/release-notes.md" <<'EOF'
+          RELEASE_NOTES_FILE=".github/release-notes/${RELEASE_TAG}.md"
+          if [ -f "$RELEASE_NOTES_FILE" ]; then
+            cp "$RELEASE_NOTES_FILE" "$WORK/release-notes.md"
+          else
+            cat > "$WORK/release-notes.md" <<'EOF'
           # dsh-go release
 
           This release was created from the exact current main commit after the repository release-freeze gate passed.
 
           The freeze gate covers the repository Cloudflare Pages, GitHub Pages, and EdgeOne Pages deployment convergence checks.
           EOF
+          fi
 
           (
             cd "$WORK"
