@@ -4,11 +4,13 @@ import { readFile } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canonicalRepoKey, canonicalRepoUrl, isValidRepositoryName, makeInstallCmd, normalizeHttpUrl, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
+import { DSH_MANIFEST_FILES, canonicalRepoKey, canonicalRepoUrl, isValidRepositoryName, makeInstallCmd, normalizeHttpUrl, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGINS_FILE = resolve(ROOT, 'catalog/plugins.json');
 const VALID_CATEGORIES = new Set(['web-ui', 'desktop', 'mcp', 'skills', 'theme', 'terminal', 'coding', 'agent', 'vision', 'memory', 'security', 'integration', 'tool', 'other']);
+const DSH_MANIFEST_SET = new Set(DSH_MANIFEST_FILES);
+const DSH_METADATA_SOURCES = new Set(DSH_MANIFEST_FILES.map((file) => file.replace(/\.json$/, '')));
 
 export function validateCatalog(data) {
   const errors = [];
@@ -35,10 +37,10 @@ export function validateCatalog(data) {
     if (p.repo_url !== canonicalRepoUrl(p.full_name)) errors.push(`repo_url 非 canonical GitHub 地址: ${p.full_name}`);
     if (p.install_cmd !== makeInstallCmd(p.full_name, p.category || 'other')) errors.push(`install_cmd 与仓库身份不一致: ${p.full_name}`);
     const overrideFields = normalizeOverrideFields(p.override_fields);
-    if (!['github', 'dsh-plugin', 'override'].includes(p.metadata_source)) errors.push(`metadata_source 非法: ${p.full_name} -> ${p.metadata_source}`);
+    if (!['github', ...DSH_METADATA_SOURCES, 'override'].includes(p.metadata_source)) errors.push(`metadata_source 非法: ${p.full_name} -> ${p.metadata_source}`);
     if (p.metadata_source === 'github' && p.name !== repoNameFromFullName(p.full_name)) errors.push(`GitHub 来源名称与仓库名不一致: ${p.full_name} -> ${p.name}`);
     if (p.metadata_source === 'github' && (p.verified || p.manifest_file)) errors.push(`GitHub 来源不能携带 verified/manifest: ${p.full_name}`);
-    if (p.metadata_source === 'dsh-plugin' && (p.manifest_file !== 'dsh-plugin.json' || !p.verified)) errors.push(`dsh-plugin 来源缺少可信 manifest 状态: ${p.full_name}`);
+    if (DSH_METADATA_SOURCES.has(p.metadata_source) && (p.manifest_file !== `${p.metadata_source}.json` || !p.verified)) errors.push(`${p.metadata_source} 来源缺少可信 manifest 状态: ${p.full_name}`);
     if (p.metadata_source === 'override' && overrideFields.length === 0) errors.push(`override 来源缺少字段级来源: ${p.full_name}`);
     if (Array.isArray(p.override_fields) && overrideFields.length !== p.override_fields.length) errors.push(`override_fields 非法: ${p.full_name}`);
     if (p.homepage && normalizeHttpUrl(p.homepage) !== p.homepage) errors.push(`homepage 非法或未规范化: ${p.full_name}`);
@@ -46,8 +48,8 @@ export function validateCatalog(data) {
     if (p.disabled !== undefined && typeof p.disabled !== 'boolean') errors.push(`disabled 非布尔: ${p.full_name}`);
     if (typeof p.stars !== 'number' || p.stars < 0) errors.push(`stars 非法: ${p.slug}`);
     if (typeof p.verified !== 'boolean') warns.push(`verified 非布尔: ${p.slug}`);
-    if (p.manifest_file && p.manifest_file !== 'dsh-plugin.json') errors.push(`非法 manifest_file（仅允许 dsh-plugin.json）: ${p.slug} -> ${p.manifest_file}`);
-    if (p.verified && p.manifest_file !== 'dsh-plugin.json') errors.push(`verified 必须由 dsh-plugin.json 提供: ${p.slug}`);
+    if (p.manifest_file && !DSH_MANIFEST_SET.has(p.manifest_file)) errors.push(`非法 manifest_file（仅允许受支持 DSH manifest）: ${p.slug} -> ${p.manifest_file}`);
+    if (p.verified && !DSH_MANIFEST_SET.has(p.manifest_file)) errors.push(`verified 必须由 dsh-plugin.json 或其他受支持 DSH manifest 提供: ${p.slug}`);
     if (!p.category) warns.push(`缺少 category: ${p.slug}`);
     else if (!VALID_CATEGORIES.has(p.category)) errors.push(`category 非法: ${p.slug} -> ${p.category}`);
   }
