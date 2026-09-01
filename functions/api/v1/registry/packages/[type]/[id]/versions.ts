@@ -27,8 +27,8 @@ export function compareVersions(left: string, right: string): number {
     const rightPart = b.pre[index];
     if (leftPart === undefined) return -1;
     if (rightPart === undefined) return 1;
-    const leftNumber = /^\\d+$/.test(leftPart);
-    const rightNumber = /^\\d+$/.test(rightPart);
+    const leftNumber = /^\d+$/.test(leftPart);
+    const rightNumber = /^\d+$/.test(rightPart);
     if (leftNumber && rightNumber && Number(leftPart) !== Number(rightPart)) return Number(leftPart) - Number(rightPart);
     if (leftNumber !== rightNumber) return leftNumber ? -1 : 1;
     if (leftPart !== rightPart) return leftPart.localeCompare(rightPart);
