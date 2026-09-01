@@ -118,7 +118,7 @@ describe('CI and deployment hygiene', () => {
     expect(hygiene).toContain("github.event.pull_request.merged == true");
     expect(hygiene).toContain('github.event.pull_request.head.repo.full_name == github.repository');
     expect(hygiene).toContain("gh pr list --repo \"$GITHUB_REPOSITORY\" --state open");
-    expect(hygiene).toContain('compare/${base_encoded}...${encoded}');
+    expect(hygiene).toContain('encoded="$(jq -rn --arg value "$branch" \'$value|@uri\')"');
     expect(hygiene).toContain('git/refs/heads/$encoded');
   });
 });
