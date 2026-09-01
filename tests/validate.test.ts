@@ -42,6 +42,13 @@ describe('validateCatalog', () => {
     expect(errors).toEqual([]);
   });
 
+  it('接受由 dsh-package.json 提供的可信记录', () => {
+    const c = goodCatalog();
+    c.plugins[0].metadata_source = 'dsh-package';
+    c.plugins[0].manifest_file = 'dsh-package.json';
+    expect(validateCatalog(c).errors).toEqual([]);
+  });
+
   it('version 错误', () => {
     const c = goodCatalog();
     c.version = 1;
