@@ -21,6 +21,7 @@ const TYPE_BY_FILE = Object.freeze({
 });
 const VERSION_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const ID_RE = /^[A-Za-z0-9_.-]+$/;
+const RELEASE_TAG_RE = /^[A-Za-z0-9_.-]{1,128}$/;
 
 async function exists(file) {
   try { await access(file); return true; } catch { return false; }
@@ -50,6 +51,7 @@ export function normalizePackageManifest(data, file = 'dsh-package.json') {
     id: typeof data.id === 'string' ? data.id.trim() : undefined,
     name: typeof data.name === 'string' ? data.name.trim().slice(0, 200) : undefined,
     version: typeof data.version === 'string' ? data.version.trim() : DSH_DEFAULT_PACKAGE_VERSION,
+    release_tag: typeof data.release_tag === 'string' ? data.release_tag.trim() : undefined,
     type,
     description: typeof data.description === 'string' ? data.description.trim().slice(0, 4000) : undefined,
     category: typeof data.category === 'string' ? data.category.trim() : undefined,
@@ -91,6 +93,7 @@ export function validatePackageManifest(data, options = {}) {
   if (manifest.id && !ID_RE.test(manifest.id)) errors.push('id must contain only letters, numbers, dot, underscore, and dash');
   if (!manifest.name) errors.push('name is required');
   if (!VERSION_RE.test(manifest.version)) errors.push('version must be semantic version');
+  if (manifest.release_tag && (!RELEASE_TAG_RE.test(manifest.release_tag) || !manifest.release_tag.endsWith(`v${manifest.version}`))) errors.push('release_tag must be safe and end with v<version>');
   if (!DSH_PACKAGE_TYPES.includes(manifest.type)) errors.push('type must be plugin, mcp, skill, or agent');
   if (manifest.version !== DSH_DEFAULT_PACKAGE_VERSION && options.enforceDefaultVersion) errors.push(`new ecosystem packages must start at ${DSH_DEFAULT_PACKAGE_VERSION}`);
   const permissionReport = inspectPermissions(manifest.permissions);
