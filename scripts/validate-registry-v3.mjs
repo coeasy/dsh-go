@@ -4,7 +4,7 @@ import { realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
-import { DEFAULT_PLUGIN_VERSION, REGISTRY_VERSION, SCHEMA_VERSION, isCommitSha } from './registry-v3-builder.mjs';
+import { DEFAULT_PLUGIN_VERSION, REGISTRY_VERSION, SCHEMA_VERSION, isCommitSha, isSupportedPackageVersion } from './registry-v3-builder.mjs';
 import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, makeRegistryInstallCmd, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -57,7 +57,10 @@ export function validateRegistry(data) {
     if (ids.has(idKey)) errors.push(`duplicate id after case normalization: ${id}`);
     ids.add(idKey);
 
-    if (plugin?.version !== DEFAULT_PLUGIN_VERSION) errors.push(`${id}: version must be ${DEFAULT_PLUGIN_VERSION}`);
+    const manifestBacked = plugin?.metadata?.verified === true && MANIFESTS.has(plugin?.metadata?.manifest_file);
+    if (!isSupportedPackageVersion(plugin?.version) || (!manifestBacked && plugin?.version !== DEFAULT_PLUGIN_VERSION)) {
+      errors.push(`${id}: version must be ${DEFAULT_PLUGIN_VERSION} unless backed by a verified DSH manifest`);
+    }
     const repo = String(plugin?.source?.repo || '');
     if (!REPO_RE.test(repo)) errors.push(`${id}: invalid source.repo`);
     const repoKey = canonicalRepoKey(repo);
