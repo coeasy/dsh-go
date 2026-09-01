@@ -9,6 +9,7 @@ describe('first-party DSH Marketplace package layer', () => {
     expect(root).toEqual(packaged);
     expect(validatePackageManifest(root, { file: 'dsh-package.json' })).toMatchObject({ valid: true });
     expect(root.type).toBe('mcp');
+    expect(root.release_tag).toBe('dsh-go-marketplace-v0.1.0');
     expect(root.mcp).toMatchObject({
       transport: 'streamable-http',
       url: 'https://dsh-go.pages.dev/api/v1/mcp',
