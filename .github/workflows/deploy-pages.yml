@@ -108,6 +108,7 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: site/dist
+          include-hidden-files: true
       - name: Deploy to GitHub Pages
         if: ${{ steps.registry.outputs.ready == 'true' }}
         id: deployment
