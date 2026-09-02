@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 02 Sep 2026 05:17:38 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 02 Sep 2026 11:19:07 GMT</lastBuildDate>
     <item>
       <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -58,8 +58,8 @@
     <item>
       <title>🔄 DSH-ReasonixUI</title>
       <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-02T02:13:18Z</guid>
-      <pubDate>Wed, 02 Sep 2026 02:13:18 GMT</pubDate>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-02T07:01:15Z</guid>
+      <pubDate>Wed, 02 Sep 2026 07:01:15 GMT</pubDate>
       <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
@@ -84,18 +84,25 @@
       <description>dsh theme picker DeepSeek Harness 主题选择插件 —— 在设置面板中添加「主题」页面：统一管理应用主题与已安装的主题插件，同一时间仅一个主题生效，其余自动禁用。 A theme picker plugin for DeepSeek Harness: adds a Themes page to the Settings panel. It manages both a</description>
     </item>
     <item>
+      <title>🆕 DSH Composer Dynamic Island</title>
+      <link>https://github.com/says693/dsh-composer-dynamic-island</link>
+      <guid isPermaLink="false">says693/dsh-composer-dynamic-island@2026-09-02T03:38:27Z</guid>
+      <pubDate>Wed, 02 Sep 2026 03:38:27 GMT</pubDate>
+      <description>DSH Composer Dynamic Island English 简体中文 Collapse selected DeepSeek Harness Web composer controls into a compact, upward expanding island without moving their DOM nodes or changing the host React tree</description>
+    </item>
+    <item>
+      <title>🔄 DSH Go Marketplace</title>
+      <link>https://github.com/coeasy/dsh-go</link>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-02T05:17:59Z</guid>
+      <pubDate>Wed, 02 Sep 2026 05:17:59 GMT</pubDate>
+      <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
+    </item>
+    <item>
       <title>🆕 dsh-tui-browser-use</title>
       <link>https://github.com/FlameTN7/dsh-tui-browser-use</link>
       <guid isPermaLink="false">FlameTN7/dsh-tui-browser-use@2026-09-01T13:09:09Z</guid>
       <pubDate>Tue, 01 Sep 2026 13:09:09 GMT</pubDate>
       <description>dsh tui browser use 简体中文 English 给 dsh tui 的 agent 装上&quot;看得见网页&quot;的浏览器自动化工具。 dsh tui browser use 是 dsh tui 的子插件（Cordis 插件），随 dsh profile dsh tui 组合加载。它向 agent 注册 21 个 browser 工具 ，用 Playwright 驱动真实</description>
-    </item>
-    <item>
-      <title>🔄 DSH Go Marketplace</title>
-      <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-01T21:09:37Z</guid>
-      <pubDate>Tue, 01 Sep 2026 21:09:37 GMT</pubDate>
-      <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
     </item>
     <item>
       <title>🔄 DSH PPT</title>
@@ -117,13 +124,6 @@
       <guid isPermaLink="false">gychen-NJU/dsh-overleaf@2026-08-31T01:33:31Z</guid>
       <pubDate>Mon, 31 Aug 2026 01:33:31 GMT</pubDate>
       <description>dsh overleaf English 中文 An embedded Overleaf workbench plugin for DeepSeek Harness (DSH) Web. It adds a fourth tab next to Chat / Trajectory / Context on the session page: the tab loads your Overleaf </description>
-    </item>
-    <item>
-      <title>🆕 DSH Composer Dynamic Island</title>
-      <link>https://github.com/says693/dsh-composer-dynamic-island</link>
-      <guid isPermaLink="false">says693/dsh-composer-dynamic-island@2026-09-02T03:38:27Z</guid>
-      <pubDate>Wed, 02 Sep 2026 03:38:27 GMT</pubDate>
-      <description>Compact DSH Web composer island with a Community v0.15 host manifest and no user-defined button positioning.</description>
     </item>
     <item>
       <title>🆕 dsh-TUI Secret Guard</title>
@@ -161,18 +161,11 @@
       <description>dsh github installer 基于 dsh std 标准化协议的插件管理器 —— 粘贴 GitHub 仓库网址 / npm 包名 / 其他 Git 仓库地址，即可安装；支持卸载与更新。 A dsh std standard component for managing plugins — install from a GitHub repo URL, npm package name,</description>
     </item>
     <item>
-      <title>🆕 dsh-pro-vision-std</title>
+      <title>🔄 dsh-pro-vision-std</title>
       <link>https://github.com/lasdrder0705/dsh-pro-vision-std</link>
       <guid isPermaLink="false">lasdrder0705/dsh-pro-vision-std@2026-08-27T08:18:13Z</guid>
       <pubDate>Thu, 27 Aug 2026 08:18:13 GMT</pubDate>
       <description>dsh pro vision std 中文 · English Compatible with dsh std Community v0.15. A portable ModelProvider that lets DeepSeek V4 Pro handle image attachments. Images are first captioned by deepseek v4 flash vi</description>
-    </item>
-    <item>
-      <title>🆕 dsh-chat-zone-std</title>
-      <link>https://github.com/lasdrder0705/dsh-chat-zone-std</link>
-      <guid isPermaLink="false">lasdrder0705/dsh-chat-zone-std@2026-08-26T06:00:55Z</guid>
-      <pubDate>Wed, 26 Aug 2026 06:00:55 GMT</pubDate>
-      <description>dsh chat zone std 中文 · English Compatible with dsh std Community v0.15. A dsh std rewrite of dsh chat zone. Separate repository: the original Cordis sidebar plugin is not replaced. This package declar</description>
     </item>
     <item>
       <title>🔄 Subagent Viewer</title>
@@ -214,6 +207,13 @@
       <link>https://github.com/FUSU123fusu/dsh-tui-keys</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-keys@2026-08-28T15:45:14Z</guid>
       <pubDate>Fri, 28 Aug 2026 15:45:14 GMT</pubDate>
+      <description></description>
+    </item>
+    <item>
+      <title>🔄 Cron Schedules</title>
+      <link>https://github.com/FUSU123fusu/dsh-tui-cron</link>
+      <guid isPermaLink="false">FUSU123fusu/dsh-tui-cron@2026-08-28T15:44:57Z</guid>
+      <pubDate>Fri, 28 Aug 2026 15:44:57 GMT</pubDate>
       <description></description>
     </item>
   </channel>
