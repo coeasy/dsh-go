@@ -21,6 +21,9 @@ try {
     const script = fileURLToPath(new URL('../runtime/provider-cli.mjs', import.meta.url));
     process.argv = [process.execPath, script, ...args.slice(1)];
     await import(pathToFileURL(resolve(script)).href);
+  } else if (args[0] === 'enterprise' || args[0] === 'organization') {
+    const enterprise = await import('../runtime/enterprise-cli.mjs');
+    await enterprise.runEnterpriseCli(args);
   } else {
     const normalizedArgs = normalizeInstallVersionArgs(args);
     process.argv = [...process.argv.slice(0, 2), ...normalizedArgs];
