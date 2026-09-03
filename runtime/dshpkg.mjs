@@ -122,16 +122,19 @@ export async function installDshPackage(file, options = {}) {
   const transactionId = randomUUID();
   const stage = `${target}.dshpkg-stage-${process.pid}-${Date.now()}`;
   const backup = `${target}.dshpkg-backup-${transactionId}`;
+  let hadPrevious = false;
+  let targetCommitted = false;
   await rm(stage, { recursive: true, force: true });
   try {
     await mkdir(stage, { recursive: true });
     await materialize(bundle.files, stage);
     const stagedLock = await readInstallLock(stage);
     if (stagedLock.type !== lock.type || stagedLock.id !== lock.id || stagedLock.version !== lock.version || stagedLock.source.commit !== lock.source.commit) throw new Error('materialized .dshpkg identity mismatch');
-    const hadPrevious = await pathExists(target);
+    hadPrevious = await pathExists(target);
     if (hadPrevious) await rename(target, backup);
     await mkdir(dirname(target), { recursive: true });
     await rename(stage, target);
+    targetCommitted = true;
     const base = current?.state === 'removed' ? {} : current || {};
     const record = recordRuntimeEvent({
       ...base,
@@ -168,10 +171,8 @@ export async function installDshPackage(file, options = {}) {
     return { ...plan, executed: true, dry_run: false, transaction_id: transactionId };
   } catch (error) {
     await rm(stage, { recursive: true, force: true });
-    if (await pathExists(backup)) {
-      await rm(target, { recursive: true, force: true });
-      await rename(backup, target);
-    }
+    if (targetCommitted) await rm(target, { recursive: true, force: true });
+    if (hadPrevious && await pathExists(backup)) await rename(backup, target);
     throw error;
   }
 }
