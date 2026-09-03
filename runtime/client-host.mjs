@@ -233,6 +233,12 @@ export async function createClientHost(options = {}) {
         const result = await executeCli(['mcp', 'logs', route.id]);
         return json(req, res, 200, result);
       }
+      if (route && req.method === 'POST' && route.action === 'doctor') {
+        const request = await body(req);
+        requireApproval(request);
+        const result = await executeCli([route.type, 'doctor', route.id]);
+        return json(req, res, 200, { ...result, restart_required: false, auto_restart: false });
+      }
       if (route && req.method === 'DELETE' && !route.action) {
         const request = await body(req);
         requireApproval(request);
