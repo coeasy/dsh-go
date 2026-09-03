@@ -85,23 +85,50 @@ function releaseChannel(plugin: RegistryV3Plugin): ReleaseChannel {
   return plugin.channel || plugin.release_channel || 'stable';
 }
 
-function yanked(plugin: RegistryV3Plugin) {
-  return Boolean((plugin.security as Record<string, unknown> | null | undefined)?.yanked === true);
+function activeBlockingAdvisory(plugin: RegistryV3Plugin) {
+  const security = plugin.security as Record<string, unknown> | null | undefined;
+  const advisories = Array.isArray(security?.advisories) ? security.advisories as Array<Record<string, unknown>> : [];
+  return advisories.find((advisory) =>
+    advisory.withdrawn !== true
+    && advisory.resolved !== true
+    && ['high', 'critical'].includes(String(advisory.severity || '').toLowerCase()));
+}
+
+function securityBlock(plugin: RegistryV3Plugin): { code: string; reason: string } | null {
+  const security = plugin.security as Record<string, unknown> | null | undefined;
+  if (security?.revoked === true || security?.recalled === true) return { code: 'DSH_PACKAGE_REVOKED', reason: 'revoked' };
+  if (security?.yanked === true) return { code: 'DSH_PACKAGE_YANKED', reason: 'yanked' };
+  if (activeBlockingAdvisory(plugin)) return { code: 'DSH_SECURITY_ADVISORY_BLOCKED', reason: 'security-advisory' };
+  return null;
 }
 
 export function resolveEdgePackageRequest(plugins: RegistryV3Plugin[], raw: { id?: string; type?: string; version?: string; channel?: string }) {
   const request = normalizeEdgePackageRequest(raw);
   const idKey = request.id.toLowerCase();
-  const candidates = plugins
-    .filter((plugin) => !yanked(plugin))
+  const identityMatches = plugins
     .filter((plugin) => releaseChannel(plugin) === request.channel)
-    .filter((plugin) => !request.type || ecosystemType(plugin) === request.type)
-    .filter((plugin) => plugin.id.toLowerCase() === idKey || plugin.source.repo.toLowerCase() === idKey)
-    .filter((plugin) => satisfiesSemanticVersion(plugin.version, request.versionRange));
+    .filter((plugin) => plugin.id.toLowerCase() === idKey || plugin.source.repo.toLowerCase() === idKey);
+  let candidates = identityMatches.filter((plugin) => satisfiesSemanticVersion(plugin.version, request.versionRange));
+  if (request.type) candidates = candidates.filter((plugin) => ecosystemType(plugin) === request.type);
 
-  if (!candidates.length) throw new Error(`ecosystem item not found: ${request.id}@${request.versionRange} [${request.channel}]`);
   const types = [...new Set(candidates.map(ecosystemType))].sort();
   if (!request.type && types.length > 1) throw new Error(`ecosystem item is ambiguous; specify type (${types.join(', ')}): ${request.id}`);
-  candidates.sort((left, right) => compareSemanticVersions(right.version, left.version));
-  return { request, package: candidates[0] };
+
+  const allowed = candidates.filter((plugin) => !securityBlock(plugin));
+  if (!allowed.length && candidates.length) {
+    const blocks = candidates.map(securityBlock).filter(Boolean) as Array<{ code: string; reason: string }>;
+    const block = blocks.find((item) => item.code === 'DSH_PACKAGE_REVOKED')
+      || blocks.find((item) => item.code === 'DSH_SECURITY_ADVISORY_BLOCKED')
+      || blocks[0];
+    throw new Error(`${block.code}: package is blocked (${block.reason}): ${request.id}@${request.versionRange} [${request.channel}]`);
+  }
+
+  if (!allowed.length) {
+    const typedIdentity = request.type ? identityMatches.filter((plugin) => ecosystemType(plugin) === request.type) : identityMatches;
+    if (typedIdentity.length) throw new Error(`ecosystem item version not found: ${request.id}@${request.versionRange} [${request.channel}]`);
+    throw new Error(`ecosystem item not found: ${request.id}`);
+  }
+  allowed.sort((left, right) => compareSemanticVersions(right.version, left.version));
+  const pkg = allowed[0];
+  return { request: { ...request, type: request.type || ecosystemType(pkg) }, package: pkg };
 }
