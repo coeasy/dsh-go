@@ -44,8 +44,9 @@ export function installProfile(category) {
   return 'tools';
 }
 
-export function makeInstallCmd(fullName, category) {
-  return `dsh plugin --profile ${installProfile(category)} add github:${fullName}`;
+export function makeInstallCmd(fullName, _category) {
+  const repo = String(fullName || '').trim();
+  return isValidRepositoryName(repo) ? `dsh plugin install github:${repo}` : '';
 }
 
 export function makeDshInstallCmd(id, type, version = '') {
@@ -55,6 +56,14 @@ export function makeDshInstallCmd(id, type, version = '') {
   const packageVersion = String(version || '').trim();
   const suffix = DSH_VERSION_RE.test(packageVersion) ? `@${packageVersion}` : '';
   return `dsh ${packageType} install ${packageId}${suffix}`;
+}
+
+export function makeCatalogInstallCmd(plugin) {
+  if (isAuthoritativeDshManifest(plugin?.manifest_file)) {
+    const packageCommand = makeDshInstallCmd(plugin?.package_id, plugin?.package_type);
+    if (packageCommand) return packageCommand;
+  }
+  return makeInstallCmd(plugin?.full_name, plugin?.category || 'other');
 }
 
 export function makeRegistryInstallCmd(record) {
@@ -158,13 +167,13 @@ export function normalizeStoredPlugin(plugin) {
     repo_name: repoName,
     repo_url: canonicalRepoUrl(fullName),
     category,
-    install_cmd: makeInstallCmd(fullName, category),
     homepage: normalizeHttpUrl(plugin?.homepage),
     metadata_source: metadataSource,
     manifest_file: authoritativeManifest ? plugin.manifest_file : null,
     verified: authoritativeManifest,
     name: (overrideSet.has('name') || authoritativeManifest) ? (plugin?.name || repoName) : repoName,
   };
+  normalized.install_cmd = makeCatalogInstallCmd(normalized);
   if (overrideFields.length) normalized.override_fields = overrideFields;
   else delete normalized.override_fields;
   return normalized;
@@ -265,7 +274,7 @@ export function mergeDiscoveredRepository(current, discovered) {
     name,
     description,
   };
-  merged.install_cmd = makeInstallCmd(live.full_name, category);
+  merged.install_cmd = makeCatalogInstallCmd(merged);
   if (hasOverrides) merged.override_fields = overrideFields;
   else delete merged.override_fields;
   delete merged._manifest_observed;

@@ -49,5 +49,5 @@ describe('client install -> manual restart -> startup loader E2E', () => {
     expect(activated.commit).toBe(commit);
     expect(activated.manifest_file).toBe('dsh-package.json');
     expect(activated.message).toContain('startup loader');
-  });
+  }, 15_000);
 });

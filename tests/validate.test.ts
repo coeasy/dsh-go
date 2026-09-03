@@ -15,9 +15,12 @@ function goodCatalog() {
         stars: 10,
         verified: true,
         manifest_file: 'dsh-plugin.json',
+        package_id: 'b',
+        package_type: 'mcp',
+        package_version: '1.2.3',
         category: 'mcp',
         repo_url: 'https://github.com/a/b',
-        install_cmd: 'dsh plugin --profile tools add github:a/b',
+        install_cmd: 'dsh mcp install b',
       },
       {
         slug: 'c-d',
@@ -30,7 +33,7 @@ function goodCatalog() {
         manifest_file: null,
         category: 'web-ui',
         repo_url: 'https://github.com/c/d',
-        install_cmd: 'dsh plugin --profile web add github:c/d',
+        install_cmd: 'dsh plugin install github:c/d',
       },
     ],
   };

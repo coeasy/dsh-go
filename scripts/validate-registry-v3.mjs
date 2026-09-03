@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { artifactIntegrity, registryContentHash } from './checksum.mjs';
 import { DEFAULT_PLUGIN_VERSION, REGISTRY_VERSION, SCHEMA_VERSION, isCommitSha, isSupportedPackageVersion } from './registry-v3-builder.mjs';
-import { canonicalRepoKey, canonicalRepoUrl, makeInstallCmd, makeRegistryInstallCmd, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
+import { canonicalRepoKey, canonicalRepoUrl, makeRegistryInstallCmd, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEFAULT_FILE = resolve(ROOT, 'catalog/registry-v3.json');
@@ -17,6 +17,16 @@ const ARTIFACT_KINDS = new Set(['git-source', 'release-archive']);
 const RELEASE_FORMATS = new Set(['tgz', 'tar.gz']);
 const SHA256_RE = /^sha256-[0-9a-f]{64}$/i;
 const RELEASE_TAG_RE = /^[A-Za-z0-9_.-]{1,128}$/;
+
+function legacyInstallProfile(category) {
+  if (category === 'web-ui') return 'web';
+  if (category === 'desktop') return 'desktop';
+  return 'tools';
+}
+
+function legacyInstallCmd(repo, category) {
+  return `dsh plugin --profile ${legacyInstallProfile(category)} add github:${repo}`;
+}
 
 function validateArtifact(id, artifact, errors) {
   const kind = artifact?.kind;
@@ -85,8 +95,8 @@ export function validateRegistry(data) {
     if (metadata.repo_name !== repoName) errors.push(`${id}: metadata.repo_name mismatch`);
     if (metadata.repo_url !== canonicalRepoUrl(repo)) errors.push(`${id}: metadata.repo_url is not canonical`);
     const expectedInstallCmd = makeRegistryInstallCmd(plugin);
-    const legacyInstallCmd = makeInstallCmd(repo, metadata.category || 'other');
-    if (metadata.install_cmd !== expectedInstallCmd && metadata.install_cmd !== legacyInstallCmd) errors.push(`${id}: metadata.install_cmd source mismatch`);
+    const historicalInstallCmd = legacyInstallCmd(repo, metadata.category || 'other');
+    if (metadata.install_cmd !== expectedInstallCmd && metadata.install_cmd !== historicalInstallCmd) errors.push(`${id}: metadata.install_cmd source mismatch`);
     if (!['github', 'dsh-package', 'dsh-plugin', 'dsh-mcp', 'dsh-skill', 'dsh-agent', 'override'].includes(metadata.metadata_source)) errors.push(`${id}: unsupported metadata_source ${metadata.metadata_source || '<missing>'}`);
     if (metadata.metadata_source === 'github' && metadata.name !== repoName) errors.push(`${id}: GitHub metadata.name must match repository name`);
     if (metadata.metadata_source === 'github' && (metadata.verified || metadata.manifest_file)) errors.push(`${id}: GitHub metadata cannot be verified or manifest-backed`);

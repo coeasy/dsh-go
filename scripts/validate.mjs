@@ -4,13 +4,23 @@ import { readFile } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DSH_MANIFEST_FILES, canonicalRepoKey, canonicalRepoUrl, isValidRepositoryName, makeInstallCmd, normalizeHttpUrl, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
+import { DSH_MANIFEST_FILES, canonicalRepoKey, canonicalRepoUrl, isValidRepositoryName, makeCatalogInstallCmd, normalizeHttpUrl, normalizeOverrideFields, repoNameFromFullName } from './repository-identity.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGINS_FILE = resolve(ROOT, 'catalog/plugins.json');
 const VALID_CATEGORIES = new Set(['web-ui', 'desktop', 'mcp', 'skills', 'theme', 'terminal', 'coding', 'agent', 'vision', 'memory', 'security', 'integration', 'tool', 'other']);
 const DSH_MANIFEST_SET = new Set(DSH_MANIFEST_FILES);
 const DSH_METADATA_SOURCES = new Set(DSH_MANIFEST_FILES.map((file) => file.replace(/\.json$/, '')));
+
+function legacyInstallProfile(category) {
+  if (category === 'web-ui') return 'web';
+  if (category === 'desktop') return 'desktop';
+  return 'tools';
+}
+
+function legacyInstallCmd(repo, category) {
+  return `dsh plugin --profile ${legacyInstallProfile(category)} add github:${repo}`;
+}
 
 export function validateCatalog(data) {
   const errors = [];
@@ -35,7 +45,10 @@ export function validateCatalog(data) {
     if (p.repo_id) { const repoId = String(p.repo_id); if (repoIds.has(repoId)) errors.push(`repo_id 重复: ${repoId}`); repoIds.add(repoId); }
     if (p.repo_name !== repoNameFromFullName(p.full_name)) errors.push(`repo_name 与 full_name 不一致: ${p.full_name}`);
     if (p.repo_url !== canonicalRepoUrl(p.full_name)) errors.push(`repo_url 非 canonical GitHub 地址: ${p.full_name}`);
-    if (p.install_cmd !== makeInstallCmd(p.full_name, p.category || 'other')) errors.push(`install_cmd 与仓库身份不一致: ${p.full_name}`);
+    const canonicalInstallCmd = makeCatalogInstallCmd(p);
+    const historicalInstallCmd = legacyInstallCmd(p.full_name, p.category || 'other');
+    if (p.install_cmd !== canonicalInstallCmd && p.install_cmd !== historicalInstallCmd) errors.push(`install_cmd 与仓库身份不一致: ${p.full_name}`);
+    if (p.install_cmd === historicalInstallCmd && canonicalInstallCmd !== historicalInstallCmd) warns.push(`install_cmd 使用历史兼容格式，下一次同步将迁移: ${p.full_name}`);
     const overrideFields = normalizeOverrideFields(p.override_fields);
     if (!['github', ...DSH_METADATA_SOURCES, 'override'].includes(p.metadata_source)) errors.push(`metadata_source 非法: ${p.full_name} -> ${p.metadata_source}`);
     if (p.metadata_source === 'github' && p.name !== repoNameFromFullName(p.full_name)) errors.push(`GitHub 来源名称与仓库名不一致: ${p.full_name} -> ${p.name}`);
