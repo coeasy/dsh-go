@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 03 Sep 2026 21:09:09 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 03 Sep 2026 23:47:05 GMT</lastBuildDate>
     <item>
       <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -100,8 +100,8 @@
     <item>
       <title>🔄 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-03T16:34:18Z</guid>
-      <pubDate>Thu, 03 Sep 2026 16:34:18 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-03T23:38:59Z</guid>
+      <pubDate>Thu, 03 Sep 2026 23:38:59 GMT</pubDate>
       <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
     </item>
     <item>
