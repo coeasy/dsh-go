@@ -124,7 +124,7 @@ async function loadDistributionIndex(source, root, options = {}) {
   }
   const cached = await exists(indexFile);
   const metadata = cached ? await readIndexMetadata(root, source) : null;
-  const headers = {};
+  const headers = { ...(options.headers || {}) };
   if (metadata?.etag) headers['If-None-Match'] = metadata.etag;
   if (metadata?.last_modified) headers['If-Modified-Since'] = metadata.last_modified;
   try {
@@ -248,7 +248,7 @@ async function tryDynamicPackageEndpoint(source, index, descriptor, identity, op
   const path = template.replace('{type}', encodeURIComponent(identity.type)).replace('{id}', encodeURIComponent(identity.id));
   const endpoint = new URL(path, new URL(source).origin).toString();
   try {
-    const response = await fetch(endpoint, { headers: commandHeaders(), signal: AbortSignal.timeout(options.timeout || 30000) });
+    const response = await fetch(endpoint, { headers: commandHeaders(options.headers), signal: AbortSignal.timeout(options.timeout || 30000) });
     if (!response.ok) return null;
     return validatePackageRecord(await response.json(), { ...descriptor, key: identity.key });
   } catch { return null; }
