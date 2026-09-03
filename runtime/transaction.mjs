@@ -114,7 +114,7 @@ function installedRecord(pkg, result, previous, transactionId) {
     id: pkg.id,
     type: pkg.type,
     version: pkg.version,
-    state: 'installed',
+    state: 'pending-restart',
     channel: pkg.channel || previous?.channel || 'stable',
     path: result.final_target,
     source: pkg.source,
