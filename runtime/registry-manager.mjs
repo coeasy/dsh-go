@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
@@ -104,6 +105,13 @@ function publisherIdentity(pkg) {
   return String(publisher?.id || publisher?.login || publisher?.name || publisher?.organization || pkg?.source?.repo?.split('/')[0] || '').toLowerCase();
 }
 
+function registryCachePath(registry, options = {}) {
+  const root = resolve(options.cacheDir || process.env.DSH_REGISTRY_CACHE_DIR || join(homedir(), '.dsh', 'cache', 'registries'));
+  const safeName = String(registry.name || 'registry').replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '') || 'registry';
+  const sourceHash = createHash('sha256').update(String(registry.url)).digest('hex').slice(0, 16);
+  return join(root, `${safeName}-${sourceHash}.json`);
+}
+
 function registryRequestOptions(registry, options = {}) {
   const headers = {};
   if (registry.auth_env) {
@@ -117,7 +125,12 @@ function registryRequestOptions(registry, options = {}) {
     }
     headers.Authorization = `Bearer ${token}`;
   }
-  return { allowStale: options.allowStale !== false, headers };
+  return {
+    allowStale: options.allowStale !== false,
+    allowLegacyFallback: registry.auth_env ? false : options.allowLegacyFallback,
+    cacheFile: registryCachePath(registry, options),
+    headers,
+  };
 }
 
 export async function inspectRegistries(options = {}) {
