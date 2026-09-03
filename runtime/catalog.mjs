@@ -57,6 +57,17 @@ function hasPrivateAuthorization(headers = {}) {
   return Boolean(headers.Authorization || headers.authorization);
 }
 
+function responseHeader(response, name) {
+  const headers = response?.headers;
+  if (!headers) return null;
+  if (typeof headers.get === 'function') return headers.get(name) || null;
+  const wanted = String(name).toLowerCase();
+  for (const [key, value] of Object.entries(headers)) {
+    if (String(key).toLowerCase() === wanted) return value == null ? null : String(value);
+  }
+  return null;
+}
+
 async function ensureLegacyRegistryCache(resolvedSource, options = {}) {
   if (!/^https?:\/\//i.test(resolvedSource)) return resolve(resolvedSource);
   const file = resolve(options.cacheFile || registryCacheFile());
@@ -96,8 +107,8 @@ async function ensureLegacyRegistryCache(resolvedSource, options = {}) {
       source: resolvedSource,
       mode: 'legacy-full-registry',
       content_hash: parsed.generated?.content_hash || null,
-      etag: response.headers.get('etag') || null,
-      last_modified: response.headers.get('last-modified') || null,
+      etag: responseHeader(response, 'etag'),
+      last_modified: responseHeader(response, 'last-modified'),
       fetched_at: new Date().toISOString(),
       checked_at: new Date().toISOString(),
     }, null, 2)}\n`);
