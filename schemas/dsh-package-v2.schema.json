@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeasy.github.io/dsh-go/schemas/dsh-package-v2.schema.json",
+  "title": "DSH Package Manifest V2",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["manifest_version", "id", "name", "version", "type", "publisher", "source"],
+  "properties": {
+    "manifest_version": { "const": "2.0.0" },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$" },
+    "type": { "enum": ["plugin", "mcp", "skill", "agent"] },
+    "description": { "type": "string", "maxLength": 4000 },
+    "source": {
+      "type": "object",
+      "required": ["provider", "repo"],
+      "properties": {
+        "provider": { "const": "github" },
+        "repo": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+        "commit": { "type": "string", "pattern": "^[0-9a-fA-F]{40}$" },
+        "release_tag": { "type": "string" }
+      }
+    },
+    "publisher": {
+      "type": "object",
+      "required": ["provider", "id", "repository_ownership"],
+      "properties": {
+        "provider": { "const": "github" },
+        "id": { "type": "string", "minLength": 1 },
+        "repository_ownership": { "enum": ["required", "verified", "declared", "unverified"] },
+        "verified_at": { "type": ["string", "null"] },
+        "profile_url": { "type": ["string", "null"] }
+      }
+    },
+    "localization": {
+      "type": "object",
+      "properties": {
+        "default_locale": { "type": "string", "default": "en" },
+        "overlay_key": { "type": "string" },
+        "locales": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "capabilities": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "dependencies": { "type": "array" },
+    "permissions": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "permission_policy": { "type": "object" },
+    "compatibility": { "type": "object" },
+    "security": {
+      "type": "object",
+      "properties": {
+        "license": { "type": "string" },
+        "provenance": {},
+        "signature": {},
+        "sbom": {},
+        "advisories": { "type": "array" },
+        "yanked": { "type": "boolean" },
+        "revoked": { "type": "boolean" },
+        "minimum_safe_version": { "type": "string" }
+      }
+    },
+    "release": {
+      "type": "object",
+      "properties": {
+        "channel": { "enum": ["stable", "beta", "nightly", "dev"] },
+        "artifact_digest": { "type": ["string", "null"] },
+        "provenance_required": { "type": "boolean" },
+        "signature_required": { "type": "boolean" },
+        "sbom_required": { "type": "boolean" }
+      }
+    },
+    "conflicts": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "replaces": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "provides": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "plugin": { "type": "object" },
+    "mcp": { "type": "object" },
+    "skill": { "type": "object" },
+    "agent": { "type": "object" }
+  }
+}
