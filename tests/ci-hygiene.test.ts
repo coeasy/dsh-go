@@ -97,6 +97,15 @@ describe('CI and deployment hygiene', () => {
     expect(page).toContain("u('/catalog/registry-v3.json')");
   });
 
+  it('keeps the marketplace homepage bounded while preserving full-index browsing', () => {
+    const page = readFileSync(join(root, 'site', 'src', 'components', 'UnifiedMarketplace.astro'), 'utf8');
+    expect(page).toContain("data-market-index-url={u('/catalog/search-index-v2.json')}");
+    expect(page).toContain('{popularItems.map');
+    expect(page).not.toContain('{orderedItems.map');
+    expect(page).toContain('fetchAllItems');
+    expect(page).toContain('load-more');
+  });
+
   it('keeps API documentation links on the configured API origin', () => {
     const docs = readFileSync(join(root, 'site', 'src', 'pages', 'docs.astro'), 'utf8');
     expect(docs).toContain('href={`${BASE}/api/v1/meta`}');
