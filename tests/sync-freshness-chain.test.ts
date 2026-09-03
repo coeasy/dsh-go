@@ -14,13 +14,19 @@ describe('Sync freshness chain', () => {
     expect(sync).toContain('public freshness state');
   });
 
-  it('uses a bounded watchdog that only dispatches the canonical sync workflow', () => {
+  it('uses a bounded watchdog that recovers both missed cadence and missed daily full syncs', () => {
     const watchdog = read('.github/workflows/sync-watchdog.yml');
-    expect(watchdog).toContain('cron: "5 * * * *"');
+    expect(watchdog).toContain('cron: "55 * * * *"');
     expect(watchdog).toContain('actions: write');
     expect(watchdog).toContain('SYNC_MAX_AGE_HOURS: "6.5"');
     expect(watchdog).toContain('FULL_SYNC_MAX_AGE_HOURS: "26"');
-    expect(watchdog).toContain('.status == "queued" or .status == "in_progress"');
+    expect(watchdog).toContain('SYNC_STALE=');
+    expect(watchdog).toContain('FULL_STALE=');
+    expect(watchdog).toContain('if [ "$FULL_STALE" = "true" ]');
+    expect(watchdog).toContain('.status == "requested"');
+    expect(watchdog).toContain('.status == "waiting"');
+    expect(watchdog).toContain('.status == "pending"');
+    expect(watchdog).toContain('.status == "in_progress"');
     expect(watchdog).toContain('gh workflow run sync.yml --ref main -f mode="$MODE"');
     expect(watchdog).not.toContain('node scripts/sync-v3.mjs');
   });
