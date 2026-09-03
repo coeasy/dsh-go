@@ -30,7 +30,8 @@ try {
   } else {
     const normalizedArgs = normalizeInstallVersionArgs(args);
     const registrySelector = await import('../runtime/registry-cli-resolver.mjs');
-    const inheritedArgs = await registrySelector.inheritInstalledRegistryArgs(normalizedArgs);
+    const deepLinkArgs = await registrySelector.resolveDeepLinkRegistryArgs(normalizedArgs);
+    const inheritedArgs = await registrySelector.inheritInstalledRegistryArgs(deepLinkArgs);
     const selected = await registrySelector.resolveNamedRegistryArgs(inheritedArgs);
     const routedArgs = selected.args;
     process.argv = [...process.argv.slice(0, 2), ...routedArgs];
