@@ -12,7 +12,9 @@ export async function inspectPackage(pkg, options = {}) {
 
 export function enablePackage(pkg) {
   if (pkg.state === 'removed') throw new Error(`cannot enable removed runtime package: ${label(pkg)}`);
-  const next = pkg.state === 'disabled' ? transitionPackage(pkg, 'installed', { event: 'enabled' }) : recordRuntimeEvent(pkg, 'enabled');
+  const next = pkg.state === 'disabled'
+    ? transitionPackage(pkg, 'pending-restart', { event: 'enabled' })
+    : recordRuntimeEvent({ ...pkg, state: pkg.state === 'installed' ? 'pending-restart' : pkg.state }, 'enabled');
   return { ...next, enabled: true, activated: false, restart_required: true };
 }
 
@@ -25,7 +27,7 @@ export function disablePackage(pkg) {
 export function activatePackage(pkg, binding = pkg.binding || null) {
   if (!pkg.enabled) throw new Error(`cannot activate disabled runtime package: ${label(pkg)}`);
   let next = pkg;
-  if (next.state === 'installed' || next.state === 'failed') {
+  if (['installed', 'pending-restart', 'failed'].includes(next.state)) {
     next = transitionPackage(next, 'verifying', { event: 'activation-verify' });
   }
   next = transitionPackage(next, 'active', { event: 'activated' });
