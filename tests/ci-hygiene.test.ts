@@ -36,6 +36,14 @@ describe('CI and deployment hygiene', () => {
     expect(ci).toContain('cd site && npm run check');
   });
 
+  it('bounds every externally waiting release and validation job', () => {
+    expect(workflow('phase-e-validation.yml')).toContain('timeout-minutes: 30');
+    expect(workflow('provider-adapter-marketplace.yml')).toContain('timeout-minutes: 20');
+    expect(workflow('provider-adapter-release.yml')).toContain('timeout-minutes: 30');
+    expect(workflow('release.yml')).toContain('timeout-minutes: 10');
+    expect(workflow('release.yml')).toContain('timeout-minutes: 30');
+  });
+
   it('keeps the release freeze gate fail-closed and reproducible', () => {
     const freeze = workflow('release-freeze.yml');
     expect(freeze).toContain('workflow_call:');
