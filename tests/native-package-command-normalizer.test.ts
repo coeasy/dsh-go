@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeInstallVersionArgs } from '../runtime/command-normalizer.mjs';
+import { normalizeDshInstallUri, normalizeInstallVersionArgs } from '../runtime/command-normalizer.mjs';
 
 describe('native package install normalization', () => {
   it('turns versionless typed installs into latest-compatible requests', () => {
@@ -24,5 +24,21 @@ describe('native package install normalization', () => {
   it('keeps the legacy add alias compatible while normalizing it', () => {
     expect(normalizeInstallVersionArgs(['plugin', 'add', 'memory-kit']))
       .toEqual(['plugin', 'add', 'memory-kit@*']);
+  });
+
+  it('aligns dsh deep links with the same latest-stable request', () => {
+    const plugin = new URL(normalizeDshInstallUri('dsh://plugin/install/memory-kit'));
+    expect(decodeURIComponent(plugin.pathname)).toBe('/install/memory-kit@*');
+
+    const typed = new URL(normalizeDshInstallUri('dsh://package/install/mcp/dsh-go-marketplace'));
+    expect(decodeURIComponent(typed.pathname)).toBe('/install/mcp/dsh-go-marketplace@*');
+
+    const marketplace = new URL(normalizeDshInstallUri('dsh://install?id=memory-kit&type=plugin'));
+    expect(marketplace.searchParams.get('version')).toBe('*');
+  });
+
+  it('normalizes host handle requests before the existing host bridge executes', () => {
+    const args = normalizeInstallVersionArgs(['host', 'handle', 'dsh://skill/install/code-review']);
+    expect(decodeURIComponent(new URL(args[2]).pathname)).toBe('/install/code-review@*');
   });
 });
