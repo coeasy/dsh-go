@@ -5,6 +5,7 @@ import { parsePackageRequest, packageKey } from './package-model.mjs';
 import { getRuntimePackage, packagePath, readRuntimeRegistry } from './registry.mjs';
 import { readInstallLock } from './verifier.mjs';
 import { packageActivationState } from './package-status.mjs';
+import { exportOfflinePackage, installOfflinePackage } from './offline-package.mjs';
 import { printCliValue } from './cli-output.mjs';
 
 function option(args, name, fallback = undefined) {
@@ -90,7 +91,8 @@ export async function inspectInstalledLock(rawSpec, options = {}) {
 }
 
 export function isOfflineCommand(args = process.argv.slice(2)) {
-  return args[0] === 'cache' || (args[0] === 'package' && args[1] === 'lock');
+  return args[0] === 'cache'
+    || (args[0] === 'package' && ['lock', 'export', 'install-file'].includes(args[1]));
 }
 
 export async function runOfflineCli(args = process.argv.slice(2)) {
@@ -116,6 +118,41 @@ export async function runOfflineCli(args = process.argv.slice(2)) {
       type: option(args, '--type'),
       registryFile: option(args, '--runtime-registry'),
       root: option(args, '--root'),
+    });
+    printCliValue(result, { argv: args });
+    return result;
+  }
+
+  if (args[0] === 'package' && args[1] === 'export') {
+    const raw = args[2];
+    if (!raw || raw.startsWith('--')) {
+      const error = new Error('package export requires <type:id>');
+      error.code = 'DSH_PACKAGE_SPEC_REQUIRED';
+      throw error;
+    }
+    const result = await exportOfflinePackage(raw, {
+      type: option(args, '--type'),
+      registryFile: option(args, '--runtime-registry'),
+      root: option(args, '--root'),
+      output: option(args, '--output') || option(args, '-o'),
+    });
+    printCliValue(result, { argv: args });
+    return result;
+  }
+
+  if (args[0] === 'package' && args[1] === 'install-file') {
+    const file = args[2];
+    if (!file || file.startsWith('--')) {
+      const error = new Error('package install-file requires <file.dshpkg>');
+      error.code = 'DSH_OFFLINE_PACKAGE_REQUIRED';
+      throw error;
+    }
+    const result = await installOfflinePackage(file, {
+      registryFile: option(args, '--runtime-registry'),
+      root: option(args, '--root'),
+      storeRoot: option(args, '--store'),
+      dryRun: args.includes('--dry-run'),
+      approved: args.includes('--yes'),
     });
     printCliValue(result, { argv: args });
     return result;
