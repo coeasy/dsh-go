@@ -5,7 +5,7 @@ export interface MarketplaceInstallRequest {
   type: MarketplacePackageType;
   id: string;
   version?: string | null;
-  channel?: MarketplaceChannel | null;
+  channel?: unknown;
   registry?: string | null;
 }
 
@@ -27,13 +27,17 @@ export function normalizeMarketplacePackageType(value: unknown): MarketplacePack
   return TYPES.has(normalized) ? normalized : 'plugin';
 }
 
+export function normalizeMarketplaceChannel(value: unknown): MarketplaceChannel {
+  const normalized = String(value || 'stable').toLowerCase() as MarketplaceChannel;
+  return CHANNELS.has(normalized) ? normalized : 'stable';
+}
+
 export function buildMarketplaceInstallPlan(input: MarketplaceInstallRequest): MarketplaceInstallPlan {
   const type = normalizeMarketplacePackageType(input.type);
   const id = String(input.id || '').trim();
   if (!id) throw new Error('marketplace install request requires package id');
   const versionRange = String(input.version || '*').trim() || '*';
-  const requestedChannel = String(input.channel || 'stable').toLowerCase() as MarketplaceChannel;
-  const channel = CHANNELS.has(requestedChannel) ? requestedChannel : 'stable';
+  const channel = normalizeMarketplaceChannel(input.channel);
   const registry = String(input.registry || '').trim() || undefined;
 
   const target = versionRange === '*' ? id : `${id}@${versionRange}`;
