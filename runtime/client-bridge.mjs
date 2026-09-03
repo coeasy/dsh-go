@@ -4,16 +4,29 @@ import { dirname, join, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { parsePackageRequest } from './package-model.mjs';
 
 const exec = promisify(execFile);
 
+function normalizedInstallRequest(request = {}) {
+  const type = request.type || 'plugin';
+  const version = request.versionRange || request.version || '*';
+  return parsePackageRequest(`${type}:${request.id}@${version}`, {
+    defaultType: type,
+    defaultVersion: '*',
+    channel: request.channel || 'stable',
+    registry: request.registry || null,
+  });
+}
+
 export function buildInstallDeepLink(request) {
+  const parsed = normalizedInstallRequest(request);
   const url = new URL('dsh://install');
-  url.searchParams.set('id', request.id);
-  if (request.version) url.searchParams.set('version', request.version);
-  if (request.channel) url.searchParams.set('channel', request.channel);
-  if (request.type) url.searchParams.set('type', request.type);
-  if (request.registry) url.searchParams.set('registry', request.registry);
+  url.searchParams.set('id', parsed.id);
+  url.searchParams.set('version', parsed.versionRange);
+  url.searchParams.set('channel', parsed.channel);
+  url.searchParams.set('type', parsed.type);
+  if (parsed.registry) url.searchParams.set('registry', parsed.registry);
   return url.toString();
 }
 
@@ -23,14 +36,33 @@ export function parseDshUrl(input) {
   if (url.protocol !== 'dsh:') throw new Error('unsupported URL protocol');
   const action = (url.hostname || url.pathname.replace(/^\//, '')).toLowerCase();
   if (!['install', 'update', 'open'].includes(action)) throw new Error(`unsupported dsh action: ${action}`);
-  const id = url.searchParams.get('id') || '';
-  if ((action === 'install' || action === 'update') && !/^[A-Za-z0-9_.-]+$/.test(id)) throw new Error('invalid package id in dsh URL');
-  return {
-    protocol: 'dsh', action, id,
-    version: url.searchParams.get('version') || '*',
+  if (action === 'open') {
+    return {
+      protocol: 'dsh',
+      action,
+      id: url.searchParams.get('id') || '',
+      version: url.searchParams.get('version') || '*',
+      versionRange: url.searchParams.get('version') || '*',
+      channel: url.searchParams.get('channel') || 'stable',
+      type: url.searchParams.get('type') || 'plugin',
+      registry: url.searchParams.get('registry') || undefined,
+    };
+  }
+  const id = url.searchParams.get('id') || url.searchParams.get('plugin') || '';
+  const type = url.searchParams.get('type') || 'plugin';
+  const version = url.searchParams.get('version') || '*';
+  const request = parsePackageRequest(`${type}:${id}@${version}`, {
+    defaultType: type,
+    defaultVersion: '*',
     channel: url.searchParams.get('channel') || 'stable',
-    type: url.searchParams.get('type') || 'plugin',
-    registry: url.searchParams.get('registry') || undefined,
+    registry: url.searchParams.get('registry') || null,
+  });
+  return {
+    protocol: 'dsh',
+    action,
+    ...request,
+    version: request.versionRange,
+    registry: request.registry || undefined,
   };
 }
 
@@ -102,14 +134,19 @@ export async function registerProtocolHandler(options = {}) {
 }
 
 export function deepLinkInstallPlan(input) {
-  const request = typeof input === 'string' ? parseDshUrl(input) : input;
+  const request = typeof input === 'string' ? parseDshUrl(input) : { protocol: 'dsh', action: 'install', ...normalizedInstallRequest(input) };
   if (request.action !== 'install' && request.action !== 'update') throw new Error(`dsh action ${request.action} does not create an install plan`);
-  const command = request.type === 'plugin' ? 'plugin' : request.type;
-  const argv = [command, request.action === 'update' ? 'update' : 'install', `${request.id}@${request.version}`];
-  if (request.channel && request.channel !== 'stable') argv.push('--channel', request.channel);
-  if (request.registry) argv.push('--registry', request.registry);
+  const parsed = parsePackageRequest(`${request.type}:${request.id}@${request.versionRange || request.version || '*'}`, {
+    defaultType: request.type,
+    defaultVersion: '*',
+    channel: request.channel || 'stable',
+    registry: request.registry || null,
+  });
+  const argv = [parsed.type, request.action === 'update' ? 'update' : 'install', `${parsed.id}@${parsed.versionRange}`];
+  if (parsed.channel !== 'stable') argv.push('--channel', parsed.channel);
+  if (parsed.registry) argv.push('--registry', parsed.registry);
   return {
-    request,
+    request: { protocol: 'dsh', action: request.action, ...parsed, version: parsed.versionRange },
     executable: 'dsh',
     argv,
     confirmation_required: true,
