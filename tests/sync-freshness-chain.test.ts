@@ -31,11 +31,12 @@ describe('Sync freshness chain', () => {
     expect(watchdog).not.toContain('node scripts/sync-v3.mjs');
   });
 
-  it('renders last successful sync from catalog metadata in Beijing time on the homepage', () => {
+  it('renders last successful sync from catalog metadata in Beijing time without brittle metric DOM mutation', () => {
     const homepage = read('site/src/pages/index.astro');
     expect(homepage).toContain("'catalog', 'meta.json'");
     expect(homepage).toContain("timeZone: 'Asia/Shanghai'");
     expect(homepage).toContain('data-market-sync-status');
-    expect(homepage).toContain("document.querySelector('.market-hero .metrics span:last-child b')");
+    expect(homepage).toContain('<time datetime={lastSyncAt}>{lastSyncTimeLabel}</time>');
+    expect(homepage).not.toContain("document.querySelector('.market-hero .metrics span:last-child b')");
   });
 });
