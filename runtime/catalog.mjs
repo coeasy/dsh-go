@@ -37,16 +37,48 @@ async function writeAtomic(file, content) {
   await rename(temp, file);
 }
 
+function registryRequestHeaders(options = {}) {
+  const headers = { ...(options.headers || {}) };
+  const authEnv = String(process.env.DSH_REGISTRY_AUTH_ENV || '').trim();
+  if (authEnv && !headers.Authorization && !headers.authorization) {
+    const token = process.env[authEnv];
+    if (!token) {
+      const error = new Error(`private registry credential is not configured: ${authEnv}`);
+      error.code = 'DSH_REGISTRY_AUTH_REQUIRED';
+      error.auth_env = authEnv;
+      throw error;
+    }
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+function hasPrivateAuthorization(headers = {}) {
+  return Boolean(headers.Authorization || headers.authorization);
+}
+
+function responseHeader(response, name) {
+  const headers = response?.headers;
+  if (!headers) return null;
+  if (typeof headers.get === 'function') return headers.get(name) || null;
+  const wanted = String(name).toLowerCase();
+  for (const [key, value] of Object.entries(headers)) {
+    if (String(key).toLowerCase() === wanted) return value == null ? null : String(value);
+  }
+  return null;
+}
+
 async function ensureLegacyRegistryCache(resolvedSource, options = {}) {
   if (!/^https?:\/\//i.test(resolvedSource)) return resolve(resolvedSource);
   const file = resolve(options.cacheFile || registryCacheFile());
   const metadataFile = resolve(options.metadataFile || registryCacheMetadataFile(file));
+  const requestHeaders = registryRequestHeaders(options);
   await mkdir(dirname(file), { recursive: true });
+  const cached = await exists(file);
+  const metadata = cached ? await readCacheMetadata(metadataFile, resolvedSource) : null;
 
   try {
-    const cached = await exists(file);
-    const metadata = cached ? await readCacheMetadata(metadataFile, resolvedSource) : null;
-    const headers = { Accept: 'application/json', 'User-Agent': 'dsh-runtime-v3' };
+    const headers = { Accept: 'application/json', 'User-Agent': 'dsh-runtime-v3', ...requestHeaders };
     if (metadata?.etag) headers['If-None-Match'] = metadata.etag;
     if (metadata?.last_modified) headers['If-Modified-Since'] = metadata.last_modified;
 
@@ -56,7 +88,7 @@ async function ensureLegacyRegistryCache(resolvedSource, options = {}) {
     });
 
     if (response.status === 304) {
-      if (!cached) throw new Error('registry server returned 304 without a local cache');
+      if (!cached || !metadata) throw new Error('registry server returned 304 without a matching local cache');
       await writeAtomic(metadataFile, `${JSON.stringify({
         ...metadata,
         source: resolvedSource,
@@ -75,14 +107,14 @@ async function ensureLegacyRegistryCache(resolvedSource, options = {}) {
       source: resolvedSource,
       mode: 'legacy-full-registry',
       content_hash: parsed.generated?.content_hash || null,
-      etag: response.headers.get('etag') || null,
-      last_modified: response.headers.get('last-modified') || null,
+      etag: responseHeader(response, 'etag'),
+      last_modified: responseHeader(response, 'last-modified'),
       fetched_at: new Date().toISOString(),
       checked_at: new Date().toISOString(),
     }, null, 2)}\n`);
     return file;
   } catch (error) {
-    if (options.allowStale !== false && await exists(file)) return file;
+    if (options.allowStale !== false && cached && metadata) return file;
     throw error;
   }
 }
@@ -108,11 +140,14 @@ export async function resolveRegistrySource(explicit) {
 export async function ensureRegistryCache(source, options = {}) {
   const resolvedSource = await resolveRegistrySource(source);
   const file = resolve(options.cacheFile || registryCacheFile());
+  const headers = registryRequestHeaders(options);
+  const privateAuthenticated = hasPrivateAuthorization(headers);
 
   if (isRegistryDistributionSource(resolvedSource)) {
     try {
       const result = await materializeRegistryDistribution(resolvedSource, {
         ...options,
+        headers,
         cacheFile: file,
       });
       await mkdir(dirname(file), { recursive: true });
@@ -129,10 +164,10 @@ export async function ensureRegistryCache(source, options = {}) {
       }, null, 2)}\n`);
       return result.file;
     } catch (distributionError) {
-      if (options.allowLegacyFallback === false) throw distributionError;
+      if (options.allowLegacyFallback === false || privateAuthenticated) throw distributionError;
       const legacySource = options.legacySource || process.env.DSH_LEGACY_REGISTRY_URL || DEFAULT_REGISTRY_URL;
       try {
-        return await ensureLegacyRegistryCache(legacySource, { ...options, cacheFile: file });
+        return await ensureLegacyRegistryCache(legacySource, { ...options, headers, cacheFile: file });
       } catch (legacyError) {
         legacyError.cause = distributionError;
         throw legacyError;
@@ -140,5 +175,5 @@ export async function ensureRegistryCache(source, options = {}) {
     }
   }
 
-  return ensureLegacyRegistryCache(resolvedSource, { ...options, cacheFile: file });
+  return ensureLegacyRegistryCache(resolvedSource, { ...options, headers, cacheFile: file });
 }

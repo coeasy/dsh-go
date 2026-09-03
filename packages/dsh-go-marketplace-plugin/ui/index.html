@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src http://127.0.0.1:* http://localhost:* https://dsh-go.pages.dev https://coeasy.github.io; img-src 'self' data: https:;" />
+  <title>DSH Marketplace</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color-scheme:light dark;--bg:#0c0f14;--panel:#151a22;--line:#2a313d;--text:#f4f6f8;--muted:#9da8b5;--accent:#78a8ff;--good:#70d39a;--warn:#f2bd68;--bad:#ff7b89}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}button,input,select{font:inherit}header{position:sticky;top:0;z-index:5;display:flex;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(16px)}h1{font-size:17px;margin:0;margin-right:auto}.badge{font-size:11px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}main{max-width:1180px;margin:0 auto;padding:22px}.toolbar{display:grid;grid-template-columns:1fr 150px auto;gap:10px}.toolbar input,.toolbar select{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel);color:var(--text)}button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--panel);color:var(--text);cursor:pointer}button.primary{background:var(--accent);color:#07101f;border-color:transparent;font-weight:700}button:disabled{opacity:.45;cursor:not-allowed}.summary{display:grid;grid-template-columns:repeat(5,minmax(100px,1fr));gap:10px;margin:18px 0}.metric{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.metric b{display:block;font-size:23px}.metric span{color:var(--muted);font-size:12px}.section{margin-top:24px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.section h2{font-size:14px;margin:0}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}.card{padding:14px;border:1px solid var(--line);border-radius:13px;background:var(--panel)}.card h3{font-size:14px;margin:0 0 6px}.card p{font-size:12px;color:var(--muted);min-height:34px}.meta{display:flex;gap:7px;flex-wrap:wrap;color:var(--muted);font-size:11px}.actions{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}.state{font-weight:700}.state.active{color:var(--good)}.state.pending-restart{color:var(--warn)}.state.failed{color:var(--bad)}.notice{padding:12px 14px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:12px;margin-top:14px}.notice.warn{border-color:color-mix(in srgb,var(--warn) 50%,var(--line));color:var(--warn)}#status{font-size:12px;color:var(--muted)}#diagnostics{white-space:pre-wrap;max-height:260px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Consolas,monospace} @media(max-width:720px){.toolbar{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DSH Marketplace</h1>
+    <span class="badge">Desktop Plugin</span>
+    <span id="status">Connecting…</span>
+  </header>
+  <main>
+    <div class="toolbar">
+      <input id="search" placeholder="Search Plugin / MCP / Skill / Agent" autocomplete="off" />
+      <select id="type"><option value="">All types</option><option>plugin</option><option>mcp</option><option>skill</option><option>agent</option></select>
+      <button id="searchButton" class="primary">Search</button>
+    </div>
+    <div id="restartNotice" class="notice warn" hidden>Installed changes are pending activation. <button id="restartButton">Restart DSH</button> <button id="laterButton">Later</button></div>
+    <div class="summary" id="summary"></div>
+
+    <section class="section">
+      <div class="section-head"><h2>Installed & updates</h2><button id="refreshButton">Refresh</button></div>
+      <div id="installed" class="grid"></div>
+    </section>
+    <section class="section">
+      <div class="section-head"><h2>Diagnostics / logs</h2><span class="badge">local runtime only</span></div>
+      <div id="diagnostics" class="notice">Select Doctor or MCP Logs from an installed package.</div>
+    </section>
+    <section class="section">
+      <div class="section-head"><h2>Marketplace results</h2><span class="badge">remote discovery only</span></div>
+      <div id="results" class="grid"></div>
+    </section>
+    <div id="enterprise" class="notice"></div>
+  </main>
+
+  <script type="module">
+    import { createMarketplaceDesktopClient } from '../index.mjs';
+
+    const config = globalThis.__DSH_DESKTOP__ || {};
+    const client = createMarketplaceDesktopClient(config);
+    const $ = (id) => document.getElementById(id);
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+
+    function metric(label, value) { return `<div class="metric"><b>${escapeHtml(value)}</b><span>${escapeHtml(label)}</span></div>`; }
+    function packageCard(item) {
+      const state = item.activation_state || item.state || 'unknown';
+      const update = item.update_available ? `<span>update ${escapeHtml(item.latest_stable)}</span>` : '';
+      const sourceError = item.update_source_error ? `<span title="${escapeHtml(item.update_source_error.message)}">source unavailable</span>` : '';
+      const logs = item.type === 'mcp' ? '<button data-tool="logs">Logs</button>' : '';
+      return `<article class="card" data-type="${escapeHtml(item.type)}" data-id="${escapeHtml(item.id)}"><h3>${escapeHtml(item.id)}</h3><div class="meta"><span>${escapeHtml(item.type)}@${escapeHtml(item.version)}</span><span class="state ${escapeHtml(state)}">${escapeHtml(state)}</span><span>${escapeHtml(item.source_registry || 'official')}</span>${update}${sourceError}</div><div class="actions">${item.update_available ? '<button data-action="update">Update</button>' : ''}<button data-tool="doctor">Doctor</button>${logs}<button data-action="repair">Repair</button><button data-action="rollback">Rollback</button></div></article>`;
+    }
+    function marketplaceCard(item) {
+      const identity = item.identity || item;
+      const presentation = item.presentation || item.metadata || {};
+      return `<article class="card" data-market-type="${escapeHtml(identity.type || 'plugin')}" data-market-id="${escapeHtml(identity.id)}"><h3>${escapeHtml(presentation.name || identity.id)}</h3><div class="meta"><span>${escapeHtml(identity.type || 'plugin')}@${escapeHtml(identity.version || 'latest')}</span><span>trust ${escapeHtml(item.trust?.tier || 'unverified')}</span></div><p>${escapeHtml(presentation.description || '')}</p><div class="actions"><button class="primary" data-install>Install</button></div></article>`;
+    }
+
+    function showDiagnostics(label, result) {
+      $('diagnostics').textContent = `${label}\n${typeof result === 'string' ? result : JSON.stringify(result, null, 2)}`;
+    }
+
+    async function refreshCenter() {
+      const center = await client.center();
+      $('status').textContent = 'Local runtime connected';
+      $('summary').innerHTML = [metric('active', center.counts.active), metric('pending restart', center.counts.pending_restart), metric('updates', center.counts.updates), metric('failed', center.counts.failed), metric('security alerts', center.security_alerts.length)].join('');
+      $('installed').innerHTML = center.packages.length ? center.packages.map(packageCard).join('') : '<div class="notice">No packages installed.</div>';
+      $('restartNotice').hidden = !center.restart_required;
+      $('enterprise').textContent = center.enterprise.configured ? `Enterprise policy: ${center.enterprise.organization || 'organization'} · ${center.enterprise.enforce ? 'enforced' : 'audit only'}` : 'Enterprise policy: not configured';
+    }
+
+    async function search() {
+      const response = await client.search($('search').value, { type: $('type').value, locale: config.locale });
+      const items = response.packages || response.items || response.results || response.data || (Array.isArray(response) ? response : []);
+      $('results').innerHTML = items.length ? items.map(marketplaceCard).join('') : '<div class="notice">No results.</div>';
+    }
+
+    document.addEventListener('click', async (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const installedCard = target.closest('[data-type][data-id]');
+      if (installedCard && target.dataset.tool === 'doctor') {
+        const approved = globalThis.confirm(`Run Doctor for ${installedCard.dataset.type}:${installedCard.dataset.id}?`);
+        if (!approved) return;
+        const result = await client.doctor(installedCard.dataset.type, installedCard.dataset.id, { approved: true });
+        showDiagnostics(`Doctor · ${installedCard.dataset.type}:${installedCard.dataset.id}`, result);
+        await refreshCenter();
+        return;
+      }
+      if (installedCard && target.dataset.tool === 'logs') {
+        const result = await client.logs(installedCard.dataset.type, installedCard.dataset.id);
+        showDiagnostics(`Logs · ${installedCard.dataset.type}:${installedCard.dataset.id}`, result);
+        return;
+      }
+      if (installedCard && target.dataset.action) {
+        const approved = globalThis.confirm(`Run ${target.dataset.action} for ${installedCard.dataset.type}:${installedCard.dataset.id}?`);
+        if (!approved) return;
+        await client.packageAction(installedCard.dataset.type, installedCard.dataset.id, target.dataset.action, { approved: true });
+        await refreshCenter();
+        return;
+      }
+      const marketCard = target.closest('[data-market-type][data-market-id]');
+      if (marketCard && target.hasAttribute('data-install')) {
+        const request = { type: marketCard.dataset.marketType, id: marketCard.dataset.marketId };
+        const plan = await client.installPlan(request);
+        const approved = globalThis.confirm(`Install ${request.type}:${request.id}?\n\n${JSON.stringify(plan, null, 2).slice(0, 1600)}`);
+        if (!approved) return;
+        await client.install(request, { approved: true });
+        await refreshCenter();
+      }
+    });
+
+    $('searchButton').addEventListener('click', () => search().catch((error) => { $('results').innerHTML = `<div class="notice">${escapeHtml(error.message)}</div>`; }));
+    $('search').addEventListener('keydown', (event) => { if (event.key === 'Enter') $('searchButton').click(); });
+    $('refreshButton').addEventListener('click', () => refreshCenter().catch((error) => { $('status').textContent = error.message; }));
+    $('laterButton').addEventListener('click', () => { $('restartNotice').hidden = true; });
+    $('restartButton').addEventListener('click', () => {
+      const intent = client.restartIntent();
+      globalThis.dispatchEvent(new CustomEvent(intent.event, { detail: intent }));
+    });
+
+    refreshCenter().catch((error) => { $('status').textContent = error.message; });
+  </script>
+</body>
+</html>

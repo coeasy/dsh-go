@@ -23,7 +23,14 @@ export async function runPackageManagerV2Cli(args = process.argv.slice(2)) {
     const action = args[1] || 'list';
     const file = option(args, '--file');
     if (action === 'list') result = await readRegistries(file);
-    else if (action === 'add') result = await addRegistry(args[2], args[3], { file, priority: option(args, '--priority', 0), trusted: has(args, '--trusted') });
+    else if (action === 'add') result = await addRegistry(args[2], args[3], {
+      file,
+      priority: option(args, '--priority', 0),
+      trusted: has(args, '--trusted'),
+      organization: option(args, '--organization'),
+      scope: option(args, '--scope'),
+      authEnv: option(args, '--auth-env'),
+    });
     else if (action === 'remove') result = await removeRegistry(args[2], { file });
     else if (action === 'refresh' || action === 'doctor') result = await inspectRegistries({ file, allowStale: action !== 'doctor' });
     else throw new Error(`unknown registry action: ${action}`);
@@ -44,6 +51,7 @@ export async function runPackageManagerV2Cli(args = process.argv.slice(2)) {
         result = await installDshPackage(raw, {
           registryFile: option(args, '--runtime-registry'),
           root: option(args, '--root'),
+          enterprisePolicyFile: option(args, '--policy-file'),
           dryRun: has(args, '--dry-run'),
           approved: has(args, '--yes'),
         });

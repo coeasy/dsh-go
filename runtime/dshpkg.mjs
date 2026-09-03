@@ -7,6 +7,7 @@ import { packageKey } from './package-model.mjs';
 import { getRuntimePackage, packagePath, pathExists, readRuntimeRegistry, upsertRuntimePackage, writeRuntimeRegistry } from './registry.mjs';
 import { readInstallLock, normalizeInstallLock } from './verifier.mjs';
 import { recordRuntimeEvent } from './lifecycle.mjs';
+import { enforceEnterprisePolicy } from './enterprise-policy.mjs';
 
 export const DSHPKG_SCHEMA_VERSION = 1;
 
@@ -112,6 +113,13 @@ export async function installDshPackage(file, options = {}) {
   const { bundle, lock } = await readDshPackage(file);
   const pkg = bundle.package;
   assertPackageSecurityAllowed(pkg);
+  await enforceEnterprisePolicy({
+    package: pkg,
+    publisher: pkg.publisher,
+    permissions: pkg.permissions,
+    approved: options.approved === true || options.dryRun === true || process.env.DSH_PERMISSION_APPROVED === '1',
+    operation: 'offline-install',
+  }, { file: options.enterprisePolicyFile });
   if (!options.dryRun) assertPermissionConsent(pkg.permissions, { approved: options.approved === true || process.env.DSH_PERMISSION_APPROVED === '1' });
   const runtime = await readRuntimeRegistry(options.registryFile);
   const current = getRuntimePackage(runtime, pkg.type, pkg.id, { includeRemoved: true });

@@ -12,6 +12,7 @@ import { hasDeclaredSupplyChainEvidence, verifySecurityEvidence } from './supply
 import { verifySupplyChainIdentity } from './supply-chain-identity.mjs';
 import { installReleaseArtifact, isReleaseArtifact } from './artifact-installer.mjs';
 import { discoverReleaseArtifact } from './release-discovery.mjs';
+import { enforceEnterprisePolicy } from './enterprise-policy.mjs';
 
 const exec = promisify(execFile);
 
@@ -63,6 +64,32 @@ function identityFailures(report) {
     .map((item) => `${item.kind}:${item.status}`);
 }
 
+function enterpriseRegistryIdentity() {
+  const selectedName = String(process.env.DSH_SELECTED_REGISTRY_NAME || '').trim();
+  if (selectedName) {
+    return {
+      name: selectedName,
+      url: String(process.env.DSH_SELECTED_REGISTRY_URL || '').trim() || null,
+      trusted: process.env.DSH_SELECTED_REGISTRY_TRUSTED === '1',
+      organization: String(process.env.DSH_SELECTED_REGISTRY_ORGANIZATION || '').trim() || null,
+    };
+  }
+  const registryIndex = process.argv.indexOf('--registry');
+  const directRegistry = registryIndex >= 0 ? String(process.argv[registryIndex + 1] || '').trim() : '';
+  if (directRegistry) return { name: directRegistry, url: directRegistry, trusted: false, organization: null };
+  return { name: 'official', url: null, trusted: true, organization: null };
+}
+
+function sourceWithRegistryProvenance(source, registry) {
+  return {
+    ...source,
+    registry: registry.name,
+    registry_url: registry.url || null,
+    registry_trusted: registry.trusted === true,
+    registry_organization: registry.organization || null,
+  };
+}
+
 export async function installPackage(inputPackage, options = {}) {
   const type = assertPackageType(inputPackage?.type || 'plugin');
   assertNotYanked({ ...inputPackage, type });
@@ -84,9 +111,19 @@ export async function installPackage(inputPackage, options = {}) {
 
   const compatibility = assertCompatibility(pkg, options.environment);
   const permissions = inspectPermissions(pkg.permissions);
+  const registryContext = enterpriseRegistryIdentity();
+  const locallyApproved = options.approved === true || options.dryRun === true || process.env.DSH_PERMISSION_APPROVED === '1';
+  await enforceEnterprisePolicy({
+    package: { ...pkg, type },
+    publisher: pkg.publisher,
+    permissions: pkg.permissions,
+    registry: registryContext,
+    approved: locallyApproved,
+    operation: options.force ? 'replace' : 'install',
+  }, { file: options.enterprisePolicyFile });
   if (!options.dryRun) {
     assertPermissionConsent(pkg.permissions, {
-      approved: options.approved === true || process.env.DSH_PERMISSION_APPROVED === '1',
+      approved: locallyApproved,
     });
   }
 
@@ -105,6 +142,10 @@ export async function installPackage(inputPackage, options = {}) {
     commit: pkg.commit,
     target,
     backup,
+    source_registry: registryContext.name,
+    source_registry_url: registryContext.url,
+    source_registry_trusted: registryContext.trusted === true,
+    source_registry_organization: registryContext.organization,
     install_source: installSource,
     artifact_url: releaseArtifact ? pkg.artifact.url : null,
     artifact_digest: releaseArtifact ? pkg.artifact.digest : null,
@@ -169,7 +210,11 @@ export async function installPackage(inputPackage, options = {}) {
       package_type: type,
       version: pkg.version,
       channel: pkg.channel || 'stable',
-      source: pkg.source,
+      source: sourceWithRegistryProvenance(pkg.source, registryContext),
+      source_registry: registryContext.name,
+      source_registry_url: registryContext.url,
+      source_registry_trusted: registryContext.trusted === true,
+      source_registry_organization: registryContext.organization,
       artifact: pkg.artifact,
       installation: {
         source: installSource,

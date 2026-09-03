@@ -124,13 +124,13 @@ async function loadDistributionIndex(source, root, options = {}) {
   }
   const cached = await exists(indexFile);
   const metadata = cached ? await readIndexMetadata(root, source) : null;
-  const headers = {};
+  const headers = { ...(options.headers || {}) };
   if (metadata?.etag) headers['If-None-Match'] = metadata.etag;
   if (metadata?.last_modified) headers['If-Modified-Since'] = metadata.last_modified;
   try {
     const response = await fetch(source, { headers: commandHeaders(headers), signal: AbortSignal.timeout(options.timeout || 30000) });
     if (response.status === 304) {
-      if (!cached) throw new Error('Registry Distribution returned 304 without cached index');
+      if (!cached || !metadata) throw new Error('Registry Distribution returned 304 without matching cached index');
       const index = validateIndex(JSON.parse(await readFile(indexFile, 'utf8')));
       await writeAtomic(metadataFile, `${JSON.stringify({ ...metadata, source, content_hash: index.content_hash, checked_at: new Date().toISOString() }, null, 2)}\n`);
       return { index, changed: false, stale: false, responseEtag: metadata?.etag || null, responseLastModified: metadata?.last_modified || null };
@@ -144,7 +144,7 @@ async function loadDistributionIndex(source, root, options = {}) {
     await writeAtomic(metadataFile, `${JSON.stringify({ source, etag, last_modified: lastModified, content_hash: index.content_hash, fetched_at: new Date().toISOString(), checked_at: new Date().toISOString() }, null, 2)}\n`);
     return { index, changed: metadata?.content_hash !== index.content_hash, stale: false, responseEtag: etag, responseLastModified: lastModified };
   } catch (error) {
-    if (options.allowStale !== false && cached) {
+    if (options.allowStale !== false && cached && metadata) {
       const index = validateIndex(JSON.parse(await readFile(indexFile, 'utf8')));
       return { index, changed: false, stale: true, responseEtag: metadata?.etag || null, responseLastModified: metadata?.last_modified || null };
     }
@@ -248,7 +248,7 @@ async function tryDynamicPackageEndpoint(source, index, descriptor, identity, op
   const path = template.replace('{type}', encodeURIComponent(identity.type)).replace('{id}', encodeURIComponent(identity.id));
   const endpoint = new URL(path, new URL(source).origin).toString();
   try {
-    const response = await fetch(endpoint, { headers: commandHeaders(), signal: AbortSignal.timeout(options.timeout || 30000) });
+    const response = await fetch(endpoint, { headers: commandHeaders(options.headers), signal: AbortSignal.timeout(options.timeout || 30000) });
     if (!response.ok) return null;
     return validatePackageRecord(await response.json(), { ...descriptor, key: identity.key });
   } catch { return null; }
