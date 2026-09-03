@@ -13,7 +13,7 @@ import { mcpStatusSafely, restartMcpSafely, startMcpSafely, stopMcpSafely } from
 import { readPackageConfig, redactConfig, setPackageConfig, unsetPackageConfig } from './config-store.mjs';
 import { deleteSecret, getSecret, listSecrets, secretStoreStatus, setSecret } from './secret-store.mjs';
 import { planRuntimeRemoval, removeRuntimePackageSafe } from './dependency-guard.mjs';
-import { executePackageTransaction, recoverPackageTransactions } from './transaction.mjs';
+import { buildPackageTransaction, executePackageTransaction, recoverPackageTransactions } from './transaction.mjs';
 import { assertPackageType } from './package-model.mjs';
 import { withNormalizedPackagePlan } from './plan-normalizer.mjs';
 import { printCliError, printCliValue } from './cli-output.mjs';
@@ -120,17 +120,34 @@ async function typedRemoval(type) {
   return print(await removeRuntimePackageSafe(type, id, { cascade: has('--cascade') }));
 }
 
+function permissionEscalationError(escalations) {
+  const details = escalations.flatMap((item) => item.added.map((permission) => `${item.key}:${permission}`));
+  const error = new Error(`explicit permission consent required before transaction executes: ${details.join(', ')}`);
+  error.code = 'DSH_PERMISSION_CONSENT_REQUIRED';
+  error.permissionReport = { escalation: true, escalations };
+  return error;
+}
+
 async function planCommand(kind) {
   const expected = kind === 'profile' ? 'apply' : 'install';
   if (args[1] !== expected) throw new Error(`unknown ${kind} action: ${args[1]}`);
   const file = args[2];
   if (!file) throw new Error(`${kind} ${expected} requires a JSON file`);
-  const result = await withNormalizedPackagePlan(file, (normalizedFile) => executePackageTransaction(normalizedFile, {
+  const options = {
     kind,
     catalog: option('--registry', 'catalog/registry-v3.json'),
+    registryFile: option('--runtime-registry'),
     approved: has('--yes'),
     dryRun: has('--dry-run'),
-  }));
+  };
+  const result = await withNormalizedPackagePlan(file, async (normalizedFile) => {
+    if (!options.dryRun && !options.approved) {
+      const transaction = await buildPackageTransaction(normalizedFile, options);
+      const escalations = transaction.preflights.flatMap((preflight) => preflight.permission_escalations || []);
+      if (escalations.length) throw permissionEscalationError(escalations);
+    }
+    return executePackageTransaction(normalizedFile, options);
+  });
   return print(result);
 }
 
@@ -145,7 +162,7 @@ async function main() {
   }
   if (command === 'profile') return planCommand('profile');
   if (command === 'bundle') return planCommand('bundle');
-  if (command === 'transaction' && args[1] === 'recover') return print(await recoverPackageTransactions());
+  if (command === 'transaction' && args[1] === 'recover') return print(await recoverPackageTransactions({ registryFile: option('--runtime-registry') }));
   throw new Error(`unknown runtime control command: ${args.join(' ')}`);
 }
 
