@@ -1,4 +1,5 @@
 import { compareVersions, satisfiesVersion } from './semver.mjs';
+import { inferPackageType } from './package-model.mjs';
 
 function advisoryList(pkg) {
   return Array.isArray(pkg?.security?.advisories) ? pkg.security.advisories : Array.isArray(pkg?.advisories) ? pkg.advisories : [];
@@ -34,6 +35,32 @@ export function packageSecurityDecision(pkg, options = {}) {
     minimum_safe_version: minimumSafe,
     advisories,
     critical: critical.length,
+  };
+}
+
+export function inspectPackageAdvisories(registry, request) {
+  const range = request.version || request.versionRange || '*';
+  const channel = request.channel || 'stable';
+  const candidates = (registry?.plugins || [])
+    .filter((item) => inferPackageType(item) === request.type)
+    .filter((item) => String(item.id || '').toLowerCase() === String(request.id || '').toLowerCase())
+    .filter((item) => (item.channel || item.release_channel || 'stable') === channel)
+    .filter((item) => satisfiesVersion(item.version, range))
+    .sort((left, right) => compareVersions(right.version, left.version));
+  if (!candidates.length) {
+    const error = new Error(`runtime package not found for advisory inspection: ${request.type}:${request.id}@${range} [${channel}]`);
+    error.code = 'DSH_PACKAGE_NOT_FOUND';
+    throw error;
+  }
+  return {
+    request: { type: request.type, id: request.id, version: range, channel },
+    versions: candidates.map((item) => ({
+      type: request.type,
+      id: item.id,
+      version: item.version,
+      channel,
+      security: packageSecurityDecision(item),
+    })),
   };
 }
 
