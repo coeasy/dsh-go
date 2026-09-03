@@ -46,7 +46,7 @@ export async function inheritInstalledRegistryArgs(args = []) {
   if (!target) return values;
   const runtime = await readRuntimeRegistry(option(values, '--runtime-registry'));
   const record = getRuntimePackage(runtime, target.type, target.id);
-  const source = String(record?.source_registry || '').trim();
+  const source = String(record?.source_registry || record?.source?.registry || '').trim();
   if (!source || source === 'official') return values;
   values.push('--registry', source);
   return values;
