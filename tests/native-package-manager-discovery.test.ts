@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeOutdated,
+  isDiscoveryCommand,
   latestSearchablePackages,
   packageInfo,
   searchPackages,
@@ -54,6 +55,13 @@ const registry = {
 };
 
 describe('native package manager discovery', () => {
+  it('routes typed and unified package discovery commands through one read-only surface', () => {
+    expect(isDiscoveryCommand(['plugin', 'search', 'memory'])).toBe(true);
+    expect(isDiscoveryCommand(['package', 'search', 'memory'])).toBe(true);
+    expect(isDiscoveryCommand(['package', 'info', 'mcp:dsh-go-marketplace'])).toBe(true);
+    expect(isDiscoveryCommand(['plugin', 'install', 'memory-kit'])).toBe(false);
+  });
+
   it('selects the latest non-yanked stable version per package', () => {
     const packages = latestSearchablePackages(registry, { type: 'plugin' });
     expect(packages).toHaveLength(1);
