@@ -29,7 +29,8 @@ describe('Phase E private registry', () => {
     expect(raw).toContain('DSH_TEST_PRIVATE_REGISTRY_TOKEN');
     expect(raw).not.toContain('super-secret-value');
     const config = await registries.readRegistries(file);
-    expect(config.registries[0]).toMatchObject({ name: 'corp', organization: 'acme', scope: 'private', auth_env: 'DSH_TEST_PRIVATE_REGISTRY_TOKEN', trusted: true });
+    const corp = config.registries.find((item: { name: string }) => item.name === 'corp');
+    expect(corp).toMatchObject({ name: 'corp', organization: 'acme', scope: 'private', auth_env: 'DSH_TEST_PRIVATE_REGISTRY_TOKEN', trusted: true });
   });
 
   it('passes an injected bearer credential to a direct private Registry V3 fetch', async () => {
