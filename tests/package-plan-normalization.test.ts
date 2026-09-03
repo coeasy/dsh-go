@@ -47,7 +47,7 @@ describe('profile and bundle PackageRequest normalization', () => {
     }, null, 2));
     await writeFile(runtimeFile, JSON.stringify({ schema_version: 3, generation: 0, packages: [] }, null, 2));
 
-    const result = await withNormalizedPackagePlan(planFile, (normalizedFile) => executePackageTransaction(normalizedFile, {
+    const result = await withNormalizedPackagePlan(planFile, (normalizedFile: string) => executePackageTransaction(normalizedFile, {
       kind: 'profile',
       catalog: registryFile,
       registryFile: runtimeFile,
