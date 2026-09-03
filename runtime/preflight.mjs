@@ -16,14 +16,20 @@ function resolveRequestedPackage(registry, spec, options = {}) {
     registry: options.registry || null,
   });
   try {
-    return resolvePackage(registry, request.type, request.id, request.versionRange, { channel: request.channel });
+    return resolvePackage(registry, request.type, request.id, request.versionRange, {
+      channel: request.channel,
+      allowVulnerable: options.allowVulnerable === true,
+    });
   } catch (error) {
     const match = (registry.plugins || []).find((item) =>
       inferPackageType(item) === request.type
       && item.source?.repo === request.id
       && (item.channel || item.release_channel || 'stable') === request.channel);
     if (!match) throw error;
-    return resolvePackage(registry, request.type, match.id, request.versionRange, { channel: request.channel });
+    return resolvePackage(registry, request.type, match.id, request.versionRange, {
+      channel: request.channel,
+      allowVulnerable: options.allowVulnerable === true,
+    });
   }
 }
 
@@ -41,26 +47,46 @@ export function preflightPackage(registry, spec, options = {}) {
     dependencyPlan = buildDependencyPlan(registry, root, {
       channel: options.channel || root.channel || 'stable',
       installed,
+      allowVulnerable: options.allowVulnerable === true,
     });
   } catch (error) {
     reasons.push(error instanceof Error ? error.message : String(error));
   }
 
   const candidates = dependencyPlan?.order || [root];
+  const permissionEscalations = [];
   const packageChecks = candidates.map((candidate) => {
     const compatibility = evaluateCompatibility(candidate, options.environment);
     const permissions = inspectPermissions(candidate.permissions);
-    for (const reason of compatibility.reasons) reasons.push(`${packageKey(candidate.type || 'plugin', candidate.id)}: ${reason}`);
+    const candidateType = candidate.type || inferPackageType(candidate);
+    const key = packageKey(candidateType, candidate.id);
+    const current = installed.find((record) => packageKey(record.type || 'plugin', record.id) === key);
+    const diff = permissionDiff(current?.permissions || [], candidate.permissions || []);
+    if (current && diff.added.length) {
+      permissionEscalations.push({
+        key,
+        type: candidateType,
+        id: candidate.id,
+        from_version: current.version || null,
+        to_version: candidate.version,
+        added: diff.added,
+        removed: diff.removed,
+      });
+    }
+    for (const reason of compatibility.reasons) reasons.push(`${key}: ${reason}`);
     return {
       id: candidate.id,
       version: candidate.version,
-      type: candidate.type || inferPackageType(candidate),
+      type: candidateType,
       commit: candidate.commit,
       compatibility,
       permissions,
+      permission_diff: diff,
+      permission_escalation: Boolean(current && diff.added.length),
       provides: candidate.provides || [],
       conflicts: candidate.conflicts || [],
       replaces: candidate.replaces || [],
+      advisories: candidate.advisories || [],
     };
   });
 
@@ -80,6 +106,8 @@ export function preflightPackage(registry, spec, options = {}) {
       || evaluateCompatibility(root, options.environment),
     permissions: aggregatePermissions,
     permission_diff: rootPermissionDiff,
+    permission_escalation: permissionEscalations.length > 0,
+    permission_escalations: permissionEscalations,
     dependency_plan: dependencyPlan ? {
       order: dependencyPlan.order.map((candidate) => ({
         id: candidate.id,
@@ -89,6 +117,7 @@ export function preflightPackage(registry, spec, options = {}) {
         provides: candidate.provides || [],
       })),
       graph: dependencyPlan.graph,
+      constraints: dependencyPlan.constraints || {},
       replacements: dependencyPlan.replacements,
       declared_replacements: dependencyPlan.declared_replacements || [],
     } : null,
@@ -98,6 +127,7 @@ export function preflightPackage(registry, spec, options = {}) {
     provides: root.provides || [],
     publisher: root.publisher || null,
     security: root.security || null,
+    advisories: root.advisories || [],
     reasons: [...new Set(reasons)],
   };
 }
