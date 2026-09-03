@@ -1,6 +1,8 @@
 export const RUNTIME_PACKAGE_TYPES = Object.freeze(['plugin', 'mcp', 'skill', 'agent']);
+export const RUNTIME_PACKAGE_CHANNELS = Object.freeze(['stable', 'beta', 'nightly', 'dev']);
 
 const PACKAGE_TYPES = new Set(RUNTIME_PACKAGE_TYPES);
+const PACKAGE_CHANNELS = new Set(RUNTIME_PACKAGE_CHANNELS);
 const SPEC_ID_RE = /^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)?$/;
 const RUNTIME_ID_RE = /^[A-Za-z0-9_.-]+$/;
 const VERSION_RE = /^[A-Za-z0-9*.^~+_-]+$/;
@@ -9,6 +11,17 @@ export function assertPackageType(value, fallback = 'plugin') {
   const type = String(value || fallback).trim().toLowerCase();
   if (!PACKAGE_TYPES.has(type)) throw new Error(`unsupported runtime package type: ${type || '<empty>'}`);
   return type;
+}
+
+export function assertPackageChannel(value, fallback = 'stable') {
+  const channel = String(value || fallback).trim().toLowerCase();
+  if (!PACKAGE_CHANNELS.has(channel)) {
+    const error = new Error(`unsupported runtime package channel: ${channel || '<empty>'}`);
+    error.code = 'DSH_UNSUPPORTED_CHANNEL';
+    error.supported_channels = [...RUNTIME_PACKAGE_CHANNELS];
+    throw error;
+  }
+  return channel;
 }
 
 export function safePackageId(value, options = {}) {
@@ -62,10 +75,30 @@ export function parsePackageSpec(spec, defaultVersion = '0.1.0', defaultType = '
   return { type, id, version };
 }
 
+export function parsePackageRequest(spec, options = {}) {
+  const parsed = parsePackageSpec(spec, options.defaultVersion ?? '*', options.defaultType || 'plugin');
+  const channel = assertPackageChannel(options.channel || 'stable');
+  const registry = options.registry == null ? null : String(options.registry).trim();
+  if (registry != null && (!registry || registry.length > 2048)) {
+    const error = new Error('invalid runtime package registry selector');
+    error.code = 'DSH_INVALID_REGISTRY_SELECTOR';
+    throw error;
+  }
+  return {
+    type: parsed.type,
+    id: parsed.id,
+    version: parsed.version,
+    versionRange: parsed.version,
+    channel,
+    registry,
+    spec: `${parsed.type}:${parsed.id}@${parsed.version}`,
+  };
+}
+
 export function normalizePackageDependency(dependency, defaultType = 'plugin') {
   if (typeof dependency === 'string') {
-    const parsed = parsePackageSpec(dependency, '*', defaultType);
-    return { type: parsed.type, id: parsed.id, range: parsed.version || '*', optional: false };
+    const parsed = parsePackageRequest(dependency, { defaultVersion: '*', defaultType });
+    return { type: parsed.type, id: parsed.id, range: parsed.versionRange || '*', optional: false };
   }
   if (!dependency?.id) throw new Error('dependency id is required');
   return {

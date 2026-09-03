@@ -14,8 +14,9 @@ import { checkForRuntimeUpdate, runtimeEnvironment, updateRuntime } from '../run
 import { loadRegistryFile } from '../runtime/resolver.mjs';
 import { preflightPackage } from '../runtime/preflight.mjs';
 import { findRuntimePackage, readRuntimeRegistry } from '../runtime/registry.mjs';
-import { assertPackageType, parsePackageSpec } from '../runtime/package-model.mjs';
+import { assertPackageType, parsePackageRequest } from '../runtime/package-model.mjs';
 import { runDoctor } from '../runtime/doctor.mjs';
+import { cliJsonMode, printCliError, printCliValue } from '../runtime/cli-output.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -30,7 +31,7 @@ const CONTROL_ACTIONS = Object.freeze({
 });
 
 function print(value) {
-  console.log(JSON.stringify(value, null, 2));
+  return printCliValue(value, { argv: args });
 }
 
 function usage() {
@@ -96,7 +97,9 @@ async function packageVersion() {
 }
 
 async function version() {
-  console.log(await packageVersion());
+  const value = await packageVersion();
+  if (cliJsonMode()) print({ version: value });
+  else console.log(value);
 }
 
 async function delegateScript(relativePath, nextArgs, options = {}) {
@@ -159,9 +162,14 @@ async function mutationRequest(nextArgs) {
   }
 
   if (!['install', 'add', 'update', 'repair'].includes(action) || !raw) return null;
-  const parsed = parsePackageSpec(raw, requestedVersion || '*', assertPackageType(type));
+  const parsed = parsePackageRequest(raw, {
+    defaultVersion: requestedVersion || '*',
+    defaultType: assertPackageType(type),
+    channel: optionFrom(nextArgs, '--channel') || 'stable',
+    registry: optionFrom(nextArgs, '--registry') || null,
+  });
   type = parsed.type;
-  let spec = `${type}:${parsed.id}@${action === 'update' ? (requestedVersion || parsed.version || '*') : parsed.version}`;
+  let spec = `${type}:${parsed.id}@${action === 'update' ? (requestedVersion || parsed.versionRange || '*') : parsed.versionRange}`;
 
   if (action === 'repair') {
     const runtime = await readRuntimeRegistry();
@@ -201,8 +209,9 @@ async function authorizeMutation(nextArgs) {
 async function hostCommand() {
   const action = args[1] || 'registration';
   if (action === 'uri') {
-    const spec = args[2];
-    console.log(buildInstallUri(spec, { type: option('--type'), channel: option('--channel') }));
+    const uri = buildInstallUri(args[2], { type: option('--type'), channel: option('--channel') });
+    if (cliJsonMode()) print({ uri });
+    else console.log(uri);
     return;
   }
   if (action === 'parse') {
@@ -304,9 +313,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error('[dsh] ' + (error.stack || error.message));
-  if (error.permissionReport) console.error(JSON.stringify(error.permissionReport, null, 2));
-  if (error.compatibilityReport) console.error(JSON.stringify(error.compatibilityReport, null, 2));
-  if (error.dependents) console.error(JSON.stringify({ dependents: error.dependents }, null, 2));
-  process.exit(1);
+  printCliError(error, { prefix: '[dsh]', argv: args });
+  process.exitCode = 1;
 });

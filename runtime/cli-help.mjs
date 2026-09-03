@@ -1,7 +1,9 @@
-export function nativePackageManagerHelp() {
+import { cliLanguage, translate } from './i18n.mjs';
+
+export function nativePackageManagerHelp(locale = cliLanguage()) {
   return `DSH Go CLI 0.1.0
 
-Native package manager
+${translate('native_package_manager', locale)}
   dsh package search <query> [--type plugin|mcp|skill|agent] [--channel stable|beta|nightly|dev]
   dsh package info <type:id|type:owner/repo> [--channel stable|beta|nightly|dev]
   dsh package outdated [--type plugin|mcp|skill|agent]
@@ -9,14 +11,14 @@ Native package manager
   dsh package list [--type plugin|mcp|skill|agent]
   dsh package status [type:id]
 
-Typed package commands
+${translate('typed_package_commands', locale)}
   dsh <plugin|mcp|skill|agent> search <query>
   dsh <plugin|mcp|skill|agent> info <id|owner/repo>[@version]
   dsh <plugin|mcp|skill|agent> install <id|owner/repo>[@version] [--yes|--dry-run]
   dsh <plugin|mcp|skill|agent> list|status|outdated|update|rollback|remove|uninstall|enable|disable|doctor|repair|history
   dsh <plugin|mcp|skill|agent> config get|set|unset ...
 
-Runtime controls
+${translate('runtime_controls', locale)}
   dsh mcp start|stop|restart|process-status|logs|probe|invoke ...
   dsh skill load|unload|inspect|invoke ...
   dsh doctor [package-id] [--type plugin|mcp|skill|agent] [--quick]
@@ -25,29 +27,29 @@ Runtime controls
   dsh runtime doctor [package-id] [--type plugin|mcp|skill|agent] [--quick]
   dsh runtime update [--dry-run]
 
-Profiles, bundles and transactions
+${translate('profiles_bundles_transactions', locale)}
   dsh profile apply <profile.json> [--yes|--dry-run]
   dsh bundle install <bundle.json> [--yes|--dry-run]
   dsh secret set|get|list|delete ...
   dsh transaction recover
 
-Host bridge
+${translate('host_bridge', locale)}
   dsh host uri <package-spec> [--type <type>] [--channel <name>]
   dsh host parse <dsh://...>
   dsh host handle <dsh://...> [--yes|--dry-run]
   dsh host registration|register
 
-Developer package workflow
+${translate('developer_package_workflow', locale)}
   dsh package init|validate|audit|sbom|publish-check ...
 
-Rules
-  - A versionless install resolves the latest compatible package from the selected channel (stable by default).
-  - Dangerous or unknown permissions require explicit --yes approval before any dependency is installed.
-  - --dry-run is always non-mutating and never requires approval.
-  - Host/deep-link mutation never executes without explicit local approval.
-  - Install/update/repair/rollback/enable/disable never restart the client automatically.
-  - Installed packages that require activation remain pending until the desktop client calls 'dsh startup activate'.
-  - Canonical remote APIs remain under /api/v1.
+${translate('rules', locale)}
+  - ${translate('rule_versionless', locale)}
+  - ${translate('rule_permission', locale)}
+  - ${translate('rule_dry_run', locale)}
+  - ${translate('rule_host_approval', locale)}
+  - ${translate('rule_no_restart', locale)}
+  - ${translate('rule_pending_activation', locale)}
+  - ${translate('rule_api', locale)}
 `;
 }
 

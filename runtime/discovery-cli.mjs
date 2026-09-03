@@ -1,7 +1,8 @@
 import { loadRegistryFile, resolvePackage } from './resolver.mjs';
 import { compareVersions } from './semver.mjs';
-import { assertPackageType, inferPackageType, packageKey, parsePackageSpec } from './package-model.mjs';
+import { assertPackageType, inferPackageType, packageKey, parsePackageRequest } from './package-model.mjs';
 import { readRuntimeRegistry } from './registry.mjs';
+import { printCliValue } from './cli-output.mjs';
 
 const PACKAGE_TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
 const DISCOVERY_ACTIONS = new Set(['search', 'info', 'outdated']);
@@ -94,17 +95,17 @@ export function searchPackages(registry, query, options = {}) {
 }
 
 function resolveByIdOrRepo(registry, type, raw, version = '*', channel = 'stable') {
-  const parsed = parsePackageSpec(raw, version, type);
+  const parsed = parsePackageRequest(raw, { defaultVersion: version, defaultType: type, channel });
   try {
-    return resolvePackage(registry, parsed.type, parsed.id, parsed.version, { channel });
+    return resolvePackage(registry, parsed.type, parsed.id, parsed.versionRange, { channel: parsed.channel });
   } catch (error) {
     const match = (registry.plugins || []).find((item) =>
       inferPackageType(item) === parsed.type
       && item.source?.repo === parsed.id
-      && releaseChannel(item) === channel
+      && releaseChannel(item) === parsed.channel
       && item.security?.yanked !== true);
     if (!match) throw error;
-    return resolvePackage(registry, parsed.type, match.id, parsed.version, { channel });
+    return resolvePackage(registry, parsed.type, match.id, parsed.versionRange, { channel: parsed.channel });
   }
 }
 
@@ -189,23 +190,23 @@ export async function runDiscoveryCli(args = process.argv.slice(2)) {
       channel,
       limit: option(args, '--limit', 20),
     });
-    console.log(JSON.stringify(result, null, 2));
+    printCliValue(result, { argv: args });
     return result;
   }
 
   if (action === 'info') {
     const raw = positional(args, 2);
     if (!raw) throw new Error(`runtime package id is required for ${command} info`);
-    const parsed = parsePackageSpec(raw, '*', type || 'plugin');
-    const result = packageInfo(registry, parsed.type, raw, { channel });
-    console.log(JSON.stringify(result, null, 2));
+    const parsed = parsePackageRequest(raw, { defaultVersion: '*', defaultType: type || 'plugin', channel, registry: catalog });
+    const result = packageInfo(registry, parsed.type, raw, { channel: parsed.channel });
+    printCliValue(result, { argv: args });
     return result;
   }
 
   if (action === 'outdated') {
     const runtimeRegistry = await readRuntimeRegistry();
     const result = computeOutdated(registry, runtimeRegistry, { type });
-    console.log(JSON.stringify(result, null, 2));
+    printCliValue(result, { argv: args });
     return result;
   }
 

@@ -3,12 +3,20 @@ import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { normalizeInstallVersionArgs } from '../runtime/command-normalizer.mjs';
 import { isHelpRequest, nativePackageManagerHelp } from '../runtime/cli-help.mjs';
+import { applyGlobalCliOptions } from '../runtime/cli-global-options.mjs';
+import { cliJsonMode, printCliError, printCliValue } from '../runtime/cli-output.mjs';
 
-const args = process.argv.slice(2);
+let args = process.argv.slice(2);
 
 try {
+  const global = applyGlobalCliOptions(args);
+  args = global.args;
+  process.argv = [...process.argv.slice(0, 2), ...args];
+
   if (isHelpRequest(args)) {
-    console.log(nativePackageManagerHelp());
+    const help = nativePackageManagerHelp(global.language);
+    if (cliJsonMode()) printCliValue({ language: global.language, help }, { command: 'help' });
+    else console.log(help);
   } else if (args[0] === 'provider') {
     const script = fileURLToPath(new URL('../runtime/provider-cli.mjs', import.meta.url));
     process.argv = [process.execPath, script, ...args.slice(1)];
@@ -21,6 +29,6 @@ try {
     else await import('./dsh-core.mjs');
   }
 } catch (error) {
-  console.error('[dsh] ' + (error.stack || error.message));
-  process.exit(1);
+  printCliError(error, { prefix: '[dsh]', argv: args });
+  process.exitCode = 1;
 }

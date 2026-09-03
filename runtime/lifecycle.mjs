@@ -4,6 +4,7 @@ export const LIFECYCLE_STATES = Object.freeze({
   AVAILABLE: 'available',
   INSTALLING: 'installing',
   INSTALLED: 'installed',
+  PENDING_RESTART: 'pending-restart',
   VERIFYING: 'verifying',
   ACTIVE: 'active',
   DISABLED: 'disabled',
@@ -14,13 +15,14 @@ export const LIFECYCLE_STATES = Object.freeze({
 
 const allowedTransitions = Object.freeze({
   available: ['installing', 'removed'],
-  installing: ['installed', 'failed'],
-  installed: ['installing', 'verifying', 'disabled', 'rollback', 'removed', 'failed'],
-  verifying: ['active', 'failed', 'disabled'],
+  installing: ['installed', 'pending-restart', 'failed'],
+  installed: ['pending-restart', 'installing', 'verifying', 'disabled', 'rollback', 'removed', 'failed'],
+  'pending-restart': ['installing', 'verifying', 'disabled', 'rollback', 'removed', 'failed'],
+  verifying: ['active', 'failed', 'disabled', 'pending-restart'],
   active: ['installing', 'verifying', 'disabled', 'rollback', 'removed', 'failed'],
-  disabled: ['installed', 'installing', 'removed'],
-  failed: ['installing', 'verifying', 'rollback', 'removed'],
-  rollback: ['installed', 'verifying', 'failed'],
+  disabled: ['installed', 'pending-restart', 'installing', 'removed'],
+  failed: ['installing', 'verifying', 'rollback', 'removed', 'pending-restart'],
+  rollback: ['installed', 'pending-restart', 'verifying', 'failed'],
   removed: ['installing'],
 });
 
