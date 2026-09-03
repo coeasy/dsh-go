@@ -15,6 +15,8 @@ import { deleteSecret, getSecret, listSecrets, secretStoreStatus, setSecret } fr
 import { planRuntimeRemoval, removeRuntimePackageSafe } from './dependency-guard.mjs';
 import { executePackageTransaction, recoverPackageTransactions } from './transaction.mjs';
 import { assertPackageType } from './package-model.mjs';
+import { withNormalizedPackagePlan } from './plan-normalizer.mjs';
+import { printCliError, printCliValue } from './cli-output.mjs';
 
 const args = process.argv.slice(2);
 
@@ -23,7 +25,7 @@ function option(name, fallback = undefined) {
   return index >= 0 ? args[index + 1] : fallback;
 }
 function has(name) { return args.includes(name); }
-function print(value) { console.log(JSON.stringify(value, null, 2)); }
+function print(value) { return printCliValue(value, { argv: args }); }
 
 async function inputValue() {
   const file = option('--input-file');
@@ -123,12 +125,13 @@ async function planCommand(kind) {
   if (args[1] !== expected) throw new Error(`unknown ${kind} action: ${args[1]}`);
   const file = args[2];
   if (!file) throw new Error(`${kind} ${expected} requires a JSON file`);
-  return print(await executePackageTransaction(file, {
+  const result = await withNormalizedPackagePlan(file, (normalizedFile) => executePackageTransaction(normalizedFile, {
     kind,
     catalog: option('--registry', 'catalog/registry-v3.json'),
     approved: has('--yes'),
     dryRun: has('--dry-run'),
   }));
+  return print(result);
 }
 
 async function main() {
@@ -147,9 +150,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`[dsh-control] ${error.stack || error.message}`);
-  if (error.permissionReport) console.error(JSON.stringify(error.permissionReport, null, 2));
-  if (error.policyResult) console.error(JSON.stringify({ policy: error.policyResult }, null, 2));
-  if (error.dependents) console.error(JSON.stringify({ dependents: error.dependents }, null, 2));
-  process.exit(1);
+  printCliError(error, { prefix: '[dsh-control]', argv: args });
+  if (error.policyResult && process.env.DSH_OUTPUT_JSON !== '1') console.error(JSON.stringify({ policy: error.policyResult }, null, 2));
+  process.exitCode = 1;
 });
