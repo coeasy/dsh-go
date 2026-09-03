@@ -10,7 +10,7 @@ async function gitText(directory, args) {
 }
 
 async function gitPaths(directory, args) {
-  const { stdout } = await exec('git', ['-C', directory, ...args, '-z'], { windowsHide: true, encoding: 'buffer', maxBuffer: 16 * 1024 * 1024 });
+  const { stdout } = await exec('git', ['-C', directory, ...args], { windowsHide: true, encoding: null, maxBuffer: 16 * 1024 * 1024 });
   return Buffer.from(stdout || []).toString('utf8').split('\0').filter(Boolean).map((value) => value.replaceAll('\\', '/'));
 }
 
@@ -35,9 +35,9 @@ export async function verifyOfflineGitIdentity(directory, expectedCommit) {
   }
 
   await gitText(directory, ['cat-file', '-e', 'HEAD^{commit}']);
-  const changed = disallowed(await gitPaths(directory, ['diff', '--name-only', 'HEAD', '--']));
-  const untracked = disallowed(await gitPaths(directory, ['ls-files', '--others', '--exclude-standard']));
-  const ignored = disallowed(await gitPaths(directory, ['ls-files', '--others', '--ignored', '--exclude-standard']));
+  const changed = disallowed(await gitPaths(directory, ['diff', '--name-only', '-z', 'HEAD', '--']));
+  const untracked = disallowed(await gitPaths(directory, ['ls-files', '-z', '--others', '--exclude-standard']));
+  const ignored = disallowed(await gitPaths(directory, ['ls-files', '-z', '--others', '--ignored', '--exclude-standard']));
   if (changed.length || untracked.length || ignored.length) {
     const error = new Error(`offline package worktree does not match locked commit: changed=${changed.join(',') || '-'} untracked=${untracked.join(',') || '-'} ignored=${ignored.join(',') || '-'}`);
     error.code = 'DSH_INTEGRITY_MISMATCH';
