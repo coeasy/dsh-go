@@ -38,7 +38,11 @@ try {
         else {
           const discovery = await import('../runtime/discovery-cli.mjs');
           if (discovery.isDiscoveryCommand(normalizedArgs)) await discovery.runDiscoveryCli(normalizedArgs);
-          else await import('./dsh-core.mjs');
+          else {
+            const guard = await import('../runtime/enterprise-guard.mjs');
+            await guard.guardEnterpriseMutation(normalizedArgs);
+            await import('./dsh-core.mjs');
+          }
         }
       }
     }
