@@ -1,6 +1,7 @@
 import { loadInstalledPackage } from './loader.mjs';
 import { recordRuntimeEvent } from './lifecycle.mjs';
 import { packageKey } from './package-model.mjs';
+import { packageActivationState } from './package-status.mjs';
 import { recoverPackageTransactions } from './transaction.mjs';
 import {
   getRuntimePackage,
@@ -57,12 +58,19 @@ export async function activatePendingPackages(options = {}) {
         version: loaded.version,
         commit: loaded.commit,
         activation: loaded.activation,
+        activation_state: 'active',
         binding: loaded.binding,
         restart_required: loaded.restart_required,
       });
     } catch (error) {
       await markActivationFailed(record.type || 'plugin', record.id, error, registryFile);
-      failed.push({ type: record.type || 'plugin', id: record.id, key: packageKey(record.type || 'plugin', record.id), error: error.message });
+      failed.push({
+        type: record.type || 'plugin',
+        id: record.id,
+        key: packageKey(record.type || 'plugin', record.id),
+        activation_state: 'failed',
+        error: error.message,
+      });
     }
   }
 
@@ -70,6 +78,12 @@ export async function activatePendingPackages(options = {}) {
     recovered_transactions: recovery.recovered,
     scanned: packages.length,
     pending: candidates.length,
+    pending_packages: candidates.map((record) => ({
+      id: record.id,
+      type: record.type || 'plugin',
+      key: packageKey(record.type || 'plugin', record.id),
+      activation_state: packageActivationState(record),
+    })),
     activated,
     failed,
     healthy: failed.length === 0 && recovery.recovered.every((item) => !item.error),

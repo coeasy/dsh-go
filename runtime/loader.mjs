@@ -102,6 +102,7 @@ export async function loadInstalledPackage(type, id, options = {}) {
     manifest: manifest.manifest,
     binding,
     activation: 'active',
+    activation_state: 'active',
     restart_required: activatedRecord?.restart_required ?? false,
     message: `Runtime package ${key} is installed, verified, compatible, bound locally, and activated by the client startup loader.`,
   };
