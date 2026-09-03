@@ -19,17 +19,20 @@ describe('Runtime Platform V2 CLI', () => {
     const env = { ...process.env, DSH_REGISTRY: registry };
     const run = (args: string[]) => execFileSync('node', args, { env, encoding: 'utf8' });
 
-    expect(JSON.parse(run(['runtime/cli.mjs', 'plugin', 'status', 'demo'])).id).toBe('demo');
+    const initial = JSON.parse(run(['runtime/cli.mjs', 'plugin', 'status', 'demo']));
+    expect(initial.id).toBe('demo');
+    expect(initial.activation_state).toBe('pending-restart');
 
     run(['runtime/cli.mjs', 'plugin', 'disable', 'demo']);
     let stored = JSON.parse(await readFile(registry, 'utf8'));
     expect(stored.plugins[0].state).toBe('disabled');
     expect(stored.plugins[0].restart_required).toBe(true);
 
-    run(['runtime/cli.mjs', 'plugin', 'enable', 'demo']);
+    const enabled = JSON.parse(run(['runtime/cli.mjs', 'plugin', 'enable', 'demo']));
     stored = JSON.parse(await readFile(registry, 'utf8'));
-    expect(stored.plugins[0].state).toBe('installed');
+    expect(stored.plugins[0].state).toBe('pending-restart');
     expect(stored.plugins[0].enabled).toBe(true);
+    expect(enabled.activation_state).toBe('pending-restart');
 
     expect(JSON.parse(run(['runtime/cli.mjs', 'plugin', 'history', 'demo'])).history.length).toBeGreaterThanOrEqual(2);
   });
