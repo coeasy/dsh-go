@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeasy.github.io/dsh-go/schemas/localization-overlay-v1.schema.json",
+  "title": "DSH Marketplace Localization Overlay V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "locale", "entries"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "locale": { "type": "string", "minLength": 2 },
+    "generated_at": { "type": "string" },
+    "entries": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "maxLength": 200 },
+          "description": { "type": "string", "maxLength": 4000 },
+          "summary": { "type": "string", "maxLength": 1000 },
+          "category_label": { "type": "string", "maxLength": 200 }
+        }
+      }
+    }
+  }
+}

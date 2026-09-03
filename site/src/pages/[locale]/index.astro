@@ -1,0 +1,66 @@
+---
+import UnifiedMarketplace from '../../components/UnifiedMarketplace.astro';
+import MarketplacePresentation from '../../components/MarketplacePresentation.astro';
+import { tr } from '../../i18n/dict';
+import { LANGUAGE_LABELS, SUPPORTED_LANGS, type Lang } from '../../i18n/config';
+import { u } from '../../lib/urls';
+import '../../styles/marketplace-polish.css';
+import '../../styles/marketplace-emphasis.css';
+
+export function getStaticPaths() {
+  return SUPPORTED_LANGS.map((locale) => ({ params: { locale }, props: { locale } }));
+}
+const { locale } = Astro.props as { locale: Lang };
+const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
+const title = `${tr('hero_title', locale)} · DSH Marketplace`;
+const description = tr('hero_sub', locale, { n: '13K+' });
+---
+
+<!doctype html>
+<html lang={locale} data-route-locale={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href={u('/favicon.svg')} />
+    <link rel="canonical" href={`${SITE}${u(`/${locale}/`)}`} />
+    <link rel="alternate" hreflang="x-default" href={`${SITE}${u('/')}`} />
+    {SUPPORTED_LANGS.map((lang) => <link rel="alternate" hreflang={lang} href={`${SITE}${u(`/${lang}/`)}`} />)}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={`${SITE}${u(`/${locale}/`)}`} />
+    <style>
+      :root{--bg:#f7f9fc;--bg-soft:#eef2f7;--card:#fff;--fg:#0f172a;--muted:#64748b;--border:#e2e8f0;--border-strong:#cbd5e1;--accent:#2563eb;--accent-2:#7c3aed;--accent-soft:#eff6ff;--green:#16a34a;--amber:#f59e0b;--red:#ef4444;--shadow-sm:0 1px 2px rgb(15 23 42/.05);--shadow-md:0 5px 18px rgb(15 23 42/.08);--shadow-lg:0 14px 36px rgb(15 23 42/.12);--grad-accent:linear-gradient(135deg,#2563eb,#7c3aed);--content-max:1560px}html{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--fg)}body{margin:0}.locale-nav{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:13px max(20px,calc((100vw - var(--content-max))/2));border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(16px)}.brand{font-weight:850;color:var(--fg);text-decoration:none}.languages{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}.languages a{font-size:12px;padding:5px 8px;border-radius:999px;color:var(--muted);text-decoration:none}.languages a.active{color:var(--accent);background:var(--accent-soft);font-weight:800}.trust{font-size:12px;color:var(--accent);text-decoration:none}.intro{max-width:920px;text-align:center;margin:32px auto 2px;padding:0 20px}.intro h1{font-size:clamp(34px,5vw,52px);letter-spacing:-.04em;margin:0}.intro p{color:var(--muted);margin:8px auto 0}.local-note{font-size:12px;color:var(--muted)}main{max-width:var(--content-max);margin:auto;padding:0 28px 80px}.footer{border-top:1px solid var(--border);padding:24px;text-align:center;color:var(--muted);font-size:12px}@media(prefers-color-scheme:dark){:root{--bg:#0b1120;--bg-soft:#111a2e;--card:#10192c;--fg:#f1f5f9;--muted:#94a3b8;--border:#1e293b;--border-strong:#334155;--accent:#60a5fa;--accent-2:#a78bfa;--accent-soft:#16233d;--green:#4ade80;--amber:#fbbf24;--red:#f87171;--grad-accent:linear-gradient(135deg,#3b82f6,#8b5cf6)}}@media(max-width:650px){.locale-nav{flex-wrap:wrap}.languages{width:100%;margin-left:0}main{padding-inline:16px}}
+    </style>
+  </head>
+  <body>
+    <nav class="locale-nav" aria-label="Marketplace locale navigation">
+      <a class="brand" href={u('/')}>DSH Marketplace</a>
+      <a class="trust" href={u('/trust')}>Trust Center</a>
+      <div class="languages">
+        {SUPPORTED_LANGS.map((lang) => <a class={lang === locale ? 'active' : ''} href={u(`/${lang}/`)} hreflang={lang}>{LANGUAGE_LABELS[lang]}</a>)}
+      </div>
+    </nav>
+    <section class="intro">
+      <h1>{tr('hero_title', locale)}</h1>
+      <p>{description}</p>
+      <p class="local-note">Registry V3 identity remains language-neutral · installation executes locally only</p>
+    </section>
+    <main>
+      <UnifiedMarketplace />
+      <MarketplacePresentation />
+    </main>
+    <footer class="footer">{tr('footer_summary', locale)}</footer>
+    <script>
+      import { apply } from '../../scripts/i18n';
+      import { normalizeLang } from '../../i18n/config';
+      const locale = normalizeLang(document.documentElement.dataset.routeLocale) || 'en';
+      const activate = () => apply(locale);
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', activate, { once: true });
+      else activate();
+    </script>
+  </body>
+</html>

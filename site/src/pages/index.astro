@@ -4,6 +4,8 @@ import { resolve } from 'node:path';
 import Layout from '../layouts/Layout.astro';
 import UnifiedMarketplace from '../components/UnifiedMarketplace.astro';
 import MarketplacePresentation from '../components/MarketplacePresentation.astro';
+import { LANGUAGE_LABELS, SUPPORTED_LANGS } from '../i18n/config';
+import { u } from '../lib/urls';
 
 let lastSyncAt = '';
 try {
@@ -14,28 +16,22 @@ try {
 const lastSyncTimestamp = Date.parse(lastSyncAt);
 const validLastSync = Number.isFinite(lastSyncTimestamp);
 const lastSyncDate = validLastSync ? new Date(lastSyncTimestamp) : new Date(0);
-const lastSyncDateLabel = validLastSync
-  ? new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Shanghai',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(lastSyncDate)
-  : '';
 const lastSyncTimeLabel = validLastSync
   ? new Intl.DateTimeFormat('zh-CN', {
       timeZone: 'Asia/Shanghai',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
     }).format(lastSyncDate)
   : '';
 ---
 
 <Layout title="DSH Plugin Marketplace" description="Registry V3 与原始 dsh-plugin Catalog 对齐的统一 Plugin、MCP、Skill、Agent Marketplace。">
+  <div class="v4-links" aria-label="Marketplace V4 entry points">
+    <a href={u('/trust')}><strong>Trust Center</strong><span>Publisher identity · provenance · advisory</span></a>
+    <div class="locale-links">
+      <strong>Localized Marketplace</strong>
+      <span>{SUPPORTED_LANGS.map((lang) => <a href={u(`/${lang}/`)} hreflang={lang}>{LANGUAGE_LABELS[lang]}</a>)}</span>
+    </div>
+  </div>
   <UnifiedMarketplace />
   {validLastSync && (
     <p class="market-sync-status" data-market-sync-status>
@@ -43,23 +39,8 @@ const lastSyncTimeLabel = validLastSync
     </p>
   )}
   <MarketplacePresentation />
-
-  <script define:vars={{ lastSyncAt, lastSyncDateLabel, lastSyncTimeLabel }}>
-    if (lastSyncAt) {
-      const dateNode = document.querySelector('.market-hero .metrics span:last-child b');
-      if (dateNode && lastSyncDateLabel) {
-        dateNode.textContent = lastSyncDateLabel;
-        dateNode.closest('span')?.setAttribute('title', `最近成功同步：${lastSyncTimeLabel}（北京时间）`);
-      }
-    }
-  </script>
 </Layout>
 
 <style>
-  .market-sync-status {
-    margin: -1rem auto 2rem;
-    text-align: center;
-    font-size: 0.85rem;
-    opacity: 0.72;
-  }
+  .v4-links{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0 0 4px;padding:10px 14px;border:1px solid var(--border);border-radius:14px;background:var(--card);font-size:12px}.v4-links>a,.locale-links{display:flex;align-items:center;gap:10px}.v4-links strong{color:var(--fg)}.v4-links span{color:var(--muted)}.locale-links>span{display:flex;gap:7px;flex-wrap:wrap}.locale-links a{font-weight:700}.market-sync-status{margin:-1rem auto 2rem;text-align:center;font-size:.85rem;opacity:.72}@media(max-width:760px){.v4-links,.v4-links>a,.locale-links{align-items:flex-start;flex-direction:column}.locale-links>span{margin-top:3px}}
 </style>

@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "fallback_locale": "en",
+  "locales": ["en", "zh-CN", "ja", "ko", "es"],
+  "identity_fields_localized": false,
+  "allowed_fields": ["name", "description", "summary", "category_label"]
+}

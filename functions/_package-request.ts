@@ -85,23 +85,51 @@ function releaseChannel(plugin: RegistryV3Plugin): ReleaseChannel {
   return plugin.channel || plugin.release_channel || 'stable';
 }
 
-function yanked(plugin: RegistryV3Plugin) {
-  return Boolean((plugin.security as Record<string, unknown> | null | undefined)?.yanked === true);
+function security(plugin: RegistryV3Plugin): Record<string, any> {
+  return (plugin.security && typeof plugin.security === 'object' ? plugin.security : {}) as Record<string, any>;
+}
+
+function blockingReason(plugin: RegistryV3Plugin): string | null {
+  const policy = security(plugin);
+  if (policy.revoked === true) return 'revoked';
+  if (policy.yanked === true) return 'yanked';
+  const minimum = typeof policy.minimum_safe_version === 'string' ? policy.minimum_safe_version : null;
+  if (minimum && parseVersion(minimum) && compareSemanticVersions(plugin.version, minimum) < 0) return `below-minimum-safe:${minimum}`;
+  const advisories = Array.isArray(policy.advisories) ? policy.advisories : [];
+  const critical = advisories.find((item: any) => String(item?.severity || '').toLowerCase() === 'critical'
+    && satisfiesSemanticVersion(plugin.version, item?.affected || item?.range || '*'));
+  if (critical) return `critical-advisory:${critical.id || critical.advisory_id || 'unknown'}`;
+  return null;
+}
+
+function securityError(blocked: Array<{ plugin: RegistryV3Plugin; reason: string }>, request: EdgePackageRequest): Error {
+  const reasons = [...new Set(blocked.map((item) => item.reason))];
+  const error = new Error(`ecosystem item is blocked by security policy: ${request.id}@${request.versionRange} [${request.channel}] (${reasons.join(', ')})`);
+  (error as Error & { code?: string; security?: unknown }).code = reasons.some((reason) => reason === 'revoked')
+    ? 'DSH_PACKAGE_REVOKED'
+    : reasons.some((reason) => reason === 'yanked') && reasons.every((reason) => reason === 'yanked')
+      ? 'DSH_PACKAGE_YANKED'
+      : 'DSH_SECURITY_ADVISORY_BLOCKED';
+  (error as Error & { code?: string; security?: unknown }).security = blocked.map(({ plugin, reason }) => ({ id: plugin.id, type: ecosystemType(plugin), version: plugin.version, reason }));
+  return error;
 }
 
 export function resolveEdgePackageRequest(plugins: RegistryV3Plugin[], raw: { id?: string; type?: string; version?: string; channel?: string }) {
   const request = normalizeEdgePackageRequest(raw);
   const idKey = request.id.toLowerCase();
-  const candidates = plugins
-    .filter((plugin) => !yanked(plugin))
+  const matching = plugins
     .filter((plugin) => releaseChannel(plugin) === request.channel)
     .filter((plugin) => !request.type || ecosystemType(plugin) === request.type)
     .filter((plugin) => plugin.id.toLowerCase() === idKey || plugin.source.repo.toLowerCase() === idKey)
     .filter((plugin) => satisfiesSemanticVersion(plugin.version, request.versionRange));
 
-  if (!candidates.length) throw new Error(`ecosystem item not found: ${request.id}@${request.versionRange} [${request.channel}]`);
-  const types = [...new Set(candidates.map(ecosystemType))].sort();
+  if (!matching.length) throw new Error(`ecosystem item not found: ${request.id}@${request.versionRange} [${request.channel}]`);
+  const types = [...new Set(matching.map(ecosystemType))].sort();
   if (!request.type && types.length > 1) throw new Error(`ecosystem item is ambiguous; specify type (${types.join(', ')}): ${request.id}`);
+
+  const blocked = matching.map((plugin) => ({ plugin, reason: blockingReason(plugin) })).filter((item): item is { plugin: RegistryV3Plugin; reason: string } => Boolean(item.reason));
+  const candidates = matching.filter((plugin) => !blockingReason(plugin));
+  if (!candidates.length) throw securityError(blocked, request);
   candidates.sort((left, right) => compareSemanticVersions(right.version, left.version));
-  return { request, package: candidates[0] };
+  return { request, package: candidates[0], blocked };
 }
