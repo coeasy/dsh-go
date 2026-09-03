@@ -18,6 +18,17 @@ describe('Transaction lifecycle persistence contract', () => {
     expect(recordSource).toContain("'transaction-install-complete'");
   });
 
+  it('keeps versionless semantics latest-compatible in the Transaction Core itself', async () => {
+    const source = await readFile('runtime/transaction.mjs', 'utf8');
+    const requestStart = source.indexOf('function requestFromEntry');
+    const documentStart = source.indexOf('\nexport async function readPackagePlanDocument', requestStart);
+    expect(requestStart).toBeGreaterThanOrEqual(0);
+    expect(documentStart).toBeGreaterThan(requestStart);
+    const requestSource = source.slice(requestStart, documentStart);
+    expect(requestSource).toContain("parsePackageSpec(entry, '*', 'plugin')");
+    expect(requestSource).not.toContain("parsePackageSpec(entry, '0.1.0', 'plugin')");
+  });
+
   it('keeps legacy installed records readable while deriving the same pending activation state', () => {
     const registry = migrateRuntimeRegistry({
       schema_version: 3,
