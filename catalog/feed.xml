@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 03 Sep 2026 02:57:26 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 03 Sep 2026 05:10:19 GMT</lastBuildDate>
     <item>
       <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -16,8 +16,8 @@
     <item>
       <title>🔄 ds-harness-remote</title>
       <link>https://github.com/liguobao/ds-harness-remote</link>
-      <guid isPermaLink="false">liguobao/ds-harness-remote@2026-09-03T02:50:58Z</guid>
-      <pubDate>Thu, 03 Sep 2026 02:50:58 GMT</pubDate>
+      <guid isPermaLink="false">liguobao/ds-harness-remote@2026-09-03T03:46:17Z</guid>
+      <pubDate>Thu, 03 Sep 2026 03:46:17 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo.svg&quot; alt=&quot;DeepSeek Harness Remote&quot; width=&quot;600&quot; &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/strong &</description>
     </item>
     <item>
@@ -100,8 +100,8 @@
     <item>
       <title>🔄 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-03T02:56:40Z</guid>
-      <pubDate>Thu, 03 Sep 2026 02:56:40 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-03T04:57:23Z</guid>
+      <pubDate>Thu, 03 Sep 2026 04:57:23 GMT</pubDate>
       <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
     </item>
     <item>
@@ -140,11 +140,32 @@
       <description>简体中文 Web Bridge — Browser Automation MCP Server (dsh plugin) Web Bridge is an automation MCP server that uses a real browser . It gives agents a browser&apos;s eyes and hands: open web pages, read pag</description>
     </item>
     <item>
+      <title>🔄 Plugin Market</title>
+      <link>https://github.com/FUSU123fusu/dsh-tui-market</link>
+      <guid isPermaLink="false">FUSU123fusu/dsh-tui-market@2026-08-28T15:45:35Z</guid>
+      <pubDate>Fri, 28 Aug 2026 15:45:35 GMT</pubDate>
+      <description>dsh tui market English below dsh TUI 的插件市场插件：在 TUI 里用 /market 浏览、搜索、安装、移除 dsh 插件，不用离开终端。 功能 /market — 浏览生态精选列表（分页，多选安装，可直接进搜索） /market search &lt;关键词 — 按 GitHub topic:dsh plugin 搜索全网插件 /market all （或 </description>
+    </item>
+    <item>
+      <title>🆕 @all3cn/dsh-qa-suite-n23</title>
+      <link>https://github.com/All3nCN/dsh-qa-suite-N23</link>
+      <guid isPermaLink="false">All3nCN/dsh-qa-suite-N23@2026-09-01T16:41:43Z</guid>
+      <pubDate>Tue, 01 Sep 2026 16:41:43 GMT</pubDate>
+      <description>@all3cn/dsh qa suite n23 DSH 质量套件插件（host 侧，无 UI 半区）。一个包合并两份上游能力： 能力 1. code check 工具（自动类型检查） 吸收自 a179 sanae/dsh code check （BSD 3 Clause）。 监听 fs/observed 事件：模型经 edit / write 工具改动 .ts / .tsx / .mts / .</description>
+    </item>
+    <item>
       <title>🔄 Jobs Panel</title>
       <link>https://github.com/FUSU123fusu/dsh-tui-jobs</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-jobs@2026-08-28T15:45:09Z</guid>
       <pubDate>Fri, 28 Aug 2026 15:45:09 GMT</pubDate>
       <description>dsh tui jobs 适用于 dsh TUI（dshtui.com）的社区插件。 dsh TUI 的后台任务面板： /jobs 列出当前所有可见的后台任务（bash、子 agent 等），状态变化实时刷新，可查看已完成任务的输出、取消运行中的任务。补齐官方 WebUI 有而 TUI 没有的任务列表面。 English below. 用法 列表：↑/↓ 选择 · Enter 查看详情与输出 · </description>
+    </item>
+    <item>
+      <title>🔄 Webhook 通知</title>
+      <link>https://github.com/FUSU123fusu/dsh-tui-webhook</link>
+      <guid isPermaLink="false">FUSU123fusu/dsh-tui-webhook@2026-08-28T15:45:26Z</guid>
+      <pubDate>Fri, 28 Aug 2026 15:45:26 GMT</pubDate>
+      <description>dsh tui webhook 适用于 dsh TUI（dshtui.com）的社区插件。 把 dsh TUI 的关键事件推送到 IM 机器人（飞书 / 钉钉 / 企业微信 / 任意通用 webhook）：长轮次完成、审批请求——人离开电脑也能收到提醒。 English below. 用法 配置在 /settings →「Webhook 通知」，保存后立即生效，无需重启。 设置 说明 默认 pla</description>
     </item>
     <item>
       <title>🆕 @all3cn/dsh-better-sidebar-n23</title>
@@ -163,8 +184,8 @@
     <item>
       <title>🆕 dsh-github-installer</title>
       <link>https://github.com/yhPrime/dsh-github-installer</link>
-      <guid isPermaLink="false">yhPrime/dsh-github-installer@2026-08-29T16:09:15Z</guid>
-      <pubDate>Sat, 29 Aug 2026 16:09:15 GMT</pubDate>
+      <guid isPermaLink="false">yhPrime/dsh-github-installer@2026-09-02T16:53:01Z</guid>
+      <pubDate>Wed, 02 Sep 2026 16:53:01 GMT</pubDate>
       <description>dsh github installer 基于 dsh std 标准化协议的插件管理器 —— 粘贴 GitHub 仓库网址 / npm 包名 / 其他 Git 仓库地址，即可安装；支持卸载与更新。 A dsh std standard component for managing plugins — install from a GitHub repo URL, npm package name,</description>
     </item>
     <item>
@@ -182,13 +203,6 @@
       <description>dsh tui subagents dsh TUI 的子 agent 会话视图： /subagents 列出当前会话的子 agent，Enter 进入全屏轨迹视图， 实时 跟着子 agent 的思考、工具调用和回复滚动；对 可续（continuable） 子 agent 可以直接发消息纠偏、中断当前轮。对应上游 issue dsh TUI 223。 English below. 用法 轨迹视图按键</description>
     </item>
     <item>
-      <title>🔄 Webhook 通知</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-webhook</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-webhook@2026-08-28T15:45:26Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:26 GMT</pubDate>
-      <description>dsh tui webhook 适用于 dsh TUI（dshtui.com）的社区插件。 把 dsh TUI 的关键事件推送到 IM 机器人（飞书 / 钉钉 / 企业微信 / 任意通用 webhook）：长轮次完成、审批请求——人离开电脑也能收到提醒。 English below. 用法 配置在 /settings →「Webhook 通知」，保存后立即生效，无需重启。 设置 说明 默认 pla</description>
-    </item>
-    <item>
       <title>🔄 Herdr 状态上报</title>
       <link>https://github.com/FUSU123fusu/dsh-tui-herdr</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-herdr@2026-08-28T15:45:40Z</guid>
@@ -196,24 +210,10 @@
       <description></description>
     </item>
     <item>
-      <title>🔄 Plugin Market</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-market</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-market@2026-08-28T15:45:35Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:35 GMT</pubDate>
-      <description>dsh tui market English below dsh TUI 的插件市场插件：在 TUI 里用 /market 浏览、搜索、安装、移除 dsh 插件，不用离开终端。 功能 /market — 浏览生态精选列表（分页，多选安装，可直接进搜索） /market search &lt;关键词 — 按 GitHub topic:dsh plugin 搜索全网插件 /market all （或 </description>
-    </item>
-    <item>
       <title>🔄 Checkpoints</title>
       <link>https://github.com/FUSU123fusu/dsh-tui-checkpoints</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-checkpoints@2026-08-28T15:45:46Z</guid>
       <pubDate>Fri, 28 Aug 2026 15:45:46 GMT</pubDate>
-      <description></description>
-    </item>
-    <item>
-      <title>🔄 Keybindings Cheatsheet</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-keys</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-keys@2026-08-28T15:45:14Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:14 GMT</pubDate>
       <description></description>
     </item>
   </channel>
