@@ -1,6 +1,7 @@
 const DEFAULT_LOCAL_BASE = 'http://127.0.0.1:43731';
 const DEFAULT_MARKETPLACE_BASE = 'https://dsh-go.pages.dev';
 const PACKAGE_TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
+export const DSH_TAURI_IPC_COMMAND = 'dsh_client_host_request';
 
 function trimBase(value) {
   return String(value || '').replace(/\/+$/, '');
@@ -26,9 +27,16 @@ async function parseResponse(response) {
   return body;
 }
 
+function bodyValue(init = {}) {
+  if (!init.body) return null;
+  if (typeof init.body !== 'string') return init.body;
+  try { return JSON.parse(init.body); } catch { return init.body; }
+}
+
 export function createMarketplaceDesktopClient(options = {}) {
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   if (typeof fetchImpl !== 'function') throw new Error('fetch implementation is required');
+  const invoke = typeof options.invoke === 'function' ? options.invoke : null;
   const localBaseUrl = trimBase(options.localBaseUrl || DEFAULT_LOCAL_BASE);
   const marketplaceBaseUrl = trimBase(options.marketplaceBaseUrl || DEFAULT_MARKETPLACE_BASE);
   const token = String(options.token || '');
@@ -39,10 +47,25 @@ export function createMarketplaceDesktopClient(options = {}) {
       error.code = 'DSH_DESKTOP_TOKEN_REQUIRED';
       throw error;
     }
+    if (invoke) {
+      return invoke(DSH_TAURI_IPC_COMMAND, {
+        request: {
+          path,
+          method: init.method || 'GET',
+          body: bodyValue(init),
+          token,
+        },
+      });
+    }
     const headers = new Headers(init.headers || {});
     headers.set('authorization', `Bearer ${token}`);
     if (init.body && !headers.has('content-type')) headers.set('content-type', 'application/json');
     return parseResponse(await fetchImpl(`${localBaseUrl}${path}`, { ...init, headers }));
+  }
+
+  async function health() {
+    if (invoke) return invoke(DSH_TAURI_IPC_COMMAND, { request: { path: '/health', method: 'GET', body: null, token } });
+    return parseResponse(await fetchImpl(`${localBaseUrl}/health`));
   }
 
   async function marketplace(path, params = {}) {
@@ -56,7 +79,8 @@ export function createMarketplaceDesktopClient(options = {}) {
   return Object.freeze({
     localBaseUrl,
     marketplaceBaseUrl,
-    health: () => parseResponse(fetchImpl(`${localBaseUrl}/health`)),
+    transport: invoke ? 'tauri-ipc' : 'client-host-http',
+    health,
     contract: () => local('/v1/desktop/contract'),
     center: () => local('/v1/desktop/center'),
     enterprisePolicy: () => local('/v1/enterprise/policy'),
@@ -107,6 +131,7 @@ export const marketplaceDesktopPlugin = Object.freeze({
   id: 'dsh-go-marketplace-plugin',
   version: '0.1.0',
   local_protocol: 'dsh-client-host-v1',
+  ipc_command: DSH_TAURI_IPC_COMMAND,
   remote_role: 'discovery-only',
   local_role: 'authenticated-package-manager-ipc',
   auto_restart: false,
