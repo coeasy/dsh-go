@@ -110,6 +110,23 @@ export function createMarketplaceDesktopClient(options = {}) {
         body: JSON.stringify({ action, version: options.version, approved: true }),
       });
     },
+    doctor: async (type, id, options = {}) => {
+      if (options.approved !== true) return { executed: false, confirmation_required: true, type, id, action: 'doctor', auto_restart: false };
+      const normalizedType = assertType(type);
+      return local(`/v1/packages/${normalizedType}/${encodeURIComponent(id)}/doctor`, {
+        method: 'POST',
+        body: JSON.stringify({ approved: true }),
+      });
+    },
+    logs: (type, id) => {
+      const normalizedType = assertType(type);
+      if (normalizedType !== 'mcp') {
+        const error = new Error(`desktop logs are currently available for MCP packages only: ${normalizedType}:${id}`);
+        error.code = 'DSH_DESKTOP_LOGS_UNSUPPORTED';
+        throw error;
+      }
+      return local(`/v1/packages/mcp/${encodeURIComponent(id)}/logs`);
+    },
     removePackage: async (type, id, options = {}) => {
       if (options.approved !== true) return { executed: false, confirmation_required: true, type, id, action: 'remove', auto_restart: false };
       const normalizedType = assertType(type);
