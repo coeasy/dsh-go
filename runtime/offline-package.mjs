@@ -4,6 +4,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { hashDirectory, snapshotDirectory } from './cas-store.mjs';
 import { recordRuntimeEvent } from './lifecycle.mjs';
 import { packageKey, parsePackageRequest } from './package-model.mjs';
+import { verifyOfflineGitIdentity } from './offline-git-integrity.mjs';
 import {
   getRuntimePackage,
   packagePath,
@@ -104,6 +105,7 @@ export async function exportOfflinePackage(rawSpec, options = {}) {
     error.code = 'DSH_INTEGRITY_MISMATCH';
     throw error;
   }
+  await verifyOfflineGitIdentity(target, installLock.source.commit);
   const content = await hashDirectory(target);
   const entries = await serializeDirectory(target);
   const bundle = {
@@ -196,6 +198,7 @@ async function extractBundle(bundle, directory) {
     error.code = 'DSH_INTEGRITY_MISMATCH';
     throw error;
   }
+  await verifyOfflineGitIdentity(root, lock.source.commit);
   return { digest, lock };
 }
 
