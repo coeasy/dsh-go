@@ -7,6 +7,8 @@ const policyModule = await import('../runtime/enterprise-policy.mjs');
 const desktopModule = await import('../runtime/desktop-center.mjs');
 const manifestModule = await import('../runtime/package-manifest.mjs');
 const pluginModule = await import('../packages/dsh-go-marketplace-plugin/index.mjs');
+const installerModule = await import('../runtime/installer.mjs');
+const checksumModule = await import('../scripts/checksum.mjs');
 
 describe('Phase E desktop and enterprise platform', () => {
   it('fails closed for blocked publishers and permissions when enterprise enforcement is enabled', async () => {
@@ -45,6 +47,40 @@ describe('Phase E desktop and enterprise platform', () => {
       approved: true,
     });
     expect(approved.allowed).toBe(true);
+  });
+
+  it('enforces enterprise policy at the authoritative installer boundary used by deep links and dependencies', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-installer-policy-'));
+    const policyFile = join(root, 'policy.json');
+    await writeFile(policyFile, JSON.stringify({
+      schema_version: 1,
+      enforce: true,
+      packages: { deny: ['plugin:blocked-desktop-package'] },
+    }));
+    const previous = process.env.DSH_ENTERPRISE_POLICY_FILE;
+    process.env.DSH_ENTERPRISE_POLICY_FILE = policyFile;
+    const source = { provider: 'github', repo: 'coeasy/dsh-go', commit: 'a'.repeat(40) };
+    const pkg = {
+      type: 'plugin',
+      id: 'blocked-desktop-package',
+      version: '0.1.0',
+      repo: source.repo,
+      commit: source.commit,
+      source,
+      integrity: checksumModule.artifactIntegrity({ version: '0.1.0', source }),
+      artifact: { kind: 'git-source' },
+      permissions: [],
+      dependencies: [],
+      compatibility: {},
+      publisher: { id: 'coeasy' },
+      security: {},
+    };
+    try {
+      await expect(installerModule.installPackage(pkg, { dryRun: true, releaseDiscovery: false })).rejects.toMatchObject({ code: 'DSH_ENTERPRISE_POLICY_BLOCKED' });
+    } finally {
+      if (previous === undefined) delete process.env.DSH_ENTERPRISE_POLICY_FILE;
+      else process.env.DSH_ENTERPRISE_POLICY_FILE = previous;
+    }
   });
 
   it('builds a desktop status center with pending restart as an explicit host-owned state', async () => {
