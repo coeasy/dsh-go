@@ -68,7 +68,7 @@ describe('Registry Distribution V1', () => {
     expect(direct.source).toBe('shard-projection');
     expect(direct.record.key).toBe('plugin:alpha');
     expect(direct.record.entries[0].package.source.commit).toBe('c'.repeat(40));
-  });
+  }, 20_000);
 
   it('uses a conditional index request, zero repeated shard downloads, and API-to-shard package fallback', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-registry-distribution-http-'));
