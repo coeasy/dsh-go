@@ -12,6 +12,7 @@ import { hasDeclaredSupplyChainEvidence, verifySecurityEvidence } from './supply
 import { verifySupplyChainIdentity } from './supply-chain-identity.mjs';
 import { installReleaseArtifact, isReleaseArtifact } from './artifact-installer.mjs';
 import { discoverReleaseArtifact } from './release-discovery.mjs';
+import { enforceEnterprisePolicy } from './enterprise-policy.mjs';
 
 const exec = promisify(execFile);
 
@@ -63,6 +64,19 @@ function identityFailures(report) {
     .map((item) => `${item.kind}:${item.status}`);
 }
 
+function enterpriseRegistryIdentity() {
+  const selectedName = String(process.env.DSH_SELECTED_REGISTRY_NAME || '').trim();
+  if (selectedName) {
+    return {
+      name: selectedName,
+      url: String(process.env.DSH_SELECTED_REGISTRY_URL || '').trim() || null,
+      trusted: process.env.DSH_SELECTED_REGISTRY_TRUSTED === '1',
+      organization: String(process.env.DSH_SELECTED_REGISTRY_ORGANIZATION || '').trim() || null,
+    };
+  }
+  return { name: 'official', trusted: true };
+}
+
 export async function installPackage(inputPackage, options = {}) {
   const type = assertPackageType(inputPackage?.type || 'plugin');
   assertNotYanked({ ...inputPackage, type });
@@ -84,9 +98,18 @@ export async function installPackage(inputPackage, options = {}) {
 
   const compatibility = assertCompatibility(pkg, options.environment);
   const permissions = inspectPermissions(pkg.permissions);
+  const locallyApproved = options.approved === true || options.dryRun === true || process.env.DSH_PERMISSION_APPROVED === '1';
+  await enforceEnterprisePolicy({
+    package: { ...pkg, type },
+    publisher: pkg.publisher,
+    permissions: pkg.permissions,
+    registry: enterpriseRegistryIdentity(),
+    approved: locallyApproved,
+    operation: options.force ? 'replace' : 'install',
+  }, { file: options.enterprisePolicyFile });
   if (!options.dryRun) {
     assertPermissionConsent(pkg.permissions, {
-      approved: options.approved === true || process.env.DSH_PERMISSION_APPROVED === '1',
+      approved: locallyApproved,
     });
   }
 
