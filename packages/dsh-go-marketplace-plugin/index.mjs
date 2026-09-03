@@ -84,6 +84,15 @@ export function createMarketplaceDesktopClient(options = {}) {
     contract: () => local('/v1/desktop/contract'),
     center: () => local('/v1/desktop/center'),
     enterprisePolicy: () => local('/v1/enterprise/policy'),
+    registries: () => local('/v1/registries'),
+    addRegistry: async (registry, options = {}) => {
+      if (options.approved !== true) return { executed: false, confirmation_required: true, registry, auto_restart: false };
+      return local('/v1/registries', { method: 'POST', body: JSON.stringify({ ...(registry || {}), approved: true }) });
+    },
+    removeRegistry: async (name, options = {}) => {
+      if (options.approved !== true) return { executed: false, confirmation_required: true, name, auto_restart: false };
+      return local(`/v1/registries/${encodeURIComponent(name)}`, { method: 'DELETE', body: JSON.stringify({ approved: true }) });
+    },
     search: (query, options = {}) => marketplace('/api/v1/marketplace', {
       q: query,
       type: options.type,
