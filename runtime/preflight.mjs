@@ -1,29 +1,29 @@
 import { buildDependencyPlan, resolvePackage } from './resolver.mjs';
 import { evaluateCompatibility } from './compatibility.mjs';
 import { inspectPermissions, permissionDiff } from './permissions.mjs';
-import { assertPackageType, inferPackageType, packageKey, parsePackageSpec } from './package-model.mjs';
+import { assertPackageType, inferPackageType, packageKey, parsePackageRequest } from './package-model.mjs';
 
 function active(records) {
   return (records || []).filter((record) => record.state !== 'removed');
 }
 
-function defaultVersion(registry, type, channel) {
-  if (channel) return '*';
-  return registry.defaults?.[`${type}_version`] || registry.defaults?.plugin_version || '0.1.0';
-}
-
 function resolveRequestedPackage(registry, spec, options = {}) {
   const defaultType = assertPackageType(options.type || 'plugin');
-  const parsed = parsePackageSpec(spec, defaultVersion(registry, defaultType, options.channel), defaultType);
+  const request = parsePackageRequest(spec, {
+    defaultVersion: '*',
+    defaultType,
+    channel: options.channel || 'stable',
+    registry: options.registry || null,
+  });
   try {
-    return resolvePackage(registry, parsed.type, parsed.id, parsed.version, { channel: options.channel });
+    return resolvePackage(registry, request.type, request.id, request.versionRange, { channel: request.channel });
   } catch (error) {
     const match = (registry.plugins || []).find((item) =>
-      inferPackageType(item) === parsed.type
-      && item.source?.repo === parsed.id
-      && (!options.channel || (item.channel || item.release_channel || 'stable') === options.channel));
+      inferPackageType(item) === request.type
+      && item.source?.repo === request.id
+      && (item.channel || item.release_channel || 'stable') === request.channel);
     if (!match) throw error;
-    return resolvePackage(registry, parsed.type, match.id, parsed.version, { channel: options.channel });
+    return resolvePackage(registry, request.type, match.id, request.versionRange, { channel: request.channel });
   }
 }
 
