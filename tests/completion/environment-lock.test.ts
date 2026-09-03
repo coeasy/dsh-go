@@ -102,7 +102,7 @@ describe('CAS and environment lock', () => {
     await expect(restoreEnvironmentLock({ registryFile: runtimeFile, lockFile, storeRoot }))
       .rejects.toMatchObject({ code: 'DSH_RESTORE_APPROVAL_REQUIRED' });
 
-    const restored = await restoreEnvironmentLock({ registryFile: runtimeFile, lockFile, storeRoot, approved: true });
+    const restored: any = await restoreEnvironmentLock({ registryFile: runtimeFile, lockFile, storeRoot, approved: true });
     expect(restored.executed).toBe(true);
     expect(restored.restored).toBe(1);
     expect(restored.pruned).toBe(1);
