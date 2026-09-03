@@ -22,8 +22,11 @@ try {
     process.argv = [process.execPath, script, ...args.slice(1)];
     await import(pathToFileURL(resolve(script)).href);
   } else if (args[0] === 'enterprise' || args[0] === 'organization') {
+    const registrySelector = await import('../runtime/registry-cli-resolver.mjs');
+    const selected = await registrySelector.resolveNamedRegistryArgs(args);
+    process.argv = [...process.argv.slice(0, 2), ...selected.args];
     const enterprise = await import('../runtime/enterprise-cli.mjs');
-    await enterprise.runEnterpriseCli(args);
+    await enterprise.runEnterpriseCli(selected.args);
   } else {
     const normalizedArgs = normalizeInstallVersionArgs(args);
     const registrySelector = await import('../runtime/registry-cli-resolver.mjs');
