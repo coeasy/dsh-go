@@ -77,7 +77,17 @@ function enterpriseRegistryIdentity() {
   const registryIndex = process.argv.indexOf('--registry');
   const directRegistry = registryIndex >= 0 ? String(process.argv[registryIndex + 1] || '').trim() : '';
   if (directRegistry) return { name: directRegistry, url: directRegistry, trusted: false, organization: null };
-  return { name: 'official', trusted: true };
+  return { name: 'official', url: null, trusted: true, organization: null };
+}
+
+function sourceWithRegistryProvenance(source, registry) {
+  return {
+    ...source,
+    registry: registry.name,
+    registry_url: registry.url || null,
+    registry_trusted: registry.trusted === true,
+    registry_organization: registry.organization || null,
+  };
 }
 
 export async function installPackage(inputPackage, options = {}) {
@@ -101,12 +111,13 @@ export async function installPackage(inputPackage, options = {}) {
 
   const compatibility = assertCompatibility(pkg, options.environment);
   const permissions = inspectPermissions(pkg.permissions);
+  const registryContext = enterpriseRegistryIdentity();
   const locallyApproved = options.approved === true || options.dryRun === true || process.env.DSH_PERMISSION_APPROVED === '1';
   await enforceEnterprisePolicy({
     package: { ...pkg, type },
     publisher: pkg.publisher,
     permissions: pkg.permissions,
-    registry: enterpriseRegistryIdentity(),
+    registry: registryContext,
     approved: locallyApproved,
     operation: options.force ? 'replace' : 'install',
   }, { file: options.enterprisePolicyFile });
@@ -131,6 +142,10 @@ export async function installPackage(inputPackage, options = {}) {
     commit: pkg.commit,
     target,
     backup,
+    source_registry: registryContext.name,
+    source_registry_url: registryContext.url,
+    source_registry_trusted: registryContext.trusted === true,
+    source_registry_organization: registryContext.organization,
     install_source: installSource,
     artifact_url: releaseArtifact ? pkg.artifact.url : null,
     artifact_digest: releaseArtifact ? pkg.artifact.digest : null,
@@ -195,7 +210,11 @@ export async function installPackage(inputPackage, options = {}) {
       package_type: type,
       version: pkg.version,
       channel: pkg.channel || 'stable',
-      source: pkg.source,
+      source: sourceWithRegistryProvenance(pkg.source, registryContext),
+      source_registry: registryContext.name,
+      source_registry_url: registryContext.url,
+      source_registry_trusted: registryContext.trusted === true,
+      source_registry_organization: registryContext.organization,
       artifact: pkg.artifact,
       installation: {
         source: installSource,
