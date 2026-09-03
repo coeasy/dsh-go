@@ -1,10 +1,65 @@
 ---
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import Layout from '../layouts/Layout.astro';
 import UnifiedMarketplace from '../components/UnifiedMarketplace.astro';
 import MarketplacePresentation from '../components/MarketplacePresentation.astro';
+
+let lastSyncAt = '';
+try {
+  const meta = JSON.parse(readFileSync(resolve('..', 'catalog', 'meta.json'), 'utf8'));
+  lastSyncAt = String(meta.last_sync?.at || meta.pipeline?.run_at || '');
+} catch { /* sync metadata is optional during isolated site checks */ }
+
+const lastSyncTimestamp = Date.parse(lastSyncAt);
+const validLastSync = Number.isFinite(lastSyncTimestamp);
+const lastSyncDate = validLastSync ? new Date(lastSyncTimestamp) : new Date(0);
+const lastSyncDateLabel = validLastSync
+  ? new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(lastSyncDate)
+  : '';
+const lastSyncTimeLabel = validLastSync
+  ? new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).format(lastSyncDate)
+  : '';
 ---
 
 <Layout title="DSH Plugin Marketplace" description="Registry V3 与原始 dsh-plugin Catalog 对齐的统一 Plugin、MCP、Skill、Agent Marketplace。">
   <UnifiedMarketplace />
+  {validLastSync && (
+    <p class="market-sync-status" data-market-sync-status>
+      最近成功同步：<time datetime={lastSyncAt}>{lastSyncTimeLabel}</time>（北京时间）
+    </p>
+  )}
   <MarketplacePresentation />
+
+  <script define:vars={{ lastSyncAt, lastSyncDateLabel, lastSyncTimeLabel }}>
+    if (lastSyncAt) {
+      const dateNode = document.querySelector('.market-hero .metrics span:last-child b');
+      if (dateNode && lastSyncDateLabel) {
+        dateNode.textContent = lastSyncDateLabel;
+        dateNode.closest('span')?.setAttribute('title', `最近成功同步：${lastSyncTimeLabel}（北京时间）`);
+      }
+    }
+  </script>
 </Layout>
+
+<style>
+  .market-sync-status {
+    margin: -1rem auto 2rem;
+    text-align: center;
+    font-size: 0.85rem;
+    opacity: 0.72;
+  }
+</style>

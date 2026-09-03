@@ -1,0 +1,67 @@
+name: Sync Watchdog
+
+on:
+  schedule:
+    # Offset from the production monitor (:05) and canonical syncs (:18).
+    # At :55 we can recover a missed six-hour sync after the 6.5h freshness bound.
+    - cron: "55 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: sync-watchdog
+  cancel-in-progress: true
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SYNC_MAX_AGE_HOURS: "6.5"
+      FULL_SYNC_MAX_AGE_HOURS: "26"
+    steps:
+      - name: Checkout current control plane
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Recover stale canonical sync
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          LAST_SYNC=$(node -e "const m=require('./catalog/meta.json');process.stdout.write(String(m.last_sync?.at||''))")
+          LAST_FULL=$(node -e "const m=require('./catalog/meta.json');const rows=[...(m.history||[]),m.last_sync].filter(Boolean);const full=rows.filter((r)=>r.mode==='full'&&Number.isFinite(Date.parse(r.at||''))).map((r)=>Date.parse(r.at)).sort((a,b)=>b-a)[0]||0;process.stdout.write(full?new Date(full).toISOString():'')")
+          SYNC_STALE=$(LAST_SYNC="$LAST_SYNC" node -e "const t=Date.parse(process.env.LAST_SYNC||'');const max=Number(process.env.SYNC_MAX_AGE_HOURS||6.5)*3600000;process.stdout.write(String(!Number.isFinite(t)||Date.now()-t>max))")
+          FULL_STALE=$(LAST_FULL="$LAST_FULL" node -e "const t=Date.parse(process.env.LAST_FULL||'');const max=Number(process.env.FULL_SYNC_MAX_AGE_HOURS||26)*3600000;process.stdout.write(String(!Number.isFinite(t)||Date.now()-t>max))")
+          echo "Last successful sync: ${LAST_SYNC:-missing}; stale=${SYNC_STALE}"
+          echo "Last successful full sync: ${LAST_FULL:-missing}; stale=${FULL_STALE}"
+
+          if [ "$SYNC_STALE" != "true" ] && [ "$FULL_STALE" != "true" ]; then
+            echo "Canonical sync cadence and daily full-sync cadence are both healthy"
+            exit 0
+          fi
+
+          ACTIVE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/sync.yml/runs?per_page=20" --jq '[.workflow_runs[] | select(.status == "queued" or .status == "in_progress" or .status == "requested" or .status == "waiting" or .status == "pending")] | length')
+          if [ "$ACTIVE" != "0" ]; then
+            echo "Canonical sync already queued, requested, waiting, pending, or running (${ACTIVE}); watchdog will not duplicate it"
+            exit 0
+          fi
+
+          MODE="incremental"
+          if [ "$FULL_STALE" = "true" ]; then
+            MODE="full"
+          fi
+          echo "Dispatching canonical sync recovery in ${MODE} mode"
+          gh workflow run sync.yml --ref main -f mode="$MODE"

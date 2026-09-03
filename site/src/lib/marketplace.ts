@@ -10,6 +10,7 @@ export interface MarketplacePlugin {
   repo_url?: string;
   description?: string;
   topics?: string[];
+  tags?: string[];
   category?: string;
   stars?: number;
   trend_score?: number;
@@ -22,6 +23,7 @@ export interface MarketplacePlugin {
 
 export interface RegistryEntry {
   id?: string;
+  kind?: string;
   type?: string;
   version?: string;
   source?: { repo?: string; commit?: string };
@@ -35,8 +37,10 @@ export type EcosystemType = 'plugin' | 'mcp' | 'skill' | 'agent';
 
 export function ecosystemType(entry?: RegistryEntry | null): EcosystemType {
   if (!entry) return 'plugin';
-  if (entry.type === 'mcp' || entry.type === 'skill' || entry.type === 'agent') return entry.type;
-  const runtime = entry.runtime?.type;
+  const declared = String(entry.kind || entry.type || '').toLowerCase();
+  if (declared === 'mcp' || declared === 'skill' || declared === 'agent' || declared === 'plugin') return declared;
+  if (declared === 'mcp-server' || declared === 'mcp_server') return 'mcp';
+  const runtime = String(entry.runtime?.type || '').toLowerCase();
   if (runtime === 'mcp' || runtime === 'skill' || runtime === 'agent') return runtime;
   const capabilities = entry.capabilities ?? [];
   if (capabilities.includes('mcp')) return 'mcp';
@@ -45,14 +49,17 @@ export function ecosystemType(entry?: RegistryEntry | null): EcosystemType {
   return 'plugin';
 }
 
-export function normalizeRepo(value?: string | null): string {
-  if (!value) return '';
-  return value
-    .trim()
-    .replace(/^https?:\/\/github\.com\//i, '')
-    .replace(/\.git$/i, '')
-    .replace(/^\/+|\/+$/g, '')
-    .toLowerCase();
+export function normalizeRepo(value?: unknown): string {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  const githubMatch = raw.match(/(?:https?:\/\/|ssh:\/\/git@|git@)?github\.com[/:]([^/]+)\/([^/#?]+?)(?:\.git)?(?:[#/?].*)?$/i);
+  const candidate = githubMatch
+    ? `${githubMatch[1]}/${githubMatch[2]}`
+    : raw.replace(/^github:/i, '').replace(/\.git$/i, '').replace(/^\/+|\/+$/g, '');
+  const parts = candidate.split('/').filter(Boolean);
+  if (parts.length !== 2) return '';
+  return `${parts[0].toLowerCase()}/${parts[1].toLowerCase()}`;
 }
 
 export function isActivePlugin(plugin: MarketplacePlugin): boolean {
@@ -79,12 +86,12 @@ export function isDiscoveryAggregator(plugin: MarketplacePlugin): boolean {
   const ecosystemListName = /(^|-)(plugins?|mcp|skills?|agents?|tools?|resources?)-(list|directory|collection)(-|$)|(^|-)(list|directory|collection)-(plugins?|mcp|skills?|agents?|tools?|resources?)(-|$)/;
   if (candidates.some((value) => awesomeName.test(value) || curatedName.test(value) || ecosystemListName.test(value))) return true;
 
-  const topics = Array.isArray(plugin.topics) ? plugin.topics.map((topic) => normalizedDiscoveryName(topic)) : [];
-  if (topics.some((topic) => ['awesome', 'awesome-list', 'curated-list', 'resource-list'].includes(topic))) return true;
+  const topics = [...(plugin.topics || []), ...(plugin.tags || [])].map((topic) => normalizedDiscoveryName(topic));
+  if (topics.some((topic) => ['awesome', 'awesome-list', 'awesome-lists', 'curated-list', 'resource-list'].includes(topic))) return true;
 
   const description = String(plugin.description || '').trim().toLowerCase();
-  return /\b(awesome|curated)\s+(list|collection)\b/.test(description)
-    || /\b(collection|directory|list)\s+of\s+(plugins?|tools?|resources?|projects?|agents?|skills?|mcp)\b/.test(description);
+  return /\b(awesome|curated)\s+(list|collection|directory)\b/.test(description)
+    || /\b(collection|directory|list)\s+of\s+(plugins?|tools?|resources?|projects?|agents?|skills?|mcp|servers?)\b/.test(description);
 }
 
 export function isHomePopular(plugin: MarketplacePlugin): boolean {
@@ -96,10 +103,14 @@ export function isHomePopular(plugin: MarketplacePlugin): boolean {
     && stars < HOME_HARD_MAX_STARS;
 }
 
+export function marketplaceUpdatedAtTimestamp(updatedAt?: string): number {
+  const timestamp = Date.parse(String(updatedAt || ''));
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
 function recencyScore(updatedAt?: string): number {
-  if (!updatedAt) return 0;
-  const timestamp = Date.parse(updatedAt);
-  if (!Number.isFinite(timestamp)) return 0;
+  const timestamp = marketplaceUpdatedAtTimestamp(updatedAt);
+  if (!timestamp) return 0;
   const days = Math.max(0, (Date.now() - timestamp) / 86_400_000);
   if (days <= 7) return 1;
   if (days <= 30) return 0.75;
@@ -108,13 +119,22 @@ function recencyScore(updatedAt?: string): number {
   return 0;
 }
 
-export function marketplaceScore(plugin: MarketplacePlugin): number {
+function marketplaceQualityScore(plugin: MarketplacePlugin): number {
   const stars = Math.max(HOME_MIN_STARS, Number(plugin.stars || 0));
   const starScore = Math.min(1, Math.log10(stars + 1) / Math.log10(HOME_MAX_STARS + 1));
   const trend = Math.max(0, Number(plugin.trend_score || 0));
   const trendScore = Math.min(1, Math.log10(trend + 1) / 3);
   const verifiedScore = plugin.verified ? 1 : 0;
   return starScore * 0.5 + trendScore * 0.2 + recencyScore(plugin.updated_at) * 0.2 + verifiedScore * 0.1;
+}
+
+/**
+ * Homepage ranking key. Repository updated_at is the primary signal; the
+ * existing quality score only breaks ties. Keeping this logic in one helper
+ * lets both the standalone selector and the unified homepage use the same rule.
+ */
+export function marketplaceScore(plugin: MarketplacePlugin): number {
+  return marketplaceUpdatedAtTimestamp(plugin.updated_at) * 2 + marketplaceQualityScore(plugin);
 }
 
 export function selectHomeTop100<T extends MarketplacePlugin>(plugins: T[]): T[] {
@@ -128,16 +148,23 @@ export function selectHomeTop100<T extends MarketplacePlugin>(plugins: T[]): T[]
     .map(({ plugin }) => plugin);
 }
 
+export function compareRegistryVersionsDesc(left: RegistryEntry, right: RegistryEntry): number {
+  return String(right.version || '').localeCompare(String(left.version || ''), undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  });
+}
+
 export function buildRegistryRepoIndex(entries: RegistryEntry[]): Map<string, RegistryEntry[]> {
   const index = new Map<string, RegistryEntry[]>();
-  for (const entry of entries) {
+  for (const entry of entries || []) {
     const repo = normalizeRepo(entry.source?.repo);
     if (!repo) continue;
     const group = index.get(repo) ?? [];
     group.push(entry);
-    group.sort((a, b) => String(b.version || '').localeCompare(String(a.version || '')));
     index.set(repo, group);
   }
+  for (const group of index.values()) group.sort(compareRegistryVersionsDesc);
   return index;
 }
 

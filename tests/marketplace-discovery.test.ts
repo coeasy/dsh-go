@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ecosystemType,
   isDiscoveryAggregator,
   isHomePopular,
+  normalizeRepo,
   selectHomeTop100,
 } from '../site/src/lib/marketplace';
 
@@ -19,9 +21,11 @@ describe('Marketplace discovery policy', () => {
     expect(isDiscoveryAggregator({ name: 'collection-manager', full_name: 'demo/collection-manager' })).toBe(false);
   });
 
-  it('keeps Top100 inside the star band and excludes aggregators', () => {
+  it('keeps inactive packages out while preserving the star band and aggregator policy', () => {
     const plugins = [
       { name: 'direct-plugin', full_name: 'demo/direct-plugin', stars: 900, verified: true },
+      { name: 'disabled-plugin', full_name: 'demo/disabled-plugin', stars: 1000, disabled: true },
+      { name: 'deprecated-plugin', full_name: 'demo/deprecated-plugin', stars: 1100, deprecated: true },
       { name: 'awesome-plugins', full_name: 'demo/awesome-plugins', stars: 1500 },
       { name: 'too-small', full_name: 'demo/too-small', stars: 99 },
       { name: 'too-large', full_name: 'demo/too-large', stars: 5001 },
@@ -29,5 +33,13 @@ describe('Marketplace discovery policy', () => {
 
     expect(isHomePopular(plugins[0])).toBe(true);
     expect(selectHomeTop100(plugins).map((plugin) => plugin.name)).toEqual(['direct-plugin']);
+  });
+
+  it('preserves Registry type inference and repository normalization contracts', () => {
+    expect(ecosystemType({ id: 'runtime-mcp', runtime: { type: 'mcp' } })).toBe('mcp');
+    expect(ecosystemType({ id: 'capability-skill', capabilities: ['skill'] })).toBe('skill');
+    expect(ecosystemType({ id: 'legacy-mcp', kind: 'mcp-server' })).toBe('mcp');
+    expect(normalizeRepo('https://github.com/Demo/Tool.git')).toBe('demo/tool');
+    expect(normalizeRepo('git@github.com:Demo/Tool.git')).toBe('demo/tool');
   });
 });

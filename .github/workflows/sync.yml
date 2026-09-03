@@ -84,7 +84,9 @@ jobs:
         id: diff
         shell: bash
         run: |
-          if ! git diff --quiet -- catalog/plugins.json catalog/feed.xml catalog/registry-v3.json catalog/schema-v3.json; then
+          # meta.json is public freshness state and participates in exact-SHA production convergence.
+          # Treat every successful sync metadata refresh as deploy-worthy so production never trails main.
+          if ! git diff --quiet -- catalog/plugins.json catalog/feed.xml catalog/registry-v3.json catalog/schema-v3.json catalog/meta.json; then
             echo "data_changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "data_changed=false" >> "$GITHUB_OUTPUT"
@@ -132,7 +134,7 @@ jobs:
             node -e "const m=require('./catalog/meta.json'); console.log('- last sync: '+(m.last_sync?.at||'n/a')+'\n- registry hash: '+(m.registry?.content_hash||'n/a')+'\n- registry count: '+(m.registry?.count||0))" >> "$GITHUB_STEP_SUMMARY"
           fi
           echo "- generated commit pushed: ${{ steps.publish.outputs.pushed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- deploy-worthy data changed: ${{ steps.diff.outputs.data_changed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- deploy-worthy catalog/meta changed: ${{ steps.diff.outputs.data_changed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- release workflows dispatched: ${{ steps.dispatch.outputs.dispatched || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- dispatch failures: ${{ steps.dispatch.outputs.dispatch_failures || 'none' }}" >> "$GITHUB_STEP_SUMMARY"
           if [ -n "${{ steps.publish.outputs.commit_sha }}" ]; then
