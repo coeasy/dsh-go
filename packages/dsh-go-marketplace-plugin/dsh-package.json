@@ -52,6 +52,7 @@
     "host": "tauri-or-compatible-webview",
     "bridge": {
       "protocol": "dsh-client-host-v1",
+      "tauri_command": "dsh_client_host_request",
       "health": "/health",
       "contract": "/v1/desktop/contract",
       "center": "/v1/desktop/center",
