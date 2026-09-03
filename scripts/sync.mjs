@@ -42,6 +42,7 @@ const REQUEST_DELAY = 120; // ms，普通资源请求间隔
 // 搜索 API 速率：认证 30 req/min、匿名 10 req/min。主动限速避免 403 导致全量中途失败。
 const SEARCH_DELAY = TOKEN ? 2200 : 6000; // ms
 const README_EXCERPT_LEN = 500;
+const README_TIMEOUT_MS = 15_000;
 const MANIFEST_FILES = Object.freeze(['dsh-package.json', 'dsh-plugin.json', 'dsh-mcp.json', 'dsh-skill.json', 'dsh-agent.json']);
 const MANIFEST_TYPE_BY_FILE = Object.freeze({
   'dsh-plugin.json': 'plugin', 'dsh-mcp.json': 'mcp', 'dsh-skill.json': 'skill', 'dsh-agent.json': 'agent',
@@ -326,7 +327,7 @@ export function applyManifestObservation(plugin, observation) {
 async function fetchReadme(fullName, branch) {
   const url = `https://raw.githubusercontent.com/${fullName}/${branch}/README.md`;
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' } });
+    const res = await fetch(url, { headers: { 'User-Agent': 'dsh-go' }, signal: AbortSignal.timeout(README_TIMEOUT_MS) });
     if (!res.ok) return { has: false, excerpt: '' };
     const text = await res.text();
     return { has: true, excerpt: stripMarkdown(text).slice(0, README_EXCERPT_LEN) };

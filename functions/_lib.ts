@@ -314,7 +314,7 @@ export function json(body: unknown, init: ResponseInit = {}, etag?: string) {
   headers.set('Content-Type', 'application/json; charset=utf-8');
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  headers.set('Access-Control-Allow-Headers', 'Content-Type, If-None-Match');
+  headers.set('Access-Control-Allow-Headers', 'Content-Type, If-None-Match, Accept-Language');
   headers.set('Access-Control-Max-Age', '86400');
   headers.set('X-Api-Version', 'v1');
   headers.set('X-Content-Type-Options', 'nosniff');
@@ -346,6 +346,18 @@ export function notModifiedResponse(etag: string) {
       ETag: `"${etag}"`,
       'Access-Control-Allow-Origin': '*',
       'X-Api-Version': 'v1',
+    },
+  });
+}
+
+export function optionsResponse(methods = 'GET, OPTIONS') {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': methods,
+      'Access-Control-Allow-Headers': 'Content-Type, If-None-Match, Accept-Language',
+      'Access-Control-Max-Age': '86400',
     },
   });
 }

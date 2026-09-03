@@ -4,6 +4,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
+import { withFileLock } from './file-lock.mjs';
+import { withPackageOperationLock } from './package-operation-lock.mjs';
 import { getLocalMcpProcessStartTime, mcpStatus, startMcp } from './execution.mjs';
 import { safePackageId } from './package-model.mjs';
 import { runtimeRoot } from './registry.mjs';
@@ -14,6 +16,13 @@ const DEFAULT_STOP_POLL_MS = 50;
 const DEFAULT_START_TIME_TOLERANCE_MS = 10_000;
 const SUPERVISOR_START_TIME_TOLERANCE_MS = 1_500;
 const SUPERVISOR_IDENTITY_VERSION = 1;
+const MAX_TIMER_MS = 2_147_483_647;
+
+function boundedTimeout(value, fallback, { allowZero = false } = {}) {
+  const candidate = Number(value);
+  const valid = Number.isFinite(candidate) && (allowZero ? candidate >= 0 : candidate > 0);
+  return valid ? Math.min(candidate, MAX_TIMER_MS) : fallback;
+}
 
 function executionRoot() {
   return resolve(process.env.DSH_EXECUTION_HOME || join(runtimeRoot(), 'run'));
@@ -23,14 +32,27 @@ export function mcpStatePath(id) {
   return join(executionRoot(), 'mcp', `${safePackageId(id)}.json`);
 }
 
+function mcpControlLockPath(id) {
+  return join(executionRoot(), 'mcp', `${safePackageId(id)}.control.lock`);
+}
+
+function withMcpControlLock(id, options, task) {
+  return withFileLock(mcpControlLockPath(id), task, {
+    timeoutMs: options.controlLockTimeoutMs,
+    staleMs: options.controlLockStaleMs,
+  });
+}
+
+function withMcpPackageLock(id, options, task) {
+  return withPackageOperationLock('mcp', id, task, options);
+}
+
 export function processRunning(pid) {
   if (!Number.isInteger(pid) || pid <= 0) return false;
   try {
     process.kill(pid, 0);
     return true;
-  } catch {
-    return false;
-  }
+  } catch (error) { return error?.code === 'EPERM'; }
 }
 
 function parseStartedAt(value) {
@@ -196,8 +218,13 @@ async function writeMcpProcessState(id, value) {
   const file = mcpStatePath(id);
   await mkdir(dirname(file), { recursive: true });
   const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
-  await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
-  await rename(temp, file);
+  try {
+    await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
   return value;
 }
 
@@ -323,8 +350,8 @@ function sleep(ms) {
 }
 
 export async function waitForProcessExit(pid, options = {}) {
-  const timeoutMs = Math.max(0, Number(options.timeoutMs) || DEFAULT_STOP_TIMEOUT_MS);
-  const pollMs = Math.max(1, Number(options.pollMs) || DEFAULT_STOP_POLL_MS);
+  const timeoutMs = boundedTimeout(options.timeoutMs, DEFAULT_STOP_TIMEOUT_MS, { allowZero: true });
+  const pollMs = boundedTimeout(options.pollMs, DEFAULT_STOP_POLL_MS);
   const isRunning = options.isRunning || processRunning;
   const pause = options.sleep || sleep;
   const deadline = Date.now() + timeoutMs;
@@ -346,7 +373,7 @@ export async function readMcpProcessState(id) {
   }
 }
 
-export async function startMcpSafely(id, options = {}) {
+async function startMcpSafelyUnlocked(id, options = {}) {
   const state = await readMcpProcessState(id);
   if (state?.managed_process) {
     const pid = Number(state.pid);
@@ -373,40 +400,46 @@ export async function startMcpSafely(id, options = {}) {
   return { ...attested, identity_verified: true, supervisor_identity_verified: true };
 }
 
-export async function mcpStatusSafely(id, options = {}) {
-  const status = await (options.status || mcpStatus)(id, options);
-  const state = status?.state || await readMcpProcessState(id);
-  if (!state?.managed_process) return { ...status, identity_verified: false, supervisor_identity_verified: false };
-
-  const pid = Number(state.pid);
-  const isRunning = options.isRunning || processRunning;
-  if (!Number.isInteger(pid) || pid <= 0 || !isRunning(pid)) {
-    return { ...status, running: false, identity_verified: false, supervisor_identity_verified: false };
-  }
-
-  const identity = await verifyManagedProcessIdentity(state, options);
-  if (!identity.matched) {
-    return {
-      ...status,
-      running: false,
-      stale_state: true,
-      pid_reused: !identity.exited,
-      identity_verified: identity.verified,
-      supervisor_identity_verified: false,
-      identity,
-    };
-  }
-  return {
-    ...status,
-    running: true,
-    identity_verified: identity.verified,
-    supervisor_identity_verified: identity.supervisor_verified === true,
-    identity_legacy: identity.legacy === true,
-    supervisor_instance_id: identity.instance_id || null,
-  };
+export function startMcpSafely(id, options = {}) {
+  return withMcpPackageLock(id, options, () => withMcpControlLock(id, options, () => startMcpSafelyUnlocked(id, options)));
 }
 
-export async function stopMcpSafely(id, options = {}) {
+export function mcpStatusSafely(id, options = {}) {
+  return withMcpPackageLock(id, options, async () => {
+    const status = await (options.status || mcpStatus)(id, options);
+    const state = status?.state || await readMcpProcessState(id);
+    if (!state?.managed_process) return { ...status, identity_verified: false, supervisor_identity_verified: false };
+
+    const pid = Number(state.pid);
+    const isRunning = options.isRunning || processRunning;
+    if (!Number.isInteger(pid) || pid <= 0 || !isRunning(pid)) {
+      return { ...status, running: false, identity_verified: false, supervisor_identity_verified: false };
+    }
+
+    const identity = await verifyManagedProcessIdentity(state, options);
+    if (!identity.matched) {
+      return {
+        ...status,
+        running: false,
+        stale_state: true,
+        pid_reused: !identity.exited,
+        identity_verified: identity.verified,
+        supervisor_identity_verified: false,
+        identity,
+      };
+    }
+    return {
+      ...status,
+      running: true,
+      identity_verified: identity.verified,
+      supervisor_identity_verified: identity.supervisor_verified === true,
+      identity_legacy: identity.legacy === true,
+      supervisor_instance_id: identity.instance_id || null,
+    };
+  });
+}
+
+async function stopMcpSafelyUnlocked(id, options = {}) {
   const state = await readMcpProcessState(id);
   if (!state) return { type: 'mcp', id, stopped: false, reason: 'not-started' };
 
@@ -438,7 +471,7 @@ export async function stopMcpSafely(id, options = {}) {
       }
 
       let exited = await waitForProcessExit(pid, {
-        timeoutMs: Number(options.stopTimeoutMs ?? options.timeoutMs) || DEFAULT_STOP_TIMEOUT_MS,
+        timeoutMs: boundedTimeout(options.stopTimeoutMs ?? options.timeoutMs, DEFAULT_STOP_TIMEOUT_MS, { allowZero: true }),
         pollMs: options.pollMs,
         isRunning,
         sleep: options.sleep,
@@ -467,8 +500,14 @@ export async function stopMcpSafely(id, options = {}) {
   };
 }
 
-export async function restartMcpSafely(id, options = {}) {
-  const stopped = await stopMcpSafely(id, options);
-  const started = await startMcpSafely(id, options);
-  return { ...started, restarted: true, previous: stopped };
+export function stopMcpSafely(id, options = {}) {
+  return withMcpPackageLock(id, options, () => withMcpControlLock(id, options, () => stopMcpSafelyUnlocked(id, options)));
+}
+
+export function restartMcpSafely(id, options = {}) {
+  return withMcpPackageLock(id, options, () => withMcpControlLock(id, options, async () => {
+    const stopped = await stopMcpSafelyUnlocked(id, options);
+    const started = await startMcpSafelyUnlocked(id, options);
+    return { ...started, restarted: true, previous: stopped };
+  }));
 }

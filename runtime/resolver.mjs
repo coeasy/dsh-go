@@ -81,10 +81,14 @@ export function resolvePackage(registry, type, id, version, options = {}) {
     .filter((item) => satisfiesVersion(item.version, range));
 
   const directMatching = matching.filter((item) => String(item.id || '').toLowerCase() === idKey);
+  const repositoryMatching = matching.filter((item) => String(item.source?.repo || '').toLowerCase() === idKey);
   let candidates;
   if (directMatching.length) {
     candidates = selectable(directMatching, options);
     if (!candidates.length) throw selectionError(directMatching, normalizedType, id, range, channel) || new Error(`Runtime package not found: ${normalizedType}:${id}@${range} [${channel}]`);
+  } else if (repositoryMatching.length) {
+    candidates = selectable(repositoryMatching, options);
+    if (!candidates.length) throw selectionError(repositoryMatching, normalizedType, id, range, channel) || new Error(`Runtime package not found: ${normalizedType}:${id}@${range} [${channel}]`);
   } else {
     const providerMatching = matching.filter((item) => matchesCapability(item, idKey));
     candidates = selectable(providerMatching, options);
@@ -146,6 +150,7 @@ function resolveDependency(registry, dependency, options) {
 
 function recordMatchesToken(item, token) {
   return String(item.id || '').toLowerCase() === String(token || '').toLowerCase()
+    || String(item.source?.repo || '').toLowerCase() === String(token || '').toLowerCase()
     || matchesCapability(item, token);
 }
 
@@ -202,7 +207,8 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
       }
       graph[outputKey].push({
         type: resolved.type,
-        id: dependency.id,
+        id: resolved.id,
+        requested_id: dependency.id,
         range: dependency.range,
         version: resolved.version,
         optional: dependency.optional,

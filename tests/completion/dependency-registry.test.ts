@@ -1,4 +1,4 @@
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -64,5 +64,17 @@ describe('runtime dependency guard and generation CAS', () => {
     const latest = await readRuntimeRegistry(registryFile);
     expect(latest.packages.some((item: { id: string }) => item.id === 'two')).toBe(true);
     expect(latest.packages.some((item: { id: string }) => item.id === 'three')).toBe(false);
+  });
+
+  it('does not evict a stale-looking registry lock owned by a live process', async () => {
+    const lockFile = `${registryFile}.lock`;
+    await writeFile(lockFile, `${JSON.stringify({ pid: process.pid, created_at: new Date().toISOString() })}\n`);
+    const old = new Date(Date.now() - 60_000);
+    await utimes(lockFile, old, old);
+
+    await expect(writeRuntimeRegistry({ schema_version: 3, generation: 0, packages: [] }, registryFile, { timeoutMs: 100 }))
+      .rejects.toMatchObject({ code: 'DSH_REGISTRY_BUSY' });
+    expect(JSON.parse(await readFile(lockFile, 'utf8')).pid).toBe(process.pid);
+    await rm(lockFile, { force: true });
   });
 });

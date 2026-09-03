@@ -18,21 +18,29 @@ import {
 } from './registry.mjs';
 import { preflightPackage } from './preflight.mjs';
 import { readInstallLock } from './verifier.mjs';
+import { withPackageOperationLocks } from './package-operation-lock.mjs';
 
 export function transactionsRoot() {
   return resolve(process.env.DSH_TRANSACTION_HOME || join(runtimeRoot(), 'transactions'));
 }
 
 function transactionPath(id) {
-  return join(transactionsRoot(), id);
+  const value = String(id || '');
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(value)) throw new Error(`unsafe transaction id: ${value || '<empty>'}`);
+  return join(transactionsRoot(), value);
 }
 
 async function writeJournal(root, journal) {
   await mkdir(root, { recursive: true });
   const file = join(root, 'journal.json');
-  const temp = `${file}.tmp-${process.pid}`;
-  await writeFile(temp, `${JSON.stringify(journal, null, 2)}\n`, 'utf8');
-  await rename(temp, file);
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, `${JSON.stringify(journal, null, 2)}\n`, 'utf8');
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
 }
 
 function requestFromEntry(entry) {
@@ -322,17 +330,23 @@ export async function executePackageTransaction(file, options = {}) {
     };
   }
 
-  const root = transactionPath(transaction.id);
-  const staged = [];
-  const moves = [];
-  let nextRegistry = transaction.runtimeRegistry;
-  let registryCommitted = false;
-  await writeJournal(root, journalPayload(transaction, moves, 'staging', { registry_file: options.registryFile || null }));
+  return withPackageOperationLocks(transaction.packages, async () => {
+    const root = transactionPath(transaction.id);
+    const staged = [];
+    const moves = [];
+    let nextRegistry = transaction.runtimeRegistry;
+    let registryCommitted = false;
 
-  try {
+    try {
+    await writeJournal(root, journalPayload(transaction, moves, 'staging', { registry_file: options.registryFile || null }));
     for (const pkg of transaction.packages) {
       const stageRoot = join(root, 'stage', pkg.type);
-      const plan = await installPackage(pkg, { root: stageRoot, approved: true });
+      const plan = await installPackage(pkg, {
+        ...options,
+        root: stageRoot,
+        approved: true,
+        operationLockHeld: true,
+      });
       const stagedTarget = join(stageRoot, safePackageId(pkg.id));
       staged.push({ pkg, plan, staged_target: stagedTarget });
     }
@@ -407,22 +421,23 @@ export async function executePackageTransaction(file, options = {}) {
       order: transaction.order,
       restart_required: true,
     };
-  } catch (error) {
-    if (!registryCommitted) {
-      try {
-        await restoreMoves(moves, journalPayload(transaction, moves, 'recovery-required', { registry_file: options.registryFile || null }));
-        await rm(root, { recursive: true, force: true });
-      } catch (recoveryError) {
-        error.recovery_error = recoveryError.message;
-        await writeJournal(root, journalPayload(transaction, moves, 'recovery-required', {
-          registry_file: options.registryFile || null,
-          error: error.message,
-          recovery_error: recoveryError.message,
-        })).catch(() => {});
+    } catch (error) {
+      if (!registryCommitted) {
+        try {
+          await restoreMoves(moves, journalPayload(transaction, moves, 'recovery-required', { registry_file: options.registryFile || null }));
+          await rm(root, { recursive: true, force: true });
+        } catch (recoveryError) {
+          error.recovery_error = recoveryError.message;
+          await writeJournal(root, journalPayload(transaction, moves, 'recovery-required', {
+            registry_file: options.registryFile || null,
+            error: error.message,
+            recovery_error: recoveryError.message,
+          })).catch(() => {});
+        }
       }
+      throw error;
     }
-    throw error;
-  }
+  }, options);
 }
 
 export async function recoverPackageTransactions(options = {}) {
@@ -481,7 +496,7 @@ export async function recoverPackageTransactions(options = {}) {
         );
       }
 
-      await restoreMoves(journal.moves || [], journal);
+      await withPackageOperationLocks(journal.order || [], () => restoreMoves(journal.moves || [], journal), { registryFile });
       await rm(root, { recursive: true, force: true });
       recovered.push({
         id: journal.id || entry.name,

@@ -164,7 +164,7 @@ const ecosystemUrl = u('/ecosystem/');
     const selected = params.get('id');
     const query = params.get('q') || '';
     input.value = query;
-    const publisher = selected && publishers.find((candidate) => candidate.id === selected);
+    const publisher = selected && publishers.find((candidate) => candidate.id.toLowerCase() === selected.toLowerCase());
     if (publisher) renderProfile(publisher);
     else renderDirectory(query);
   }

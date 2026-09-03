@@ -1,7 +1,9 @@
 import { access, mkdir, open, readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { createRuntimePackageRecord, recordRuntimeEvent } from './lifecycle.mjs';
+import { lockOwnerAlive } from './file-lock.mjs';
 import { assertPackageType, packageKey, safePackageId } from './package-model.mjs';
 import { readInstallLock } from './verifier.mjs';
 
@@ -203,15 +205,25 @@ async function diskGeneration(file) {
 
 async function acquireRegistryLock(file, options = {}) {
   const lockFile = registryLockPath(file);
-  const timeout = Number(options.timeoutMs) || REGISTRY_LOCK_TIMEOUT_MS;
+  const requestedTimeout = Number(options.timeoutMs);
+  const timeout = Number.isFinite(requestedTimeout) && requestedTimeout > 0 ? requestedTimeout : REGISTRY_LOCK_TIMEOUT_MS;
   const deadline = Date.now() + timeout;
   await mkdir(dirname(lockFile), { recursive: true });
 
   while (true) {
     try {
       const handle = await open(lockFile, 'wx', 0o600);
-      await handle.writeFile(`${JSON.stringify({ pid: process.pid, created_at: new Date().toISOString() })}\n`);
+      try {
+        await handle.writeFile(`${JSON.stringify({ pid: process.pid, created_at: new Date().toISOString() })}\n`);
+      } catch (writeError) {
+        await handle.close().catch(() => {});
+        await unlink(lockFile).catch(() => {});
+        throw writeError;
+      }
+      let released = false;
       return async () => {
+        if (released) return;
+        released = true;
         try { await handle.close(); } finally { await unlink(lockFile).catch(() => {}); }
       };
     } catch (error) {
@@ -219,8 +231,12 @@ async function acquireRegistryLock(file, options = {}) {
       try {
         const info = await stat(lockFile);
         if (Date.now() - info.mtimeMs > REGISTRY_LOCK_STALE_MS) {
-          await unlink(lockFile);
-          continue;
+          const ownerAlive = await lockOwnerAlive(lockFile);
+          if (ownerAlive === null) continue;
+          if (ownerAlive === false) {
+            await unlink(lockFile);
+            continue;
+          }
         }
       } catch (inspectError) {
         if (inspectError?.code === 'ENOENT') continue;
@@ -269,13 +285,36 @@ export async function writeRuntimeRegistry(registry, file = registryPath(), opti
       plugins: packages.filter((item) => item.type === 'plugin'),
     };
     await mkdir(dirname(targetFile), { recursive: true });
-    const temp = `${targetFile}.tmp-${process.pid}-${Date.now()}`;
-    await writeFile(temp, JSON.stringify(next, null, 2) + '\n', 'utf8');
-    await rename(temp, targetFile);
+    const temp = `${targetFile}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+    try {
+      await writeFile(temp, JSON.stringify(next, null, 2) + '\n', 'utf8');
+      await rename(temp, targetFile);
+    } catch (error) {
+      await rm(temp, { force: true }).catch(() => {});
+      throw error;
+    }
     return withCompatibility(next);
   } finally {
     await release();
   }
+}
+
+export async function updateRuntimeRegistry(mutator, file = registryPath(), options = {}) {
+  if (typeof mutator !== 'function') throw new TypeError('runtime registry mutator must be a function');
+  const attempts = Number.isInteger(options.retries) && options.retries > 0 ? options.retries : 5;
+  let lastConflict;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const current = await readRuntimeRegistry(file);
+    const next = await mutator(current);
+    try {
+      return await writeRuntimeRegistry(next, file, options);
+    } catch (error) {
+      if (error?.code !== 'DSH_REGISTRY_CONFLICT' || attempt === attempts - 1) throw error;
+      lastConflict = error;
+      await new Promise((accept) => setTimeout(accept, 20 * (attempt + 1)));
+    }
+  }
+  throw lastConflict || new Error('runtime registry update did not converge');
 }
 
 export function getRuntimePackage(registry, type, id, options = {}) {

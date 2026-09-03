@@ -39,7 +39,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   try {
     const type = String(params.type || '').toLowerCase();
     const id = String(params.id || '').trim().toLowerCase();
-    if (!TYPES.has(type) || !ID_PATTERN.test(id) || id.includes('..')) return response({ error: { code: 400, message: 'invalid package identity' } }, 400);
+    if (!TYPES.has(type) || !ID_PATTERN.test(id) || id === '.' || id === '..' || id.includes('..')) return response({ error: { code: 400, message: 'invalid package identity' } }, 400);
     const key = `${type}:${id}`;
 
     const indexResponse = await env.ASSETS.fetch(new URL('/catalog/distribution-v1/index.json', request.url));

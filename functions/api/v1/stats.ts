@@ -1,5 +1,5 @@
 // GET /api/v1/stats —— 聚合统计
-import { loadCatalog, filterPlugins, json, internalError, type Env } from '../../_lib';
+import { loadCatalog, filterPlugins, json, internalError, optionsResponse, type Env } from '../../_lib';
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
@@ -37,3 +37,5 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return internalError(e);
   }
 };
+
+export const onRequestOptions: PagesFunction = () => optionsResponse();

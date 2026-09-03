@@ -7,6 +7,19 @@ import { compareVersions, satisfiesVersion } from './semver.mjs';
 
 const exec = promisify(execFile);
 const DEFAULT_REPOSITORY = 'coeasy/dsh-go';
+const DEFAULT_CHECK_TIMEOUT_MS = 15_000;
+const DEFAULT_INSTALL_TIMEOUT_MS = 120_000;
+
+function positiveOption(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+function normalizeRepository(value) {
+  const repository = String(value || '').trim();
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) throw new Error('repository must be owner/name');
+  return repository;
+}
 
 async function exists(path) {
   try {
@@ -45,7 +58,7 @@ export async function runtimeEnvironment(packageVersion, options = {}) {
 }
 
 export async function checkForRuntimeUpdate(currentVersion, options = {}) {
-  const repository = options.repository || DEFAULT_REPOSITORY;
+  const repository = normalizeRepository(options.repository || DEFAULT_REPOSITORY);
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   if (typeof fetchImpl !== 'function') throw new Error('fetch is unavailable; Node.js 20+ is required');
   const response = await fetchImpl(`https://api.github.com/repos/${repository}/releases/latest`, {
@@ -53,6 +66,7 @@ export async function checkForRuntimeUpdate(currentVersion, options = {}) {
       accept: 'application/vnd.github+json',
       'user-agent': `dsh-go/${currentVersion}`,
     },
+    signal: AbortSignal.timeout(positiveOption(options.timeoutMs, DEFAULT_CHECK_TIMEOUT_MS)),
   });
   if (!response.ok) throw new Error(`failed to check runtime update: GitHub HTTP ${response.status}`);
   const release = await response.json();
@@ -80,6 +94,8 @@ export async function updateRuntime(currentVersion, options = {}) {
   await exec(npm, ['install', '--global', installSpec], {
     windowsHide: true,
     maxBuffer: 8 * 1024 * 1024,
+    timeout: positiveOption(options.installTimeoutMs, DEFAULT_INSTALL_TIMEOUT_MS),
+    killSignal: 'SIGTERM',
   });
   return { ...check, updated: true, install_spec: installSpec };
 }

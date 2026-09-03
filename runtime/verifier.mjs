@@ -9,6 +9,7 @@ import { isReleaseArtifact, validateReleaseArtifact } from './artifact-installer
 const exec = promisify(execFile);
 const COMMIT_RE = /^[0-9a-f]{40}$/i;
 const VERSION_RE = /^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/;
+const DEFAULT_GIT_TIMEOUT_MS = 120_000;
 
 export function verifyResolvedPackage(pkg) {
   const errors = [];
@@ -40,13 +41,19 @@ export function verifyResolvedPlugin(plugin) {
   return verifyResolvedPackage({ ...plugin, type: 'plugin' });
 }
 
-export async function gitHead(targetDir) {
-  const { stdout } = await exec('git', ['-C', targetDir, 'rev-parse', 'HEAD'], { windowsHide: true });
+export async function gitHead(targetDir, options = {}) {
+  const configuredTimeout = Number(options.timeoutMs ?? process.env.DSH_GIT_TIMEOUT_MS);
+  const timeout = Number.isFinite(configuredTimeout) && configuredTimeout > 0 ? configuredTimeout : DEFAULT_GIT_TIMEOUT_MS;
+  const { stdout } = await exec('git', ['-C', targetDir, 'rev-parse', 'HEAD'], {
+    windowsHide: true,
+    timeout,
+    killSignal: 'SIGTERM',
+  });
   return stdout.trim().toLowerCase();
 }
 
-export async function verifyInstalledCommit(targetDir, expectedCommit) {
-  const actual = await gitHead(targetDir);
+export async function verifyInstalledCommit(targetDir, expectedCommit, options = {}) {
+  const actual = await gitHead(targetDir, options);
   if (actual !== String(expectedCommit).toLowerCase()) throw new Error(`installed commit mismatch: expected ${expectedCommit}, got ${actual}`);
   return actual;
 }

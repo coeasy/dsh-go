@@ -14,7 +14,7 @@ export function isPackageManagerV2Command(args = []) {
   if (args[0] === 'registry') return true;
   if (args[0] !== 'package') return false;
   if (['graph', 'explain', 'advisories', 'resolve-registry', 'export', 'publisher-check', 'submission-plan', 'manifest-v2'].includes(args[1])) return true;
-  return args[1] === 'install' && String(args[2] || '').toLowerCase().endsWith('.dshpkg');
+  return ['install', 'add'].includes(args[1]) && String(args[2] || '').toLowerCase().endsWith('.dshpkg');
 }
 
 export async function runPackageManagerV2Cli(args = process.argv.slice(2)) {
@@ -47,7 +47,7 @@ export async function runPackageManagerV2Cli(args = process.argv.slice(2)) {
       if (!raw) throw new Error(`package ${action} requires package spec`);
       if (action === 'export') {
         result = await exportDshPackage(raw, option(args, '--output'), { registryFile: option(args, '--runtime-registry'), type: option(args, '--type') });
-      } else if (action === 'install' && raw.toLowerCase().endsWith('.dshpkg')) {
+      } else if (['install', 'add'].includes(action) && raw.toLowerCase().endsWith('.dshpkg')) {
         result = await installDshPackage(raw, {
           registryFile: option(args, '--runtime-registry'),
           root: option(args, '--root'),

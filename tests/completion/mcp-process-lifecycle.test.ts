@@ -140,6 +140,33 @@ describe('managed MCP process lifecycle', () => {
     await expect(access(file)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
+  it('serializes concurrent starts so one caller cannot orphan the other process', async () => {
+    let starts = 0;
+    const start = async () => {
+      starts += 1;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      return {
+        type: 'mcp', id: 'concurrent', transport: 'stdio', managed_process: true, running: true,
+        pid: 8686, command: '/fake/node', args: ['server.mjs'], started_at: '2026-08-26T07:00:00.000Z',
+      };
+    };
+    const options = {
+      start,
+      isRunning: () => true,
+      getProcessStartTime: async () => '2026-08-26T07:00:00.000Z',
+      resolveExecutable: async () => null,
+    };
+    const [first, second] = await Promise.all([
+      startMcpSafely('concurrent', options),
+      startMcpSafely('concurrent', options),
+    ]);
+
+    expect(starts).toBe(1);
+    expect(first).toMatchObject({ running: true, pid: 8686 });
+    expect(second).toMatchObject({ running: true, pid: 8686 });
+    expect([first, second].filter((result) => result.already_running)).toHaveLength(1);
+  });
+
   it('reports a reused PID as stale instead of claiming the MCP is running', async () => {
     const state = {
       type: 'mcp', id: 'reused-status', transport: 'stdio', managed_process: true, running: true,

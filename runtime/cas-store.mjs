@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { cp, lstat, mkdir, readFile, readdir, readlink, rename, rm } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { homedir } from 'node:os';
@@ -93,22 +93,24 @@ export async function snapshotDirectory(directory, options = {}) {
   if (existing.ok) return { ...hashed, path: target, cache_hit: true };
   if (!existing.missing) await rm(target, { recursive: true, force: true });
 
-  const temp = `${target}.tmp-${process.pid}-${Date.now()}`;
+  const temp = `${target}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
   await rm(temp, { recursive: true, force: true });
   await mkdir(dirname(temp), { recursive: true });
-  await cp(source, temp, { recursive: true, force: true, dereference: false, preserveTimestamps: false });
-  const copied = await hashDirectory(temp);
-  if (copied.digest !== hashed.digest) {
-    await rm(temp, { recursive: true, force: true });
-    throw new Error(`CAS snapshot digest changed during copy: expected ${hashed.digest}, got ${copied.digest}`);
-  }
   try {
-    await rename(temp, target);
-  } catch (error) {
-    if (error?.code !== 'EEXIST' && error?.code !== 'ENOTEMPTY') throw error;
-    await rm(temp, { recursive: true, force: true });
-    const raced = await verifyCasSnapshot(hashed.digest, { root });
-    if (!raced.ok) throw new Error(`CAS snapshot race produced invalid digest: ${hashed.digest}`);
+    await cp(source, temp, { recursive: true, force: true, dereference: false, preserveTimestamps: false });
+    const copied = await hashDirectory(temp);
+    if (copied.digest !== hashed.digest) {
+      throw new Error(`CAS snapshot digest changed during copy: expected ${hashed.digest}, got ${copied.digest}`);
+    }
+    try {
+      await rename(temp, target);
+    } catch (error) {
+      if (error?.code !== 'EEXIST' && error?.code !== 'ENOTEMPTY') throw error;
+      const raced = await verifyCasSnapshot(hashed.digest, { root });
+      if (!raced.ok) throw new Error(`CAS snapshot race produced invalid digest: ${hashed.digest}`);
+    }
+  } finally {
+    await rm(temp, { recursive: true, force: true }).catch(() => {});
   }
   return { ...hashed, path: target, cache_hit: false };
 }
@@ -119,11 +121,18 @@ export async function copyCasSnapshot(digest, destination, options = {}) {
   const target = resolve(destination);
   await rm(target, { recursive: true, force: true });
   await mkdir(dirname(target), { recursive: true });
-  await cp(verified.path, target, { recursive: true, force: true, dereference: false, preserveTimestamps: false });
-  const copied = await hashDirectory(target);
-  if (copied.digest !== String(digest).toLowerCase()) {
-    await rm(target, { recursive: true, force: true });
-    throw new Error(`restored CAS snapshot digest mismatch: expected ${digest}, got ${copied.digest}`);
+  try {
+    await cp(verified.path, target, { recursive: true, force: true, dereference: false, preserveTimestamps: false });
+    const copied = await hashDirectory(target);
+    if (copied.digest !== String(digest).toLowerCase()) {
+      throw new Error(`restored CAS snapshot digest mismatch: expected ${digest}, got ${copied.digest}`);
+    }
+    return { digest: copied.digest, path: target, entries: copied.entries };
+  } catch (error) {
+    await rm(target, { recursive: true, force: true }).catch((cleanupError) => {
+      error.filesystem_cleanup_error = cleanupError.message;
+      error.recovery_required = true;
+    });
+    throw error;
   }
-  return { digest: copied.digest, path: target, entries: copied.entries };
 }

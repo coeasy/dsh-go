@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Canonical DSH Registry V3 sync orchestrator. */
 import { readFile, writeFile, rename, access, unlink } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
@@ -30,7 +31,16 @@ function runNode(args, env = process.env) {
     child.on('exit', (code) => code === 0 ? resolvePromise() : reject(new Error(`${args.join(' ')} exited ${code}`)));
   });
 }
-async function writeJsonAtomic(file, value) { const temp = `${file}.tmp-${process.pid}`; await writeFile(temp, JSON.stringify(value, null, 2) + '\n', 'utf8'); await rename(temp, file); }
+async function writeJsonAtomic(file, value) {
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, JSON.stringify(value, null, 2) + '\n', 'utf8');
+    await rename(temp, file);
+  } catch (error) {
+    await unlink(temp).catch(() => {});
+    throw error;
+  }
+}
 function parseMode() { if (process.argv.includes('--full')) return 'full'; if (process.argv.includes('--incremental')) return 'incremental'; return process.env.SYNC_MODE === 'full' ? 'full' : 'incremental'; }
 
 function rebuildLegacyCatalog(source, plugins) {

@@ -1,5 +1,5 @@
 // GET /api/v1/meta — catalog + Registry V3 sync metadata.
-import { loadCatalog, filterPlugins, json, internalError, type Env } from '../../_lib';
+import { loadCatalog, filterPlugins, json, internalError, optionsResponse, type Env } from '../../_lib';
 
 interface SyncMeta {
   last_sync?: unknown;
@@ -8,13 +8,13 @@ interface SyncMeta {
   pipeline?: unknown;
 }
 
-export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const { data, etag } = await loadCatalog(env);
     const activeCount = filterPlugins(data.plugins, {}).length;
     let syncMeta: SyncMeta = {};
     try {
-      const res = await env.ASSETS.fetch(new URL('/catalog/meta.json', 'https://dsh-go.pages.dev'));
+      const res = await env.ASSETS.fetch(new URL('/catalog/meta.json', request.url));
       if (res.ok) syncMeta = (await res.json()) as SyncMeta;
     } catch { /* static metadata is optional for legacy API availability */ }
 
@@ -36,10 +36,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
       registry: syncMeta.registry || null,
       pipeline: syncMeta.pipeline || null,
       endpoints: [
-        '/api/v1/plugins', '/api/v1/plugins/:slug', '/api/v1/categories',
+        '/api/v1', '/api/v1/capabilities', '/api/v1/plugins', '/api/v1/plugins/:slug', '/api/v1/categories',
         '/api/v1/stats', '/api/v1/search', '/api/v1/meta', '/api/v1/health',
-        '/api/v1/registry', '/api/v1/ecosystem', '/api/v1/ecosystem/:id?type=...', '/api/v1/mcp',
+        '/api/v1/registry', '/api/v1/registry/delta', '/api/v1/registry/packages/:type/:id',
+        '/api/v1/registry/packages/:type/:id/versions', '/api/v1/ecosystem', '/api/v1/ecosystem/:id?type=...',
+        '/api/v1/marketplace', '/api/v1/package-detail?id=:id&type=:type',
+        '/api/v1/install-plan?id=:id&type=:type', '/api/v1/advisories',
+        '/api/v1/publishers/:id', '/api/v1/profiles', '/api/v1/bundles',
+        '/api/v1/providers', '/api/v1/providers/:id', '/api/v1/mcp',
       ],
     });
   } catch (error) { return internalError(error); }
 };
+
+export const onRequestOptions: PagesFunction = () => optionsResponse();

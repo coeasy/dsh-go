@@ -4,10 +4,11 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { assertPermissionConsent } from './permissions.mjs';
 import { assertPackageSecurityAllowed } from './advisory.mjs';
 import { packageKey } from './package-model.mjs';
-import { getRuntimePackage, packagePath, pathExists, readRuntimeRegistry, upsertRuntimePackage, writeRuntimeRegistry } from './registry.mjs';
+import { getRuntimePackage, packagePath, pathExists, readRuntimeRegistry, updateRuntimeRegistry, upsertRuntimePackage } from './registry.mjs';
 import { readInstallLock, normalizeInstallLock } from './verifier.mjs';
 import { recordRuntimeEvent } from './lifecycle.mjs';
 import { enforceEnterprisePolicy } from './enterprise-policy.mjs';
+import { withPackageOperationLock } from './package-operation-lock.mjs';
 
 export const DSHPKG_SCHEMA_VERSION = 1;
 
@@ -121,66 +122,106 @@ export async function installDshPackage(file, options = {}) {
     operation: 'offline-install',
   }, { file: options.enterprisePolicyFile });
   if (!options.dryRun) assertPermissionConsent(pkg.permissions, { approved: options.approved === true || process.env.DSH_PERMISSION_APPROVED === '1' });
-  const runtime = await readRuntimeRegistry(options.registryFile);
-  const current = getRuntimePackage(runtime, pkg.type, pkg.id, { includeRemoved: true });
-  const target = current?.path || packagePath(pkg.type, pkg.id, options.root);
-  const plan = { key: packageKey(pkg.type, pkg.id), version: pkg.version, target, digest: bundle.digest, restart_required: true, auto_restart: false, offline: true };
+  const initialRuntime = await readRuntimeRegistry(options.registryFile);
+  const initialCurrent = getRuntimePackage(initialRuntime, pkg.type, pkg.id, { includeRemoved: true });
+  const initialTarget = initialCurrent?.path || packagePath(pkg.type, pkg.id, options.root);
+  const plan = { key: packageKey(pkg.type, pkg.id), version: pkg.version, target: initialTarget, digest: bundle.digest, restart_required: true, auto_restart: false, offline: true };
   if (options.dryRun) return { ...plan, dry_run: true, executed: false };
 
-  const transactionId = randomUUID();
-  const stage = `${target}.dshpkg-stage-${process.pid}-${Date.now()}`;
-  const backup = `${target}.dshpkg-backup-${transactionId}`;
-  let hadPrevious = false;
-  let targetCommitted = false;
-  await rm(stage, { recursive: true, force: true });
-  try {
-    await mkdir(stage, { recursive: true });
-    await materialize(bundle.files, stage);
-    const stagedLock = await readInstallLock(stage);
-    if (stagedLock.type !== lock.type || stagedLock.id !== lock.id || stagedLock.version !== lock.version || stagedLock.source.commit !== lock.source.commit) throw new Error('materialized .dshpkg identity mismatch');
-    hadPrevious = await pathExists(target);
-    if (hadPrevious) await rename(target, backup);
-    await mkdir(dirname(target), { recursive: true });
-    await rename(stage, target);
-    targetCommitted = true;
-    const base = current?.state === 'removed' ? {} : current || {};
-    const record = recordRuntimeEvent({
-      ...base,
-      id: pkg.id,
-      type: pkg.type,
-      version: pkg.version,
-      channel: pkg.channel || 'stable',
-      state: 'pending-restart',
-      path: target,
-      source: pkg.source,
-      commit: pkg.source.commit,
-      runtime: pkg.runtime || {},
-      capabilities: pkg.capabilities || [],
-      dependencies: pkg.dependencies || [],
-      permissions: pkg.permissions || [],
-      permission_policy: pkg.permission_policy || null,
-      permission_manifest: pkg.permission_manifest || null,
-      compatibility: pkg.compatibility || {},
-      publisher: pkg.publisher || null,
-      security: pkg.security || null,
-      conflicts: pkg.conflicts || [],
-      replaces: pkg.replaces || [],
-      provides: pkg.provides || [],
-      type_config: pkg.type_config || null,
-      enabled: current?.enabled ?? true,
-      activated: false,
-      binding: null,
-      restart_required: true,
-      health: null,
-      offline_package_digest: bundle.digest,
-    }, 'offline-package-installed', { transaction_id: transactionId, digest: bundle.digest });
-    await writeRuntimeRegistry(upsertRuntimePackage(runtime, record), options.registryFile);
-    await rm(backup, { recursive: true, force: true });
-    return { ...plan, executed: true, dry_run: false, transaction_id: transactionId };
-  } catch (error) {
+  return withPackageOperationLock(pkg.type, pkg.id, async () => {
+    const runtime = await readRuntimeRegistry(options.registryFile);
+    const current = getRuntimePackage(runtime, pkg.type, pkg.id, { includeRemoved: true });
+    const target = current?.path || packagePath(pkg.type, pkg.id, options.root);
+    const currentPlan = { ...plan, target };
+    const transactionId = randomUUID();
+    const stage = `${target}.dshpkg-stage-${transactionId}`;
+    const backup = `${target}.dshpkg-backup-${transactionId}`;
+    let hadPrevious = false;
+    let targetCommitted = false;
+    let registryCommitted = false;
     await rm(stage, { recursive: true, force: true });
-    if (targetCommitted) await rm(target, { recursive: true, force: true });
-    if (hadPrevious && await pathExists(backup)) await rename(backup, target);
-    throw error;
-  }
+    try {
+      await mkdir(stage, { recursive: true });
+      await materialize(bundle.files, stage);
+      const stagedLock = await readInstallLock(stage);
+      if (stagedLock.type !== lock.type || stagedLock.id !== lock.id || stagedLock.version !== lock.version || stagedLock.source.commit !== lock.source.commit) throw new Error('materialized .dshpkg identity mismatch');
+      hadPrevious = await pathExists(target);
+      if (hadPrevious) await rename(target, backup);
+      await mkdir(dirname(target), { recursive: true });
+      await rename(stage, target);
+      targetCommitted = true;
+      const base = current?.state === 'removed' ? {} : current || {};
+      const record = recordRuntimeEvent({
+        ...base,
+        id: pkg.id,
+        type: pkg.type,
+        version: pkg.version,
+        channel: pkg.channel || 'stable',
+        state: 'pending-restart',
+        path: target,
+        source: pkg.source,
+        commit: pkg.source.commit,
+        runtime: pkg.runtime || {},
+        capabilities: pkg.capabilities || [],
+        permissions: pkg.permissions || [],
+        permission_policy: pkg.permission_policy || null,
+        permission_manifest: pkg.permission_manifest || null,
+        compatibility: pkg.compatibility || {},
+        publisher: pkg.publisher || null,
+        security: pkg.security || null,
+        conflicts: pkg.conflicts || [],
+        replaces: pkg.replaces || [],
+        provides: pkg.provides || [],
+        enabled: current?.enabled ?? true,
+        activated: false,
+        binding: null,
+        restart_required: true,
+        health: null,
+        offline_package_digest: bundle.digest,
+      }, 'offline-package-installed', { transaction_id: transactionId, digest: bundle.digest });
+      await updateRuntimeRegistry((latest) => upsertRuntimePackage(latest, record), options.registryFile);
+      registryCommitted = true;
+      // Registry commit is the point of no return. Cleanup is best effort so a
+      // transient filesystem failure cannot roll back a package that the
+      // registry already declares installed.
+      await rm(backup, { recursive: true, force: true }).catch(() => {});
+      return { ...currentPlan, executed: true, dry_run: false, transaction_id: transactionId };
+    } catch (error) {
+      await rm(stage, { recursive: true, force: true }).catch((cleanupError) => {
+        error.filesystem_cleanup_error = cleanupError.message;
+        error.recovery_required = true;
+      });
+      if (registryCommitted) {
+        error.state_preserved = true;
+        throw error;
+      }
+      if (targetCommitted) {
+        await rm(target, { recursive: true, force: true }).catch((cleanupError) => {
+          error.filesystem_rollback_error = cleanupError.message;
+          error.recovery_required = true;
+        });
+      }
+      if (hadPrevious) {
+        let backupExists = false;
+        try {
+          backupExists = await pathExists(backup);
+        } catch (inspectError) {
+          error.filesystem_rollback_error = inspectError.message;
+          error.recovery_required = true;
+        }
+        if (backupExists) {
+          try {
+            await rename(backup, target);
+          } catch (rollbackError) {
+            error.filesystem_rollback_error = rollbackError.message;
+            error.recovery_required = true;
+          }
+        } else if (!error.recovery_required) {
+          error.filesystem_rollback_error = `offline package backup is missing: ${backup}`;
+          error.recovery_required = true;
+        }
+      }
+      throw error;
+    }
+  }, options);
 }

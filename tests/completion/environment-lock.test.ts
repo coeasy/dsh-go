@@ -1,11 +1,11 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { artifactIntegrity } from '../../scripts/checksum.mjs';
 import { snapshotDirectory, verifyCasSnapshot } from '../../runtime/cas-store.mjs';
-import { createEnvironmentLock, restoreEnvironmentLock, verifyEnvironmentLock } from '../../runtime/environment-lock.mjs';
+import { createEnvironmentLock, recoverEnvironmentTransactions, restoreEnvironmentLock, verifyEnvironmentLock } from '../../runtime/environment-lock.mjs';
 import { installPlugin } from '../../runtime/installer.mjs';
 import { getRuntimePackage, readRuntimeRegistry, upsertRuntimePackage, writeRuntimeRegistry } from '../../runtime/registry.mjs';
 import { readInstallLock } from '../../runtime/verifier.mjs';
@@ -117,4 +117,51 @@ describe('CAS and environment lock', () => {
     expect(extra).toMatchObject({ state: 'removed', enabled: false, activated: false });
     expect(await verifyEnvironmentLock({ registryFile: runtimeFile, lockFile, storeRoot })).toMatchObject({ ok: true, extras: [] });
   }, 30_000);
+
+  it('recovers an interrupted environment rename using package identity before cleanup', async () => {
+    const { repo, commit } = await fixturePackage();
+    const root = await mkdtemp(join(tmpdir(), 'dsh-env-recovery-'));
+    const installRoot = join(root, 'plugins');
+    const runtimeFile = join(root, 'registry', 'runtime.json');
+    const transactionHome = join(root, 'environment-transactions');
+    const installed = await installPlugin(resolved(commit), { root: installRoot, repositoryUrl: repo });
+    const installLock = await readInstallLock(installed.target);
+    await writeRuntimeRegistry({
+      schema_version: 3,
+      generation: 0,
+      packages: [{
+        type: 'plugin', id: 'env-lock-fixture', version: '1.2.3', channel: 'stable', state: 'active',
+        enabled: true, activated: true, restart_required: false, path: installed.target, commit,
+        source: installLock.source, dependencies: [], history: [],
+      }],
+    }, runtimeFile);
+
+    const runtime = await readRuntimeRegistry(runtimeFile);
+    const transactionId = 'environment-restore-interrupted';
+    const transactionRoot = join(transactionHome, transactionId);
+    const backup = join(transactionRoot, 'backup', 'plugin', 'env-lock-fixture');
+    const identity = { type: 'plugin', id: 'env-lock-fixture', version: '1.2.3', commit };
+    await mkdir(join(transactionRoot, 'backup', 'plugin'), { recursive: true });
+    await rename(installed.target, backup);
+    await writeFile(join(transactionRoot, 'journal.json'), JSON.stringify({
+      schema_version: 1,
+      kind: 'environment-restore',
+      id: transactionId,
+      state: 'committing',
+      registry_file: runtimeFile,
+      expected_generation: runtime.generation,
+      packages: [identity],
+      pruned: [],
+      operation_packages: [identity],
+      moves: [{
+        kind: 'replace', type: 'plugin', id: 'env-lock-fixture', target: installed.target, backup,
+        expected: identity, previous: identity, had_previous: true, backup_moved: true, target_moved: false,
+      }],
+    }, null, 2));
+
+    const recovered: any = await recoverEnvironmentTransactions({ registryFile: runtimeFile, transactionHome });
+    expect(recovered.recovered).toEqual([expect.objectContaining({ id: transactionId, state: 'rolled-back' })]);
+    expect((await readInstallLock(installed.target)).source.commit).toBe(commit);
+    await expect(readFile(join(transactionRoot, 'journal.json'))).rejects.toMatchObject({ code: 'ENOENT' });
+  }, 20_000);
 });

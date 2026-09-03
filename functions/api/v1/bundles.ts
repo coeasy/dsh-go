@@ -1,4 +1,4 @@
-import { json } from '../../_lib';
+import { json, optionsResponse } from '../../_lib';
 
 export const onRequestGet: PagesFunction = async () => json({
   version: 1,
@@ -19,3 +19,5 @@ export const onRequestGet: PagesFunction = async () => json({
     example: { name: 'team-toolkit', packages: ['plugin:example@*', 'skill:reviewer@^1.0.0', 'agent:workflow@1.2.0'] },
   },
 });
+
+export const onRequestOptions: PagesFunction = () => optionsResponse();

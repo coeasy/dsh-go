@@ -1,12 +1,18 @@
+import { randomUUID } from 'node:crypto';
+import { rename, rm } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { normalizePackageDependency, packageKey } from './package-model.mjs';
 import {
   getRuntimePackage,
   markRuntimePackageRemoved,
   packagePath,
   readRuntimeRegistry,
-  removePath,
-  writeRuntimeRegistry,
+  registryPath,
+  updateRuntimeRegistry,
+  pathExists,
 } from './registry.mjs';
+import { withFileLock } from './file-lock.mjs';
+import { withPackageOperationLocks } from './package-operation-lock.mjs';
 
 function dependencyKey(dependency) {
   try {
@@ -63,24 +69,105 @@ export async function planRuntimeRemoval(type, id, options = {}) {
 }
 
 export async function removeRuntimePackageSafe(type, id, options = {}) {
-  const registryFile = options.registryFile;
-  let registry = await readRuntimeRegistry(registryFile);
-  const plan = await planRuntimeRemoval(type, id, { ...options, registry });
-  if (options.dryRun) return { ...plan, dry_run: true, restart_required: false };
-
-  const removed = [];
-  for (const candidate of plan.order) {
-    const item = getRuntimePackage(registry, candidate.type, candidate.id);
-    if (!item) continue;
-    const target = item.path || packagePath(candidate.type, candidate.id);
-    await removePath(target);
-    await removePath(`${target}.backup`);
-    registry = markRuntimePackageRemoved(registry, candidate.type, candidate.id, {
-      path: target,
-      cascade_root: plan.root,
-    });
-    removed.push({ ...candidate, path: target });
+  const registryFile = resolve(options.registryFile || registryPath());
+  if (options.dryRun) {
+    const registry = await readRuntimeRegistry(registryFile);
+    const plan = await planRuntimeRemoval(type, id, { ...options, registry });
+    return { ...plan, dry_run: true, restart_required: false };
   }
-  await writeRuntimeRegistry(registry, registryFile);
-  return { ...plan, removed, restart_required: true };
+
+  const lockFile = `${registryFile}.remove.lock`;
+  return withFileLock(lockFile, async () => {
+    let registry = await readRuntimeRegistry(registryFile);
+    const plan = await planRuntimeRemoval(type, id, { ...options, registry });
+    return withPackageOperationLocks(plan.order, async () => {
+      const latest = await readRuntimeRegistry(registryFile);
+      if (latest.generation !== registry.generation) {
+        const conflict = new Error(`runtime registry changed while preparing removal: expected generation ${registry.generation}, current ${latest.generation}`);
+        conflict.code = 'DSH_REGISTRY_CONFLICT';
+        conflict.expected_generation = registry.generation;
+        conflict.current_generation = latest.generation;
+        throw conflict;
+      }
+      registry = latest;
+      const transactionId = randomUUID();
+      const moves = [];
+      const removed = [];
+      let registryCommitted = false;
+      try {
+        for (const candidate of plan.order) {
+          const item = getRuntimePackage(registry, candidate.type, candidate.id);
+          if (!item) throw new Error(`runtime package disappeared during removal: ${candidate.key}`);
+          const target = item.path || packagePath(candidate.type, candidate.id);
+          const targetBackup = `${target}.remove-${transactionId}`;
+          const rollbackBackup = `${target}.backup.remove-${transactionId}`;
+          const move = { type: candidate.type, id: candidate.id, target, targetBackup, rollback: `${target}.backup`, rollbackBackup, movedTarget: false, movedRollback: false };
+          moves.push(move);
+          if (await pathExists(target)) {
+            await rename(target, targetBackup);
+            move.movedTarget = true;
+          }
+          if (await pathExists(move.rollback)) {
+            await rename(move.rollback, rollbackBackup);
+            move.movedRollback = true;
+          }
+          registry = markRuntimePackageRemoved(registry, candidate.type, candidate.id, {
+            path: target,
+            cascade_root: plan.root,
+          });
+          removed.push({ ...candidate, path: target });
+        }
+        await updateRuntimeRegistry((latestRegistry) => {
+          let next = latestRegistry;
+          for (const candidate of plan.order) {
+            if (!getRuntimePackage(next, candidate.type, candidate.id, { includeRemoved: true })) {
+              throw new Error(`runtime package disappeared during removal: ${candidate.key}`);
+            }
+            if (getRuntimePackage(next, candidate.type, candidate.id)?.state === 'removed') continue;
+            const move = moves.find((entry) => entry.type === candidate.type && entry.id === candidate.id);
+            next = markRuntimePackageRemoved(next, candidate.type, candidate.id, {
+              path: move?.target,
+              cascade_root: plan.root,
+            });
+          }
+          return next;
+        }, registryFile);
+        registryCommitted = true;
+        await Promise.all(moves.flatMap((move) => [
+          rm(move.targetBackup, { recursive: true, force: true }),
+          rm(move.rollbackBackup, { recursive: true, force: true }),
+        ].map((promise) => promise.catch(() => {}))));
+        return { ...plan, removed, restart_required: true };
+      } catch (error) {
+        let rollbackCompleted = false;
+        if (!registryCommitted) {
+        try {
+          for (const move of [...moves].reverse()) {
+            if (move.movedTarget) {
+              await rm(move.target, { recursive: true, force: true });
+              if (await pathExists(move.targetBackup)) await rename(move.targetBackup, move.target);
+            }
+            if (move.movedRollback) {
+              await rm(move.rollback, { recursive: true, force: true });
+              if (await pathExists(move.rollbackBackup)) await rename(move.rollbackBackup, move.rollback);
+            }
+          }
+          rollbackCompleted = true;
+        } catch (rollbackError) {
+          error.rollback_error = rollbackError.message;
+          error.recovery_required = true;
+        }
+        } else {
+          error.state_preserved = true;
+        }
+        if (registryCommitted || rollbackCompleted) {
+          for (const move of moves) {
+            await rm(move.targetBackup, { recursive: true, force: true }).catch(() => {});
+            await rm(move.rollbackBackup, { recursive: true, force: true }).catch(() => {});
+          }
+        }
+        throw error;
+      }
+    }, { ...options, registryFile });
+  }, { timeoutMs: options.operationLockTimeoutMs, staleMs: options.operationLockStaleMs });
 }

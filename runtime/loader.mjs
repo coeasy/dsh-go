@@ -6,11 +6,12 @@ import {
   getRuntimePackage,
   packagePath,
   readRuntimeRegistry,
+  updateRuntimeRegistry,
   upsertRuntimePackage,
-  writeRuntimeRegistry,
 } from './registry.mjs';
 import { readInstallLock, verifyInstalledCommit } from './verifier.mjs';
 import { assertCompatibility } from './compatibility.mjs';
+import { withPackageOperationLock } from './package-operation-lock.mjs';
 
 function hydrateRuntimeRecord(record, lock, target) {
   return {
@@ -37,7 +38,7 @@ function hydrateRuntimeRecord(record, lock, target) {
   };
 }
 
-export async function loadInstalledPackage(type, id, options = {}) {
+async function loadInstalledPackageUnlocked(type, id, options = {}) {
   const normalizedType = assertPackageType(type);
   const normalizedId = safePackageId(id);
   const runtimeRegistry = await readRuntimeRegistry(options.registryFile);
@@ -74,8 +75,8 @@ export async function loadInstalledPackage(type, id, options = {}) {
   if (runtimeRecord) {
     const hydrated = hydrateRuntimeRecord(runtimeRecord, lock, target);
     activatedRecord = activatePackage(hydrated, binding);
-    await writeRuntimeRegistry(
-      upsertRuntimePackage(runtimeRegistry, activatedRecord),
+    await updateRuntimeRegistry(
+      (current) => upsertRuntimePackage(current, activatedRecord),
       options.registryFile,
     );
   }
@@ -106,6 +107,12 @@ export async function loadInstalledPackage(type, id, options = {}) {
     restart_required: activatedRecord?.restart_required ?? false,
     message: `Runtime package ${key} is installed, verified, compatible, bound locally, and activated by the client startup loader.`,
   };
+}
+
+export function loadInstalledPackage(type, id, options = {}) {
+  const normalizedType = assertPackageType(type);
+  const normalizedId = safePackageId(id);
+  return withPackageOperationLock(normalizedType, normalizedId, () => loadInstalledPackageUnlocked(normalizedType, normalizedId, options), options);
 }
 
 export async function loadInstalledPlugin(id, options = {}) {

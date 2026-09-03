@@ -45,7 +45,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   try {
     const type = String(params.type || '').toLowerCase();
     const id = String(params.id || '').trim();
-    if (!ECOSYSTEM_TYPES.includes(type as EcosystemType) || !ID_PATTERN.test(id) || id.includes('..')) {
+    if (!ECOSYSTEM_TYPES.includes(type as EcosystemType) || !ID_PATTERN.test(id) || id === '.' || id === '..' || id.includes('..')) {
       return error(400, 'invalid package identity');
     }
     const normalizedId = id.toLowerCase();

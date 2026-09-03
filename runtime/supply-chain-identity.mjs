@@ -8,6 +8,7 @@ import { buildExecutionEnv } from './execution-env.mjs';
 
 const exec = promisify(execFile);
 const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
+const DEFAULT_COSIGN_TIMEOUT_MS = 60_000;
 const IN_TOTO_STATEMENT_V1 = 'https://in-toto.io/Statement/v1';
 const SLSA_PROVENANCE_V1 = 'https://slsa.dev/provenance/v1';
 
@@ -108,10 +109,14 @@ async function runCosign(args, options = {}) {
   const env = buildExecutionEnv(options.cosignEnv || {}, options.hostEnv || process.env);
   const context = { cwd: options.root || process.cwd(), env };
   if (typeof options.cosignRunner === 'function') return options.cosignRunner(args, context);
+  const configuredTimeout = Number(options.cosignTimeoutMs ?? options.timeoutMs);
+  const timeout = Number.isFinite(configuredTimeout) && configuredTimeout > 0 ? configuredTimeout : DEFAULT_COSIGN_TIMEOUT_MS;
   return exec(options.cosignPath || process.env.DSH_COSIGN || 'cosign', args, {
     ...context,
     windowsHide: true,
     maxBuffer: 2 * 1024 * 1024,
+    timeout,
+    killSignal: 'SIGTERM',
   });
 }
 

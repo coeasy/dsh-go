@@ -12,6 +12,12 @@ const COMMIT_RE = /^[0-9a-f]{40}$/i;
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const FORBIDDEN_IDS = new Set(['__proto__', 'prototype', 'constructor']);
 
+export function assertProviderAdapterId(value) {
+  const id = String(value || '').trim();
+  if (!ID_RE.test(id) || FORBIDDEN_IDS.has(id.toLowerCase())) throw new Error('invalid provider adapter id');
+  return id;
+}
+
 export function stableStringify(value) {
   if (value === null || typeof value !== 'object') return JSON.stringify(value);
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
@@ -74,7 +80,7 @@ export function assertProviderAdapter(adapter) {
   if (!Array.isArray(adapter.files) || adapter.files.length === 0) throw new Error('provider adapter files must be an explicit non-empty array');
   const normalized = normalizeProviderAdapter(adapter);
   if (normalized.manifest_version !== PROVIDER_ADAPTER_VERSION) throw new Error(`provider adapter manifest_version must be ${PROVIDER_ADAPTER_VERSION}`);
-  if (!ID_RE.test(normalized.id) || FORBIDDEN_IDS.has(normalized.id.toLowerCase())) throw new Error('invalid provider adapter id');
+  assertProviderAdapterId(normalized.id);
   if (!normalized.name) throw new Error('provider adapter name is required');
   if (!VERSION_RE.test(normalized.version)) throw new Error('invalid provider adapter version');
   if (!PROVIDER_ADAPTER_KINDS.includes(normalized.kind)) throw new Error('unsupported provider adapter kind');

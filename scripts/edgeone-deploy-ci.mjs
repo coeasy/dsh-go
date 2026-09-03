@@ -202,6 +202,7 @@ export function runProcess(command, args, { timeoutMs, env = process.env, cwd } 
     let timedOut = false;
     let settled = false;
     let killTimer;
+    let cleanupTimer;
 
     const child = spawn(command, args, { env, cwd, stdio: ['ignore', 'pipe', 'pipe'] });
     child.stdout.on('data', (chunk) => {
@@ -214,8 +215,19 @@ export function runProcess(command, args, { timeoutMs, env = process.env, cwd } 
     const timeout = timeoutMs
       ? setTimeout(() => {
           timedOut = true;
-          child.kill('SIGTERM');
-          killTimer = setTimeout(() => child.kill('SIGKILL'), 5_000);
+          try { child.kill('SIGTERM'); } catch { /* process exited between checks */ }
+          killTimer = setTimeout(() => {
+            if (settled) return;
+            try { child.kill('SIGKILL'); } catch { /* process exited between checks */ }
+            cleanupTimer = setTimeout(() => {
+              if (settled) return;
+              settled = true;
+              if (timeout) clearTimeout(timeout);
+              if (killTimer) clearTimeout(killTimer);
+              resolve({ code: 124, stdout, stderr, timedOut: true, process_cleanup_failed: true });
+            }, 5_000);
+            cleanupTimer.unref?.();
+          }, 5_000);
           killTimer.unref?.();
         }, timeoutMs)
       : null;
@@ -226,7 +238,8 @@ export function runProcess(command, args, { timeoutMs, env = process.env, cwd } 
       settled = true;
       if (timeout) clearTimeout(timeout);
       if (killTimer) clearTimeout(killTimer);
-      resolve({ code: timedOut ? 124 : (code ?? 1), stdout, stderr, timedOut });
+      if (cleanupTimer) clearTimeout(cleanupTimer);
+      resolve({ code: timedOut ? 124 : (code ?? 1), stdout, stderr, timedOut, process_cleanup_failed: false });
     };
 
     child.on('error', (error) => {

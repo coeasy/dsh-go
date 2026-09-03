@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 const DEFAULT_RETRIES = 5;
 const DEFAULT_RETRY_DELAY_MS = 5_000;
 const DEFAULT_COMMAND_TIMEOUT_MS = 60_000;
+const COMMAND_KILL_GRACE_MS = 1_000;
 
 export function validateRevision(value) {
   if (!/^[0-9a-f]{40}$/i.test(value || '')) {
@@ -45,12 +46,27 @@ function runGh(args, { timeoutMs = DEFAULT_COMMAND_TIMEOUT_MS, env = process.env
     let stderr = '';
     let timedOut = false;
     let settled = false;
+    let cleanupTimer;
     const child = spawn('gh', args, { env, stdio: ['ignore', 'pipe', 'pipe'] });
     child.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
     child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+    let killTimer;
     const timer = setTimeout(() => {
       timedOut = true;
       child.kill('SIGTERM');
+      killTimer = setTimeout(() => {
+        if (settled) return;
+        try { child.kill('SIGKILL'); } catch { /* process exited between checks */ }
+        cleanupTimer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          if (killTimer) clearTimeout(killTimer);
+          resolve({ code: 124, stdout, stderr, timedOut: true, process_cleanup_failed: true });
+        }, COMMAND_KILL_GRACE_MS);
+        cleanupTimer.unref?.();
+      }, COMMAND_KILL_GRACE_MS);
+      killTimer.unref?.();
     }, timeoutMs);
     timer.unref?.();
 
@@ -58,7 +74,9 @@ function runGh(args, { timeoutMs = DEFAULT_COMMAND_TIMEOUT_MS, env = process.env
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      resolve({ code: timedOut ? 124 : (code ?? 1), stdout, stderr, timedOut });
+      if (killTimer) clearTimeout(killTimer);
+      if (cleanupTimer) clearTimeout(cleanupTimer);
+      resolve({ code: timedOut ? 124 : (code ?? 1), stdout, stderr, timedOut, process_cleanup_failed: false });
     };
     child.on('error', (error) => {
       stderr += error.message;

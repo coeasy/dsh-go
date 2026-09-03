@@ -1,4 +1,4 @@
-import { mkdir, open, stat, unlink } from 'node:fs/promises';
+import { mkdir, open, readFile, stat, unlink } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 const DEFAULT_TIMEOUT_MS = 5_000;
@@ -22,10 +22,40 @@ function transientWindowsContention(error) {
   return process.platform === 'win32' && WINDOWS_CONTENTION_CODES.has(error?.code);
 }
 
+function processAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    if (error?.code === 'ESRCH') return false;
+    if (error?.code === 'EPERM') return true;
+    return undefined;
+  }
+}
+
+// A timestamp alone cannot distinguish a dead lock from a long-running owner.
+// Return null when the file disappeared and undefined when it cannot be read;
+// callers must keep an unreadable lock instead of deleting it speculatively.
+export async function lockOwnerAlive(lockFile) {
+  try {
+    const owner = JSON.parse(await readFile(lockFile, 'utf8'));
+    return processAlive(Number(owner?.pid));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    if (error?.code === 'EACCES' || error?.code === 'EPERM') return undefined;
+    // Empty, malformed, or legacy lock markers have no owner to preserve.
+    return false;
+  }
+}
+
 async function inspectExistingLock(lockFile, staleMs, originalError) {
   try {
     const info = await stat(lockFile);
     if (Date.now() - info.mtimeMs <= staleMs) return 'busy';
+    const ownerAlive = await lockOwnerAlive(lockFile);
+    if (ownerAlive === null) return 'retry';
+    if (ownerAlive !== false) return 'busy';
     try {
       await unlink(lockFile);
       return 'retry';
@@ -45,9 +75,12 @@ async function inspectExistingLock(lockFile, staleMs, originalError) {
 
 export async function acquireFileLock(file, options = {}) {
   const lockFile = resolve(file);
-  const timeoutMs = Math.max(1, Number(options.timeoutMs) || DEFAULT_TIMEOUT_MS);
-  const staleMs = Math.max(timeoutMs, Number(options.staleMs) || DEFAULT_STALE_MS);
-  const retryMs = Math.max(1, Number(options.retryMs) || DEFAULT_RETRY_MS);
+  const requestedTimeout = Number(options.timeoutMs);
+  const timeoutMs = Number.isFinite(requestedTimeout) && requestedTimeout > 0 ? requestedTimeout : DEFAULT_TIMEOUT_MS;
+  const requestedStale = Number(options.staleMs);
+  const staleMs = Math.max(timeoutMs, Number.isFinite(requestedStale) && requestedStale > 0 ? requestedStale : DEFAULT_STALE_MS);
+  const requestedRetry = Number(options.retryMs);
+  const retryMs = Number.isFinite(requestedRetry) && requestedRetry > 0 ? requestedRetry : DEFAULT_RETRY_MS;
   const deadline = Date.now() + timeoutMs;
   await mkdir(dirname(lockFile), { recursive: true });
 

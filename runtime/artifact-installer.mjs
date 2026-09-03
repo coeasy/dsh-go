@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
-import { mkdir, readdir, realpath, rm } from 'node:fs/promises';
+import { mkdir, open, readdir, realpath, rm } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -10,6 +10,13 @@ import { promisify } from 'node:util';
 const exec = promisify(execFile);
 const DIGEST_RE = /^sha256-[0-9a-f]{64}$/i;
 const FORMATS = new Set(['tgz', 'tar.gz']);
+const DEFAULT_ARTIFACT_TIMEOUT_MS = 60_000;
+const DEFAULT_ARTIFACT_MAX_BYTES = 256 * 1024 * 1024;
+
+function positiveOption(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : fallback;
+}
 
 export function isReleaseArtifact(artifact) {
   return artifact?.kind === 'release-archive';
@@ -52,48 +59,88 @@ async function assertExtractedTreeInside(root) {
 export async function downloadReleaseArtifact(artifact, file, options = {}) {
   const validation = validateReleaseArtifact(artifact);
   if (!validation.ok) throw new Error(`invalid release artifact: ${validation.errors.join('; ')}`);
+  const timeoutMs = positiveOption(options.timeout, DEFAULT_ARTIFACT_TIMEOUT_MS);
+  const maxBytes = positiveOption(options.maxBytes, DEFAULT_ARTIFACT_MAX_BYTES);
   await mkdir(dirname(resolve(file)), { recursive: true });
   const response = await fetch(artifact.url, {
     headers: { Accept: 'application/octet-stream', 'User-Agent': 'dsh-runtime-release-installer' },
     redirect: 'follow',
-    signal: AbortSignal.timeout(Number(options.timeout || 60000)),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok || !response.body) throw new Error(`release artifact download failed: HTTP ${response.status}`);
+  const contentLength = Number(response.headers.get('content-length'));
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    const error = new Error(`release artifact exceeds ${maxBytes} bytes`);
+    error.code = 'DSH_RELEASE_ARTIFACT_TOO_LARGE';
+    throw error;
+  }
   const finalUrl = new URL(response.url || artifact.url);
   if (finalUrl.protocol !== 'https:') throw new Error('release artifact redirect downgraded from https');
 
   const hash = createHash('sha256');
+  let bytes = 0;
   const digesting = new Transform({
     transform(chunk, _encoding, callback) {
+      bytes += chunk.byteLength;
+      if (bytes > maxBytes) {
+        const error = new Error(`release artifact exceeds ${maxBytes} bytes`);
+        error.code = 'DSH_RELEASE_ARTIFACT_TOO_LARGE';
+        callback(error);
+        return;
+      }
       hash.update(chunk);
       callback(null, chunk);
     },
   });
+  const handle = await open(file, 'wx', 0o600);
+  let pipelineError = null;
   try {
-    await pipeline(Readable.fromWeb(response.body), digesting, createWriteStream(file, { flags: 'wx' }));
-  } catch (error) {
-    await rm(file, { force: true });
-    throw error;
+    try {
+      await pipeline(Readable.fromWeb(response.body), digesting, createWriteStream(file, { fd: handle.fd, autoClose: false }));
+    } catch (error) {
+      pipelineError = error;
+      throw error;
+    }
+  } finally {
+    await handle.close().catch((closeError) => {
+      if (pipelineError) {
+        pipelineError.filesystem_close_error = closeError.message;
+        pipelineError.recovery_required = true;
+      } else {
+        throw closeError;
+      }
+    });
+    if (pipelineError) {
+      await rm(file, { force: true }).catch((cleanupError) => {
+        pipelineError.filesystem_cleanup_error = cleanupError.message;
+        pipelineError.recovery_required = true;
+      });
+    }
   }
   const digest = `sha256-${hash.digest('hex')}`;
   if (digest.toLowerCase() !== String(artifact.digest).toLowerCase()) {
-    await rm(file, { force: true });
     const error = new Error(`release artifact digest mismatch: expected ${artifact.digest}, got ${digest}`);
     error.code = 'DSH_RELEASE_ARTIFACT_DIGEST_MISMATCH';
+    await rm(file, { force: true }).catch((cleanupError) => {
+      error.filesystem_cleanup_error = cleanupError.message;
+      error.recovery_required = true;
+    });
     throw error;
   }
   return { file: resolve(file), digest, url: finalUrl.href };
 }
 
-export async function extractReleaseArtifact(file, target, artifact) {
+export async function extractReleaseArtifact(file, target, artifact, options = {}) {
   const validation = validateReleaseArtifact(artifact);
   if (!validation.ok) throw new Error(`invalid release artifact: ${validation.errors.join('; ')}`);
-  const { stdout } = await exec('tar', ['-tzf', resolve(file)], { windowsHide: true, maxBuffer: 16 * 1024 * 1024 });
+  const timeout = positiveOption(options.commandTimeout ?? options.timeout, DEFAULT_ARTIFACT_TIMEOUT_MS);
+  const execOptions = { windowsHide: true, maxBuffer: 16 * 1024 * 1024, timeout, killSignal: 'SIGTERM' };
+  const { stdout } = await exec('tar', ['-tzf', resolve(file)], execOptions);
   for (const entry of stdout.split(/\r?\n/).filter(Boolean)) assertSafeArchiveEntry(entry);
   await mkdir(target, { recursive: true });
   const args = ['-xzf', resolve(file), '-C', resolve(target)];
   if (validation.strip_components > 0) args.push(`--strip-components=${validation.strip_components}`);
-  await exec('tar', args, { windowsHide: true, maxBuffer: 16 * 1024 * 1024 });
+  await exec('tar', args, execOptions);
   await assertExtractedTreeInside(target);
   return { target: resolve(target), entries: stdout.split(/\r?\n/).filter(Boolean).length };
 }
@@ -103,9 +150,9 @@ export async function installReleaseArtifact(artifact, target, options = {}) {
   await rm(archive, { force: true });
   try {
     const downloaded = await downloadReleaseArtifact(artifact, archive, options);
-    const extracted = await extractReleaseArtifact(archive, target, artifact);
+    const extracted = await extractReleaseArtifact(archive, target, artifact, options);
     return { ...downloaded, ...extracted, verified: true };
   } finally {
-    await rm(archive, { force: true });
+    await rm(archive, { force: true }).catch(() => {});
   }
 }

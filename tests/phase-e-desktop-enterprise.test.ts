@@ -127,6 +127,27 @@ describe('Phase E desktop and enterprise platform', () => {
     expect(client.restartIntent()).toMatchObject({ delegated_to_host: true, auto_restart: false, event: 'dsh:restart-requested' });
   });
 
+  it('routes desktop search to the search endpoint and preserves structured API errors', async () => {
+    const requestLog: { url?: URL } = {};
+    const client = pluginModule.createMarketplaceDesktopClient({
+      fetchImpl: async (input: RequestInfo | URL) => {
+        requestLog.url = new URL(String(input));
+        return new Response(JSON.stringify({ results: [] }), { status: 200 });
+      },
+    });
+    await client.search('vision', { type: 'mcp' });
+    expect(requestLog.url).toBeInstanceOf(URL);
+    const requestedUrl = requestLog.url!;
+    expect(requestedUrl.pathname).toBe('/api/v1/search');
+    expect(requestedUrl.searchParams.get('q')).toBe('vision');
+    expect(requestedUrl.searchParams.get('type')).toBe('mcp');
+
+    const failing = pluginModule.createMarketplaceDesktopClient({
+      fetchImpl: async () => new Response(JSON.stringify({ error: { code: 400, message: 'invalid query' } }), { status: 400 }),
+    });
+    await expect(failing.search('!')).rejects.toMatchObject({ message: 'invalid query', code: 400, status: 400 });
+  });
+
   it('ships the desktop marketplace as a valid installable DSH plugin with a dedicated release workflow', async () => {
     const manifest = JSON.parse(await readFile('packages/dsh-go-marketplace-plugin/dsh-package.json', 'utf8'));
     const validated = manifestModule.validatePackageManifest(manifest, { file: 'dsh-package.json' });

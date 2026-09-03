@@ -182,6 +182,7 @@ export async function runDiscoveryCli(args = process.argv.slice(2)) {
   const action = args[1];
   const catalog = option(args, '--registry', 'catalog/registry-v3.json');
   const channel = option(args, '--channel', 'stable');
+  const runtimeRegistryFile = option(args, '--runtime-registry');
   const registry = await loadRegistryFile(catalog);
 
   if (action === 'search') {
@@ -204,7 +205,7 @@ export async function runDiscoveryCli(args = process.argv.slice(2)) {
   }
 
   if (action === 'outdated') {
-    const runtimeRegistry = await readRuntimeRegistry();
+    const runtimeRegistry = await readRuntimeRegistry(runtimeRegistryFile);
     const result = computeOutdated(registry, runtimeRegistry, { type });
     printCliValue(result, { argv: args });
     return result;

@@ -1,4 +1,5 @@
-import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { assertPackageType, safePackageId } from './package-model.mjs';
 import { runtimeRoot } from './registry.mjs';
@@ -30,9 +31,14 @@ async function writePackageConfigUnlocked(type, id, value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('package config must be a JSON object');
   const file = configPath(type, id);
   await mkdir(dirname(file), { recursive: true });
-  const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
-  await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
-  await rename(temp, file);
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
   try { await chmod(file, 0o600); } catch { /* Windows ACLs are managed by the OS */ }
   return { type: assertPackageType(type), id: safePackageId(id), file, config: value };
 }
