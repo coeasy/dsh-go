@@ -1,6 +1,7 @@
 // POST /api/v1/mcp — read-only MCP endpoint for catalog and Registry V3 discovery.
 import { loadCatalog, filterPlugins, json, error, type Env } from '../../_lib';
-import { ecosystemType, filterEcosystem, loadRegistryV3, toEcosystemItem } from '../../_registry';
+import { filterEcosystem, loadRegistryV3, toEcosystemItem } from '../../_registry';
+import { resolveEdgePackageRequest } from '../../_package-request';
 
 interface McpArgs {
   category?: string;
@@ -24,6 +25,7 @@ interface JsonRpcBody {
 }
 
 const ECOSYSTEM_TYPES = ['plugin', 'mcp', 'skill', 'agent'] as const;
+const CHANNELS = ['stable', 'beta', 'nightly', 'dev'] as const;
 
 const TOOLS = [
   {
@@ -65,32 +67,35 @@ const TOOLS = [
         search: { type: 'string' },
         capability: { type: 'string' },
         verified: { type: 'boolean' },
+        channel: { type: 'string', enum: CHANNELS },
         limit: { type: 'number', default: 20 },
       },
     },
   },
   {
     name: 'get_ecosystem_item',
-    description: '读取 Registry V3 中单个生态条目及本地 Runtime 安装计划；同 ID 多类型时应传 type',
+    description: '读取 Registry V3 中单个生态条目；支持 latest/exact/semver range/channel，同 ID 多类型时应传 type',
     inputSchema: {
       type: 'object',
       properties: {
         id: { type: 'string' },
-        version: { type: 'string' },
+        version: { type: 'string', description: 'Semver range; omitted means latest compatible release in the selected channel.' },
         type: { type: 'string', enum: ECOSYSTEM_TYPES },
+        channel: { type: 'string', enum: CHANNELS, default: 'stable' },
       },
       required: ['id'],
     },
   },
   {
     name: 'plan_local_install',
-    description: '生成本地 DSH Runtime 安装命令；仅生成计划，不执行安装',
+    description: '生成本地 DSH Runtime 安装命令；支持 latest/exact/semver range/channel；仅生成计划，不执行安装',
     inputSchema: {
       type: 'object',
       properties: {
         id: { type: 'string' },
-        version: { type: 'string' },
+        version: { type: 'string', description: 'Semver range; omitted means latest compatible release in the selected channel.' },
         type: { type: 'string', enum: ECOSYSTEM_TYPES },
+        channel: { type: 'string', enum: CHANNELS, default: 'stable' },
       },
       required: ['id'],
     },
@@ -102,14 +107,6 @@ function rpcResult(id: unknown, result: unknown) {
 }
 function rpcError(id: unknown, code: number, message: string) {
   return json({ jsonrpc: '2.0', id, error: { code, message } }, { status: 400 });
-}
-
-function normalizeType(value?: string): typeof ECOSYSTEM_TYPES[number] | undefined {
-  if (!value) return undefined;
-  const normalized = value.toLowerCase();
-  return ECOSYSTEM_TYPES.includes(normalized as typeof ECOSYSTEM_TYPES[number])
-    ? normalized as typeof ECOSYSTEM_TYPES[number]
-    : undefined;
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
@@ -195,21 +192,36 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         case 'get_ecosystem_item':
         case 'plan_local_install': {
           if (!args?.id) return rpcError(id, -32602, 'id is required');
-          const requestedType = normalizeType(args.type);
-          if (args.type && !requestedType) return rpcError(id, -32602, `invalid ecosystem type: ${args.type}`);
           const { data } = await loadRegistryV3(env, request.url);
-          const requestedId = String(args.id).toLowerCase();
-          const matches = data.plugins.filter((plugin) =>
-            plugin.id.toLowerCase() === requestedId
-            && (!args.version || plugin.version === args.version)
-            && (!requestedType || ecosystemType(plugin) === requestedType));
-          if (!matches.length) return rpcError(id, -32602, `ecosystem item not found: ${args.id}`);
-          if (matches.length > 1 && !requestedType) {
-            const types = [...new Set(matches.map(ecosystemType))].sort();
-            return rpcError(id, -32602, `ecosystem item is ambiguous; specify type (${types.join(', ')}): ${args.id}`);
+          let selection;
+          try {
+            selection = resolveEdgePackageRequest(data.plugins, {
+              id: args.id,
+              type: args.type,
+              version: args.version,
+              channel: args.channel,
+            });
+          } catch (cause) {
+            return rpcError(id, -32602, cause instanceof Error ? cause.message : String(cause));
           }
-          const item = toEcosystemItem(matches[0]);
-          result = name === 'plan_local_install' ? item.local_install : item;
+          const item = toEcosystemItem(selection.package);
+          result = name === 'plan_local_install'
+            ? {
+                ...item.local_install,
+                request: {
+                  id: selection.request.id,
+                  type: selection.request.type || item.type,
+                  version_range: selection.request.versionRange,
+                  channel: selection.request.channel,
+                },
+                resolved: {
+                  id: item.id,
+                  type: item.type,
+                  version: item.version,
+                  channel: item.channel,
+                },
+              }
+            : item;
           break;
         }
         default:
