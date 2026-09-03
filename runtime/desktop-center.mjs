@@ -1,6 +1,7 @@
 import { readRuntimeRegistry } from './registry.mjs';
 import { withPackageActivationState } from './package-status.mjs';
 import { loadRegistryFile, resolvePackage } from './resolver.mjs';
+import { resolveAcrossRegistries } from './registry-manager.mjs';
 import { compareVersions } from './semver.mjs';
 import { inferPackageType, packageKey } from './package-model.mjs';
 import { inspectEnterprisePolicy } from './enterprise-policy.mjs';
@@ -50,13 +51,44 @@ async function catalogOrNull(file) {
   try { return await loadRegistryFile(file); } catch { return null; }
 }
 
-function latestPackage(catalog, record) {
+function installedRegistry(record) {
+  return String(record.source_registry || record.source?.registry || 'official').trim() || 'official';
+}
+
+function latestFromCatalog(catalog, record) {
   if (!catalog) return null;
   const type = record.type || inferPackageType(record);
   try {
     return resolvePackage(catalog, type, record.id, '*', { channel: 'stable' });
   } catch {
     return null;
+  }
+}
+
+async function latestForRecord(officialCatalog, record, options = {}) {
+  const registry = installedRegistry(record);
+  if (registry === 'official') return { package: latestFromCatalog(officialCatalog, record), registry, error: null };
+  const type = record.type || inferPackageType(record);
+  try {
+    if (/^https?:\/\//i.test(registry)) {
+      const directCatalog = await loadRegistryFile(registry);
+      return { package: latestFromCatalog(directCatalog, record), registry, error: null };
+    }
+    const resolved = await resolveAcrossRegistries(record.id, {
+      type,
+      version: '*',
+      channel: 'stable',
+      registry,
+      file: options.registriesFile,
+      allowStale: true,
+    });
+    return { package: resolved.package, registry: resolved.registry.name, error: null };
+  } catch (error) {
+    return {
+      package: null,
+      registry,
+      error: { code: error.code || 'DSH_UPDATE_SOURCE_UNAVAILABLE', message: error.message },
+    };
   }
 }
 
@@ -70,7 +102,8 @@ export async function buildDesktopCenter(options = {}) {
   for (const source of runtime.packages || []) {
     if (source.state === 'removed' && options.includeRemoved !== true) continue;
     const record = withPackageActivationState(source);
-    const latest = latestPackage(catalog, record);
+    const latestResult = await latestForRecord(catalog, record, options);
+    const latest = latestResult.package;
     let updateAvailable = false;
     if (latest?.version && record.version) {
       try { updateAvailable = compareVersions(latest.version, record.version) > 0; } catch { updateAvailable = latest.version !== record.version; }
@@ -81,8 +114,10 @@ export async function buildDesktopCenter(options = {}) {
     packages.push({
       ...record,
       key,
+      source_registry: latestResult.registry,
       latest_stable: latest?.version || null,
       update_available: updateAvailable,
+      update_source_error: latestResult.error,
       alerts: packageAlerts,
     });
   }
