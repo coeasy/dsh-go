@@ -1,6 +1,6 @@
 // POST /api/v1/mcp — read-only MCP endpoint for catalog and Registry V3 discovery.
 import { loadCatalog, filterPlugins, json, error, type Env } from '../../_lib';
-import { ecosystemType, filterEcosystem, loadRegistryV3, toEcosystemItem } from '../../_registry';
+import { filterEcosystem, loadRegistryV3, toEcosystemItem } from '../../_registry';
 import { resolveEdgePackageRequest } from '../../_package-request';
 
 interface McpArgs {
