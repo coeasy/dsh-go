@@ -17,7 +17,7 @@ const description = tr('hero_sub', locale, { n: '13K+' });
 ---
 
 <!doctype html>
-<html lang={locale}>
+<html lang={locale} data-route-locale={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -54,10 +54,13 @@ const description = tr('hero_sub', locale, { n: '13K+' });
       <MarketplacePresentation />
     </main>
     <footer class="footer">{tr('footer_summary', locale)}</footer>
-    <script define:vars={{ locale }}>
+    <script>
       import { apply } from '../../scripts/i18n';
+      import { normalizeLang } from '../../i18n/config';
+      const locale = normalizeLang(document.documentElement.dataset.routeLocale) || 'en';
       const activate = () => apply(locale);
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', activate, { once: true }); else activate();
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', activate, { once: true });
+      else activate();
     </script>
   </body>
 </html>
