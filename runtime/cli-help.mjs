@@ -19,6 +19,12 @@ ${translate('native_package_manager', locale)}
   dsh package lock <type:id> [--runtime-registry <path>]
   dsh cache status [--registry-cache <path>]
 
+Publisher ecosystem
+  dsh package manifest-v2 [package-root]
+  dsh package publisher-check [package-root]
+  dsh package submission-plan [package-root] [--output-dir <path>]
+  dsh package init|validate|audit|sbom|publish-check ...
+
 Registry federation
   dsh registry list [--file <path>]
   dsh registry add <name> <url> [--priority <n>] [--trusted]
@@ -59,9 +65,6 @@ ${translate('host_bridge', locale)}
   dsh host handle <dsh://...> [--yes|--dry-run]
   dsh host registration|register
 
-${translate('developer_package_workflow', locale)}
-  dsh package init|validate|audit|sbom|publish-check ...
-
 ${translate('rules', locale)}
   - ${translate('rule_versionless', locale)}
   - ${translate('rule_permission', locale)}
@@ -71,6 +74,9 @@ ${translate('rules', locale)}
   - Environment restore and .dshpkg install are local, integrity-checked, permission-gated, and never auto-restart the client.
   - Multi-registry package identity conflicts fail closed instead of silently overriding publishers.
   - Revoked or critical-advisory package versions are blocked by resolver and installer policy.
+  - Publisher submission planning is local and non-mutating; Registry publication remains an explicit reviewed workflow.
+  - Marketplace localization changes presentation only; package identity, permissions, versions, commits and trust evidence remain language-neutral.
+  - Marketplace APIs and MCP are discovery/plan-only and cannot execute installation remotely.
   - ${translate('rule_pending_activation', locale)}
   - ${translate('rule_api', locale)}
 `;
