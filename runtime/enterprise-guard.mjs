@@ -45,6 +45,20 @@ function mutationRequest(args) {
   return { action: action === 'add' ? 'install' : action, parsed, requestedVersion };
 }
 
+function selectedRegistry(args) {
+  const explicit = option(args, '--registry');
+  const selectedName = String(process.env.DSH_SELECTED_REGISTRY_NAME || '').trim();
+  if (selectedName) {
+    return {
+      name: selectedName,
+      url: String(process.env.DSH_SELECTED_REGISTRY_URL || explicit || ''),
+      trusted: process.env.DSH_SELECTED_REGISTRY_TRUSTED === '1',
+      organization: String(process.env.DSH_SELECTED_REGISTRY_ORGANIZATION || '').trim() || null,
+    };
+  }
+  return explicit || { name: 'official', trusted: true };
+}
+
 export async function guardEnterpriseMutation(args = []) {
   const request = mutationRequest(args);
   if (!request) return null;
@@ -63,7 +77,6 @@ export async function guardEnterpriseMutation(args = []) {
     installed: runtime.packages,
   });
   if (!preflight.allowed) return null;
-  const explicitRegistry = option(args, '--registry');
   return enforceEnterprisePolicy({
     package: {
       type: preflight.type,
@@ -75,7 +88,7 @@ export async function guardEnterpriseMutation(args = []) {
     },
     publisher: preflight.publisher,
     permissions: preflight.permissions.permissions,
-    registry: explicitRegistry || { name: 'official', trusted: true },
+    registry: selectedRegistry(args),
     approved: args.includes('--yes') || args.includes('--dry-run'),
     operation: request.action,
   });
