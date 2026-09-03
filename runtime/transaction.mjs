@@ -36,7 +36,7 @@ async function writeJournal(root, journal) {
 
 function requestFromEntry(entry) {
   if (typeof entry === 'string') {
-    const parsed = parsePackageSpec(entry, '0.1.0', 'plugin');
+    const parsed = parsePackageSpec(entry, '*', 'plugin');
     return { id: parsed.id, type: parsed.type, version: parsed.version, channel: undefined };
   }
   if (!entry?.id) throw new Error('package plan entry requires id');
