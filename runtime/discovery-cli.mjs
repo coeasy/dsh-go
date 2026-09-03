@@ -4,6 +4,7 @@ import { assertPackageType, inferPackageType, packageKey, parsePackageSpec } fro
 import { readRuntimeRegistry } from './registry.mjs';
 
 const PACKAGE_TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
+const DISCOVERY_ACTIONS = new Set(['search', 'info', 'outdated']);
 
 function option(args, name, fallback = undefined) {
   const index = args.indexOf(name);
@@ -36,10 +37,11 @@ function searchableText(item) {
 }
 
 function compactPackage(item) {
+  const type = inferPackageType(item);
   return {
     id: item.id,
-    type: inferPackageType(item),
-    key: packageKey(inferPackageType(item), item.id),
+    type,
+    key: packageKey(type, item.id),
     version: item.version,
     channel: releaseChannel(item),
     repo: item.source?.repo || null,
@@ -122,15 +124,16 @@ export function computeOutdated(registry, runtimeRegistry, options = {}) {
 
   for (const current of runtimeRegistry.packages || []) {
     if (current.state === 'removed') continue;
-    if (requestedType && current.type !== requestedType) continue;
+    const currentType = assertPackageType(current.type || 'plugin');
+    if (requestedType && currentType !== requestedType) continue;
     const channel = current.channel || 'stable';
     try {
-      const latest = resolvePackage(registry, current.type, current.id, '*', { channel });
+      const latest = resolvePackage(registry, currentType, current.id, '*', { channel });
       const outdated = current.version !== latest.version || current.commit !== latest.commit;
       rows.push({
         id: current.id,
-        type: current.type,
-        key: packageKey(current.type, current.id),
+        type: currentType,
+        key: packageKey(currentType, current.id),
         channel,
         current_version: current.version,
         latest_version: latest.version,
@@ -142,8 +145,8 @@ export function computeOutdated(registry, runtimeRegistry, options = {}) {
     } catch (error) {
       rows.push({
         id: current.id,
-        type: current.type,
-        key: packageKey(current.type, current.id),
+        type: currentType,
+        key: packageKey(currentType, current.id),
         channel,
         current_version: current.version,
         latest_version: null,
@@ -165,8 +168,16 @@ export function computeOutdated(registry, runtimeRegistry, options = {}) {
   };
 }
 
+function discoveryType(args) {
+  if (PACKAGE_TYPES.has(args[0])) return args[0];
+  if (args[0] !== 'package') return null;
+  const requested = option(args, '--type');
+  return requested ? assertPackageType(requested) : null;
+}
+
 export async function runDiscoveryCli(args = process.argv.slice(2)) {
-  const type = assertPackageType(args[0]);
+  const command = args[0];
+  const type = discoveryType(args);
   const action = args[1];
   const catalog = option(args, '--registry', 'catalog/registry-v3.json');
   const channel = option(args, '--channel', 'stable');
@@ -184,8 +195,9 @@ export async function runDiscoveryCli(args = process.argv.slice(2)) {
 
   if (action === 'info') {
     const raw = positional(args, 2);
-    if (!raw) throw new Error(`runtime package id is required for ${type} info`);
-    const result = packageInfo(registry, type, raw, { channel });
+    if (!raw) throw new Error(`runtime package id is required for ${command} info`);
+    const parsed = parsePackageSpec(raw, '*', type || 'plugin');
+    const result = packageInfo(registry, parsed.type, raw, { channel });
     console.log(JSON.stringify(result, null, 2));
     return result;
   }
@@ -197,9 +209,9 @@ export async function runDiscoveryCli(args = process.argv.slice(2)) {
     return result;
   }
 
-  throw new Error(`unsupported discovery action: ${type} ${action || '<empty>'}`);
+  throw new Error(`unsupported discovery action: ${command} ${action || '<empty>'}`);
 }
 
 export function isDiscoveryCommand(args = process.argv.slice(2)) {
-  return PACKAGE_TYPES.has(args[0]) && ['search', 'info', 'outdated'].includes(args[1]);
+  return (PACKAGE_TYPES.has(args[0]) || args[0] === 'package') && DISCOVERY_ACTIONS.has(args[1]);
 }
