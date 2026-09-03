@@ -11,6 +11,8 @@ import { getRuntimePackage, readRuntimeRegistry } from './registry.mjs';
 import { withPackageActivationState } from './package-status.mjs';
 import { readPackageConfig, redactConfig, setPackageConfig, unsetPackageConfig } from './config-store.mjs';
 import { deleteSecret, listSecrets, setSecret } from './secret-store.mjs';
+import { buildDesktopCenter, desktopIpcContract } from './desktop-center.mjs';
+import { inspectEnterprisePolicy } from './enterprise-policy.mjs';
 
 const CLI = fileURLToPath(new URL('../bin/dsh.mjs', import.meta.url));
 const MAX_BODY_BYTES = 64 * 1024;
@@ -149,10 +151,19 @@ export async function createClientHost(options = {}) {
         return res.end();
       }
       if (requestUrl.pathname === '/health' && req.method === 'GET') {
-        return json(req, res, 200, { ok: true, service: 'dsh-client-host', protocol: 1, version: '0.1.0', api: '/v1' });
+        return json(req, res, 200, { ok: true, service: 'dsh-client-host', protocol: 1, version: '0.1.0', api: '/v1', desktop: '/v1/desktop/contract' });
       }
       if (!authenticated(req, token)) return json(req, res, 401, { error: 'unauthorized' });
 
+      if (requestUrl.pathname === '/v1/desktop/contract' && req.method === 'GET') {
+        return json(req, res, 200, desktopIpcContract());
+      }
+      if (requestUrl.pathname === '/v1/desktop/center' && req.method === 'GET') {
+        return json(req, res, 200, await buildDesktopCenter());
+      }
+      if (requestUrl.pathname === '/v1/enterprise/policy' && req.method === 'GET') {
+        return json(req, res, 200, await inspectEnterprisePolicy());
+      }
       if (requestUrl.pathname === '/v1/install/plan' && req.method === 'POST') {
         const request = await body(req);
         const url = request.url || buildInstallDeepLink(request);
