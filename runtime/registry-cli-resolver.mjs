@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto';
+import { homedir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { parsePackageRequest } from './package-model.mjs';
 import { getRuntimePackage, readRuntimeRegistry } from './registry.mjs';
 import { readRegistries } from './registry-manager.mjs';
@@ -24,6 +27,24 @@ function looksLikeSource(value) {
     || input.includes('\\')
     || input.includes('/')
     || input.toLowerCase().endsWith('.json');
+}
+
+function registryCachePath(registry) {
+  const root = resolve(process.env.DSH_REGISTRY_CACHE_DIR || join(homedir(), '.dsh', 'cache', 'registries'));
+  const safeName = String(registry.name || 'registry').replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '') || 'registry';
+  const sourceHash = createHash('sha256').update(String(registry.url)).digest('hex').slice(0, 16);
+  return join(root, `${safeName}-${sourceHash}.json`);
+}
+
+function bindRegistryContext(registry) {
+  process.env.DSH_SELECTED_REGISTRY_NAME = registry.name;
+  process.env.DSH_SELECTED_REGISTRY_URL = registry.url;
+  process.env.DSH_SELECTED_REGISTRY_TRUSTED = registry.trusted ? '1' : '0';
+  process.env.DSH_REGISTRY_CACHE = registryCachePath(registry);
+  if (registry.organization) process.env.DSH_SELECTED_REGISTRY_ORGANIZATION = registry.organization;
+  else delete process.env.DSH_SELECTED_REGISTRY_ORGANIZATION;
+  if (registry.auth_env) process.env.DSH_REGISTRY_AUTH_ENV = registry.auth_env;
+  else delete process.env.DSH_REGISTRY_AUTH_ENV;
 }
 
 function updateTarget(args) {
@@ -62,12 +83,49 @@ export async function resolveNamedRegistryArgs(args = []) {
   const registry = config.registries.find((item) => item.name.toLowerCase() === String(requested).toLowerCase());
   if (!registry) return { args: values, registry: null };
   values[index + 1] = registry.url;
-  process.env.DSH_SELECTED_REGISTRY_NAME = registry.name;
-  process.env.DSH_SELECTED_REGISTRY_URL = registry.url;
-  process.env.DSH_SELECTED_REGISTRY_TRUSTED = registry.trusted ? '1' : '0';
-  if (registry.organization) process.env.DSH_SELECTED_REGISTRY_ORGANIZATION = registry.organization;
-  else delete process.env.DSH_SELECTED_REGISTRY_ORGANIZATION;
-  if (registry.auth_env) process.env.DSH_REGISTRY_AUTH_ENV = registry.auth_env;
-  else delete process.env.DSH_REGISTRY_AUTH_ENV;
+  bindRegistryContext(registry);
   return { args: values, registry };
+}
+
+export async function resolveDeepLinkRegistryArgs(args = []) {
+  const values = [...args];
+  if (values[0] !== 'host' || values[1] !== 'handle' || !values[2]) return values;
+
+  let deepLink;
+  try {
+    deepLink = new URL(values[2]);
+  } catch {
+    return values;
+  }
+  if (deepLink.protocol !== 'dsh:') return values;
+
+  const requested = String(deepLink.searchParams.get('registry') || '').trim();
+  if (!requested) return values;
+
+  let registry;
+  if (looksLikeSource(requested)) {
+    registry = {
+      name: requested,
+      url: requested,
+      priority: 0,
+      trusted: false,
+      enabled: true,
+      organization: null,
+      scope: 'direct',
+      auth_env: null,
+    };
+  } else {
+    const config = await readRegistries();
+    registry = config.registries.find((item) => item.enabled !== false && item.name.toLowerCase() === requested.toLowerCase());
+    if (!registry) {
+      const error = new Error(`registry not configured: ${requested}`);
+      error.code = 'DSH_REGISTRY_NOT_FOUND';
+      throw error;
+    }
+  }
+
+  deepLink.searchParams.set('registry', registry.url);
+  values[2] = deepLink.toString();
+  bindRegistryContext(registry);
+  return values;
 }
