@@ -1,4 +1,4 @@
-import type { RegistryV3Data, RegistryV3Plugin, EcosystemType, ReleaseChannel } from './_registry';
+import type { RegistryV3Data, RegistryV3Plugin, ReleaseChannel } from './_registry';
 import { ecosystemType } from './_registry';
 
 export const MARKETPLACE_LOCALES = ['en', 'zh-CN', 'ja', 'ko', 'es'] as const;
@@ -33,6 +33,18 @@ export function requestedLocale(request: Request): MarketplaceLocale {
   if (explicit) return normalizeLocale(explicit);
   const accept = request.headers.get('accept-language')?.split(',')[0]?.split(';')[0];
   return normalizeLocale(accept);
+}
+
+export async function loadLocalizationOverlay(env: { ASSETS: { fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> } }, requestUrl: string, locale: MarketplaceLocale): Promise<LocalizationOverlay | null> {
+  try {
+    const response = await env.ASSETS.fetch(new URL(`/catalog/localization-v1/${encodeURIComponent(locale)}.json`, requestUrl));
+    if (!response.ok) return null;
+    const overlay = await response.json() as LocalizationOverlay;
+    if (overlay.schema_version !== 1 || !overlay.entries || typeof overlay.entries !== 'object') return null;
+    return overlay;
+  } catch {
+    return null;
+  }
 }
 
 export function trustFor(plugin: RegistryV3Plugin): TrustResult {
