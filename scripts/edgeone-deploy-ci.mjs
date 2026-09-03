@@ -70,7 +70,7 @@ export function classifyFailure(text, status = 1, timedOut = false) {
   if (/(^|[^0-9])429([^0-9]|$)|rate[ _-]*limit|quota|exceed(?:ed|s)? .*limit|project exceeds [0-9]+ limit/i.test(value)) {
     return 'quota';
   }
-  if (/(^|[^0-9])409([^0-9]|$)|already exists|project.*exists|name.*conflict|duplicate project/i.test(value)) {
+  if (/(^|[^0-9])409([^0-9]|$)|(?:project|name).*(?:conflict|duplicate)|duplicate project|cannot create .*project|project .*already exists(?![. ]+using existing project)/i.test(value)) {
     return 'project_conflict';
   }
   if (status === 0) return 'protocol';
@@ -202,6 +202,7 @@ export function runProcess(command, args, { timeoutMs, env = process.env, cwd } 
     let timedOut = false;
     let settled = false;
     let killTimer;
+    let cleanupTimer;
 
     const child = spawn(command, args, { env, cwd, stdio: ['ignore', 'pipe', 'pipe'] });
     child.stdout.on('data', (chunk) => {
@@ -214,8 +215,19 @@ export function runProcess(command, args, { timeoutMs, env = process.env, cwd } 
     const timeout = timeoutMs
       ? setTimeout(() => {
           timedOut = true;
-          child.kill('SIGTERM');
-          killTimer = setTimeout(() => child.kill('SIGKILL'), 5_000);
+          try { child.kill('SIGTERM'); } catch { /* process exited between checks */ }
+          killTimer = setTimeout(() => {
+            if (settled) return;
+            try { child.kill('SIGKILL'); } catch { /* process exited between checks */ }
+            cleanupTimer = setTimeout(() => {
+              if (settled) return;
+              settled = true;
+              if (timeout) clearTimeout(timeout);
+              if (killTimer) clearTimeout(killTimer);
+              resolve({ code: 124, stdout, stderr, timedOut: true, process_cleanup_failed: true });
+            }, 5_000);
+            cleanupTimer.unref?.();
+          }, 5_000);
           killTimer.unref?.();
         }, timeoutMs)
       : null;
@@ -226,7 +238,8 @@ export function runProcess(command, args, { timeoutMs, env = process.env, cwd } 
       settled = true;
       if (timeout) clearTimeout(timeout);
       if (killTimer) clearTimeout(killTimer);
-      resolve({ code: timedOut ? 124 : (code ?? 1), stdout, stderr, timedOut });
+      if (cleanupTimer) clearTimeout(cleanupTimer);
+      resolve({ code: timedOut ? 124 : (code ?? 1), stdout, stderr, timedOut, process_cleanup_failed: false });
     };
 
     child.on('error', (error) => {
@@ -359,6 +372,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   let lastDeploymentId = '';
   let lastProjectId = '';
   let lastConsoleUrl = '';
+  let lastTransferDiagnostics = '';
 
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     attemptsMade = attempt;
@@ -376,6 +390,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     });
     const combined = `${result.stdout || ''}\n${result.stderr || ''}`;
     const transferDiagnostics = cliTransferDiagnostics(combined, token);
+    lastTransferDiagnostics = transferDiagnostics;
     if (transferDiagnostics) {
       console.log('EdgeOne CLI transfer diagnostics:');
       console.log(transferDiagnostics);
@@ -507,7 +522,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     failure_class: failureClass,
     attempts: attemptsMade,
     error: lastError,
-    transfer_diagnostics: transferDiagnostics || undefined,
+    transfer_diagnostics: lastTransferDiagnostics || undefined,
   }, token);
   console.error(`::error title=EdgeOne deployment failure [${failureClass}]::${annotationValue(lastError)}`);
   throw new Error(`EdgeOne deployment failed after retry policy [${failureClass}]: ${lastError}`);

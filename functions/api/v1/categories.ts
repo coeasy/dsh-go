@@ -1,5 +1,5 @@
 // GET /api/v1/categories —— 分类注册表（含计数）
-import { loadCatalog, filterPlugins, json, internalError, type Env } from '../../_lib';
+import { loadCatalog, filterPlugins, json, internalError, optionsResponse, type Env } from '../../_lib';
 
 const CATEGORY_ZH: Record<string, string> = {
   'web-ui': 'Web UI 组件',
@@ -44,3 +44,5 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return internalError(e);
   }
 };
+
+export const onRequestOptions: PagesFunction = () => optionsResponse();

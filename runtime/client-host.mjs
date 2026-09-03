@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -14,9 +14,12 @@ import { deleteSecret, listSecrets, setSecret } from './secret-store.mjs';
 import { buildDesktopCenter, desktopIpcContract } from './desktop-center.mjs';
 import { inspectEnterprisePolicy } from './enterprise-policy.mjs';
 import { addRegistry, readRegistries, removeRegistry } from './registry-manager.mjs';
+import { withFileLock } from './file-lock.mjs';
 
 const CLI = fileURLToPath(new URL('../bin/dsh.mjs', import.meta.url));
 const MAX_BODY_BYTES = 64 * 1024;
+const DEFAULT_CLI_TIMEOUT_MS = 120_000;
+const CLI_KILL_GRACE_MS = 1_000;
 const DEFAULT_ALLOWED_ORIGINS = new Set([
   'https://coeasy.github.io',
   'https://dsh-go.pages.dev',
@@ -27,16 +30,25 @@ export function bridgeTokenFile() {
 }
 
 export async function ensureBridgeToken(file = bridgeTokenFile()) {
-  try {
-    const value = (await readFile(resolve(file), 'utf8')).trim();
-    if (value.length >= 32) return value;
-  } catch { /* create below */ }
   const target = resolve(file);
-  await mkdir(dirname(target), { recursive: true });
-  const value = randomBytes(32).toString('hex');
-  await writeFile(target, `${value}\n`, { encoding: 'utf8', mode: 0o600 });
-  try { await chmod(target, 0o600); } catch { /* Windows ACLs are managed by the OS */ }
-  return value;
+  return withFileLock(`${target}.lock`, async () => {
+    try {
+      const value = (await readFile(target, 'utf8')).trim();
+      if (value.length >= 32) return value;
+    } catch { /* create below */ }
+    await mkdir(dirname(target), { recursive: true });
+    const value = randomBytes(32).toString('hex');
+    const temp = `${target}.tmp-${process.pid}-${randomBytes(8).toString('hex')}`;
+    try {
+      await writeFile(temp, `${value}\n`, { encoding: 'utf8', mode: 0o600 });
+      await rename(temp, target);
+    } catch (error) {
+      await rm(temp, { force: true }).catch(() => {});
+      throw error;
+    }
+    try { await chmod(target, 0o600); } catch { /* Windows ACLs are managed by the OS */ }
+    return value;
+  });
 }
 
 function authenticated(req, token) {
@@ -60,7 +72,11 @@ async function body(req) {
   let bytes = 0;
   for await (const chunk of req) {
     bytes += chunk.length;
-    if (bytes > MAX_BODY_BYTES) throw new Error('request body is too large');
+    if (bytes > MAX_BODY_BYTES) {
+      const error = new Error('request body is too large');
+      error.code = 'DSH_REQUEST_TOO_LARGE';
+      throw error;
+    }
     chunks.push(chunk);
   }
   const text = Buffer.concat(chunks).toString('utf8');
@@ -95,28 +111,81 @@ function parseCliJson(stdout) {
   try { return JSON.parse(text); } catch { return text; }
 }
 
-async function executeCli(argv) {
+export function executeCli(argv, options = {}) {
+  const configuredTimeout = Number(options.timeoutMs ?? process.env.DSH_CLIENT_CLI_TIMEOUT_MS);
+  const timeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout > 0
+    ? configuredTimeout
+    : DEFAULT_CLI_TIMEOUT_MS;
   return new Promise((accept, reject) => {
     const child = spawn(process.execPath, [CLI, ...argv], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
     let stdout = '';
     let stderr = '';
+    let timedOut = false;
+    let settled = false;
+    let killTimer;
+    let cleanupTimer;
+    const timeoutError = new Error(`dsh command timed out after ${timeoutMs}ms: ${argv.join(' ')}`);
+    timeoutError.code = 'DSH_CLIENT_CLI_TIMEOUT';
+    timeoutError.timeout_ms = timeoutMs;
+    timeoutError.argv = argv;
+    const finish = (callback) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (killTimer) clearTimeout(killTimer);
+      if (cleanupTimer) clearTimeout(cleanupTimer);
+      callback();
+    };
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try { child.kill('SIGTERM'); } catch { /* process exited between checks */ }
+      killTimer = setTimeout(() => {
+        if (settled) return;
+        try { child.kill('SIGKILL'); } catch { /* process exited between checks */ }
+        cleanupTimer = setTimeout(() => {
+          if (settled) return;
+          timeoutError.process_cleanup_error = `dsh child process did not emit close after SIGKILL: ${child.pid}`;
+          timeoutError.recovery_required = true;
+          finish(() => reject(timeoutError));
+        }, CLI_KILL_GRACE_MS);
+        cleanupTimer.unref?.();
+      }, CLI_KILL_GRACE_MS);
+      killTimer.unref?.();
+    }, timeoutMs);
+    timer.unref?.();
     child.stdout.on('data', (chunk) => { stdout += chunk; });
     child.stderr.on('data', (chunk) => { stderr += chunk; });
-    child.on('error', reject);
-    child.on('exit', (code) => code === 0
-      ? accept({ success: true, result: parseCliJson(stdout), stdout, stderr })
-      : reject(new Error(stderr || stdout || `dsh exited ${code}`)));
+    child.once('error', (cause) => finish(() => {
+      if (timedOut) return reject(timeoutError);
+      reject(cause);
+    }));
+    // `close` fires after stdout/stderr have drained; using `exit` can return
+    // a truncated JSON result to the HTTP caller.
+    child.once('close', (code, signal) => finish(() => {
+      if (timedOut) return reject(timeoutError);
+      if (code === 0) {
+        accept({ success: true, result: parseCliJson(stdout), stdout, stderr });
+        return;
+      }
+      const error = new Error(stderr || stdout || `dsh exited ${code ?? signal ?? 'unknown'}`);
+      error.code = 'DSH_CLIENT_CLI_FAILED';
+      error.exit_code = code;
+      error.signal = signal;
+      reject(error);
+    }));
   });
 }
 
-async function executeDeepLink(url) {
-  return executeCli(['host', 'handle', url, '--yes']);
+function executeDeepLink(url, options = {}) {
+  const argv = ['host', 'handle', url, '--yes'];
+  if (options.runtimeRegistry && !argv.includes('--runtime-registry')) argv.push('--runtime-registry', options.runtimeRegistry);
+  return executeCli(argv, options);
 }
 
 function packageRoute(pathname) {
-  const match = pathname.match(/^\/v1\/packages\/(plugin|mcp|skill|agent)\/([^/]+)(?:\/([^/]+))?$/);
+  const match = pathname.match(/^\/v1\/packages\/(plugin|mcp|skill|agent)\/([^/]+)(?:\/([^/]+))?$/i);
   if (!match) return null;
-  return { type: assertPackageType(match[1]), id: decodeURIComponent(match[2]), action: match[3] || null };
+  return { type: assertPackageType(match[1].toLowerCase()), id: decodeURIComponent(match[2]), action: match[3]?.toLowerCase() || null };
 }
 
 function secretRoute(pathname) {
@@ -143,6 +212,12 @@ export async function createClientHost(options = {}) {
   const token = options.token || await ensureBridgeToken(options.tokenFile);
   const host = options.host || '127.0.0.1';
   const port = Number(options.port ?? process.env.DSH_BRIDGE_PORT ?? 43731);
+  const runtimeRegistryFile = options.runtimeRegistry || options.registryFile;
+  const cliArgs = (argv) => runtimeRegistryFile && !argv.includes('--runtime-registry')
+    ? [...argv, '--runtime-registry', runtimeRegistryFile]
+    : argv;
+  const runCli = (argv) => executeCli(cliArgs(argv), { timeoutMs: options.cliTimeoutMs });
+  const runDeepLink = (url) => executeDeepLink(url, { timeoutMs: options.cliTimeoutMs, runtimeRegistry: runtimeRegistryFile });
   const server = createServer(async (req, res) => {
     try {
       const requestUrl = new URL(req.url || '/', `http://${host}:${port || 80}`);
@@ -166,7 +241,12 @@ export async function createClientHost(options = {}) {
         return json(req, res, 200, desktopIpcContract());
       }
       if (requestUrl.pathname === '/v1/desktop/center' && req.method === 'GET') {
-        return json(req, res, 200, await buildDesktopCenter());
+        return json(req, res, 200, await buildDesktopCenter({
+          runtimeRegistry: runtimeRegistryFile,
+          catalog: options.catalog,
+          enterprisePolicyFile: options.enterprisePolicyFile,
+          registriesFile: options.registriesFile,
+        }));
       }
       if (requestUrl.pathname === '/v1/enterprise/policy' && req.method === 'GET') {
         return json(req, res, 200, await inspectEnterprisePolicy());
@@ -180,13 +260,17 @@ export async function createClientHost(options = {}) {
         const request = await body(req);
         requireApproval(request);
         const url = request.url || buildInstallDeepLink(request);
-        const result = await executeDeepLink(url);
+        const result = await runDeepLink(url);
         return json(req, res, 200, { ...result, activation_state: 'pending-restart', restart_required: true, auto_restart: false });
       }
       if (requestUrl.pathname === '/v1/packages' && req.method === 'GET') {
-        const registry = await readRuntimeRegistry();
+        const registry = await readRuntimeRegistry(runtimeRegistryFile);
         const includeRemoved = requestUrl.searchParams.get('all') === 'true';
-        const type = requestUrl.searchParams.get('type');
+        const rawType = requestUrl.searchParams.get('type')?.trim().toLowerCase() || '';
+        let type;
+        if (rawType) {
+          try { type = assertPackageType(rawType); } catch { return json(req, res, 400, { error: 'unsupported package type', code: 'DSH_INVALID_PACKAGE_TYPE' }); }
+        }
         const packages = registry.packages
           .filter((record) => includeRemoved || record.state !== 'removed')
           .filter((record) => !type || record.type === type)
@@ -238,7 +322,7 @@ export async function createClientHost(options = {}) {
 
       const route = packageRoute(requestUrl.pathname);
       if (route && req.method === 'GET' && !route.action) {
-        const registry = await readRuntimeRegistry();
+        const registry = await readRuntimeRegistry(runtimeRegistryFile);
         const record = getRuntimePackage(registry, route.type, route.id, { includeRemoved: requestUrl.searchParams.get('all') === 'true' });
         if (!record) return json(req, res, 404, { error: 'package not found', type: route.type, id: route.id });
         return json(req, res, 200, { package: withPackageActivationState(record) });
@@ -259,13 +343,13 @@ export async function createClientHost(options = {}) {
         return json(req, res, 200, { ...result, config: redactConfig(result.config) });
       }
       if (route && req.method === 'GET' && route.action === 'logs' && route.type === 'mcp') {
-        const result = await executeCli(['mcp', 'logs', route.id]);
+        const result = await runCli(['mcp', 'logs', route.id]);
         return json(req, res, 200, result);
       }
       if (route && req.method === 'POST' && route.action === 'doctor') {
         const request = await body(req);
         requireApproval(request);
-        const result = await executeCli([route.type, 'doctor', route.id]);
+        const result = await runCli([route.type, 'doctor', route.id]);
         return json(req, res, 200, { ...result, restart_required: false, auto_restart: false });
       }
       if (route && req.method === 'DELETE' && !route.action) {
@@ -273,7 +357,7 @@ export async function createClientHost(options = {}) {
         requireApproval(request);
         const argv = [route.type, 'remove', route.id, '--yes'];
         if (request.cascade === true) argv.push('--cascade');
-        const result = await executeCli(argv);
+        const result = await runCli(argv);
         return json(req, res, 200, { ...result, activation_state: 'removed', restart_required: true, auto_restart: false });
       }
       if (route && req.method === 'PATCH' && !route.action) {
@@ -285,7 +369,7 @@ export async function createClientHost(options = {}) {
         const argv = [route.type, action, route.id];
         if (request.version) argv.push(String(request.version));
         argv.push('--yes');
-        const result = await executeCli(argv);
+        const result = await runCli(argv);
         return json(req, res, 200, { ...result, restart_required: true, auto_restart: false });
       }
       if (route && req.method === 'POST' && route.action) {
@@ -303,13 +387,13 @@ export async function createClientHost(options = {}) {
           argv.push(String(request.tool));
         }
         if (request.input !== undefined) argv.push('--input', JSON.stringify(request.input));
-        const result = await executeCli(argv);
+        const result = await runCli(argv);
         return json(req, res, 200, result);
       }
 
       return json(req, res, 404, { error: 'not found' });
     } catch (error) {
-      const status = error.code === 'DSH_APPROVAL_REQUIRED' ? 409 : 400;
+      const status = error.code === 'DSH_APPROVAL_REQUIRED' ? 409 : error.code === 'DSH_CLIENT_CLI_TIMEOUT' ? 504 : error.code === 'DSH_REQUEST_TOO_LARGE' ? 413 : 400;
       return json(req, res, status, { error: error.message, code: error.code || 'DSH_CLIENT_HOST_ERROR', confirmation_required: status === 409 });
     }
   });

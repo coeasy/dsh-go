@@ -1,7 +1,7 @@
 // GET /api/v1/plugins —— 插件列表（过滤/搜索/排序/分页）
 import {
   loadCatalog, filterPlugins, paginate, parseQuery, json, internalError,
-  isNotModified, notModifiedResponse,
+  isNotModified, notModifiedResponse, optionsResponse,
   type Env,
 } from '../../_lib';
 
@@ -37,12 +37,4 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 };
 
 // Pages Functions 约定：导出 onRequestOptions（不要用旧的 OPTIONS 导出，那不会生效）
-export const onRequestOptions: PagesFunction = () =>
-  new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, If-None-Match',
-      'Access-Control-Max-Age': '86400',
-    },
-  });
+export const onRequestOptions: PagesFunction = () => optionsResponse();

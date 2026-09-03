@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
-import { access, chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { access, chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { withFileLock } from './file-lock.mjs';
@@ -8,6 +8,7 @@ import { withFileLock } from './file-lock.mjs';
 export const SECRET_KEY_BACKENDS = Object.freeze(['auto', 'file', 'dpapi', 'secret-service']);
 const BACKENDS = new Set(SECRET_KEY_BACKENDS);
 const COMMAND_TIMEOUT_MS = 15_000;
+const COMMAND_KILL_GRACE_MS = 1_000;
 const DPAPI_LOCK_TIMEOUT_MS = 30_000;
 const nativeMasterKeyCache = new Map();
 
@@ -38,8 +39,13 @@ async function exists(path) {
 async function atomicWrite(path, content, mode = 0o600) {
   await mkdir(dirname(path), { recursive: true });
   const temp = `${path}.tmp-${process.pid}-${Date.now()}-${randomBytes(4).toString('hex')}`;
-  await writeFile(temp, content, { encoding: 'utf8', mode });
-  await rename(temp, path);
+  try {
+    await writeFile(temp, content, { encoding: 'utf8', mode });
+    await rename(temp, path);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
   try { await chmod(path, mode); } catch { /* Windows ACLs are managed by the OS */ }
 }
 
@@ -53,24 +59,42 @@ export function runSecretBackendCommand(command, args, input = '', options = {})
     const stdout = [];
     const stderr = [];
     let settled = false;
+    let timedOut = false;
+    let killTimer;
+    let cleanupTimer;
+    const timeoutError = new Error(`${command} timed out`);
+    timeoutError.code = 'DSH_SECRET_BACKEND_TIMEOUT';
     const finish = (callback) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      if (killTimer) clearTimeout(killTimer);
+      if (cleanupTimer) clearTimeout(cleanupTimer);
       callback();
     };
+    const requestedTimeout = Number(options.timeoutMs);
+    const timeoutMs = Number.isFinite(requestedTimeout) && requestedTimeout > 0 ? requestedTimeout : COMMAND_TIMEOUT_MS;
     const timer = setTimeout(() => {
-      child.kill();
-      finish(() => {
-        const error = new Error(`${command} timed out`);
-        error.code = 'DSH_SECRET_BACKEND_TIMEOUT';
-        reject(error);
-      });
-    }, Math.max(1, Number(options.timeoutMs) || COMMAND_TIMEOUT_MS));
+      timedOut = true;
+      try { child.kill('SIGTERM'); } catch { /* process exited between checks */ }
+      killTimer = setTimeout(() => {
+        if (settled) return;
+        try { child.kill('SIGKILL'); } catch { /* process exited between checks */ }
+        cleanupTimer = setTimeout(() => {
+          if (settled) return;
+          timeoutError.process_cleanup_error = `secret backend process did not emit close after SIGKILL: ${child.pid}`;
+          timeoutError.recovery_required = true;
+          finish(() => reject(timeoutError));
+        }, COMMAND_KILL_GRACE_MS);
+        cleanupTimer.unref?.();
+      }, COMMAND_KILL_GRACE_MS);
+      killTimer.unref?.();
+    }, timeoutMs);
 
     child.stdout.on('data', (chunk) => stdout.push(Buffer.from(chunk)));
     child.stderr.on('data', (chunk) => stderr.push(Buffer.from(chunk)));
     child.once('error', (cause) => finish(() => {
+      if (timedOut) return reject(timeoutError);
       const error = new Error(`secret backend command unavailable: ${command}`);
       error.code = 'DSH_SECRET_BACKEND_UNAVAILABLE';
       error.command = command;
@@ -78,6 +102,7 @@ export function runSecretBackendCommand(command, args, input = '', options = {})
       reject(error);
     }));
     child.once('close', (code) => finish(() => {
+      if (timedOut) return reject(timeoutError);
       if (code === 0) {
         resolvePromise(Buffer.concat(stdout).toString('utf8'));
         return;

@@ -1,5 +1,6 @@
 import type { RegistryV3Data, RegistryV3Plugin, ReleaseChannel } from './_registry';
 import { ecosystemType } from './_registry';
+import { compareSemanticVersions } from './_package-request';
 
 export const MARKETPLACE_LOCALES = ['en', 'zh-CN', 'ja', 'ko', 'es'] as const;
 export type MarketplaceLocale = typeof MARKETPLACE_LOCALES[number];
@@ -129,7 +130,7 @@ export function latestStableByKey(data: RegistryV3Data): Map<string, RegistryV3P
     if ((plugin.security as any)?.yanked === true || (plugin.security as any)?.revoked === true) continue;
     const key = `${ecosystemType(plugin)}:${plugin.id}`;
     const current = result.get(key);
-    if (!current || plugin.version.localeCompare(current.version, undefined, { numeric: true }) > 0) result.set(key, plugin);
+    if (!current || compareSemanticVersions(plugin.version, current.version) > 0) result.set(key, plugin);
   }
   return result;
 }

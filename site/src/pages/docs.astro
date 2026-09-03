@@ -11,6 +11,19 @@ const endpoints = [
   { method: 'GET', path: '/api/v1/search?q=关键词', desc: '快速搜索（q 必填）' },
   { method: 'GET', path: '/api/v1/meta', desc: '同步元信息（供监控）' },
   { method: 'GET', path: '/api/v1/health', desc: '健康检查' },
+  { method: 'GET', path: '/api/v1/ecosystem', desc: 'Registry V3 生态条目（plugin / MCP / skill / agent）' },
+  { method: 'GET', path: '/api/v1/ecosystem/:id', desc: '生态条目详情与版本' },
+  { method: 'GET', path: '/api/v1/marketplace', desc: 'Marketplace V4 多语言首页' },
+  { method: 'GET', path: '/api/v1/package-detail?id=:id&type=:type', desc: '包详情、信任与本地安装计划' },
+  { method: 'GET', path: '/api/v1/install-plan?id=:id&type=:type', desc: '解析本地安装计划（只读）' },
+  { method: 'GET', path: '/api/v1/advisories', desc: '安全公告、撤回与下架状态' },
+  { method: 'GET', path: '/api/v1/publishers/:id', desc: 'Publisher 身份与包组合' },
+  { method: 'GET', path: '/api/v1/profiles', desc: '本地 Profile 原子应用契约' },
+  { method: 'GET', path: '/api/v1/bundles', desc: '本地 Bundle 原子安装契约' },
+  { method: 'GET', path: '/api/v1/providers', desc: 'Provider Adapter 版本与能力' },
+  { method: 'GET', path: '/api/v1/providers/:id', desc: 'Provider Adapter 详情' },
+  { method: 'GET', path: '/api/v1/registry', desc: 'Registry V3 原始权威数据' },
+  { method: 'GET', path: '/api/v1/capabilities', desc: '能力清单与部署语义' },
   { method: 'POST', path: '/api/v1/mcp', desc: 'MCP 端点（JSON-RPC 2.0，AI Agent 查询）' },
 ];
 
@@ -25,10 +38,10 @@ const params = [
   ['created_after / updated_after', '按时间过滤（ISO 时间字符串）'],
 ];
 
-const curlExample = `<span>curl "https://dsh-go.pages.dev/api/v1/plugins?category=web-ui&verified=true&sort=stars"</span>
-<span>curl "https://dsh-go.pages.dev/api/v1/search?q=vision&limit=10"</span>
-<span>curl -H "If-None-Match: a1b2c3d4e5f60718" https://dsh-go.pages.dev/api/v1/plugins</span>
-<span>curl -X POST https://dsh-go.pages.dev/api/v1/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_plugins","arguments":{"q":"agent"}}}'</span>`;
+const curlExample = `<span>curl "${BASE}/api/v1/plugins?category=web-ui&verified=true&sort=stars"</span>
+<span>curl "${BASE}/api/v1/search?q=vision&limit=10"</span>
+<span>curl -H "If-None-Match: a1b2c3d4e5f60718" ${BASE}/api/v1/plugins</span>
+<span>curl -X POST ${BASE}/api/v1/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_plugins","arguments":{"q":"agent"}}}'</span>`;
 
 const mcpConfigHtml = `<span>// ~/.config/Claude/claude_desktop_config.json</span>
 <span>{</span>
@@ -66,7 +79,7 @@ const etagHtml = `<span>// 浏览器 / Node.js（把 API_BASE 换成实际的 Ba
       <ul>
         <li data-i18n="doc_baseurl" data-base={BASE}>Base URL: <code>{BASE}</code></li>
         <li data-i18n="doc_openapi">规范文件：<a href={u('/openapi.json')} target="_blank">/openapi.json</a>（可导入 Postman / Apifox）</li>
-        <li data-i18n="doc_fresh" data-api-url={BASE}>数据新鲜度：<a href="/api/v1/meta" target="_blank">/api/v1/meta</a></li>
+        <li data-i18n="doc_fresh" data-api-url={BASE}>数据新鲜度：<a href={`${BASE}/api/v1/meta`} target="_blank">{BASE}/api/v1/meta</a></li>
         <li data-i18n="doc_ratelimit">速率限制：每 IP 每 10 秒 20 次（Cloudflare WAF 免费规则）</li>
       </ul>
     </section>

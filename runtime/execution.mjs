@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { mkdir, open, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
@@ -10,6 +11,21 @@ import { getRuntimePackage, readRuntimeRegistry, runtimeRoot } from './registry.
 import { buildExecutionEnv } from './execution-env.mjs';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
+const CHILD_CLEANUP_TIMEOUT_MS = 1_000;
+const MAX_TIMER_MS = 2_147_483_647;
+const localMcpProcesses = new Map();
+
+function boundedTimeout(value, fallback, { allowZero = false } = {}) {
+  const candidate = Number(value);
+  const valid = Number.isFinite(candidate) && (allowZero ? candidate >= 0 : candidate > 0);
+  return valid ? Math.min(candidate, MAX_TIMER_MS) : fallback;
+}
+
+export function getLocalMcpProcessStartTime(pid) {
+  const entry = localMcpProcesses.get(Number(pid));
+  if (!entry || entry.child.exitCode !== null || entry.child.signalCode !== null) return null;
+  return entry.startedAt;
+}
 
 function executionRoot() {
   return resolve(process.env.DSH_EXECUTION_HOME || join(runtimeRoot(), 'run'));
@@ -26,9 +42,14 @@ function logPath(type, id) {
 async function writeState(type, id, value) {
   const file = statePath(type, id);
   await mkdir(dirname(file), { recursive: true });
-  const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
-  await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
-  await rename(temp, file);
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
   return value;
 }
 
@@ -41,7 +62,33 @@ export async function readExecutionState(type, id) {
 
 function pidRunning(pid) {
   if (!Number.isInteger(pid) || pid <= 0) return false;
-  try { process.kill(pid, 0); return true; } catch { return false; }
+  try { process.kill(pid, 0); return true; } catch (error) { return error?.code === 'EPERM'; }
+}
+
+async function waitForPidExit(pid, timeoutMs = CHILD_CLEANUP_TIMEOUT_MS) {
+  const timeout = boundedTimeout(timeoutMs, CHILD_CLEANUP_TIMEOUT_MS, { allowZero: true });
+  const deadline = Date.now() + timeout;
+  while (pidRunning(pid)) {
+    if (Date.now() >= deadline) return false;
+    await new Promise((accept) => setTimeout(accept, 25));
+  }
+  return true;
+}
+
+async function terminatePid(pid, options = {}) {
+  if (!pidRunning(pid)) return true;
+  try { process.kill(pid, 'SIGTERM'); } catch {
+    if (!pidRunning(pid)) return true;
+    throw new Error(`unable to signal MCP process: ${pid}`);
+  }
+  if (await waitForPidExit(pid, options.stopTimeoutMs ?? options.timeoutMs ?? CHILD_CLEANUP_TIMEOUT_MS)) return true;
+  try {
+    if (process.platform === 'win32') process.kill(pid);
+    else process.kill(pid, 'SIGKILL');
+  } catch {
+    if (!pidRunning(pid)) return true;
+  }
+  return waitForPidExit(pid, options.killTimeoutMs ?? CHILD_CLEANUP_TIMEOUT_MS);
 }
 
 async function runtimeRecord(type, id, options = {}) {
@@ -127,6 +174,41 @@ async function waitSpawn(child) {
   });
 }
 
+function childHasExited(child) {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+function waitChildExit(child, timeoutMs = CHILD_CLEANUP_TIMEOUT_MS) {
+  if (childHasExited(child)) return Promise.resolve(true);
+  return new Promise((resolveWait) => {
+    const done = (exited) => {
+      clearTimeout(timer);
+      child.removeListener('exit', onExit);
+      child.removeListener('error', onError);
+      resolveWait(exited);
+    };
+    const onExit = () => done(true);
+    const onError = () => done(true);
+    const timer = setTimeout(() => done(false), boundedTimeout(timeoutMs, CHILD_CLEANUP_TIMEOUT_MS, { allowZero: true }));
+    child.once('exit', onExit);
+    child.once('error', onError);
+  });
+}
+
+async function terminateChild(child) {
+  if (!child?.pid || childHasExited(child)) return true;
+  const gracefulExit = waitChildExit(child);
+  try { child.kill('SIGTERM'); } catch { /* process exited between checks */ }
+  if (await gracefulExit) return true;
+
+  const forcedExit = waitChildExit(child);
+  try {
+    if (process.platform === 'win32') child.kill();
+    else child.kill('SIGKILL');
+  } catch { /* process exited between checks */ }
+  return forcedExit;
+}
+
 export async function startMcp(id, options = {}) {
   const record = await runtimeRecord('mcp', id, options);
   const config = await resolvedConfig(record, 'mcp', id);
@@ -151,6 +233,7 @@ export async function startMcp(id, options = {}) {
   const handle = await open(log, 'a', 0o600);
   let child;
   try {
+    const startedAt = new Date().toISOString();
     child = spawn(String(descriptor.command), descriptor.args, {
       cwd: record.path,
       env: buildExecutionEnv(descriptor.env),
@@ -159,14 +242,30 @@ export async function startMcp(id, options = {}) {
       windowsHide: true,
     });
     await waitSpawn(child);
+    localMcpProcesses.set(child.pid, { child, startedAt });
+    child.once('exit', () => {
+      if (localMcpProcesses.get(child.pid)?.child === child) localMcpProcesses.delete(child.pid);
+    });
+    if (childHasExited(child)) {
+      const error = new Error(`MCP process exited before startup completed: ${id}`);
+      error.code = 'DSH_MCP_START_FAILED';
+      throw error;
+    }
     child.unref();
+    return await writeState('mcp', id, {
+      type: 'mcp', id, transport: 'stdio', pid: child.pid, running: true, managed_process: true,
+      command: descriptor.command, args: descriptor.args, log, started_at: localMcpProcesses.get(child.pid)?.startedAt || startedAt,
+    });
+  } catch (error) {
+    if (!await terminateChild(child)) {
+      error.process_cleanup_error = `MCP process did not exit after startup failure: ${id}`;
+      error.recovery_required = true;
+    }
+    if (child?.pid && localMcpProcesses.get(child.pid)?.child === child) localMcpProcesses.delete(child.pid);
+    throw error;
   } finally {
     await handle.close();
   }
-  return writeState('mcp', id, {
-    type: 'mcp', id, transport: 'stdio', pid: child.pid, running: true, managed_process: true,
-    command: descriptor.command, args: descriptor.args, log, started_at: new Date().toISOString(),
-  });
 }
 
 export async function stopMcp(id, options = {}) {
@@ -174,7 +273,23 @@ export async function stopMcp(id, options = {}) {
   const state = await readExecutionState('mcp', id);
   if (!state) return { type: 'mcp', id, stopped: false, reason: 'not-started' };
   if (state.managed_process && state.pid && pidRunning(state.pid)) {
-    try { process.kill(state.pid, 'SIGTERM'); } catch { /* process exited between checks */ }
+    const local = localMcpProcesses.get(Number(state.pid));
+    if (local?.child) {
+      if (!await terminateChild(local.child)) {
+        const error = new Error(`MCP process did not exit after termination: ${id} (pid ${state.pid})`);
+        error.code = 'DSH_MCP_STOP_TIMEOUT';
+        error.pid = state.pid;
+        error.state_preserved = true;
+        throw error;
+      }
+    } else if (!await terminatePid(Number(state.pid), options)) {
+      const error = new Error(`MCP process did not exit after termination: ${id} (pid ${state.pid})`);
+      error.code = 'DSH_MCP_STOP_TIMEOUT';
+      error.pid = state.pid;
+      error.state_preserved = true;
+      throw error;
+    }
+    localMcpProcesses.delete(Number(state.pid));
   }
   await rm(statePath('mcp', id), { force: true });
   return { type: 'mcp', id, stopped: true, pid: state.pid || null };
@@ -227,7 +342,7 @@ function parseJsonOrSse(text) {
 
 async function remoteMcpRequest(url, payload, descriptor, sessionId, timeoutMs) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), boundedTimeout(timeoutMs, DEFAULT_TIMEOUT_MS));
   try {
     const headers = {
       'content-type': 'application/json',
@@ -260,7 +375,7 @@ async function waitForRpc(pending, id, timeoutMs, stderr) {
     const timer = setTimeout(() => {
       pending.delete(id);
       reject(new Error(`MCP stdio request timed out${stderr.value ? `: ${stderr.value.slice(-500)}` : ''}`));
-    }, timeoutMs);
+    }, boundedTimeout(timeoutMs, DEFAULT_TIMEOUT_MS));
     pending.set(id, (message) => {
       clearTimeout(timer);
       if (message.error) reject(new Error(message.error.message || JSON.stringify(message.error)));
@@ -293,6 +408,9 @@ async function invokeStdioMcp(record, descriptor, tool, input, timeoutMs) {
     } catch { /* ignore non-protocol stdout */ }
   });
   const send = (payload) => child.stdin.write(`${JSON.stringify(payload)}\n`);
+  let result;
+  let operationError = null;
+  let cleanupError = null;
   try {
     const initPromise = waitForRpc(pending, 1, timeoutMs, stderr);
     send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'dsh-go', version: '0.1.0' } } });
@@ -300,12 +418,28 @@ async function invokeStdioMcp(record, descriptor, tool, input, timeoutMs) {
     send({ jsonrpc: '2.0', method: 'notifications/initialized' });
     const callPromise = waitForRpc(pending, 2, timeoutMs, stderr);
     send({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: tool, arguments: input || {} } });
-    return await callPromise;
+    result = await callPromise;
+  } catch (error) {
+    operationError = error;
+    throw error;
   } finally {
     lines.close();
     child.stdin.end();
-    if (!child.killed) child.kill();
+    if (!await terminateChild(child)) {
+      const error = new Error(`MCP process did not exit after request: ${record.id} (pid ${child.pid})`);
+      error.code = 'DSH_MCP_EXECUTION_STOP_TIMEOUT';
+      error.pid = child.pid;
+      error.recovery_required = true;
+      if (operationError) {
+        operationError.process_cleanup_error = error.message;
+        operationError.recovery_required = true;
+      } else {
+        cleanupError = error;
+      }
+    }
   }
+  if (cleanupError) throw cleanupError;
+  return result;
 }
 
 export async function invokeMcp(id, tool, input = {}, options = {}) {
@@ -313,7 +447,7 @@ export async function invokeMcp(id, tool, input = {}, options = {}) {
   const record = await runtimeRecord('mcp', id, options);
   const config = await resolvedConfig(record, 'mcp', id);
   const descriptor = mcpDescriptor(record, config);
-  const timeoutMs = Number(options.timeoutMs) || DEFAULT_TIMEOUT_MS;
+  const timeoutMs = boundedTimeout(options.timeoutMs, DEFAULT_TIMEOUT_MS);
   const result = descriptor.transport === 'stdio'
     ? await invokeStdioMcp(record, descriptor, tool, input, timeoutMs)
     : await invokeRemoteMcp(record, descriptor, tool, input, timeoutMs);
@@ -327,7 +461,7 @@ export async function probeMcp(id, options = {}) {
   if (descriptor.transport === 'stdio') return mcpStatus(id, options);
   assertNetworkExecution(record, descriptor.url);
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), Number(options.timeoutMs) || 5000);
+  const timer = setTimeout(() => controller.abort(), boundedTimeout(options.timeoutMs, 5000));
   try {
     const response = await fetch(descriptor.url, { method: 'GET', headers: descriptor.headers, signal: controller.signal });
     return { type: 'mcp', id, transport: descriptor.transport, url: descriptor.url, reachable: response.ok || response.status === 405, status: response.status };
@@ -384,21 +518,38 @@ async function runExecutable(command, args, record, descriptor, input, timeoutMs
   child.stderr.on('data', (chunk) => { stderr += chunk; });
   let timer;
   const completed = new Promise((accept, reject) => {
+    const finish = (code, signal) => code === 0 ? accept(code) : reject(new Error(stderr || `executor exited ${code ?? signal}`));
     child.once('error', reject);
-    child.once('exit', (code, signal) => code === 0 ? accept(code) : reject(new Error(stderr || `executor exited ${code ?? signal}`)));
+    if (childHasExited(child)) finish(child.exitCode, child.signalCode);
+    else child.once('close', finish);
   });
   const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => {
-      if (!child.killed) child.kill();
-      reject(new Error('executor timed out'));
-    }, timeoutMs);
+    timer = setTimeout(() => reject(new Error('executor timed out')), timeoutMs);
   });
   child.stdin.end(`${JSON.stringify(input ?? {})}\n`);
+  let operationError = null;
+  let cleanupError = null;
   try {
     await Promise.race([completed, timeout]);
+  } catch (error) {
+    operationError = error;
+    throw error;
   } finally {
     clearTimeout(timer);
+    if (!await terminateChild(child)) {
+      const error = new Error(`skill executor did not exit after request: ${record.id} (pid ${child.pid})`);
+      error.code = 'DSH_EXECUTOR_STOP_TIMEOUT';
+      error.pid = child.pid;
+      error.recovery_required = true;
+      if (operationError) {
+        operationError.process_cleanup_error = error.message;
+        operationError.recovery_required = true;
+      } else {
+        cleanupError = error;
+      }
+    }
   }
+  if (cleanupError) throw cleanupError;
   const trimmed = stdout.trim();
   let output = trimmed;
   if (trimmed) { try { output = JSON.parse(trimmed); } catch { /* text output */ } }
@@ -423,7 +574,7 @@ export async function invokeSkill(id, input = {}, options = {}) {
   } else {
     throw new Error(`unsupported skill executor: ${descriptor.executor}`);
   }
-  const result = await runExecutable(command, args, record, descriptor, input, Number(options.timeoutMs) || DEFAULT_TIMEOUT_MS);
+  const result = await runExecutable(command, args, record, descriptor, input, boundedTimeout(options.timeoutMs, DEFAULT_TIMEOUT_MS));
   await writeState('skill', id, { type: 'skill', id, loaded: true, entrypoint, last_invoked_at: new Date().toISOString() });
   return { type: 'skill', id, executor: descriptor.executor, ...result };
 }

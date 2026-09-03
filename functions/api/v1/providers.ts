@@ -1,15 +1,17 @@
-import { error, internalError, isNotModified, json, notModifiedResponse, paginate } from '../../_lib';
+import { error, internalError, isNotModified, json, notModifiedResponse, paginate, type Env } from '../../_lib';
 import { filterProviderAdapters, loadProviderAdapterMarketplace, toProviderMarketplaceItem } from '../../_providers';
 
-export const onRequestGet: PagesFunction = async ({ request }) => {
+export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const url = new URL(request.url);
-    const { data, etag } = await loadProviderAdapterMarketplace(request.url);
+    const rawKind = url.searchParams.get('kind')?.trim().toLowerCase() || '';
+    const rawChannel = url.searchParams.get('channel')?.trim().toLowerCase() || '';
+    if (rawKind && !['llm', 'mcp', 'skill', 'agent-runtime'].includes(rawKind)) return error(400, 'unsupported provider adapter kind');
+    if (rawChannel && !['stable', 'beta', 'nightly', 'dev'].includes(rawChannel)) return error(400, 'unsupported provider adapter channel');
+    const { data, etag } = await loadProviderAdapterMarketplace(request.url, (input, init) => env.ASSETS.fetch(input, init));
     if (isNotModified(request, etag)) return notModifiedResponse(etag);
-    const kind = url.searchParams.get('kind') || undefined;
-    if (kind && !['llm', 'mcp', 'skill', 'agent-runtime'].includes(kind)) return error(400, 'unsupported provider adapter kind');
-    const channel = url.searchParams.get('channel') || undefined;
-    if (channel && !['stable', 'beta', 'nightly', 'dev'].includes(channel)) return error(400, 'unsupported provider adapter channel');
+    const kind = rawKind || undefined;
+    const channel = rawChannel || undefined;
     const filtered = filterProviderAdapters(data.providers, {
       kind,
       channel,

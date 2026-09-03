@@ -38,12 +38,34 @@ function psTemplate(installCmd) {
   return `# DSH Plugin one-click installer (generated)\nWrite-Host "Installing package through DSH CLI ..."\nif (Get-Command dsh -ErrorAction SilentlyContinue) {\n  ${installCmd}\n} else {\n  Write-Host "dsh CLI not found. See https://get.dsh.dev"\n  exit 1\n}\n`;
 }
 
+function safeRepository(value) {
+  const repository = String(value || '').trim();
+  return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository) ? repository : null;
+}
+
+function safeSlug(value) {
+  const slug = String(value || '').trim();
+  return /^[A-Za-z0-9_.-]+$/.test(slug) ? slug : null;
+}
+
+function shellArg(value) {
+  return `'${String(value).replaceAll("'", "'\\\"'\\\"'")}'`;
+}
+
+function powershellArg(value) {
+  return `'${String(value).replaceAll("'", "''")}'`;
+}
+
 async function genInstallScripts() {
   const src = resolve(CATALOG_DIR, 'plugins.json');
   if (!(await exists(src))) { console.warn('Missing plugins.json; skipping install scripts'); return; }
   const data = JSON.parse(await readFile(src, 'utf8'));
   await mkdir(INSTALL_DIR, { recursive: true });
-  const wanted = new Set((data.plugins || []).filter((plugin) => !plugin.deprecated && !plugin.disabled && (plugin.stars || 0) >= DETAIL_THRESHOLD).flatMap((plugin) => [`${plugin.slug}.sh`, `${plugin.slug}.ps1`]));
+  const wanted = new Set((data.plugins || [])
+    .filter((plugin) => !plugin.deprecated && !plugin.disabled && (plugin.stars || 0) >= DETAIL_THRESHOLD)
+    .map((plugin) => safeSlug(plugin.slug))
+    .filter(Boolean)
+    .flatMap((slug) => [`${slug}.sh`, `${slug}.ps1`]));
   try {
     for (const file of await readdir(INSTALL_DIR)) {
       if ((file.endsWith('.sh') || file.endsWith('.ps1')) && !wanted.has(file)) await unlink(resolve(INSTALL_DIR, file));
@@ -53,11 +75,17 @@ async function genInstallScripts() {
   let generated = 0;
   for (const plugin of data.plugins || []) {
     if (plugin.deprecated || plugin.disabled || (plugin.stars || 0) < DETAIL_THRESHOLD) continue;
-    const full = plugin.full_name || '';
-    if (!full || !plugin.slug) continue;
-    const installCmd = plugin.install_cmd || `dsh plugin add github:${full}`;
-    await writeFile(resolve(INSTALL_DIR, `${plugin.slug}.sh`), shTemplate(installCmd), 'utf8');
-    await writeFile(resolve(INSTALL_DIR, `${plugin.slug}.ps1`), psTemplate(installCmd), 'utf8');
+    const full = safeRepository(plugin.full_name);
+    const slug = safeSlug(plugin.slug);
+    if (!full || !slug) continue;
+    // The catalog is assembled from third-party repositories. Never embed a
+    // catalog-provided command verbatim in a downloadable shell/PowerShell
+    // script; derive the command from the validated immutable repository id.
+    const installSpec = `github:${full}`;
+    const installCmd = `dsh plugin install ${shellArg(installSpec)}`;
+    const powershellInstallCmd = `dsh plugin install ${powershellArg(installSpec)}`;
+    await writeFile(resolve(INSTALL_DIR, `${slug}.sh`), shTemplate(installCmd), 'utf8');
+    await writeFile(resolve(INSTALL_DIR, `${slug}.ps1`), psTemplate(powershellInstallCmd), 'utf8');
     generated++;
   }
   console.log(`Generated ${generated * 2} install scripts`);

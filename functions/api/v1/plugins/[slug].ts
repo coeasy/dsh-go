@@ -1,5 +1,5 @@
 // GET /api/v1/plugins/:slug —— 单个插件详情
-import { loadCatalog, filterPlugins, json, error, internalError, isNotModified, notModifiedResponse, type Env } from '../../../_lib';
+import { loadCatalog, filterPlugins, json, error, internalError, isNotModified, notModifiedResponse, optionsResponse, type Env } from '../../../_lib';
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
   try {
@@ -33,12 +33,4 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
 };
 
 // Pages Functions 约定：导出 onRequestOptions（不要用旧的 OPTIONS 导出，那不会生效）
-export const onRequestOptions: PagesFunction = () =>
-  new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, If-None-Match',
-      'Access-Control-Max-Age': '86400',
-    },
-  });
+export const onRequestOptions: PagesFunction = () => optionsResponse();

@@ -27,7 +27,8 @@ export function assertPackageChannel(value, fallback = 'stable') {
 export function safePackageId(value, options = {}) {
   const id = String(value || '').trim();
   const pattern = options.allowRepository ? SPEC_ID_RE : RUNTIME_ID_RE;
-  if (!id || id.length > 200 || !pattern.test(id)) {
+  const pathParts = id.split('/');
+  if (!id || id.length > 200 || !pattern.test(id) || pathParts.some((part) => part === '.' || part === '..')) {
     throw new Error(`unsafe runtime package id: ${id || '<empty>'}`);
   }
   return id;

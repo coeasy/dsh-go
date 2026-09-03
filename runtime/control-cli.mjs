@@ -29,6 +29,10 @@ function option(name, fallback = undefined) {
 function has(name) { return args.includes(name); }
 function print(value) { return printCliValue(value, { argv: args }); }
 
+function runtimeOptions() {
+  return { registryFile: option('--runtime-registry') };
+}
+
 function selectedRegistry() {
   const selectedName = String(process.env.DSH_SELECTED_REGISTRY_NAME || '').trim();
   const explicit = option('--registry');
@@ -91,7 +95,7 @@ async function mcpCommand() {
   const id = args[2];
   if (action === 'config') return configCommand('mcp');
   if (!id) throw new Error(`mcp ${action || '<action>'} requires id`);
-  const options = { timeoutMs: Number(option('--timeout')) || undefined, maxBytes: Number(option('--max-bytes')) || undefined };
+  const options = { ...runtimeOptions(), timeoutMs: Number(option('--timeout')) || undefined, maxBytes: Number(option('--max-bytes')) || undefined };
   if (action === 'start') return print(await startMcpSafely(id, options));
   if (action === 'stop') return print(await stopMcpSafely(id, options));
   if (action === 'restart') return print(await restartMcpSafely(id, options));
@@ -104,8 +108,8 @@ async function mcpCommand() {
     return print(await invokeMcp(id, tool, await inputValue(), options));
   }
   if (action === 'remove' || action === 'uninstall') {
-    if (has('--dry-run')) return print(await planRuntimeRemoval('mcp', id, { cascade: has('--cascade') }));
-    return print(await removeRuntimePackageSafe('mcp', id, { cascade: has('--cascade') }));
+    if (has('--dry-run')) return print(await planRuntimeRemoval('mcp', id, { ...runtimeOptions(), cascade: has('--cascade') }));
+    return print(await removeRuntimePackageSafe('mcp', id, { ...runtimeOptions(), cascade: has('--cascade') }));
   }
   throw new Error(`unknown mcp control action: ${action}`);
 }
@@ -115,14 +119,14 @@ async function skillCommand() {
   const id = args[2];
   if (action === 'config') return configCommand('skill');
   if (!id) throw new Error(`skill ${action || '<action>'} requires id`);
-  const options = { timeoutMs: Number(option('--timeout')) || undefined };
+  const options = { ...runtimeOptions(), timeoutMs: Number(option('--timeout')) || undefined };
   if (action === 'load') return print(await loadSkill(id, options));
   if (action === 'unload') return print(await unloadSkill(id, options));
   if (action === 'inspect' || action === 'status-runtime') return print(await inspectSkill(id, options));
   if (action === 'invoke') return print(await invokeSkill(id, await inputValue(), options));
   if (action === 'remove' || action === 'uninstall') {
-    if (has('--dry-run')) return print(await planRuntimeRemoval('skill', id, { cascade: has('--cascade') }));
-    return print(await removeRuntimePackageSafe('skill', id, { cascade: has('--cascade') }));
+    if (has('--dry-run')) return print(await planRuntimeRemoval('skill', id, { ...runtimeOptions(), cascade: has('--cascade') }));
+    return print(await removeRuntimePackageSafe('skill', id, { ...runtimeOptions(), cascade: has('--cascade') }));
   }
   throw new Error(`unknown skill control action: ${action}`);
 }
@@ -132,8 +136,8 @@ async function typedRemoval(type) {
   const id = args[2];
   if (!['remove', 'uninstall'].includes(action)) throw new Error(`unsupported control action: ${type} ${action}`);
   if (!id) throw new Error(`${type} remove requires id`);
-  if (has('--dry-run')) return print(await planRuntimeRemoval(type, id, { cascade: has('--cascade') }));
-  return print(await removeRuntimePackageSafe(type, id, { cascade: has('--cascade') }));
+  if (has('--dry-run')) return print(await planRuntimeRemoval(type, id, { ...runtimeOptions(), cascade: has('--cascade') }));
+  return print(await removeRuntimePackageSafe(type, id, { ...runtimeOptions(), cascade: has('--cascade') }));
 }
 
 async function enforcePlanPolicy(kind, normalizedFile, catalog, registryFile) {
@@ -187,7 +191,7 @@ async function main() {
   }
   if (command === 'profile') return planCommand('profile');
   if (command === 'bundle') return planCommand('bundle');
-  if (command === 'transaction' && args[1] === 'recover') return print(await recoverPackageTransactions());
+  if (command === 'transaction' && args[1] === 'recover') return print(await recoverPackageTransactions(runtimeOptions()));
   throw new Error(`unknown runtime control command: ${args.join(' ')}`);
 }
 

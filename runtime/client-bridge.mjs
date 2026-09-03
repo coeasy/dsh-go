@@ -7,6 +7,12 @@ import { promisify } from 'node:util';
 import { parsePackageRequest } from './package-model.mjs';
 
 const exec = promisify(execFile);
+const DEFAULT_COMMAND_TIMEOUT_MS = 30_000;
+
+function commandTimeout(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : DEFAULT_COMMAND_TIMEOUT_MS;
+}
 
 function normalizedInstallRequest(request = {}) {
   const type = request.type || 'plugin';
@@ -129,7 +135,13 @@ export async function registerProtocolHandler(options = {}) {
     await writeFile(file.path, file.content, 'utf8');
     if (file.mode) await chmod(file.path, file.mode);
   }
-  for (const [command, argv] of plan.commands || []) await exec(command, argv, { windowsHide: true });
+  for (const [command, argv] of plan.commands || []) {
+    await exec(command, argv, {
+      windowsHide: true,
+      timeout: commandTimeout(options.commandTimeoutMs),
+      killSignal: 'SIGTERM',
+    });
+  }
   return { registered: true, ...plan };
 }
 

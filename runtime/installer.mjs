@@ -1,4 +1,5 @@
 import { access, mkdir, rm, rename, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -13,8 +14,10 @@ import { verifySupplyChainIdentity } from './supply-chain-identity.mjs';
 import { installReleaseArtifact, isReleaseArtifact } from './artifact-installer.mjs';
 import { discoverReleaseArtifact } from './release-discovery.mjs';
 import { enforceEnterprisePolicy } from './enterprise-policy.mjs';
+import { withPackageOperationLock } from './package-operation-lock.mjs';
 
 const exec = promisify(execFile);
+const DEFAULT_GIT_TIMEOUT_MS = 120_000;
 
 export function defaultPluginHome() {
   return pluginRoot();
@@ -24,8 +27,16 @@ export function defaultPackageHome(type) {
   return packageRoot(assertPackageType(type));
 }
 
-async function git(args, cwd) {
-  return exec('git', args, { cwd, windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
+async function git(args, cwd, options = {}) {
+  const configuredTimeout = Number(options.timeoutMs ?? process.env.DSH_GIT_TIMEOUT_MS);
+  const timeout = Number.isFinite(configuredTimeout) && configuredTimeout > 0 ? configuredTimeout : DEFAULT_GIT_TIMEOUT_MS;
+  return exec('git', args, {
+    cwd,
+    windowsHide: true,
+    maxBuffer: 8 * 1024 * 1024,
+    timeout,
+    killSignal: 'SIGTERM',
+  });
 }
 
 function assertNotYanked(pkg) {
@@ -98,7 +109,10 @@ export async function installPackage(inputPackage, options = {}) {
   if (!sourceVerification.ok) throw new Error('runtime package verification failed: ' + sourceVerification.errors.join('; '));
 
   let pkg = inputPackage;
-  if (!isReleaseArtifact(pkg.artifact) && options.releaseDiscovery !== false && !options.repositoryUrl) {
+  // A dry-run must be deterministic and side-effect free. Release discovery
+  // performs a network lookup, so defer it to the real install path; the
+  // caller can still explicitly provide a release artifact when planning.
+  if (!options.dryRun && !isReleaseArtifact(pkg.artifact) && options.releaseDiscovery !== false && !options.repositoryUrl) {
     const discovered = await discoverReleaseArtifact({ ...pkg, type }, {
       timeout: options.releaseDiscoveryTimeout,
       strict: options.releaseDiscoveryStrict === true,
@@ -157,23 +171,28 @@ export async function installPackage(inputPackage, options = {}) {
   };
   if (options.dryRun) return plan;
 
-  await mkdir(root, { recursive: true });
-  const temp = target + '.tmp-' + process.pid + '-' + Date.now();
-  await rm(temp, { recursive: true, force: true });
+  return withPackageOperationLock(type, pkg.id, async () => {
+    await mkdir(root, { recursive: true });
+    const temp = `${target}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+    await rm(temp, { recursive: true, force: true });
+    let backupMoved = false;
+    let targetCommitted = false;
 
-  try {
+    try {
     let artifactVerification = null;
     if (releaseArtifact) {
-      artifactVerification = await installReleaseArtifact(pkg.artifact, temp, {
-        timeout: options.artifactTimeout,
-      });
+        artifactVerification = await installReleaseArtifact(pkg.artifact, temp, {
+          timeout: options.artifactTimeout,
+          maxBytes: options.artifactMaxBytes,
+          commandTimeout: options.artifactCommandTimeout,
+        });
     } else {
       await mkdir(temp, { recursive: true });
-      await git(['init', '-q'], temp);
-      await git(['remote', 'add', 'origin', options.repositoryUrl || 'https://github.com/' + pkg.repo + '.git'], temp);
-      await git(['fetch', '--depth', '1', 'origin', pkg.commit], temp);
-      await git(['checkout', '--detach', '-q', 'FETCH_HEAD'], temp);
-      await verifyInstalledCommit(temp, pkg.commit);
+      await git(['init', '-q'], temp, options);
+      await git(['remote', 'add', 'origin', options.repositoryUrl || 'https://github.com/' + pkg.repo + '.git'], temp, options);
+      await git(['fetch', '--depth', '1', 'origin', pkg.commit], temp, options);
+      await git(['checkout', '--detach', '-q', 'FETCH_HEAD'], temp, options);
+      await verifyInstalledCommit(temp, pkg.commit, options);
     }
 
     let evidenceReport = null;
@@ -246,6 +265,7 @@ export async function installPackage(inputPackage, options = {}) {
       await rm(backup, { recursive: true, force: true });
       try {
         await rename(target, backup);
+        backupMoved = true;
       } catch (error) {
         if (error?.code !== 'ENOENT') throw error;
       }
@@ -260,6 +280,7 @@ export async function installPackage(inputPackage, options = {}) {
 
     await mkdir(dirname(target), { recursive: true });
     await rename(temp, target);
+    targetCommitted = true;
     return {
       ...plan,
       artifact_verified: artifactVerification?.verified === true,
@@ -271,19 +292,25 @@ export async function installPackage(inputPackage, options = {}) {
         cryptographic_signature_verified: evidenceReport?.cryptographic_signature_verified === true,
         slsa_provenance_verified: evidenceReport?.slsa_provenance_verified === true,
       },
-      backup: options.force ? backup : undefined,
+      backup: options.force && backupMoved ? backup : undefined,
     };
-  } catch (error) {
-    await rm(temp, { recursive: true, force: true });
-    try {
-      await access(backup);
-      await rm(target, { recursive: true, force: true });
-      await rename(backup, target);
-    } catch {
-      // No previous installation to restore.
+    } catch (error) {
+      await rm(temp, { recursive: true, force: true }).catch((cleanupError) => {
+        error.filesystem_cleanup_error = cleanupError.message;
+        error.recovery_required = true;
+      });
+      if (backupMoved && !targetCommitted) {
+        try {
+          await rm(target, { recursive: true, force: true });
+          await rename(backup, target);
+        } catch (rollbackError) {
+          error.filesystem_rollback_error = rollbackError.message;
+          error.recovery_required = true;
+        }
+      }
+      throw error;
     }
-    throw error;
-  }
+  }, options);
 }
 
 export async function installPlugin(plugin, options = {}) {

@@ -1,4 +1,5 @@
-import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import {
@@ -8,6 +9,12 @@ import {
 
 export const DEFAULT_REGISTRY_URL = 'https://coeasy.github.io/dsh-go/catalog/registry-v3.json';
 export const DEFAULT_DISTRIBUTION_URL = 'https://coeasy.github.io/dsh-go/catalog/distribution-v1/index.json';
+const MAX_ABORT_TIMEOUT_MS = 2_147_483_647;
+
+function abortTimeout(value, fallback = 30_000) {
+  const candidate = Number(value);
+  return Number.isFinite(candidate) && candidate > 0 ? Math.min(candidate, MAX_ABORT_TIMEOUT_MS) : fallback;
+}
 
 async function exists(file) {
   try { await access(file); return true; } catch { return false; }
@@ -32,9 +39,14 @@ async function readCacheMetadata(file, source) {
 }
 
 async function writeAtomic(file, content) {
-  const temp = `${file}.tmp-${process.pid}-${Date.now()}`;
-  await writeFile(temp, content, 'utf8');
-  await rename(temp, file);
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, content, 'utf8');
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
 }
 
 function registryRequestHeaders(options = {}) {
@@ -84,7 +96,7 @@ async function ensureLegacyRegistryCache(resolvedSource, options = {}) {
 
     const response = await fetch(resolvedSource, {
       headers,
-      signal: AbortSignal.timeout(options.timeout || 30000),
+      signal: AbortSignal.timeout(abortTimeout(options.timeout)),
     });
 
     if (response.status === 304) {

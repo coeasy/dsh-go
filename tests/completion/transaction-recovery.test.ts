@@ -163,4 +163,44 @@ describe('transaction crash recovery', () => {
     expect(JSON.parse(await readFile(registryFile, 'utf8')).generation).toBe(7);
     await expect(access(journalDir)).rejects.toMatchObject({ code: 'ENOENT' });
   });
+
+  it('does not recover a journal belonging to another explicitly selected Registry', async () => {
+    const foreignRegistry = join(root, 'foreign-registry.json');
+    const journalDir = await writeJournal('txn-foreign', {
+      state: 'committing',
+      expected_generation: 0,
+      registry_file: foreignRegistry,
+      registry_snapshot: { schema_version: 3, generation: 0, packages: [] },
+      order: [{ type: 'plugin', id: 'foreign', version: '0.1.0', commit: 'f'.repeat(40) }],
+      moves: [],
+    });
+
+    const result = await recoverPackageTransactions({ registryFile });
+    expect(result.recovered).toEqual([]);
+    await expect(access(join(journalDir, 'journal.json'))).resolves.toBeUndefined();
+  });
+
+  it('does not claim an unbound legacy journal for an alternate Registry', async () => {
+    const selectedRegistry = join(root, 'selected-registry.json');
+    const journalDir = await writeJournal('txn-legacy', {
+      state: 'committing',
+      expected_generation: 0,
+      registry_snapshot: { schema_version: 3, generation: 0, packages: [] },
+      order: [{ type: 'plugin', id: 'legacy', version: '0.1.0', commit: 'e'.repeat(40) }],
+      moves: [],
+    });
+
+    const result = await recoverPackageTransactions({ registryFile: selectedRegistry });
+    expect(result.recovered).toEqual([]);
+    await expect(access(join(journalDir, 'journal.json'))).resolves.toBeUndefined();
+  });
+
+  it('ignores non-journal transaction directories owned by another local workflow', async () => {
+    const directory = join(transactionHome, 'environment-restore-in-progress');
+    await mkdir(directory, { recursive: true });
+
+    const result = await recoverPackageTransactions({ registryFile });
+    expect(result.recovered).toEqual([]);
+    await expect(access(directory)).resolves.toBeUndefined();
+  });
 });

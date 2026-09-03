@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Registry V3 physical distribution: compact index + 256 shards + delta. */
 import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sha256, stableStringify } from './checksum.mjs';
@@ -174,9 +175,14 @@ async function exists(path) {
 
 async function atomicWrite(file, content) {
   await mkdir(dirname(file), { recursive: true });
-  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  await writeFile(temp, content, 'utf8');
-  await rename(temp, file);
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, content, 'utf8');
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
 }
 
 async function writeMapConcurrently(entries, outDir, concurrency = 32) {

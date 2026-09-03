@@ -33,20 +33,24 @@ export interface ProviderAdapterQuery {
   search?: string;
 }
 
-export async function loadProviderAdapterMarketplace(requestUrl: string): Promise<{ data: ProviderAdapterRegistry; etag: string }> {
+type AssetFetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+export async function loadProviderAdapterMarketplace(requestUrl: string, fetcher: AssetFetcher = fetch): Promise<{ data: ProviderAdapterRegistry; etag: string }> {
   const assetUrl = new URL('/catalog/provider-adapters.json', requestUrl);
-  const response = await fetch(assetUrl.toString(), { headers: { Accept: 'application/json' } });
+  const response = await fetcher(assetUrl, { headers: { Accept: 'application/json' } });
   if (!response.ok) throw new Error(`provider adapter registry asset returned ${response.status}`);
   const data = await response.json() as ProviderAdapterRegistry;
   if (data.registry_version !== 1 || data.schema_version !== '1.0.0' || !Array.isArray(data.providers)) {
     throw new Error('invalid provider adapter registry asset');
   }
-  const etag = response.headers.get('etag') || `"${data.generated?.content_hash || 'provider-adapters'}"`;
+  const headerEtag = response.headers.get('etag')?.replace(/^W\//i, '').replace(/^"|"$/g, '') || '';
+  const etag = headerEtag || data.generated?.content_hash || 'provider-adapters';
   return { data, etag };
 }
 
 function releaseForChannel(group: ProviderAdapterGroup, channel = 'stable'): ProviderAdapterReleaseRecord | null {
-  const version = group.channels?.[channel] || group.versions.at(-1)?.version;
+  const version = group.channels?.[channel];
+  if (!version) return null;
   return group.versions.find((release) => release.version === version) || null;
 }
 

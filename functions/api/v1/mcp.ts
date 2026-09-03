@@ -1,5 +1,5 @@
 // POST /api/v1/mcp — read-only MCP endpoint for catalog, Registry V3 and Marketplace V4 discovery.
-import { loadCatalog, filterPlugins, json, error, type Env } from '../../_lib';
+import { loadCatalog, filterPlugins, json, error, optionsResponse, type Env } from '../../_lib';
 import { filterEcosystem, loadRegistryV3, toEcosystemItem } from '../../_registry';
 import { resolveEdgePackageRequest } from '../../_package-request';
 import { loadLocalizationOverlay, normalizeLocale, packageDetailV2, publisherSummary, trustFor } from '../../_marketplace-v4';
@@ -29,6 +29,7 @@ interface JsonRpcBody {
 
 const ECOSYSTEM_TYPES = ['plugin', 'mcp', 'skill', 'agent'] as const;
 const CHANNELS = ['stable', 'beta', 'nightly', 'dev'] as const;
+const MAX_BODY_BYTES = 1_000_000;
 
 const packageRequestSchema = {
   id: { type: 'string' },
@@ -95,11 +96,51 @@ const TOOLS = [
 function rpcResult(id: unknown, result: unknown) { return json({ jsonrpc: '2.0', id, result }); }
 function rpcError(id: unknown, code: number, message: string) { return json({ jsonrpc: '2.0', id, error: { code, message } }, { status: 400 }); }
 
+function payloadTooLarge() {
+  const cause = new Error('payload too large') as Error & { status: number };
+  cause.status = 413;
+  return cause;
+}
+
+async function readJsonBody(request: Request): Promise<unknown> {
+  const length = Number(request.headers.get('content-length'));
+  if (Number.isFinite(length) && length > MAX_BODY_BYTES) throw payloadTooLarge();
+  if (!request.body) return null;
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+      total += value.byteLength;
+      if (total > MAX_BODY_BYTES) {
+        try { await reader.cancel(); } catch { /* best effort */ }
+        throw payloadTooLarge();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const len = Number(request.headers.get('content-length'));
-  if (Number.isFinite(len) && len > 1_000_000) return error(413, 'payload too large');
   let body: unknown;
-  try { body = await request.json(); } catch { return error(400, 'invalid JSON body'); }
+  try {
+    body = await readJsonBody(request);
+  } catch (cause) {
+    if (cause && typeof cause === 'object' && 'status' in cause && cause.status === 413) return error(413, 'payload too large');
+    return error(400, 'invalid JSON body');
+  }
   const parsed = body as JsonRpcBody | null;
   const id = parsed?.id;
   const method = parsed?.method;
@@ -134,6 +175,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
           break;
         }
         case 'search_plugins': {
+          if (!String(args?.q || '').trim()) return rpcError(id, -32602, 'q is required');
           const { data } = await loadCatalog(env);
           const keyword = (args?.q || '').toLowerCase();
           const limit = Math.max(1, Math.min(Number(args?.limit) || 10, 100));
@@ -141,9 +183,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
           break;
         }
         case 'list_ecosystem': {
+          const type = args?.type ? String(args.type).trim().toLowerCase() : undefined;
+          const channel = args?.channel ? String(args.channel).trim().toLowerCase() : undefined;
+          if (type && !ECOSYSTEM_TYPES.includes(type as typeof ECOSYSTEM_TYPES[number])) return rpcError(id, -32602, `invalid ecosystem type: ${type}`);
+          if (channel && !CHANNELS.includes(channel as typeof CHANNELS[number])) return rpcError(id, -32602, `invalid release channel: ${channel}`);
           const { data } = await loadRegistryV3(env, request.url);
           const limit = Math.max(1, Math.min(Number(args?.limit) || 20, 100));
-          result = filterEcosystem(data.plugins, { type: args?.type, channel: args?.channel, capability: args?.capability, search: args?.search, verified: args?.verified }).slice(0, limit).map(toEcosystemItem);
+          result = filterEcosystem(data.plugins, { type, channel, capability: args?.capability, search: args?.search, verified: args?.verified }).slice(0, limit).map(toEcosystemItem);
           break;
         }
         case 'get_publisher': {
@@ -193,4 +239,4 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
 export const onRequestGet: PagesFunction = async () => json({ name: 'DSH Go MCP', version: '0.1.0', api: '/api/v1/mcp', description: 'Read-only Marketplace V4 discovery, install planning, trust, advisory and publisher information. Local mutation is intentionally not exposed.', tools: TOOLS.map((tool) => tool.name) });
 
-export const onRequestOptions: PagesFunction = async () => json(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, If-None-Match, Accept-Language', 'Access-Control-Max-Age': '86400' } });
+export const onRequestOptions: PagesFunction = () => optionsResponse('GET, POST, OPTIONS');

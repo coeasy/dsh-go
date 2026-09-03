@@ -1,10 +1,16 @@
-import { createHash } from 'node:crypto';
-import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { createHash, randomUUID } from 'node:crypto';
+import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 
 export const REGISTRY_DISTRIBUTION_VERSION = 1;
 export const REGISTRY_DISTRIBUTION_FORMAT = 'dsh-registry-distribution';
 const PACKAGE_TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
+const MAX_ABORT_TIMEOUT_MS = 2_147_483_647;
+
+function abortTimeout(value, fallback = 30_000) {
+  const candidate = Number(value);
+  return Number.isFinite(candidate) && candidate > 0 ? Math.min(candidate, MAX_ABORT_TIMEOUT_MS) : fallback;
+}
 
 function sha256(content) { return createHash('sha256').update(String(content)).digest('hex'); }
 function stableStringify(value) {
@@ -24,9 +30,14 @@ async function readJson(path, fallback = null) {
 }
 async function writeAtomic(file, content) {
   await mkdir(dirname(file), { recursive: true });
-  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  await writeFile(temp, content, 'utf8');
-  await rename(temp, file);
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, content, 'utf8');
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
 }
 function assertRelativeDistributionPath(path, label = 'path') {
   const value = String(path || '');
@@ -59,7 +70,7 @@ function resolveChildSource(indexSource, relativePath) {
 }
 async function loadJsonSource(source, options = {}) {
   if (/^https?:\/\//i.test(source)) {
-    const response = await fetch(source, { headers: commandHeaders(options.headers), signal: AbortSignal.timeout(options.timeout || 30000) });
+    const response = await fetch(source, { headers: commandHeaders(options.headers), signal: AbortSignal.timeout(abortTimeout(options.timeout)) });
     if (!response.ok) {
       const error = new Error(`Registry Distribution fetch failed: HTTP ${response.status}`);
       error.code = 'DSH_REGISTRY_DISTRIBUTION_FETCH';
@@ -128,7 +139,7 @@ async function loadDistributionIndex(source, root, options = {}) {
   if (metadata?.etag) headers['If-None-Match'] = metadata.etag;
   if (metadata?.last_modified) headers['If-Modified-Since'] = metadata.last_modified;
   try {
-    const response = await fetch(source, { headers: commandHeaders(headers), signal: AbortSignal.timeout(options.timeout || 30000) });
+    const response = await fetch(source, { headers: commandHeaders(headers), signal: AbortSignal.timeout(abortTimeout(options.timeout)) });
     if (response.status === 304) {
       if (!cached || !metadata) throw new Error('Registry Distribution returned 304 without matching cached index');
       const index = validateIndex(JSON.parse(await readFile(indexFile, 'utf8')));
@@ -248,7 +259,7 @@ async function tryDynamicPackageEndpoint(source, index, descriptor, identity, op
   const path = template.replace('{type}', encodeURIComponent(identity.type)).replace('{id}', encodeURIComponent(identity.id));
   const endpoint = new URL(path, new URL(source).origin).toString();
   try {
-    const response = await fetch(endpoint, { headers: commandHeaders(options.headers), signal: AbortSignal.timeout(options.timeout || 30000) });
+    const response = await fetch(endpoint, { headers: commandHeaders(options.headers), signal: AbortSignal.timeout(abortTimeout(options.timeout)) });
     if (!response.ok) return null;
     return validatePackageRecord(await response.json(), { ...descriptor, key: identity.key });
   } catch { return null; }

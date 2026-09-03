@@ -18,8 +18,9 @@ async function parseResponse(response) {
   let body = null;
   try { body = text ? JSON.parse(text) : null; } catch { body = text; }
   if (!response.ok) {
-    const error = new Error(body?.error || body?.message || `DSH request failed: HTTP ${response.status}`);
-    error.code = body?.code || 'DSH_DESKTOP_REQUEST_FAILED';
+    const detail = body?.error && typeof body.error === 'object' ? body.error : body;
+    const error = new Error(detail?.message || body?.error || body?.message || `DSH request failed: HTTP ${response.status}`);
+    error.code = detail?.code || body?.code || 'DSH_DESKTOP_REQUEST_FAILED';
     error.status = response.status;
     error.response = body;
     throw error;
@@ -93,7 +94,7 @@ export function createMarketplaceDesktopClient(options = {}) {
       if (options.approved !== true) return { executed: false, confirmation_required: true, name, auto_restart: false };
       return local(`/v1/registries/${encodeURIComponent(name)}`, { method: 'DELETE', body: JSON.stringify({ approved: true }) });
     },
-    search: (query, options = {}) => marketplace('/api/v1/marketplace', {
+    search: (query, options = {}) => marketplace(String(query || '').trim() ? '/api/v1/search' : '/api/v1/marketplace', {
       q: query,
       type: options.type,
       locale: options.locale,

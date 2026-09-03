@@ -9,6 +9,12 @@ import { findPackageManifest } from './package-manifest.mjs';
 const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
 const SHA256_RE = /^(?:sha256:)?([a-f0-9]{64})$/i;
 const MAX_REDIRECTS = 3;
+const MAX_ABORT_TIMEOUT_MS = 2_147_483_647;
+
+function abortTimeout(value, fallback = 10_000) {
+  const candidate = Number(value);
+  return Number.isFinite(candidate) && candidate > 0 ? Math.min(candidate, MAX_ABORT_TIMEOUT_MS) : fallback;
+}
 
 function normalizeDigest(value) {
   const match = String(value || '').trim().match(SHA256_RE);
@@ -97,7 +103,7 @@ export async function assertSafeEvidenceResolution(value, options = {}) {
   if (literalVersion) return [{ address: host, family: literalVersion }];
 
   const resolver = options.lookup || lookup;
-  const timeoutMs = Math.max(1, Number(options.timeoutMs) || 10_000);
+  const timeoutMs = abortTimeout(options.timeoutMs);
   let answers;
   try {
     answers = await withTimeout(
@@ -194,7 +200,7 @@ async function fetchEvidence(url, options = {}) {
   for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect += 1) {
     await assertSafeEvidenceResolution(current, options);
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), Number(options.timeoutMs) || 10_000);
+    const timer = setTimeout(() => controller.abort(), abortTimeout(options.timeoutMs));
     let response;
     try {
       response = await (options.fetch || fetch)(current, {

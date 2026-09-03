@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { access, chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { access, chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { runtimeRoot } from './registry.mjs';
 import { withFileLock } from './file-lock.mjs';
@@ -48,8 +48,13 @@ async function exists(path) {
 async function atomicWrite(path, content, mode = 0o600) {
   await mkdir(dirname(path), { recursive: true });
   const temp = `${path}.tmp-${process.pid}-${Date.now()}-${randomBytes(4).toString('hex')}`;
-  await writeFile(temp, content, { encoding: 'utf8', mode });
-  await rename(temp, path);
+  try {
+    await writeFile(temp, content, { encoding: 'utf8', mode });
+    await rename(temp, path);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
   try { await chmod(path, mode); } catch { /* Windows ACLs are managed by the OS */ }
 }
 

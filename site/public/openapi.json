@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "DSH Go API",
-    "version": "2.3.0",
+    "version": "0.1.0",
     "description": "DSH Go public read-only catalog and Registry V3 ecosystem API. Local installation and runtime mutation are never executed by this service.",
     "license": {
       "name": "CC-BY-4.0"
@@ -382,6 +382,311 @@
         }
       }
     },
+    "/api/v1/marketplace": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "Get the localized Marketplace V4 home",
+        "description": "Returns the latest safe stable package projection. Installation is always a local plan and is never executed by the API.",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marketplace home"
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/package-detail": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "Resolve a package detail projection",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "plugin",
+                "mcp",
+                "skill",
+                "agent"
+              ]
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "stable",
+                "beta",
+                "nightly",
+                "dev"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resolved package releases"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/install-plan": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "Create a local-only package install plan",
+        "description": "Resolves package identity and returns a command for the local DSH runtime. The API never performs installation or remote mutation.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Local installation plan"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Package blocked or ambiguous"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/advisories": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "List package security advisories",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Advisory list"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/publishers/{id}": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "Get a publisher package portfolio",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Publisher summary"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "Describe local profile application semantics",
+        "responses": {
+          "200": {
+            "description": "Profile contract"
+          }
+        }
+      }
+    },
+    "/api/v1/bundles": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "Describe local bundle installation semantics",
+        "responses": {
+          "200": {
+            "description": "Bundle contract"
+          }
+        }
+      }
+    },
+    "/api/v1/providers": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "List provider adapter releases",
+        "responses": {
+          "200": {
+            "description": "Provider adapter list"
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{id}": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "Get one provider adapter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Provider adapter detail"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
     "/api/v1/mcp": {
       "get": {
         "tags": [
@@ -474,6 +779,55 @@
           },
           "404": {
             "description": "Delta unavailable"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/v1/registry/packages/{type}/{id}": {
+      "get": {
+        "tags": [
+          "Ecosystem"
+        ],
+        "summary": "Get the immutable Registry Distribution V1 package projection",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "plugin",
+                "mcp",
+                "skill",
+                "agent"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON response"
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Package not found"
           },
           "500": {
             "description": "Server error"

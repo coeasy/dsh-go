@@ -48,7 +48,7 @@ describe('profile and bundle transaction planning', () => {
     const result = await executePackageTransaction(profile, { kind: 'profile', catalog, dryRun: true });
     expect(result.dry_run).toBe(true);
     expect(result.restart_required).toBe(false);
-    expect(result.order.map((item) => item.key)).toEqual(['plugin:core', 'skill:helper']);
+    expect(result.order.map((item: { key: string }) => item.key)).toEqual(['plugin:core', 'skill:helper']);
     await expect(import('node:fs/promises').then(({ access }) => access(process.env.DSH_REGISTRY!))).rejects.toMatchObject({ code: 'ENOENT' });
   });
 });

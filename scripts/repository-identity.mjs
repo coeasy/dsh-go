@@ -135,18 +135,21 @@ export function ensureUniquePluginSlugs(plugins, reservedPlugins = []) {
     const identity = pluginIdentityKey(plugin);
     const fallback = String(plugin.full_name || '').replace('/', '-');
     const base = String(plugin.slug || fallback || 'plugin').trim();
+    const repoId = plugin.repo_id ? String(plugin.repo_id) : '';
     let candidate = base;
     let sequence = 2;
-    while (true) {
-      const key = candidate.toLowerCase();
-      const owner = claimed.get(key);
-      if (!owner || owner === identity) {
-        claimed.set(key, identity);
-        plugin.slug = candidate;
-        return plugin;
+    let repoIdSuffixPending = Boolean(repoId);
+    while (claimed.has(candidate.toLowerCase()) && claimed.get(candidate.toLowerCase()) !== identity) {
+      if (repoIdSuffixPending) {
+        candidate = `${base}-${repoId}`;
+        repoIdSuffixPending = false;
+      } else {
+        candidate = `${base}-${repoId ? `${repoId}-` : ''}${sequence++}`;
       }
-      candidate = plugin.repo_id ? `${base}-${plugin.repo_id}` : `${base}-${sequence++}`;
     }
+    claimed.set(candidate.toLowerCase(), identity);
+    plugin.slug = candidate;
+    return plugin;
   });
 }
 

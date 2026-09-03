@@ -172,7 +172,7 @@ async function mutationRequest(nextArgs) {
   let spec = `${type}:${parsed.id}@${action === 'update' ? (requestedVersion || parsed.versionRange || '*') : parsed.versionRange}`;
 
   if (action === 'repair') {
-    const runtime = await readRuntimeRegistry();
+    const runtime = await readRuntimeRegistry(optionFrom(nextArgs, '--runtime-registry'));
     const current = findRuntimePackage(runtime, parsed.id, { type });
     if (!current) throw new Error(`runtime package is not installed: ${type}:${parsed.id}`);
     spec = `${type}:${parsed.id}@${current.version}`;
@@ -184,9 +184,10 @@ async function authorizeMutation(nextArgs) {
   const request = await mutationRequest(nextArgs);
   if (!request) return null;
   const catalog = optionFrom(nextArgs, '--registry') || 'catalog/registry-v3.json';
+  const runtimeRegistryFile = optionFrom(nextArgs, '--runtime-registry');
   const channel = optionFrom(nextArgs, '--channel');
   const sourceRegistry = await loadRegistryFile(catalog);
-  const runtimeRegistry = await readRuntimeRegistry();
+  const runtimeRegistry = await readRuntimeRegistry(runtimeRegistryFile);
   const preflight = preflightPackage(sourceRegistry, request.spec, {
     type: request.type,
     channel,
@@ -234,9 +235,13 @@ async function hostCommand() {
     const dryRun = args.includes('--dry-run');
     if (dryRun) runtimeArgs.push('--dry-run');
     const registry = option('--registry');
+    const runtimeRegistry = option('--runtime-registry');
     const rootOption = option('--root');
+    const policyFile = option('--policy-file');
     if (registry) runtimeArgs.push('--registry', registry);
+    if (runtimeRegistry) runtimeArgs.push('--runtime-registry', runtimeRegistry);
     if (rootOption) runtimeArgs.push('--root', rootOption);
+    if (policyFile) runtimeArgs.push('--policy-file', policyFile);
     if (dryRun) {
       await authorizeMutation(runtimeArgs);
       await delegateRuntime(runtimeArgs);
@@ -257,7 +262,7 @@ async function hostCommand() {
 async function startupCommand() {
   const action = args[1] || 'activate';
   if (action !== 'activate') throw new Error(`unknown startup action: ${action}`);
-  const result = await activatePendingPackages({ registryFile: option('--registry') });
+  const result = await activatePendingPackages({ registryFile: option('--runtime-registry') || option('--registry') });
   print(result);
   if (!result.healthy) process.exitCode = 1;
 }

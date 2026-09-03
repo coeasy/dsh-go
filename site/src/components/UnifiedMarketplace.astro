@@ -140,15 +140,6 @@ const popularItems = items
     return scoreOf(right) - scoreOf(left) || right.stars - left.stars || left.name.localeCompare(right.name);
   })
   .slice(0, HOME_TOP_LIMIT);
-const popularKeys = new Set(popularItems.map((item: any) => item.key));
-const orderedItems = [...items].sort((left: any, right: any) => {
-  const leftPopular = popularKeys.has(left.key);
-  const rightPopular = popularKeys.has(right.key);
-  if (leftPopular !== rightPopular) return leftPopular ? -1 : 1;
-  if (left.registryManaged !== right.registryManaged) return left.registryManaged ? -1 : 1;
-  return scoreOf(right) - scoreOf(left) || right.stars - left.stars || left.name.localeCompare(right.name);
-});
-
 const typeCards = [
   { type: 'plugin', label: 'Plugins', code: 'P', description: '客户端扩展、UI、工具与集成能力。' },
   { type: 'mcp', label: 'MCP Servers', code: 'M', description: '标准化工具、数据源与外部服务连接。' },
@@ -227,14 +218,20 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
   <span class="result-links"><a href={u('/profiles')}>Profiles / Bundles</a><a href={u('/trending')}>Trending</a><a href={apiUrl('/api/v1/search')}>Search API ↗</a></span>
 </div>
 
-<section id="market-grid" class="market-grid">
-  {orderedItems.map((item: any) => {
-    const popular = popularKeys.has(item.key);
+<section
+  id="market-grid"
+  class="market-grid"
+  data-market-index-url={u('/catalog/search-index-v2.json')}
+  data-market-detail-base={u('/ecosystem/')}
+>
+  {popularItems.map((item: any) => {
+    const popular = true;
     const itemUpdated = item.updatedAt ? new Date(item.updatedAt).toISOString().slice(0, 10) : '';
     return (
       <article
         class="market-card"
         data-type={item.type}
+        data-key={item.key}
         data-popular={String(popular)}
         data-verified={String(item.verified)}
         data-registry={String(item.registryManaged)}
@@ -273,18 +270,150 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
 <div id="market-empty" class="empty" hidden>没有匹配的生态资源。</div>
 
 <script>
+  const grid = document.querySelector<HTMLElement>('#market-grid');
   const search = document.querySelector<HTMLInputElement>('#market-search');
   const verified = document.querySelector<HTMLInputElement>('#market-verified');
   const registryOnly = document.querySelector<HTMLInputElement>('#market-registry');
   const count = document.querySelector<HTMLElement>('#market-count');
   const empty = document.querySelector<HTMLElement>('#market-empty');
-  const cards = [...document.querySelectorAll<HTMLElement>('.market-card')];
   const filters = [...document.querySelectorAll<HTMLButtonElement>('[data-market-filter]')];
   const categories = [...document.querySelectorAll<HTMLButtonElement>('[data-category-filter]')];
   const showAll = document.querySelector<HTMLButtonElement>('[data-show-all]');
+  const indexUrl = grid?.dataset.marketIndexUrl || '';
+  const detailBase = grid?.dataset.marketDetailBase || '/ecosystem/';
+  const pageSize = 120;
+  const initialCards = [...document.querySelectorAll<HTMLElement>('.market-card')];
+  const initialPopularKeys = new Set(initialCards.map((card) => card.dataset.key).filter(Boolean));
+  let cards = initialCards;
   let activeFilter = 'popular';
+  let allItems: any[] | null = null;
+  let allItemsPromise: Promise<any[]> | null = null;
+  let renderLimit = pageSize;
+  let refreshGeneration = 0;
 
-  function applyFilters() {
+  function escapeHtml(value: unknown) {
+    return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[character] || character));
+  }
+
+  function validType(value: unknown) {
+    const type = String(value || '').toLowerCase();
+    return ['plugin', 'mcp', 'skill', 'agent'].includes(type) ? type : 'plugin';
+  }
+
+  function isDiscoveryAggregator(item: any) {
+    const text = [
+      item.id, item.name, item.repo, item.description,
+      ...(Array.isArray(item.capabilities) ? item.capabilities : []),
+      ...(Array.isArray(item.tokens) ? item.tokens : []),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return /(?:^|[\s/_-])(?:awesome|curated(?:-list)?)(?:$|[\s/_-])/.test(text)
+      || /\b(?:plugins?|mcp|skills?|agents?|tools?|resources?)[\s_-]*(?:list|directory|collection)\b/.test(text)
+      || /\b(?:list|directory|collection)[\s_-]+of[\s_-]+(?:plugins?|tools?|resources?|agents?|skills?|mcp|servers?)\b/.test(text);
+  }
+
+  function normalizeIndexItem(raw: any) {
+    const id = String(raw?.id || '').trim();
+    if (!id) return null;
+    const type = validType(raw.type);
+    const version = String(raw.version || '0.1.0');
+    return {
+      key: `registry:${type}:${id}`,
+      id,
+      type,
+      name: String(raw.name || id),
+      description: String(raw.description || ''),
+      version,
+      repo: String(raw.repo || ''),
+      stars: Number.isFinite(Number(raw.stars)) ? Number(raw.stars) : 0,
+      verified: raw.verified === true,
+      language: String(raw.language || ''),
+      category: String(raw.category || type),
+      updatedAt: String(raw.updated_at || raw.updatedAt || ''),
+      trend: Number.isFinite(Number(raw.trend_score)) ? Number(raw.trend_score) : 0,
+      capabilities: Array.isArray(raw.capabilities) ? raw.capabilities.map(String).slice(0, 20) : [],
+      dependencies: Number.isFinite(Number(raw.dependencies)) ? Number(raw.dependencies) : 0,
+      commit: String(raw.commit || ''),
+      registryManaged: true,
+      catalogLinked: false,
+      aggregator: isDiscoveryAggregator(raw),
+      tokens: Array.isArray(raw.tokens) ? raw.tokens : [],
+    };
+  }
+
+  function isPopular(item: any) {
+    if (initialPopularKeys.has(item.key)) return true;
+    return !item.aggregator && item.stars >= 100 && item.stars <= 5000;
+  }
+
+  function detailHref(item: any) {
+    const base = detailBase.endsWith('/') ? detailBase : `${detailBase}/`;
+    return `${base}${encodeURIComponent(item.id)}?type=${encodeURIComponent(item.type)}`;
+  }
+
+  function deepLink(item: any) {
+    return `dsh://install?id=${encodeURIComponent(item.id)}&version=${encodeURIComponent(item.version)}&type=${encodeURIComponent(item.type)}`;
+  }
+
+  function searchText(item: any) {
+    return [item.type, item.id, item.name, item.repo, item.description, item.language, item.category, ...(item.capabilities || [])]
+      .join(' ').toLowerCase();
+  }
+
+  function cardMarkup(item: any) {
+    const popular = isPopular(item);
+    const updated = item.updatedAt ? new Date(item.updatedAt).toISOString().slice(0, 10) : '';
+    const capabilities = (item.capabilities || []).slice(0, 6)
+      .map((capability: string) => `<span>${escapeHtml(capability)}</span>`).join('');
+    const meta = [
+      item.language && `<span>${escapeHtml(item.language)}</span>`,
+      updated && `<span>Updated ${escapeHtml(updated)}</span>`,
+      item.dependencies > 0 && `<span>${item.dependencies} deps</span>`,
+      item.commit && `<span title="${escapeHtml(item.commit)}">commit ${escapeHtml(item.commit.slice(0, 8))}</span>`,
+    ].filter(Boolean).join('');
+    const sourceLabel = item.registryManaged ? `Registry v${item.version}` : 'Catalog only';
+    const install = `dsh ${item.type} install ${item.id}@${item.version}`;
+    return `<article class="market-card" data-type="${escapeHtml(item.type)}" data-key="${escapeHtml(item.key)}" data-popular="${popular}" data-verified="${item.verified}" data-registry="${item.registryManaged}" data-aggregator="${item.aggregator}" data-search="${escapeHtml(searchText(item))}">
+      <a class="card-main" href="${escapeHtml(detailHref(item))}">
+        <div class="card-top"><span class="kind ${escapeHtml(item.type)}">${escapeHtml(item.type.toUpperCase())}</span><span class="source registry">${escapeHtml(sourceLabel)}</span>${item.verified ? '<span class="verified">✓</span>' : ''}<span class="stars">${item.stars > 0 ? `★ ${item.stars.toLocaleString()}` : 'New'}</span></div>
+        <h2>${escapeHtml(item.name)}</h2>
+        <p class="repo">${escapeHtml(item.repo || `${item.type}:${item.id}`)}</p>
+        <p class="description">${escapeHtml(item.description || '暂无描述')}</p>
+        <div class="meta-row">${meta}</div>
+        <div class="caps">${capabilities}</div>
+      </a>
+      <div class="card-actions"><a class="ghost" href="${escapeHtml(detailHref(item))}">Details</a><a class="install" href="${escapeHtml(deepLink(item))}">Open in DSH</a><button class="ghost" type="button" data-copy-command="${escapeHtml(install)}">Copy CLI</button></div>
+    </article>`;
+  }
+
+  async function fetchAllItems() {
+    if (!indexUrl) throw new Error('Marketplace search index is not configured');
+    const response = await fetch(indexUrl, { headers: { accept: 'application/json' } });
+    if (!response.ok) throw new Error(`Marketplace search index returned HTTP ${response.status}`);
+    const payload = await response.json();
+    if (!Array.isArray(payload.items)) throw new Error('Marketplace search index has an invalid shape');
+    return payload.items.map(normalizeIndexItem).filter(Boolean).sort((left: any, right: any) => {
+      const popularOrder = Number(isPopular(right)) - Number(isPopular(left));
+      return popularOrder || right.stars - left.stars || left.name.localeCompare(right.name);
+    });
+  }
+
+  function ensureAllItems() {
+    if (allItems) return Promise.resolve(allItems);
+    if (!allItemsPromise) {
+      allItemsPromise = fetchAllItems().then((items) => {
+        allItems = items;
+        return items;
+      }).catch((error) => {
+        allItemsPromise = null;
+        throw error;
+      });
+    }
+    return allItemsPromise;
+  }
+
+  function applyInitialFilters() {
     const keyword = (search?.value || '').trim().toLowerCase();
     const verifiedOnly = verified?.checked === true;
     const registryRequired = registryOnly?.checked === true;
@@ -299,20 +428,79 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
       card.hidden = !show;
       if (show) visible += 1;
     }
-    if (count) count.textContent = `${visible} 个生态资源`;
+    if (count) count.textContent = `${visible} 个推荐生态资源`;
     if (empty) empty.hidden = visible !== 0;
+  }
+
+  function applyDynamicFilters() {
+    if (!grid || !allItems) return;
+    const keyword = (search?.value || '').trim().toLowerCase();
+    const verifiedOnly = verified?.checked === true;
+    const registryRequired = registryOnly?.checked === true;
+    const filtered = allItems.filter((item) => {
+      const typeMatch = activeFilter === 'all'
+        || (activeFilter === 'popular' ? isPopular(item) : item.type === activeFilter);
+      const searchMatch = !keyword || searchText(item).includes(keyword);
+      const verifiedMatch = !verifiedOnly || item.verified;
+      const registryMatch = !registryRequired || item.registryManaged;
+      return typeMatch && searchMatch && verifiedMatch && registryMatch;
+    });
+    const visible = filtered.slice(0, renderLimit);
+    grid.innerHTML = visible.map(cardMarkup).join('');
+    if (filtered.length > visible.length) {
+      const more = document.createElement('button');
+      more.className = 'load-more';
+      more.type = 'button';
+      more.textContent = `加载更多（已显示 ${visible.length} / ${filtered.length}）`;
+      more.addEventListener('click', () => {
+        renderLimit += pageSize;
+        applyDynamicFilters();
+      });
+      grid.append(more);
+    }
+    cards = [...grid.querySelectorAll<HTMLElement>('.market-card')];
+    if (count) count.textContent = `${filtered.length} 个生态资源`;
+    if (empty) empty.hidden = filtered.length !== 0;
+  }
+
+  function needsIndex() {
+    return Boolean((search?.value || '').trim())
+      || activeFilter !== 'popular'
+      || verified?.checked === true
+      || registryOnly?.checked === true;
+  }
+
+  async function refresh() {
+    const generation = ++refreshGeneration;
+    if (needsIndex() && !allItems) {
+      if (count) count.textContent = '正在加载完整生态索引…';
+      try { await ensureAllItems(); }
+      catch (error) {
+        if (generation !== refreshGeneration) return;
+        if (count) count.textContent = '完整生态索引暂时不可用';
+        if (empty) {
+          empty.hidden = false;
+          empty.textContent = error instanceof Error ? error.message : '完整生态索引暂时不可用';
+        }
+        return;
+      }
+    }
+    if (generation !== refreshGeneration) return;
+    if (allItems) applyDynamicFilters();
+    else applyInitialFilters();
   }
 
   function setFilter(filter: string) {
     activeFilter = filter;
     for (const button of filters) button.classList.toggle('active', button.dataset.marketFilter === filter);
     for (const button of categories) button.classList.toggle('active', button.dataset.categoryFilter === filter);
-    applyFilters();
+    renderLimit = pageSize;
+    void refresh();
   }
 
-  search?.addEventListener('input', applyFilters);
-  verified?.addEventListener('change', applyFilters);
-  registryOnly?.addEventListener('change', applyFilters);
+  search?.addEventListener('input', () => { renderLimit = pageSize; void refresh(); });
+  verified?.addEventListener('change', () => { renderLimit = pageSize; void refresh(); });
+  registryOnly?.addEventListener('change', () => { renderLimit = pageSize; void refresh(); });
   for (const button of filters) button.addEventListener('click', () => setFilter(button.dataset.marketFilter || 'popular'));
   for (const button of categories) button.addEventListener('click', () => {
     setFilter(button.dataset.categoryFilter || 'all');
@@ -322,22 +510,24 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
     setFilter('all');
     document.querySelector('#market-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+  grid?.addEventListener('click', async (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const button = target.closest<HTMLButtonElement>('[data-copy-command]');
+    if (!button) return;
+    const command = button.dataset.copyCommand || '';
+    try { await navigator.clipboard.writeText(command); }
+    catch { window.prompt('复制本地安装命令', command); }
+    const previous = button.textContent;
+    button.textContent = 'Copied';
+    window.setTimeout(() => { button.textContent = previous; }, 1200);
+  });
   document.addEventListener('keydown', (event) => {
     if (event.key === '/' && document.activeElement !== search) {
       event.preventDefault();
       search?.focus();
     }
   });
-  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-copy-command]')) {
-    button.addEventListener('click', async () => {
-      const command = button.dataset.copyCommand || '';
-      try { await navigator.clipboard.writeText(command); }
-      catch { window.prompt('复制本地安装命令', command); }
-      const previous = button.textContent;
-      button.textContent = 'Copied';
-      window.setTimeout(() => { button.textContent = previous; }, 1200);
-    });
-  }
 </script>
 
 <style>
@@ -345,7 +535,7 @@ const updatedLabel = updatedAt ? new Date(updatedAt).toISOString().slice(0, 10) 
   .category-section{margin:10px 0 16px}.section-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:11px}.section-kicker{display:block;color:var(--accent);font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}.section-heading h2{margin:3px 0 0;font-size:21px;letter-spacing:-.02em}.section-note{color:var(--muted);font-size:12.5px;text-align:right}.category-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.category-card{--category-a:#2563eb;--category-b:#06b6d4;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;text-align:left;border:1px solid color-mix(in srgb,var(--category-a) 19%,var(--border));border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--category-a) 7%,var(--card)),color-mix(in srgb,var(--category-b) 4%,var(--card)));padding:14px 15px;color:var(--fg);cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .16s,border-color .16s,box-shadow .16s}.category-card.mcp{--category-a:#7c3aed;--category-b:#c026d3}.category-card.skill{--category-a:#0891b2;--category-b:#10b981}.category-card.agent{--category-a:#db2777;--category-b:#f97316}.category-card:hover,.category-card.active{transform:translateY(-2px);border-color:color-mix(in srgb,var(--category-a) 48%,var(--border));box-shadow:0 10px 25px color-mix(in srgb,var(--category-a) 12%,transparent)}.category-icon{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--category-a),var(--category-b));color:#fff;font-weight:900;font-size:15px;box-shadow:0 6px 16px color-mix(in srgb,var(--category-a) 20%,transparent)}.category-copy{display:flex;flex-direction:column;min-width:0}.category-copy strong{font-size:14.5px}.category-copy small{color:color-mix(in srgb,var(--fg) 57%,var(--muted));font-size:11.5px;line-height:1.45;margin-top:2px}.category-count{display:inline-flex;align-items:center;justify-content:center;min-width:38px;border-radius:999px;padding:4px 8px;background:var(--card);border:1px solid color-mix(in srgb,var(--category-a) 18%,var(--border));color:var(--category-a);font-size:11.5px;font-weight:850}
   .market-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;overflow:hidden;border:1px solid var(--border);border-radius:15px;background:var(--border);margin:0 0 18px}.market-facts div{display:flex;flex-direction:column;gap:2px;background:var(--card);padding:11px 14px}.market-facts strong{font-size:12.5px}.market-facts span{color:var(--muted);font-size:11.5px;line-height:1.45}
   .market-toolbar{display:grid;gap:10px;margin-bottom:11px}.search-wrap{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;border:1px solid var(--border);border-radius:15px;background:var(--card);padding:0 14px;box-shadow:var(--shadow-sm)}.search-wrap>span{font-size:22px;color:var(--muted)}.search-wrap input{width:100%;border:0;outline:0;background:transparent;color:var(--fg);padding:13px 0;font:500 15px/1.4 inherit}.search-wrap kbd{border:1px solid var(--border);border-bottom-width:2px;border-radius:7px;background:var(--bg-soft);color:var(--muted);padding:2px 7px;font-size:11px}.filter-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.market-filter{border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--muted);padding:7px 12px;font-size:13px;cursor:pointer;min-height:36px}.market-filter small{margin-left:3px}.market-filter.active{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--border));color:var(--accent);font-weight:800}.check-filter{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-left:5px}.check-filter input{width:16px;height:16px}.result-line{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:12.5px;margin:9px 0 13px}.result-links{display:flex;gap:13px;flex-wrap:wrap}
-  .market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;scroll-margin-top:96px}.market-card{display:flex;flex-direction:column;min-width:0;min-height:328px;border:1px solid var(--border);border-radius:18px;background:var(--card);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .16s,box-shadow .16s,border-color .16s}.market-card:hover{transform:translateY(-3px);border-color:var(--border-strong);box-shadow:var(--shadow-md)}.market-card[hidden]{display:none}.card-main{display:flex;flex:1;flex-direction:column;min-width:0;padding:18px 18px 14px;color:inherit}.card-main:hover{text-decoration:none}.card-top{display:flex;align-items:center;gap:6px;min-width:0}.kind,.source,.verified,.meta-row span,.caps span{display:inline-flex;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:750;white-space:nowrap}.kind{color:var(--accent);background:var(--accent-soft)}.kind.mcp{color:#7c3aed;background:color-mix(in srgb,#7c3aed 12%,transparent)}.kind.skill{color:#0891b2;background:color-mix(in srgb,#0891b2 12%,transparent)}.kind.agent{color:#db2777;background:color-mix(in srgb,#db2777 12%,transparent)}.source{color:var(--muted);background:var(--bg-soft)}.source.registry{color:var(--accent)}.source.catalog{color:var(--amber)}.verified{color:var(--green);background:color-mix(in srgb,var(--green) 12%,transparent)}.stars{margin-left:auto;color:var(--amber);font-size:12px;font-weight:800;white-space:nowrap}.market-card h2{margin:12px 0 2px;font-size:17px;line-height:1.35;overflow-wrap:anywhere}.repo{margin:0;color:var(--muted);font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.description{color:var(--muted);font-size:13.5px;line-height:1.6;min-height:86px;margin:12px 0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}.meta-row,.caps{display:flex;gap:6px;flex-wrap:wrap}.meta-row{margin-top:auto}.meta-row span,.caps span{color:var(--muted);background:var(--bg-soft);font-weight:650}.caps{margin-top:7px}.caps span{max-width:100%;overflow:hidden;text-overflow:ellipsis}.card-actions{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap;border-top:1px solid var(--border);padding:10px 12px;background:color-mix(in srgb,var(--bg-soft) 38%,transparent)}.card-actions .ghost,.card-actions .install{padding:7px 10px;font-size:12px;min-height:34px}.empty{text-align:center;color:var(--muted);padding:50px 0;font-size:14px}
+  .market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;scroll-margin-top:96px}.market-card{display:flex;flex-direction:column;min-width:0;min-height:328px;border:1px solid var(--border);border-radius:18px;background:var(--card);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .16s,box-shadow .16s,border-color .16s}.market-card:hover{transform:translateY(-3px);border-color:var(--border-strong);box-shadow:var(--shadow-md)}.market-card[hidden]{display:none}.card-main{display:flex;flex:1;flex-direction:column;min-width:0;padding:18px 18px 14px;color:inherit}.card-main:hover{text-decoration:none}.card-top{display:flex;align-items:center;gap:6px;min-width:0}.kind,.source,.verified,.meta-row span,.caps span{display:inline-flex;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:750;white-space:nowrap}.kind{color:var(--accent);background:var(--accent-soft)}.kind.mcp{color:#7c3aed;background:color-mix(in srgb,#7c3aed 12%,transparent)}.kind.skill{color:#0891b2;background:color-mix(in srgb,#0891b2 12%,transparent)}.kind.agent{color:#db2777;background:color-mix(in srgb,#db2777 12%,transparent)}.source{color:var(--muted);background:var(--bg-soft)}.source.registry{color:var(--accent)}.source.catalog{color:var(--amber)}.verified{color:var(--green);background:color-mix(in srgb,var(--green) 12%,transparent)}.stars{margin-left:auto;color:var(--amber);font-size:12px;font-weight:800;white-space:nowrap}.market-card h2{margin:12px 0 2px;font-size:17px;line-height:1.35;overflow-wrap:anywhere}.repo{margin:0;color:var(--muted);font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.description{color:var(--muted);font-size:13.5px;line-height:1.6;min-height:86px;margin:12px 0;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}.meta-row,.caps{display:flex;gap:6px;flex-wrap:wrap}.meta-row{margin-top:auto}.meta-row span,.caps span{color:var(--muted);background:var(--bg-soft);font-weight:650}.caps{margin-top:7px}.caps span{max-width:100%;overflow:hidden;text-overflow:ellipsis}.card-actions{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap;border-top:1px solid var(--border);padding:10px 12px;background:color-mix(in srgb,var(--bg-soft) 38%,transparent)}.card-actions .ghost,.card-actions .install{padding:7px 10px;font-size:12px;min-height:34px}.load-more{grid-column:1/-1;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--accent);padding:12px;font:750 13px/1.25 inherit;cursor:pointer}.load-more:hover{border-color:var(--accent);background:var(--accent-soft)}.empty{text-align:center;color:var(--muted);padding:50px 0;font-size:14px}
   @media(min-width:1700px){.market-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
   @media(min-width:980px){.market-hero p{white-space:nowrap}}
   @media(max-width:1040px){.category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.market-facts{grid-template-columns:1fr}.section-heading{align-items:flex-start;flex-direction:column;gap:4px}.section-note{text-align:left}}

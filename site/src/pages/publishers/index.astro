@@ -1,0 +1,198 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { u } from '../../lib/urls';
+
+const registryUrl = u('/catalog/registry-v3.json');
+const ecosystemUrl = u('/ecosystem/');
+---
+
+<Layout title="Publishers · DSH Marketplace" description="Registry-backed DSH Marketplace publisher directory and package portfolios.">
+  <section class="hero">
+    <div>
+      <span class="kicker">Marketplace V4</span>
+      <h1>Publisher directory</h1>
+      <p>Explore registry-backed publisher identities and their package portfolios. Ownership, trust and popularity remain separate signals.</p>
+    </div>
+    <div class="hero-actions">
+      <a class="secondary" href={u('/')}>Marketplace</a>
+      <a class="secondary" href={u('/trust')}>Trust Center</a>
+    </div>
+  </section>
+
+  <form id="publisher-search" class="search" role="search">
+    <label for="publisher-query">Find a publisher</label>
+    <div class="search-row">
+      <input id="publisher-query" name="q" type="search" placeholder="Search by publisher or repository owner" autocomplete="off" />
+      <button type="submit">Search</button>
+    </div>
+  </form>
+
+  <p id="publisher-status" class="status" role="status" aria-live="polite">Loading the Registry V3 publisher directory…</p>
+  <section id="publisher-grid" class="grid" aria-live="polite"></section>
+  <p id="publisher-empty" class="empty" hidden>No publisher matches this search.</p>
+</Layout>
+
+<script is:inline define:vars={{ registryUrl, ecosystemUrl }}>
+  const grid = document.querySelector('#publisher-grid');
+  const empty = document.querySelector('#publisher-empty');
+  const status = document.querySelector('#publisher-status');
+  const form = document.querySelector('#publisher-search');
+  const input = document.querySelector('#publisher-query');
+  let publishers = [];
+
+  const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, (character) => escapeMap[character]);
+  }
+
+  function publisherId(item) {
+    return String(item.publisher && (item.publisher.id || item.publisher.login || item.publisher.name)
+      || (item.source && item.source.repo && item.source.repo.split('/')[0]) || 'unknown').trim();
+  }
+
+  function packageType(item) {
+    return String(item.type || (item.runtime && item.runtime.type) || 'plugin');
+  }
+
+  function trust(item) {
+    const security = item.security || {};
+    const publisher = item.publisher || {};
+    const ownership = publisher.repository_ownership || 'unverified';
+    const advisories = security.advisories || [];
+    let score = 0;
+    if (security.provenance) score += 20;
+    if (security.signature) score += 25;
+    if (security.sbom) score += 15;
+    if (security.license) score += 10;
+    if (ownership === 'verified' || publisher.verified === true) score += 25;
+    else if (ownership === 'declared' || ownership === 'required') score += 10;
+    if (item.metadata && item.metadata.verified === true) score += 10;
+    if (security.yanked === true) score -= 25;
+    if (security.revoked === true) score -= 100;
+    const critical = advisories.some((advisory) => String(advisory && advisory.severity || '').toLowerCase() === 'critical');
+    if (critical) score -= 50;
+    score = Math.max(0, Math.min(100, score));
+    return {
+      score,
+      tier: security.revoked || critical ? 'unverified' : score >= 80 ? 'trusted' : score >= 55 ? 'verified' : score >= 25 ? 'community' : 'unverified',
+    };
+  }
+
+  function compareVersions(left, right) {
+    return String(left || '').localeCompare(String(right || ''), undefined, { numeric: true });
+  }
+
+  function repoHref(item) {
+    const repo = String(item.source && item.source.repo || '').trim();
+    return /^[\w.-]+\/[\w.-]+$/.test(repo) ? 'https://github.com/' + repo : '';
+  }
+
+  function queryHref(values) {
+    const url = new URL(window.location.href);
+    url.search = '';
+    Object.entries(values).forEach(([key, value]) => {
+      if (value) url.searchParams.set(key, value);
+    });
+    return url.pathname + url.search;
+  }
+
+  function groupedPublishers(entries) {
+    const groups = new Map();
+    entries.forEach((item) => {
+      const id = publisherId(item);
+      if (!id || id === 'unknown') return;
+      const group = groups.get(id) || { id, packages: new Map() };
+      const key = packageType(item) + ':' + item.id;
+      const current = group.packages.get(key);
+      if (!current || compareVersions(item.version, current.version) > 0) group.packages.set(key, item);
+      groups.set(id, group);
+    });
+    return Array.from(groups.values()).map((group) => {
+      const items = Array.from(group.packages.values()).sort((left, right) => Number(right.metadata && right.metadata.stars || 0) - Number(left.metadata && left.metadata.stars || 0));
+      const signals = items.map(trust);
+      const stars = items.reduce((sum, item) => sum + Number(item.metadata && item.metadata.stars || 0), 0);
+      return {
+        id: group.id,
+        items,
+        avgTrust: items.length ? Math.round(signals.reduce((sum, signal) => sum + signal.score, 0) / items.length) : 0,
+        verified: items.some((item) => item.publisher && (item.publisher.repository_ownership === 'verified' || item.publisher.verified === true)),
+        stars,
+      };
+    }).sort((left, right) => right.items.length - left.items.length || right.stars - left.stars || left.id.localeCompare(right.id));
+  }
+
+  function packageCard(item) {
+    const type = packageType(item);
+    const signal = trust(item);
+    const repo = repoHref(item);
+    const detail = ecosystemUrl + encodeURIComponent(item.id) + '?type=' + encodeURIComponent(type);
+    const metadata = item.metadata || {};
+    return '<article class="card package-card">'
+      + '<div class="top"><span class="tier ' + escapeHtml(signal.tier) + '">' + escapeHtml(signal.tier) + ' · ' + signal.score + '</span><span>★ ' + Number(metadata.stars || 0).toLocaleString() + '</span></div>'
+      + '<h3>' + escapeHtml(metadata.name || item.id) + '</h3>'
+      + '<code>' + escapeHtml(type) + ':' + escapeHtml(item.id) + '@' + escapeHtml(item.version) + '</code>'
+      + '<p>' + escapeHtml(metadata.description || (item.source && item.source.repo) || '') + '</p>'
+      + '<div class="links">' + (repo ? '<a href="' + repo + '" target="_blank" rel="noopener noreferrer">Source ↗</a>' : '') + '<a href="' + detail + '">Registry detail →</a></div>'
+      + '</article>';
+  }
+
+  function renderDirectory(query) {
+    const normalized = String(query || '').trim().toLowerCase();
+    const visible = publishers.filter((publisher) => publisher.id.toLowerCase().includes(normalized));
+    empty.hidden = visible.length !== 0;
+    grid.className = 'grid';
+    grid.innerHTML = visible.map((publisher) => '<a class="card publisher-card" href="' + queryHref({ id: publisher.id }) + '">'
+      + '<div class="top"><span class="kicker">Publisher</span><span>' + (publisher.verified ? '✓ Verified' : 'Unverified') + '</span></div>'
+      + '<h2>' + escapeHtml(publisher.id) + '</h2>'
+      + '<div class="summary"><span><b>' + publisher.items.length + '</b><small>packages</small></span><span><b>' + publisher.avgTrust + '</b><small>avg trust</small></span><span><b>★ ' + publisher.stars.toLocaleString() + '</b><small>stars</small></span></div>'
+      + '<span class="profile-link">Open portfolio →</span></a>').join('');
+    status.textContent = visible.length.toLocaleString() + ' of ' + publishers.length.toLocaleString() + ' publishers · Registry V3';
+  }
+
+  function renderProfile(publisher) {
+    empty.hidden = true;
+    grid.className = 'profile-grid';
+    grid.innerHTML = '<a class="back-link" href="' + queryHref({}) + '">← All publishers</a>'
+      + '<section class="profile-hero"><div><span class="kicker">Publisher</span><h2>' + escapeHtml(publisher.id) + '</h2><p>Registry-backed package portfolio. Ownership and trust are independent from popularity.</p></div>'
+      + '<div class="summary"><span><b>' + publisher.items.length + '</b><small>packages</small></span><span><b>' + publisher.avgTrust + '</b><small>avg trust</small></span><span><b>' + (publisher.verified ? 'Verified' : 'Unverified') + '</b><small>repository ownership</small></span></div></section>'
+      + '<section class="package-grid">' + publisher.items.map(packageCard).join('') + '</section>';
+    status.textContent = publisher.id + ' · ' + publisher.items.length + ' package(s) · Registry V3';
+  }
+
+  function render() {
+    const params = new URLSearchParams(window.location.search);
+    const selected = params.get('id');
+    const query = params.get('q') || '';
+    input.value = query;
+    const publisher = selected && publishers.find((candidate) => candidate.id.toLowerCase() === selected.toLowerCase());
+    if (publisher) renderProfile(publisher);
+    else renderDirectory(query);
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    window.history.pushState({}, '', queryHref({ q: input.value.trim() }));
+    render();
+  });
+  window.addEventListener('popstate', render);
+
+  fetch(registryUrl, { headers: { accept: 'application/json' } })
+    .then((response) => {
+      if (!response.ok) throw new Error('Registry V3 returned HTTP ' + response.status);
+      return response.json();
+    })
+    .then((payload) => {
+    publishers = groupedPublishers(Array.isArray(payload.plugins) ? payload.plugins : []);
+    render();
+    })
+    .catch((error) => {
+    grid.innerHTML = '';
+    empty.hidden = false;
+    empty.textContent = 'Publisher directory is temporarily unavailable. Open the Trust Center or try again later.';
+    status.textContent = error instanceof Error ? error.message : 'Registry V3 could not be loaded';
+    });
+</script>
+
+<style>
+  .hero{display:flex;justify-content:space-between;gap:26px;align-items:end;margin:24px auto 30px;padding:30px;border:1px solid var(--border);border-radius:20px;background:var(--card);box-shadow:var(--shadow-sm)}.kicker{color:var(--accent);font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}.hero h1{margin:7px 0;font-size:clamp(38px,6vw,60px);letter-spacing:-.045em}.hero p{max-width:760px;margin:0;color:var(--muted)}.hero-actions{display:flex;gap:8px;flex-wrap:wrap}.secondary{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:11px;padding:10px 14px;background:var(--card);color:var(--fg);font-size:13px;font-weight:750}.search{max-width:760px;margin:0 auto 18px}.search label{display:block;margin-bottom:6px;font-size:12px;font-weight:800;color:var(--muted)}.search-row{display:flex;gap:8px}.search input{flex:1;min-width:0;border:1px solid var(--border-strong);border-radius:11px;background:var(--card);color:var(--fg);padding:12px 14px;font:inherit}.search button{border:0;border-radius:11px;background:var(--accent);color:white;padding:0 18px;font-weight:800;cursor:pointer}.status{text-align:center;color:var(--muted);font-size:12px;margin:12px 0 20px}.grid,.package-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:14px}.profile-grid{display:grid;gap:14px}.card{display:block;border:1px solid var(--border);border-radius:16px;background:var(--card);box-shadow:var(--shadow-sm);padding:18px;color:var(--fg)}a.card:hover{text-decoration:none;transform:translateY(-2px);box-shadow:var(--shadow-md)}.publisher-card .top,.package-card .top,.links{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px}.publisher-card h2{margin:12px 0 16px;font-size:24px;overflow-wrap:anywhere}.summary{display:flex;gap:8px;flex-wrap:wrap}.summary span{min-width:86px;padding:10px;border:1px solid var(--border);border-radius:11px;background:var(--bg-soft)}.summary b,.summary small{display:block}.summary small{color:var(--muted);font-size:10px}.profile-link{display:block;margin-top:16px;color:var(--accent);font-size:12px;font-weight:800}.tier{padding:3px 8px;border-radius:999px;background:var(--bg-soft);font-weight:800}.tier.trusted{color:var(--green)}.tier.verified{color:var(--accent)}.package-card h3{margin:12px 0 2px}.package-card>code{color:var(--muted);font-size:12px}.package-card p{min-height:45px;color:var(--muted);font-size:13px}.links a{font-weight:750}.empty{text-align:center;padding:35px;color:var(--muted)}.back-link{color:var(--muted);font-size:13px;font-weight:750}.profile-hero{display:flex;justify-content:space-between;gap:22px;align-items:end;padding:26px;border:1px solid var(--border);border-radius:18px;background:var(--card)}.profile-hero h2{margin:5px 0;font-size:clamp(30px,5vw,48px);letter-spacing:-.04em}.profile-hero p{margin:0;color:var(--muted)}@media(max-width:760px){.hero,.profile-hero{align-items:flex-start;flex-direction:column}.search-row{flex-direction:column}.search button{min-height:42px}}
+</style>

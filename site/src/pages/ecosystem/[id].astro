@@ -100,6 +100,8 @@ function evidence(item: any) {
       const query = new URLSearchParams({ id: item.id, version: String(item.version), type });
       const deepLink = `dsh://install?${query.toString()}`;
       const highRisk = permissions.filter((permission: string) => ['filesystem.write', 'network.unrestricted', 'shell', 'secrets.read', 'process.spawn'].includes(permission));
+      const publisherName = item.publisher?.id || item.source?.repo?.split('/')[0] || '';
+      const publisherHref = publisherName ? u('/publishers/?id=' + encodeURIComponent(publisherName)) : '';
       const repoHref = item.source?.repo ? `https://github.com/${item.source.repo}` : '';
       const readmeHref = repoHref ? `${repoHref}#readme` : '';
       return (
@@ -211,7 +213,7 @@ function evidence(item: any) {
                   <dt>OS</dt><dd>{(compatibility.os || ['any']).join(', ')}</dd>
                   <dt>Arch</dt><dd>{(compatibility.arch || ['any']).join(', ')}</dd>
                   <dt>Runtime</dt><dd>{compatibility.runtime || compatibility.dsh_runtime || 'unspecified'}</dd>
-                  <dt>Publisher</dt><dd>{item.publisher?.id || 'not declared'} {publisherVerified(item) ? '✓' : ''}</dd>
+                  <dt>Publisher</dt><dd>{publisherHref ? <a href={publisherHref}>{publisherName} {publisherVerified(item) ? '✓' : ''}</a> : 'not declared'}</dd>
                 </dl>
                 <div class="side-links">
                   {readmeHref && <a href={readmeHref} target="_blank" rel="noreferrer">README / Usage ↗</a>}

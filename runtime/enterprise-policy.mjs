@@ -1,4 +1,5 @@
-import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { packageKey } from './package-model.mjs';
@@ -85,9 +86,14 @@ export async function readEnterprisePolicy(file = enterprisePolicyPath()) {
 async function writeAtomic(file, value) {
   const target = resolve(file);
   await mkdir(dirname(target), { recursive: true });
-  const temp = `${target}.tmp-${process.pid}-${Date.now()}`;
-  await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
-  await rename(temp, target);
+  const temp = `${target}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+    await rename(temp, target);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
   return target;
 }
 

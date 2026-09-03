@@ -71,7 +71,7 @@ export function satisfiesSemanticVersion(version: string, range = '*') {
 
 export function normalizeEdgePackageRequest(input: { id?: string; type?: string; version?: string; channel?: string }): EdgePackageRequest {
   const id = String(input.id || '').trim();
-  if (!id || id.length > 200 || !ID_RE.test(id)) throw new Error(`invalid package id: ${id || '<empty>'}`);
+  if (!id || id.length > 200 || !ID_RE.test(id) || id.split('/').some((part) => part === '.' || part === '..')) throw new Error(`invalid package id: ${id || '<empty>'}`);
   const rawType = String(input.type || '').trim().toLowerCase();
   const type = rawType ? TYPES.find((candidate) => candidate === rawType) : undefined;
   if (rawType && !type) throw new Error(`invalid ecosystem type: ${rawType}`);

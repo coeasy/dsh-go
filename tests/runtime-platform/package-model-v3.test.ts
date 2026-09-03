@@ -27,5 +27,7 @@ describe('Runtime Platform V3 unified package model', () => {
   it('rejects unsupported types and unsafe ids', () => {
     expect(() => parsePackageSpec('tool:demo@1.0.0')).toThrow(/unsafe|version/);
     expect(() => parsePackageSpec('mcp:../../evil@1.0.0')).toThrow(/unsafe/);
+    expect(() => parsePackageSpec('mcp:owner/../evil@1.0.0')).toThrow(/unsafe/);
+    expect(() => packageKey('plugin', '..')).toThrow(/unsafe/);
   });
 });

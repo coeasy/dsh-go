@@ -27,6 +27,7 @@ const lastSyncTimeLabel = validLastSync
 <Layout title="DSH Plugin Marketplace" description="Registry V3 与原始 dsh-plugin Catalog 对齐的统一 Plugin、MCP、Skill、Agent Marketplace。">
   <div class="v4-links" aria-label="Marketplace V4 entry points">
     <a href={u('/trust')}><strong>Trust Center</strong><span>Publisher identity · provenance · advisory</span></a>
+    <a href={u('/publishers/')}><strong>Publishers</strong><span>Registry-backed publisher portfolios</span></a>
     <div class="locale-links">
       <strong>Localized Marketplace</strong>
       <span>{SUPPORTED_LANGS.map((lang) => <a href={u(`/${lang}/`)} hreflang={lang}>{LANGUAGE_LABELS[lang]}</a>)}</span>

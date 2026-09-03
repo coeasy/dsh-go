@@ -85,7 +85,7 @@ async function runLegacy(args, registryFile, approved = false) {
 async function approvedPreflight(type, spec, args) {
   const ctx = await registryContext(args);
   const channel = option(args, '--channel');
-  const runtimeRegistry = await readRuntimeRegistry();
+  const runtimeRegistry = await readRuntimeRegistry(option(args, '--runtime-registry'));
   const preflight = preflightPackage(ctx.registry, spec, { type, channel, installed: runtimeRegistry.packages });
   if (!preflight.allowed) throw new Error(`preflight blocked operation: ${preflight.reasons.join('; ')}`);
   if (has(args, '--dry-run')) return { ctx, preflight, approved: false };
@@ -117,6 +117,12 @@ async function installOrUpdate(type, action, spec, args) {
   const flags = [];
   const channel = option(args, '--channel');
   if (channel) flags.push('--channel', channel);
+  const runtimeRegistry = option(args, '--runtime-registry');
+  if (runtimeRegistry) flags.push('--runtime-registry', runtimeRegistry);
+  const root = option(args, '--root');
+  if (root) flags.push('--root', root);
+  const policyFile = option(args, '--policy-file');
+  if (policyFile) flags.push('--policy-file', policyFile);
   if (has(args, '--force')) flags.push('--force');
   let runtimeArgs;
   if (action === 'update') runtimeArgs = [normalizedType, 'update', parsed.id, parsed.version || preflight.version, ...flags];
@@ -128,13 +134,20 @@ async function installOrUpdate(type, action, spec, args) {
 async function repairPackage(type, id, args) {
   if (!id) throw new Error('repair requires a package id');
   const normalizedType = assertPackageType(type);
-  const runtime = await readRuntimeRegistry();
+  const runtime = await readRuntimeRegistry(option(args, '--runtime-registry'));
   const current = findRuntimePackage(runtime, id, { type: normalizedType });
   if (!current) throw new Error(`${normalizedType} is not installed: ${id}`);
   const spec = `${normalizedType}:${id}@${current.version}`;
   const { ctx, approved } = await approvedPreflight(normalizedType, spec, args);
   if (has(args, '--dry-run')) return;
-  return runLegacy([normalizedType, 'repair', id], ctx.file, approved);
+  const runtimeArgs = [normalizedType, 'repair', id];
+  const runtimeRegistry = option(args, '--runtime-registry');
+  if (runtimeRegistry) runtimeArgs.push('--runtime-registry', runtimeRegistry);
+  const root = option(args, '--root');
+  if (root) runtimeArgs.push('--root', root);
+  const policyFile = option(args, '--policy-file');
+  if (policyFile) runtimeArgs.push('--policy-file', policyFile);
+  return runLegacy(runtimeArgs, ctx.file, approved);
 }
 
 async function packageCommand(action, args) {
@@ -188,10 +201,11 @@ async function packageCommand(action, args) {
 
 async function applyPackagePlan(kind, file, args) {
   if (!file) throw new Error(`${kind} requires a JSON file`);
-  const result = await executePackageTransaction(file, {
-    kind,
-    catalog: option(args, '--registry', 'catalog/registry-v3.json'),
-    approved: has(args, '--yes'),
+    const result = await executePackageTransaction(file, {
+      kind,
+      catalog: option(args, '--registry', 'catalog/registry-v3.json'),
+      registryFile: option(args, '--runtime-registry'),
+      approved: has(args, '--yes'),
     dryRun: has(args, '--dry-run'),
   });
   print(result);
@@ -201,7 +215,13 @@ async function bridgeCommand(action, args) {
   if (action === 'parse') return print(parseDshUrl(args[2]));
   if (action === 'register') return print(await registerProtocolHandler({ dryRun: has(args, '--dry-run') }));
   if (action === 'serve') {
-    const host = await startClientHost({ port: option(args, '--port') });
+    const host = await startClientHost({
+      port: option(args, '--port'),
+      runtimeRegistry: option(args, '--runtime-registry'),
+      catalog: option(args, '--registry'),
+      enterprisePolicyFile: option(args, '--policy-file'),
+      registriesFile: option(args, '--registries-file'),
+    });
     console.log(`DSH client host listening on http://${host.host}:${host.port}`);
     return;
   }
@@ -221,6 +241,12 @@ async function bridgeCommand(action, args) {
     const synthetic = [type, plan.request.action === 'update' ? 'update' : 'install', `${plan.request.id}@${plan.request.version}`, '--yes'];
     if (plan.request.channel) synthetic.push('--channel', plan.request.channel);
     if (plan.request.registry) synthetic.push('--registry', plan.request.registry);
+    const runtimeRegistry = option(args, '--runtime-registry');
+    if (runtimeRegistry) synthetic.push('--runtime-registry', runtimeRegistry);
+    const root = option(args, '--root');
+    if (root) synthetic.push('--root', root);
+    const policyFile = option(args, '--policy-file');
+    if (policyFile) synthetic.push('--policy-file', policyFile);
     await installOrUpdate(type, plan.request.action === 'update' ? 'update' : 'install', `${plan.request.id}@${plan.request.version}`, synthetic);
     return;
   }
@@ -233,6 +259,10 @@ async function ecosystemLifecycle(type, action, spec, args) {
     const runtimeArgs = ['package', action];
     if (spec) runtimeArgs.push(spec);
     if (has(args, '--all')) runtimeArgs.push('--all');
+    const type = option(args, '--type');
+    if (type) runtimeArgs.push('--type', type);
+    const runtimeRegistry = option(args, '--runtime-registry');
+    if (runtimeRegistry) runtimeArgs.push('--runtime-registry', runtimeRegistry);
     return runLegacy(runtimeArgs);
   }
   const normalizedType = assertPackageType(type);
@@ -249,7 +279,7 @@ async function main() {
   if (command === 'version' || command === '--version' || command === '-v') return print(versionInfo());
   if (command === 'preflight') {
     const ctx = await registryContext(args);
-    const runtimeRegistry = await readRuntimeRegistry();
+    const runtimeRegistry = await readRuntimeRegistry(option(args, '--runtime-registry'));
     return print(preflightPackage(ctx.registry, args[1], { type: option(args, '--type'), channel: option(args, '--channel'), installed: runtimeRegistry.packages }));
   }
   if (command === 'bridge') return bridgeCommand(args[1] || 'parse', args);

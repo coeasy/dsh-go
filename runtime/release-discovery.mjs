@@ -2,6 +2,12 @@ import { assertPackageType } from './package-model.mjs';
 import { validateReleaseArtifact } from './artifact-installer.mjs';
 
 export const RELEASE_DESCRIPTOR_NAME = 'dsh-package-release.json';
+const DEFAULT_RELEASE_DISCOVERY_TIMEOUT_MS = 8_000;
+
+function positiveTimeout(value, fallback = DEFAULT_RELEASE_DISCOVERY_TIMEOUT_MS) {
+  const timeout = Number(value);
+  return Number.isFinite(timeout) && timeout > 0 ? timeout : fallback;
+}
 
 function defaultReleaseTag(pkg) {
   return pkg?.release_tag || pkg?.artifact?.release_tag || (pkg?.package_path ? `${pkg.id}-v${pkg.version}` : `v${pkg.version}`);
@@ -28,7 +34,7 @@ export async function discoverReleaseArtifact(pkg, options = {}) {
     response = await fetch(url, {
       headers: { Accept: 'application/json', 'User-Agent': 'dsh-runtime-release-discovery' },
       redirect: 'follow',
-      signal: AbortSignal.timeout(Number(options.timeout || 8000)),
+      signal: AbortSignal.timeout(positiveTimeout(options.timeout)),
     });
   } catch (error) {
     if (options.strict === true) throw error;

@@ -1,10 +1,11 @@
-import { createHash } from 'node:crypto';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { createHash, randomUUID } from 'node:crypto';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { DEFAULT_DISTRIBUTION_URL, loadRegistrySource } from './catalog.mjs';
 import { assertPackageType, packageKey } from './package-model.mjs';
 import { resolvePackage } from './resolver.mjs';
+import { withFileLock } from './file-lock.mjs';
 
 const ENV_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
@@ -49,13 +50,18 @@ export async function readRegistries(file = registriesPath()) {
 async function writeAtomic(file, value) {
   const target = resolve(file);
   await mkdir(dirname(target), { recursive: true });
-  const temp = `${target}.tmp-${process.pid}-${Date.now()}`;
-  await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
-  await rename(temp, target);
+  const temp = `${target}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+    await rename(temp, target);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
   return target;
 }
 
-export async function writeRegistries(config, file = registriesPath()) {
+async function writeRegistriesUnlocked(config, file) {
   const names = new Set();
   const registries = (config.registries || []).map(normalizeRegistry).map((item) => {
     const key = item.name.toLowerCase();
@@ -67,37 +73,50 @@ export async function writeRegistries(config, file = registriesPath()) {
   return { file: resolve(file), registries };
 }
 
+function configLock(file, task, options = {}) {
+  const target = resolve(file);
+  return withFileLock(`${target}.lock`, task, options);
+}
+
+export async function writeRegistries(config, file = registriesPath(), options = {}) {
+  return configLock(file, () => writeRegistriesUnlocked(config, file), options);
+}
+
 export async function addRegistry(name, url, options = {}) {
   const file = options.file || registriesPath();
-  const config = await readRegistries(file);
-  if (config.registries.some((item) => item.name.toLowerCase() === String(name).toLowerCase())) {
-    const error = new Error(`registry already exists: ${name}`);
-    error.code = 'DSH_REGISTRY_EXISTS';
-    throw error;
-  }
-  config.registries.push(normalizeRegistry({
-    name,
-    url,
-    priority: options.priority,
-    trusted: options.trusted,
-    enabled: true,
-    organization: options.organization,
-    scope: options.scope,
-    auth_env: options.authEnv,
-  }));
-  return writeRegistries(config, file);
+  return configLock(file, async () => {
+    const config = await readRegistries(file);
+    if (config.registries.some((item) => item.name.toLowerCase() === String(name).toLowerCase())) {
+      const error = new Error(`registry already exists: ${name}`);
+      error.code = 'DSH_REGISTRY_EXISTS';
+      throw error;
+    }
+    config.registries.push(normalizeRegistry({
+      name,
+      url,
+      priority: options.priority,
+      trusted: options.trusted,
+      enabled: true,
+      organization: options.organization,
+      scope: options.scope,
+      auth_env: options.authEnv,
+    }));
+    return writeRegistriesUnlocked(config, file);
+  }, options);
 }
 
 export async function removeRegistry(name, options = {}) {
   const file = options.file || registriesPath();
-  const config = await readRegistries(file);
-  const next = config.registries.filter((item) => item.name.toLowerCase() !== String(name).toLowerCase());
-  if (next.length === config.registries.length) {
-    const error = new Error(`registry not found: ${name}`);
-    error.code = 'DSH_REGISTRY_NOT_FOUND';
-    throw error;
-  }
-  return writeRegistries({ ...config, registries: next }, file);
+  return configLock(file, async () => {
+    const config = await readRegistries(file);
+    const next = config.registries.filter((item) => item.name.toLowerCase() !== String(name).toLowerCase());
+    if (next.length === config.registries.length) {
+      const error = new Error(`registry not found: ${name}`);
+      error.code = 'DSH_REGISTRY_NOT_FOUND';
+      throw error;
+    }
+    return writeRegistriesUnlocked({ ...config, registries: next }, file);
+  }, options);
 }
 
 function publisherIdentity(pkg) {

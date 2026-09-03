@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { assertProviderAdapterRelease } from '../runtime/provider-adapter.mjs';
@@ -30,9 +31,14 @@ async function readRegistry(file) {
 
 async function atomicWriteJson(file, value) {
   await mkdir(dirname(file), { recursive: true });
-  const temp = `${file}.tmp-${process.pid}`;
-  await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
-  await rename(temp, file);
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
 }
 
 function assertExpectedSource(release, options) {

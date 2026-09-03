@@ -10,9 +10,12 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
     if (requestedType && !ECOSYSTEM_TYPES.includes(requestedType)) return error(400, `invalid ecosystem type: ${rawType}`);
 
     const { data, etag } = await loadRegistryV3(env, request.url);
-    const matches = data.plugins.filter((plugin) =>
-      plugin.id.toLocaleLowerCase() === id
-      && (!requestedType || ecosystemType(plugin) === requestedType));
+    const matches = data.plugins.filter((plugin) => {
+      const pluginId = plugin.id.toLocaleLowerCase();
+      const repo = String(plugin.source?.repo || '').toLocaleLowerCase();
+      return (pluginId === id || repo === id)
+        && (!requestedType || ecosystemType(plugin) === requestedType);
+    });
     if (!matches.length) return error(404, `ecosystem item not found: ${requestedType ? `${requestedType}:` : ''}${id}`);
     if (!requestedType) {
       const types = [...new Set(matches.map(ecosystemType))];

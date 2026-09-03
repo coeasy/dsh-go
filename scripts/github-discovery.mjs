@@ -5,6 +5,7 @@ const GRAPHQL_URL = 'https://api.github.com/graphql';
 const SEARCH_DELAY = Number(process.env.REGISTRY_SEARCH_DELAY || (process.env.GITHUB_TOKEN ? 2200 : 6200));
 const GRAPHQL_DELAY = Number(process.env.REGISTRY_GRAPHQL_DELAY || 100);
 const GRAPHQL_PAGE_SIZE = Math.min(100, Math.max(10, Number(process.env.REGISTRY_GRAPHQL_PAGE_SIZE || 50)));
+const MAX_TOPIC_PAGES = 1_000;
 const EARLIEST = new Date('2008-01-01T00:00:00Z');
 const MAX_REPOSITORY_SIZE_KB = 2147483647;
 
@@ -165,6 +166,9 @@ export async function discoverTopicRepositories(topicName = 'dsh-plugin', option
     }
 
     page += 1;
+    if (page >= MAX_TOPIC_PAGES && connection.pageInfo?.hasNextPage) {
+      throw new Error(`GitHub topic pagination exceeded safety limit of ${MAX_TOPIC_PAGES} pages`);
+    }
     if (page % 25 === 0 || !connection.pageInfo?.hasNextPage) {
       console.log(`[discovery] topic:${topicName} page=${page} page_size=${pageSize} unique=${repositories.size}/${totalCount} rate_remaining=${data.rateLimit?.remaining ?? 'n/a'}`);
     }

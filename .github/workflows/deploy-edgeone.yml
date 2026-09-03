@@ -138,13 +138,16 @@ jobs:
           cp package.json dist/package.json
         env:
           PUBLIC_SITE_URL: ${{ env.EDGEONE_SITE_URL }}
-          PUBLIC_API_URL: ${{ env.EDGEONE_SITE_URL }}
+          # APIs are served by the Cloudflare Functions deployment, not by
+          # the static EdgeOne host—even when EdgeOne has a custom domain.
+          PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
 
       - name: Verify build output
         if: ${{ steps.registry.outputs.ready == 'true' && steps.edgeone-config.outputs.token_configured == 'true' }}
         run: |
           set -euo pipefail
           test -f site/dist/index.html
+          test -f site/dist/publishers/index.html
           test -f site/dist/package.json
           test -f site/dist/version.json
           node scripts/check-platform-discovery.mjs --file site/dist/.well-known/dsh-marketplace.json
@@ -163,6 +166,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          static_file_count=$(find site/dist -type f | wc -l | tr -d ' ')
+          if [ "$static_file_count" -gt 19000 ]; then
+            echo "::error::EdgeOne artifact contains $static_file_count files; the production budget is 19000 (provider limit may be lower)."
+            exit 1
+          fi
+          echo "EdgeOne static file count: $static_file_count/19000"
           oversized=$(find site/dist -type f -size +26214400c -print)
           if [ -n "$oversized" ]; then
             echo "::error::EdgeOne artifact contains files larger than 25 MiB:"

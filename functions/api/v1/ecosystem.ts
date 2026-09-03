@@ -1,17 +1,21 @@
 import { error, internalError, isNotModified, json, notModifiedResponse, paginate, type Env } from '../../_lib';
-import { ecosystemType, filterEcosystem, loadRegistryV3, toEcosystemItem } from '../../_registry';
+import { ECOSYSTEM_TYPES, ecosystemType, filterEcosystem, loadRegistryV3, toEcosystemItem, type EcosystemType } from '../../_registry';
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const url = new URL(request.url);
+    const verifiedParam = url.searchParams.get('verified');
+    if (verifiedParam && !['true', 'false'].includes(verifiedParam)) return error(400, 'verified must be true or false');
+    const rawType = (url.searchParams.get('type') || '').toLowerCase();
+    if (rawType && !ECOSYSTEM_TYPES.includes(rawType as EcosystemType)) return error(400, `invalid ecosystem type: ${rawType}`);
+    const rawChannel = (url.searchParams.get('channel') || '').toLowerCase();
+    if (rawChannel && !['stable', 'beta', 'nightly', 'dev'].includes(rawChannel)) return error(400, `invalid release channel: ${rawChannel}`);
     const { data, etag } = await loadRegistryV3(env, request.url);
     if (isNotModified(request, etag)) return notModifiedResponse(etag);
 
-    const verifiedParam = url.searchParams.get('verified');
-    if (verifiedParam && !['true', 'false'].includes(verifiedParam)) return error(400, 'verified must be true or false');
     const query = {
-      type: url.searchParams.get('type') || undefined,
-      channel: url.searchParams.get('channel') || undefined,
+      type: rawType || undefined,
+      channel: rawChannel || undefined,
       capability: url.searchParams.get('capability') || undefined,
       search: url.searchParams.get('search') || url.searchParams.get('q') || undefined,
       verified: verifiedParam === 'true' ? true : verifiedParam === 'false' ? false : undefined,

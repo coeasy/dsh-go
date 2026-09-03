@@ -6,6 +6,7 @@ import { startMcp } from '../../runtime/execution.mjs';
 import {
   mcpStatePath,
   mcpStatusSafely,
+  parseLinuxProcStartTime,
   parseWindowsWmicCreationDate,
   processRunning,
   readMcpProcessState,
@@ -58,6 +59,16 @@ function activeMcp(id: string, packageDir: string, server: string) {
 }
 
 describe('managed MCP process lifecycle', () => {
+  it('parses Linux proc start ticks without relying on ps', () => {
+    const fields = ['S', ...Array(18).fill('0'), '12345', '0'];
+    const stat = `4242 (node) ${fields.join(' ')}`;
+    const procStat = 'cpu  1 2 3 4\nbtime 1700000000\n';
+    expect(parseLinuxProcStartTime(stat, procStat, 100)).toBe(
+      new Date((1_700_000_000 + 12345 / 100) * 1_000).toISOString(),
+    );
+    expect(parseLinuxProcStartTime('malformed', procStat)).toBeNull();
+  });
+
   it('parses WMIC creation timestamps with timezone offsets', () => {
     expect(parseWindowsWmicCreationDate('CreationDate=20260825223015.123456-420')).toBe('2026-08-26T05:30:15.123Z');
     expect(parseWindowsWmicCreationDate('CreationDate=20260826053015.987654+000')).toBe('2026-08-26T05:30:15.987Z');
@@ -127,6 +138,33 @@ describe('managed MCP process lifecycle', () => {
     expect(result).toMatchObject({ id: 'reused-start', pid: 8484, running: true });
     expect(result.already_running).not.toBe(true);
     await expect(access(file)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('serializes concurrent starts so one caller cannot orphan the other process', async () => {
+    let starts = 0;
+    const start = async () => {
+      starts += 1;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      return {
+        type: 'mcp', id: 'concurrent', transport: 'stdio', managed_process: true, running: true,
+        pid: 8686, command: '/fake/node', args: ['server.mjs'], started_at: '2026-08-26T07:00:00.000Z',
+      };
+    };
+    const options = {
+      start,
+      isRunning: () => true,
+      getProcessStartTime: async () => '2026-08-26T07:00:00.000Z',
+      resolveExecutable: async () => null,
+    };
+    const [first, second] = await Promise.all([
+      startMcpSafely('concurrent', options),
+      startMcpSafely('concurrent', options),
+    ]);
+
+    expect(starts).toBe(1);
+    expect(first).toMatchObject({ running: true, pid: 8686 });
+    expect(second).toMatchObject({ running: true, pid: 8686 });
+    expect([first, second].filter((result) => result.already_running)).toHaveLength(1);
   });
 
   it('reports a reused PID as stale instead of claiming the MCP is running', async () => {

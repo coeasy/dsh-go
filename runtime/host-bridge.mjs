@@ -6,8 +6,14 @@ import { promisify } from 'node:util';
 import { assertPackageType, parsePackageSpec } from './package-model.mjs';
 
 const exec = promisify(execFile);
+const DEFAULT_COMMAND_TIMEOUT_MS = 30_000;
 const SPEC_PATTERN = /^(?:github:)?[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)?(?:@[A-Za-z0-9*.^~+_-]+)?$/;
 const CHANNEL_PATTERN = /^[A-Za-z0-9._-]+$/;
+
+function commandTimeout(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : DEFAULT_COMMAND_TIMEOUT_MS;
+}
 
 function safeBridgeSpec(value, fallbackType = 'plugin') {
   let spec = String(value || '').trim();
@@ -277,7 +283,13 @@ export async function registerProtocolHandler(options = {}) {
   }
 
   if (registration.platform === 'win32') {
-    for (const [command, args] of registration.commands) await exec(command, args, { windowsHide: true });
+    for (const [command, args] of registration.commands) {
+      await exec(command, args, {
+        windowsHide: true,
+        timeout: commandTimeout(options.commandTimeoutMs),
+        killSignal: 'SIGTERM',
+      });
+    }
     return { ...registration, registered: true };
   }
 
@@ -287,7 +299,11 @@ export async function registerProtocolHandler(options = {}) {
     const warnings = [];
     for (const [command, args] of registration.commands) {
       try {
-        await exec(command, args, { windowsHide: true });
+        await exec(command, args, {
+          windowsHide: true,
+          timeout: commandTimeout(options.commandTimeoutMs),
+          killSignal: 'SIGTERM',
+        });
       } catch (error) {
         warnings.push(`${command}: ${error.message}`);
       }

@@ -1,13 +1,16 @@
 // GET /api/v1/search?q=关键词&type=plugin|mcp|skill|agent&verified=true
-import { error, internalError, isNotModified, json, notModifiedResponse, type Env } from '../../_lib';
+import { error, internalError, isNotModified, json, notModifiedResponse, optionsResponse, type Env } from '../../_lib';
 import { ECOSYSTEM_TYPES, filterEcosystem, loadRegistryV3, toEcosystemItem, type EcosystemType } from '../../_registry';
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const url = new URL(request.url);
     const q = url.searchParams.get('q') || url.searchParams.get('search') || '';
+    if (!q.trim()) return error(400, 'q is required');
     const rawType = (url.searchParams.get('type') || '').toLowerCase();
     if (rawType && !ECOSYSTEM_TYPES.includes(rawType as EcosystemType)) return error(400, `invalid ecosystem type: ${rawType}`);
+    const rawChannel = (url.searchParams.get('channel') || '').toLowerCase();
+    if (rawChannel && !['stable', 'beta', 'nightly', 'dev'].includes(rawChannel)) return error(400, `invalid release channel: ${rawChannel}`);
     const verifiedRaw = url.searchParams.get('verified');
     if (verifiedRaw && !['true', 'false'].includes(verifiedRaw)) return error(400, 'verified must be true or false');
     const verified = verifiedRaw === 'true' ? true : verifiedRaw === 'false' ? false : undefined;
@@ -20,7 +23,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       search: q || undefined,
       type: rawType || undefined,
       verified,
-      channel: url.searchParams.get('channel') || undefined,
+      channel: rawChannel || undefined,
       capability: url.searchParams.get('capability') || undefined,
     });
     const items = matched.slice(0, limit).map(toEcosystemItem);
@@ -60,3 +63,5 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return internalError(cause);
   }
 };
+
+export const onRequestOptions: PagesFunction = () => optionsResponse();

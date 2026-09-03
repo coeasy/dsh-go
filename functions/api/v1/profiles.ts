@@ -1,4 +1,4 @@
-import { json } from '../../_lib';
+import { json, optionsResponse } from '../../_lib';
 
 export const onRequestGet: PagesFunction = async () => json({
   version: 1,
@@ -19,3 +19,5 @@ export const onRequestGet: PagesFunction = async () => json({
     example: { name: 'developer', packages: ['plugin:example@*', { type: 'mcp', id: 'server', version: '^1.0.0' }] },
   },
 });
+
+export const onRequestOptions: PagesFunction = () => optionsResponse();

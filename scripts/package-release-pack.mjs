@@ -8,6 +8,12 @@ import { findPackageManifest } from '../runtime/package-manifest.mjs';
 import { generateSbom } from './generate-sbom.mjs';
 
 const exec = promisify(execFile);
+const DEFAULT_GIT_TIMEOUT_MS = 120_000;
+
+function gitTimeout(value) {
+  const number = Number(value ?? process.env.DSH_GIT_TIMEOUT_MS);
+  return Number.isFinite(number) && number > 0 ? number : DEFAULT_GIT_TIMEOUT_MS;
+}
 
 function option(name, fallback = undefined) {
   const index = process.argv.indexOf(name);
@@ -22,8 +28,14 @@ function safeName(value) {
   return String(value || 'package').replace(/[^A-Za-z0-9_.-]+/g, '-');
 }
 
-async function git(root, args) {
-  const { stdout } = await exec('git', args, { cwd: root, windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
+async function git(root, args, options = {}) {
+  const { stdout } = await exec('git', args, {
+    cwd: root,
+    windowsHide: true,
+    maxBuffer: 8 * 1024 * 1024,
+    timeout: gitTimeout(options.timeoutMs),
+    killSignal: 'SIGTERM',
+  });
   return stdout.trim();
 }
 
@@ -60,7 +72,8 @@ async function main() {
   const packageRoot = scope.root;
   const outDir = resolve(option('--out-dir', join(root, 'dist')));
   const repository = option('--repository', process.env.GITHUB_REPOSITORY || '');
-  const commit = String(option('--commit', process.env.GITHUB_SHA || await git(root, ['rev-parse', 'HEAD']))).toLowerCase();
+  const commandOptions = { timeoutMs: option('--timeout') };
+  const commit = String(option('--commit', process.env.GITHUB_SHA || await git(root, ['rev-parse', 'HEAD'], commandOptions))).toLowerCase();
   const githubOutput = option('--github-output', process.env.GITHUB_OUTPUT || '');
   const found = await findPackageManifest(packageRoot);
   if (!found) throw new Error('no DSH package manifest found');
@@ -88,6 +101,8 @@ async function main() {
     cwd: root,
     windowsHide: true,
     maxBuffer: 8 * 1024 * 1024,
+    timeout: gitTimeout(commandOptions.timeoutMs),
+    killSignal: 'SIGTERM',
   });
   const digest = await sha256File(archiveFile);
   const artifactUrl = `https://github.com/${repository}/releases/download/${encodeURIComponent(tag)}/${archiveName}`;

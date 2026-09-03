@@ -6,6 +6,7 @@ import {
   createSecretMasterKey,
   preferredSecretKeyBackend,
   readExistingSecretMasterKey,
+  runSecretBackendCommand,
   secretProviderStatus,
 } from '../../runtime/secret-provider.mjs';
 
@@ -69,4 +70,13 @@ describe('native secret key providers', () => {
       legacy_file_key: true,
     });
   });
+
+  it('force-kills a secret backend that ignores SIGTERM after the timeout', async () => {
+    await expect(runSecretBackendCommand(
+      process.execPath,
+      ['-e', "process.on('SIGTERM', () => {}); setInterval(() => {}, 1000);"],
+      '',
+      { env: process.env, timeoutMs: 20 },
+    )).rejects.toMatchObject({ code: 'DSH_SECRET_BACKEND_TIMEOUT' });
+  }, 5_000);
 });

@@ -11,27 +11,36 @@ import {
   packagePath,
   pathExists,
   readRuntimeRegistry,
+  registryPath,
   runtimeRoot,
   upsertRuntimePackage,
   writeRuntimeRegistry,
 } from './registry.mjs';
 import { preflightPackage } from './preflight.mjs';
 import { readInstallLock } from './verifier.mjs';
+import { withPackageOperationLocks } from './package-operation-lock.mjs';
 
 export function transactionsRoot() {
   return resolve(process.env.DSH_TRANSACTION_HOME || join(runtimeRoot(), 'transactions'));
 }
 
 function transactionPath(id) {
-  return join(transactionsRoot(), id);
+  const value = String(id || '');
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(value)) throw new Error(`unsafe transaction id: ${value || '<empty>'}`);
+  return join(transactionsRoot(), value);
 }
 
 async function writeJournal(root, journal) {
   await mkdir(root, { recursive: true });
   const file = join(root, 'journal.json');
-  const temp = `${file}.tmp-${process.pid}`;
-  await writeFile(temp, `${JSON.stringify(journal, null, 2)}\n`, 'utf8');
-  await rename(temp, file);
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
+  try {
+    await writeFile(temp, `${JSON.stringify(journal, null, 2)}\n`, 'utf8');
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true }).catch(() => {});
+    throw error;
+  }
 }
 
 function requestFromEntry(entry) {
@@ -321,17 +330,23 @@ export async function executePackageTransaction(file, options = {}) {
     };
   }
 
-  const root = transactionPath(transaction.id);
-  const staged = [];
-  const moves = [];
-  let nextRegistry = transaction.runtimeRegistry;
-  let registryCommitted = false;
-  await writeJournal(root, journalPayload(transaction, moves, 'staging', { registry_file: options.registryFile || null }));
+  return withPackageOperationLocks(transaction.packages, async () => {
+    const root = transactionPath(transaction.id);
+    const staged = [];
+    const moves = [];
+    let nextRegistry = transaction.runtimeRegistry;
+    let registryCommitted = false;
 
-  try {
+    try {
+    await writeJournal(root, journalPayload(transaction, moves, 'staging', { registry_file: options.registryFile || null }));
     for (const pkg of transaction.packages) {
       const stageRoot = join(root, 'stage', pkg.type);
-      const plan = await installPackage(pkg, { root: stageRoot, approved: true });
+      const plan = await installPackage(pkg, {
+        ...options,
+        root: stageRoot,
+        approved: true,
+        operationLockHeld: true,
+      });
       const stagedTarget = join(stageRoot, safePackageId(pkg.id));
       staged.push({ pkg, plan, staged_target: stagedTarget });
     }
@@ -388,7 +403,14 @@ export async function executePackageTransaction(file, options = {}) {
 
     const written = await writeRuntimeRegistry(nextRegistry, options.registryFile);
     registryCommitted = true;
-    await writeJournal(root, { id: transaction.id, state: 'committed', generation: written.generation, order: transaction.order, moves }).catch(() => {});
+    await writeJournal(root, {
+      id: transaction.id,
+      state: 'committed',
+      generation: written.generation,
+      registry_file: options.registryFile || null,
+      order: transaction.order,
+      moves,
+    }).catch(() => {});
     await rm(root, { recursive: true, force: true }).catch(() => {});
     return {
       id: transaction.id,
@@ -399,26 +421,30 @@ export async function executePackageTransaction(file, options = {}) {
       order: transaction.order,
       restart_required: true,
     };
-  } catch (error) {
-    if (!registryCommitted) {
-      try {
-        await restoreMoves(moves, journalPayload(transaction, moves, 'recovery-required', { registry_file: options.registryFile || null }));
-        await rm(root, { recursive: true, force: true });
-      } catch (recoveryError) {
-        error.recovery_error = recoveryError.message;
-        await writeJournal(root, journalPayload(transaction, moves, 'recovery-required', {
-          registry_file: options.registryFile || null,
-          error: error.message,
-          recovery_error: recoveryError.message,
-        })).catch(() => {});
+    } catch (error) {
+      if (!registryCommitted) {
+        try {
+          await restoreMoves(moves, journalPayload(transaction, moves, 'recovery-required', { registry_file: options.registryFile || null }));
+          await rm(root, { recursive: true, force: true });
+        } catch (recoveryError) {
+          error.recovery_error = recoveryError.message;
+          await writeJournal(root, journalPayload(transaction, moves, 'recovery-required', {
+            registry_file: options.registryFile || null,
+            error: error.message,
+            recovery_error: recoveryError.message,
+          })).catch(() => {});
+        }
       }
+      throw error;
     }
-    throw error;
-  }
+  }, options);
 }
 
 export async function recoverPackageTransactions(options = {}) {
   const base = transactionsRoot();
+  const defaultRegistryFile = resolve(registryPath());
+  const requestedRegistryFile = resolve(options.registryFile || defaultRegistryFile);
+  const registryWasExplicit = Boolean(options.registryFile);
   let entries;
   try { entries = await readdir(base, { withFileTypes: true }); } catch (error) {
     if (error?.code === 'ENOENT') return { recovered: [] };
@@ -429,12 +455,29 @@ export async function recoverPackageTransactions(options = {}) {
     if (!entry.isDirectory()) continue;
     const root = join(base, entry.name);
     try {
-      const journal = JSON.parse(await readFile(join(root, 'journal.json'), 'utf8'));
+      let journal;
+      try {
+        journal = JSON.parse(await readFile(join(root, 'journal.json'), 'utf8'));
+      } catch (error) {
+        // Other local transaction implementations may use the same parent
+        // directory without this journal format. They are not recoverable by
+        // this module and must not make an unrelated startup unhealthy.
+        if (error?.code === 'ENOENT') continue;
+        throw error;
+      }
+      const journalRegistryFile = journal.registry_file ? resolve(journal.registry_file) : null;
+      // A shared transaction directory may contain journals for more than one
+      // explicitly selected runtime Registry. Never let startup for one
+      // Registry recover, delete, or report conflicts from another Registry.
+      // Legacy journals without a target are only safe for the process' own
+      // default Registry; an explicit alternate Registry must not claim them.
+      if (journalRegistryFile && journalRegistryFile !== requestedRegistryFile) continue;
+      if (!journalRegistryFile && registryWasExplicit && requestedRegistryFile !== defaultRegistryFile) continue;
       if (journal.state === 'committed') {
         await rm(root, { recursive: true, force: true });
         continue;
       }
-      const registryFile = journal.registry_file || options.registryFile;
+      const registryFile = journalRegistryFile || requestedRegistryFile;
       const currentRegistry = await readRuntimeRegistry(registryFile);
       if (transactionRecorded(currentRegistry, journal)) {
         await rm(root, { recursive: true, force: true });
@@ -453,7 +496,7 @@ export async function recoverPackageTransactions(options = {}) {
         );
       }
 
-      await restoreMoves(journal.moves || [], journal);
+      await withPackageOperationLocks(journal.order || [], () => restoreMoves(journal.moves || [], journal), { registryFile });
       await rm(root, { recursive: true, force: true });
       recovered.push({
         id: journal.id || entry.name,

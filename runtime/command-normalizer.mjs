@@ -4,9 +4,13 @@ function explicitVersion(spec) {
   return String(spec || '').lastIndexOf('@') > 0;
 }
 
+function isOfflinePackage(spec) {
+  return String(spec || '').trim().toLowerCase().endsWith('.dshpkg');
+}
+
 function withLatestVersion(spec) {
   const value = String(spec || '').trim();
-  if (!value || explicitVersion(value)) return value;
+  if (!value || explicitVersion(value) || isOfflinePackage(value)) return value;
   return `${value}@*`;
 }
 
