@@ -25,7 +25,7 @@ describe('catalog identity audit report', () => {
         metadata_source: 'github',
         category: 'tool',
         repo_url: 'https://github.com/owner/demo',
-        install_cmd: 'dsh plugin --profile tools add github:owner/demo',
+        install_cmd: 'dsh plugin install github:owner/demo',
         homepage: null,
         manifest_file: null,
         verified: false,
@@ -34,10 +34,12 @@ describe('catalog identity audit report', () => {
     const result = auditCatalogIdentity(data);
     const report = buildAuditReport(data, result);
     expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
     expect(report.schema_version).toBe(1);
     expect(report.catalog_updated_at).toBe('2026-08-25T00:00:00.000Z');
     expect(report.plugin_count).toBe(1);
     expect(report.error_count).toBe(0);
+    expect(report.warning_count).toBe(0);
     expect(report.ok).toBe(true);
     expect(report.errors).toEqual([]);
   });
@@ -52,13 +54,38 @@ describe('catalog identity audit report', () => {
         metadata_source: 'dsh-package',
         category: 'mcp',
         repo_url: 'https://github.com/owner/package',
-        install_cmd: 'dsh plugin --profile tools add github:owner/package',
+        install_cmd: 'dsh mcp install marketplace-package',
         homepage: null,
         manifest_file: 'dsh-package.json',
         verified: true,
+        package_id: 'marketplace-package',
+        package_type: 'mcp',
+        package_version: '1.2.3',
       }],
     };
     expect(auditCatalogIdentity(data).errors).toEqual([]);
+  });
+
+  it('accepts historical install commands only as migration warnings', () => {
+    const data: any = {
+      plugins: [{
+        slug: 'owner-legacy',
+        full_name: 'owner/legacy',
+        repo_name: 'legacy',
+        name: 'legacy',
+        metadata_source: 'github',
+        category: 'tool',
+        repo_url: 'https://github.com/owner/legacy',
+        install_cmd: 'dsh plugin --profile tools add github:owner/legacy',
+        homepage: null,
+        manifest_file: null,
+        verified: false,
+      }],
+    };
+    const result = auditCatalogIdentity(data);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('historical install_cmd');
   });
 
   it('captures stale package metadata and API URLs as audit errors', () => {
@@ -70,7 +97,7 @@ describe('catalog identity audit report', () => {
       metadata_source: 'github',
       category: 'agent',
       repo_url: 'https://api.github.com/repos/ruvnet/ruflo',
-      install_cmd: 'dsh plugin --profile tools add github:ruvnet/ruflo',
+      install_cmd: 'dsh plugin install github:ruvnet/ruflo',
       manifest_file: 'package.json',
       verified: true,
     }] };
