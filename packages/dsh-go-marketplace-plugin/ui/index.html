@@ -47,7 +47,7 @@
     function packageCard(item) {
       const state = item.activation_state || item.state || 'unknown';
       const update = item.update_available ? `<span>update ${escapeHtml(item.latest_stable)}</span>` : '';
-      return `<article class="card" data-type="${escapeHtml(item.type)}" data-id="${escapeHtml(item.id)}"><h3>${escapeHtml(item.id)}</h3><div class="meta"><span>${escapeHtml(item.type)}@${escapeHtml(item.version)}</span><span class="state ${escapeHtml(state)}">${escapeHtml(state)}</span>${update}</div><div class="actions">${item.update_available ? '<button data-action="update">Update</button>' : ''}<button data-action="doctor">Doctor</button><button data-action="rollback">Rollback</button></div></article>`;
+      return `<article class="card" data-type="${escapeHtml(item.type)}" data-id="${escapeHtml(item.id)}"><h3>${escapeHtml(item.id)}</h3><div class="meta"><span>${escapeHtml(item.type)}@${escapeHtml(item.version)}</span><span class="state ${escapeHtml(state)}">${escapeHtml(state)}</span>${update}</div><div class="actions">${item.update_available ? '<button data-action="update">Update</button>' : ''}<button data-action="repair">Repair</button><button data-action="rollback">Rollback</button></div></article>`;
     }
     function marketplaceCard(item) {
       const identity = item.identity || item;
