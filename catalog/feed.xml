@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 02 Sep 2026 21:09:21 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 03 Sep 2026 02:02:13 GMT</lastBuildDate>
     <item>
       <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -63,6 +63,13 @@
       <description>&lt;div align=&quot;center&quot; dsh omp tui OMP 风格的 DeepSeek Harness（dsh）终端界面 &lt;/div 简介 dsh omp tui 是 DeepSeek Harness（dsh）的独立 profile bundle（插件），负责终端呈现、输入交互与会话相关的 TUI 能力；agent、模型、工具、持久化和沙箱仍由 dsh h</description>
     </item>
     <item>
+      <title>🔄 DSH-ReasonixUI</title>
+      <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-03T01:43:45Z</guid>
+      <pubDate>Thu, 03 Sep 2026 01:43:45 GMT</pubDate>
+      <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
+    </item>
+    <item>
       <title>🔄 dsh-large-proj-perf</title>
       <link>https://github.com/orangeofcarl0-sys/dsh-large-proj-perf</link>
       <guid isPermaLink="false">orangeofcarl0-sys/dsh-large-proj-perf@2026-09-02T20:02:05Z</guid>
@@ -75,13 +82,6 @@
       <guid isPermaLink="false">orangeofcarl0-sys/dsh-fresh-start@2026-09-02T19:55:23Z</guid>
       <pubDate>Wed, 02 Sep 2026 19:55:23 GMT</pubDate>
       <description>dsh fresh start DSH（DeepSeek Harness） /fresh 命令： 一键总结当前对话 → 开启新对话（自动跳转）→ 归档老对话 。 为什么需要它 超大会话（数十万事件）工作一段时间后，live 事件树越滚越大，每次构建上下文都更慢、更占内存—— 在一个 67 万事件的会话里继续工作，卡顿和内存压力会持续恶化。 /fresh 把这个收尾动作变成一键操作：把历史压缩成一份</description>
-    </item>
-    <item>
-      <title>🔄 DSH-ReasonixUI</title>
-      <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-02T17:14:22Z</guid>
-      <pubDate>Wed, 02 Sep 2026 17:14:22 GMT</pubDate>
-      <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
       <title>🆕 dsh Music TUI</title>
@@ -98,6 +98,13 @@
       <description>dsh theme picker DeepSeek Harness 主题选择插件 —— 在设置面板中添加「主题」页面：统一管理应用主题与已安装的主题插件，同一时间仅一个主题生效，其余自动禁用。 A theme picker plugin for DeepSeek Harness: adds a Themes page to the Settings panel. It manages both a</description>
     </item>
     <item>
+      <title>🔄 DSH Go Marketplace</title>
+      <link>https://github.com/coeasy/dsh-go</link>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-03T02:01:40Z</guid>
+      <pubDate>Thu, 03 Sep 2026 02:01:40 GMT</pubDate>
+      <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
+    </item>
+    <item>
       <title>🆕 dsh-overleaf</title>
       <link>https://github.com/gychen-NJU/dsh-overleaf</link>
       <guid isPermaLink="false">gychen-NJU/dsh-overleaf@2026-09-02T18:16:08Z</guid>
@@ -110,13 +117,6 @@
       <guid isPermaLink="false">says693/dsh-composer-dynamic-island@2026-09-02T03:38:27Z</guid>
       <pubDate>Wed, 02 Sep 2026 03:38:27 GMT</pubDate>
       <description>DSH Composer Dynamic Island English 简体中文 Collapse selected DeepSeek Harness Web composer controls into a compact, upward expanding island without moving their DOM nodes or changing the host React tree</description>
-    </item>
-    <item>
-      <title>🔄 DSH Go Marketplace</title>
-      <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-02T16:43:49Z</guid>
-      <pubDate>Wed, 02 Sep 2026 16:43:49 GMT</pubDate>
-      <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
     </item>
     <item>
       <title>🆕 dsh-tui-browser-use</title>
