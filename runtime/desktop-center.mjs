@@ -20,6 +20,8 @@ export function desktopIpcContract() {
       install_plan: { method: 'POST', path: '/v1/install/plan', mutates: false },
       install_execute: { method: 'POST', path: '/v1/install/execute', mutates: true, approval_field: 'approved' },
       packages: { method: 'GET', path: '/v1/packages' },
+      package_logs: { method: 'GET', path: '/v1/packages/mcp/{id}/logs', mutates: false },
+      package_doctor: { method: 'POST', path: '/v1/packages/{type}/{id}/doctor', mutates: true, approval_field: 'approved' },
       package_action: { method: 'PATCH', path: '/v1/packages/{type}/{id}', mutates: true, approval_field: 'approved' },
       package_remove: { method: 'DELETE', path: '/v1/packages/{type}/{id}', mutates: true, approval_field: 'approved' },
     },
