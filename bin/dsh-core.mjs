@@ -69,6 +69,7 @@ Usage:
 
 Public release version remains 0.1.0 and canonical remote APIs remain under /api/v1.
 Dangerous or unknown permissions require explicit --yes approval before any dependency is installed.
+Any permission added by an update requires fresh explicit --yes approval, even when the permission is not classified high risk.
 Dry-run is always non-mutating and never requires approval.
 Host/deep-link mutation never executes without explicit local approval.
 Install/update/repair/rollback/enable/disable operations never restart the client automatically.
@@ -195,11 +196,18 @@ async function authorizeMutation(nextArgs) {
   if (!preflight.allowed) throw new Error(`preflight blocked ${request.action}: ${preflight.reasons.join('; ')}`);
   if (nextArgs.includes('--dry-run')) return preflight;
   const approved = nextArgs.includes('--yes');
-  if (preflight.permissions.requires_consent && !approved) {
-    const details = [...preflight.permissions.dangerous, ...preflight.permissions.unknown].join(', ');
+  const permissionEscalation = preflight.permission_escalation === true;
+  if ((preflight.permissions.requires_consent || permissionEscalation) && !approved) {
+    const highRisk = [...preflight.permissions.dangerous, ...preflight.permissions.unknown];
+    const escalated = (preflight.permission_escalations || []).flatMap((item) => item.added.map((permission) => `${item.key}:${permission}`));
+    const details = [...highRisk, ...escalated].join(', ');
     const error = new Error(`explicit permission consent required before install plan executes: ${details}`);
     error.code = 'DSH_PERMISSION_CONSENT_REQUIRED';
-    error.permissionReport = preflight.permissions;
+    error.permissionReport = {
+      ...preflight.permissions,
+      escalation: permissionEscalation,
+      escalations: preflight.permission_escalations || [],
+    };
     throw error;
   }
   if (approved) process.env.DSH_PERMISSION_APPROVED = '1';
