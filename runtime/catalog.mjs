@@ -46,7 +46,7 @@ async function ensureLegacyRegistryCache(resolvedSource, options = {}) {
   try {
     const cached = await exists(file);
     const metadata = cached ? await readCacheMetadata(metadataFile, resolvedSource) : null;
-    const headers = { Accept: 'application/json', 'User-Agent': 'dsh-runtime-v3' };
+    const headers = { Accept: 'application/json', 'User-Agent': 'dsh-runtime-v3', ...(options.headers || {}) };
     if (metadata?.etag) headers['If-None-Match'] = metadata.etag;
     if (metadata?.last_modified) headers['If-Modified-Since'] = metadata.last_modified;
 
