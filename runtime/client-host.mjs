@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { buildInstallDeepLink, deepLinkInstallPlan } from './client-bridge.mjs';
 import { assertPackageType } from './package-model.mjs';
 import { getRuntimePackage, readRuntimeRegistry } from './registry.mjs';
+import { withPackageActivationState } from './package-status.mjs';
 import { readPackageConfig, redactConfig, setPackageConfig, unsetPackageConfig } from './config-store.mjs';
 import { deleteSecret, listSecrets, setSecret } from './secret-store.mjs';
 
@@ -162,7 +163,7 @@ export async function createClientHost(options = {}) {
         requireApproval(request);
         const url = request.url || buildInstallDeepLink(request);
         const result = await executeDeepLink(url);
-        return json(req, res, 200, { ...result, restart_required: true, auto_restart: false });
+        return json(req, res, 200, { ...result, activation_state: 'pending-restart', restart_required: true, auto_restart: false });
       }
       if (requestUrl.pathname === '/v1/packages' && req.method === 'GET') {
         const registry = await readRuntimeRegistry();
@@ -170,7 +171,8 @@ export async function createClientHost(options = {}) {
         const type = requestUrl.searchParams.get('type');
         const packages = registry.packages
           .filter((record) => includeRemoved || record.state !== 'removed')
-          .filter((record) => !type || record.type === type);
+          .filter((record) => !type || record.type === type)
+          .map(withPackageActivationState);
         return json(req, res, 200, { packages, generation: registry.generation });
       }
 
@@ -199,7 +201,7 @@ export async function createClientHost(options = {}) {
         const registry = await readRuntimeRegistry();
         const record = getRuntimePackage(registry, route.type, route.id, { includeRemoved: requestUrl.searchParams.get('all') === 'true' });
         if (!record) return json(req, res, 404, { error: 'package not found', type: route.type, id: route.id });
-        return json(req, res, 200, { package: record });
+        return json(req, res, 200, { package: withPackageActivationState(record) });
       }
       if (route && req.method === 'GET' && route.action === 'config') {
         return json(req, res, 200, { type: route.type, id: route.id, config: redactConfig(await readPackageConfig(route.type, route.id)) });
@@ -226,7 +228,7 @@ export async function createClientHost(options = {}) {
         const argv = [route.type, 'remove', route.id, '--yes'];
         if (request.cascade === true) argv.push('--cascade');
         const result = await executeCli(argv);
-        return json(req, res, 200, { ...result, restart_required: true, auto_restart: false });
+        return json(req, res, 200, { ...result, activation_state: 'removed', restart_required: true, auto_restart: false });
       }
       if (route && req.method === 'PATCH' && !route.action) {
         const request = await body(req);
@@ -262,7 +264,7 @@ export async function createClientHost(options = {}) {
       return json(req, res, 404, { error: 'not found' });
     } catch (error) {
       const status = error.code === 'DSH_APPROVAL_REQUIRED' ? 409 : 400;
-      return json(req, res, status, { error: error.message, confirmation_required: status === 409 });
+      return json(req, res, status, { error: error.message, code: error.code || 'DSH_CLIENT_HOST_ERROR', confirmation_required: status === 409 });
     }
   });
   return { server, token, host, port };
