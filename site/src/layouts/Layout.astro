@@ -1,5 +1,6 @@
 ---
 import { u, apiUrl } from '../lib/urls';
+import { LANGUAGE_LABELS, SUPPORTED_LANGS } from '../i18n/config';
 import '../styles/marketplace-polish.css';
 import '../styles/marketplace-emphasis.css';
 
@@ -12,7 +13,7 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -57,7 +58,7 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
       a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:5px}
       header.nav{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(18px) saturate(1.35);-webkit-backdrop-filter:blur(18px) saturate(1.35);border-bottom:1px solid var(--border)}
       .nav-inner{max-width:var(--content-max);margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:20px}.brand{display:flex;align-items:center;gap:10px;color:var(--fg);font-size:18px;font-weight:850;letter-spacing:-.02em}.brand:hover{text-decoration:none}.brand img{width:30px;height:30px;border-radius:8px}.brand small{color:var(--muted);font-size:11px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;margin-left:3px}
-      .nav-links{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:14px}.nav-links a{color:var(--muted);padding:8px 12px;border-radius:999px;white-space:nowrap;font-weight:600}.nav-links a:hover{color:var(--fg);background:var(--bg-soft);text-decoration:none}.nav-links a.active{color:var(--accent);background:var(--accent-soft);font-weight:800}.nav-btn{border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:750;cursor:pointer;min-width:42px;min-height:36px;box-shadow:var(--shadow-sm)}.nav-btn:hover{color:var(--fg);border-color:var(--border-strong)}
+      .nav-links{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:14px}.nav-links a{color:var(--muted);padding:8px 12px;border-radius:999px;white-space:nowrap;font-weight:600}.nav-links a:hover{color:var(--fg);background:var(--bg-soft);text-decoration:none}.nav-links a.active{color:var(--accent);background:var(--accent-soft);font-weight:800}.nav-btn,.nav-select{border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:750;cursor:pointer;min-height:36px;box-shadow:var(--shadow-sm)}.nav-btn{min-width:42px}.nav-select{max-width:118px}.nav-btn:hover,.nav-select:hover{color:var(--fg);border-color:var(--border-strong)}
       main{max-width:var(--content-max);margin:0 auto;padding:28px 28px 84px}.grad-text{background:var(--grad-accent);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:750}.badge.green{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green)}.badge.amber{background:color-mix(in srgb,var(--amber) 15%,transparent);color:var(--amber)}.badge.gray{background:color-mix(in srgb,var(--muted) 13%,transparent);color:var(--muted)}
       footer{border-top:1px solid var(--border);background:color-mix(in srgb,var(--bg-soft) 74%,transparent)}.footer-inner{max-width:var(--content-max);margin:0 auto;padding:28px;display:flex;justify-content:space-between;gap:24px;color:var(--muted);font-size:13px}.footer-links{display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end}
       @media(max-width:980px){.nav-inner{align-items:flex-start;flex-wrap:wrap;padding-inline:20px}.brand small{display:none}.nav-links{width:100%;margin-left:0;overflow-x:auto;padding-bottom:3px}.nav-links a{padding:7px 10px}main{padding:24px 20px 68px}.footer-inner{padding:24px 20px;flex-direction:column}.footer-links{justify-content:flex-start}}
@@ -69,27 +70,35 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
       <div class="nav-inner">
         <a class="brand" href={u('/')}><img src={u('/favicon.svg')} alt="DSH" /><span>DSH <span class="grad-text">Marketplace</span></span><small>Ecosystem</small></a>
         <nav class="nav-links" data-path={Astro.url.pathname.replace(/\/$/, '') || '/'}>
-          <a href={u('/')} data-nav="/">Marketplace</a>
-          <a href={u('/profiles')} data-nav={u('/profiles')}>Profiles</a>
-          <a href={u('/trending')} data-nav={u('/trending')}>Trending</a>
-          <a href={u('/stats')} data-nav={u('/stats')}>Stats</a>
-          <a href={u('/docs')} data-nav={u('/docs')}>API</a>
-          <a href={u('/feed.xml')} target="_blank">RSS</a>
-          <button id="lang-toggle" class="nav-btn" type="button" title="Switch language">EN</button>
-          <button id="theme-toggle" class="nav-btn" type="button" aria-label="theme" title="Toggle theme">🌙</button>
+          <a href={u('/')} data-nav="/" data-i18n="nav_marketplace">Marketplace</a>
+          <a href={u('/profiles')} data-nav={u('/profiles')} data-i18n="nav_profiles">Profiles</a>
+          <a href={u('/trending')} data-nav={u('/trending')} data-i18n="nav_trending">Trending</a>
+          <a href={u('/stats')} data-nav={u('/stats')} data-i18n="nav_stats">Stats</a>
+          <a href={u('/docs')} data-nav={u('/docs')} data-i18n="nav_api">API</a>
+          <a href={u('/feed.xml')} target="_blank" data-i18n="nav_rss">RSS</a>
+          <select id="lang-select" class="nav-select" data-i18n-aria="aria_language" aria-label="Language">
+            {SUPPORTED_LANGS.map((lang) => <option value={lang}>{LANGUAGE_LABELS[lang]}</option>)}
+          </select>
+          <button id="theme-toggle" class="nav-btn" type="button" data-i18n-aria="aria_theme" aria-label="Toggle theme">🌙</button>
         </nav>
       </div>
     </header>
     <main><slot /></main>
     <footer>
       <div class="footer-inner">
-        <span>DSH Plugin Marketplace · Registry V3 + dsh-plugin Catalog · local install only</span>
-        <span class="footer-links"><a href={apiUrl('/api/v1/health')}>API health</a><a href={u('/ecosystem')}>Ecosystem alias</a><a href={u('/docs')}>Docs</a></span>
+        <span data-i18n="footer_summary">DSH Plugin Marketplace · Registry V3 + dsh-plugin Catalog · local install only</span>
+        <span class="footer-links">
+          <a href={apiUrl('/api/v1/health')} data-i18n="footer_api_health">API health</a>
+          <a href={u('/ecosystem')} data-i18n="footer_ecosystem">Ecosystem alias</a>
+          <a href={u('/docs')} data-i18n="footer_docs">Docs</a>
+        </span>
       </div>
     </footer>
     <script>
       import { initI18n } from '../scripts/i18n';
+      import { initTheme } from '../scripts/theme';
       initI18n();
+      initTheme();
     </script>
   </body>
 </html>

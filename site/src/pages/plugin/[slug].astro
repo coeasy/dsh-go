@@ -7,6 +7,7 @@ import { u } from '../../lib/urls';
 import { DETAIL_THRESHOLD } from '../../lib/threshold';
 import { fmtK } from '../../lib/format';
 import { buildRegistryRepoIndex, ecosystemType, primaryRegistryMatch, registryMatchesForPlugin } from '../../lib/marketplace';
+import { buildMarketplaceInstallPlan, normalizeMarketplacePackageType } from '../../lib/install-command';
 
 export async function getStaticPaths() {
   let plugins: any[] = [];
@@ -54,7 +55,14 @@ const updatedAt = plugin.updated_at ? new Date(plugin.updated_at).toLocaleDateSt
 const hash = [...String(plugin.name || plugin.slug)].reduce((value: number, char: string) => (value * 31 + char.charCodeAt(0)) >>> 0, 7);
 const hue = hash % 360;
 const initial = String(plugin.name || '?').trim().charAt(0).toUpperCase();
-const installCommand = plugin.install_cmd || `dsh plugin add github:${plugin.full_name}`;
+const installPlan = buildMarketplaceInstallPlan({
+  type: normalizeMarketplacePackageType(type),
+  id: primaryRegistry?.id || plugin.full_name || plugin.slug,
+  version: primaryRegistry?.version || '*',
+  channel: primaryRegistry?.channel || primaryRegistry?.release_channel || 'stable',
+});
+const installCommand = installPlan.command;
+const installDeepLink = installPlan.deepLink;
 const repoHref = plugin.repo_url || `https://github.com/${plugin.full_name}`;
 const readmeHref = `${repoHref}#readme`;
 const issuesHref = `${repoHref.replace(/\/$/, '')}/issues`;
@@ -122,7 +130,7 @@ const issuesHref = `${repoHref.replace(/\/$/, '')}/issues`;
             <button id="copy" data-cmd={installCommand}>Copy CLI</button>
           </div>
           <div class="install-actions">
-            <button class="primary" id="open-dsh" data-full={plugin.full_name} data-cmd={installCommand}>Open in DSH</button>
+            <button class="primary" id="open-dsh" data-link={installDeepLink} data-cmd={installCommand}>Open in DSH</button>
             <a class="secondary" href={u(`/install/${plugin.slug}.sh`)} download>Linux / macOS</a>
             <a class="secondary" href={u(`/install/${plugin.slug}.ps1`)} download>Windows</a>
             <a class="secondary" href={readmeHref} target="_blank" rel="noopener noreferrer">README ↗</a>
@@ -209,8 +217,8 @@ const issuesHref = `${repoHref.replace(/\/$/, '')}/issues`;
 
     const open = document.getElementById('open-dsh');
     open?.addEventListener('click', () => {
-      const full = open.getAttribute('data-full') || '';
-      window.location.href = `dsh://install?plugin=${encodeURIComponent(full)}`;
+      const link = open.getAttribute('data-link') || '';
+      if (link) window.location.href = link;
       const command = open.getAttribute('data-cmd') || '';
       if (command && navigator.clipboard) navigator.clipboard.writeText(command).catch(() => {});
     });

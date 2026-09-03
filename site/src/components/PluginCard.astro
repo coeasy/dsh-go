@@ -2,6 +2,7 @@
 import { u } from '../lib/urls';
 import { DETAIL_THRESHOLD } from '../lib/threshold';
 import { fmtK } from '../lib/format';
+import { buildMarketplaceInstallPlan, normalizeMarketplacePackageType } from '../lib/install-command';
 
 interface Props {
   slug: string;
@@ -25,7 +26,7 @@ interface Props {
 
 const {
   slug, name, description, stars, category, verified, trend, tags, isNew,
-  created, updated, full_name, install_cmd, language,
+  created, updated, full_name, language,
   ecosystemType = 'plugin', registryVersion = '', registryManaged = false,
 } = Astro.props;
 
@@ -35,6 +36,11 @@ const githubHref = `https://github.com/${full_name || slug}`;
 const cardHref = hasDetail ? detailHref : githubHref;
 const repoName = full_name?.split('/').pop() || '';
 const showRepoIdentity = Boolean(full_name && repoName && name.trim().toLowerCase() !== repoName.toLowerCase());
+const installPlan = buildMarketplaceInstallPlan({
+  type: normalizeMarketplacePackageType(ecosystemType),
+  id: full_name || slug,
+  version: registryManaged && registryVersion ? registryVersion : '*',
+});
 
 const hash = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
 const hue = hash % 360;
@@ -71,7 +77,7 @@ const CATEGORY_ZH: Record<string, string> = {
   data-language={language || ''}
   data-created={created}
   data-updated={updated}
-  data-cmd={install_cmd}
+  data-cmd={installPlan.command}
 >
   <a class="card-main" href={cardHref} aria-label={`${name} 详情`}>
     <div class="row1">
@@ -103,9 +109,7 @@ const CATEGORY_ZH: Record<string, string> = {
       {hasDetail
         ? <a class="detail-btn" href={detailHref}>详情</a>
         : <a class="detail-btn" href={githubHref} target="_blank" rel="noreferrer">GitHub ↗</a>}
-      {install_cmd && (
-        <button class="install-btn copy-cmd" type="button" data-copy-cmd={install_cmd} title={install_cmd} aria-label="复制安装命令">Copy install</button>
-      )}
+      <button class="install-btn copy-cmd" type="button" data-copy-cmd={installPlan.command} title={installPlan.command} aria-label="复制安装命令">Copy install</button>
     </span>
   </div>
 </article>
