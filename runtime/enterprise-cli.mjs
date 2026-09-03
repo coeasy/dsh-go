@@ -9,7 +9,7 @@ import {
   writeEnterprisePolicy,
 } from './enterprise-policy.mjs';
 import { inspectRegistries } from './registry-manager.mjs';
-import { executePackageTransaction } from './transaction.mjs';
+import { buildPackageTransaction, executePackageTransaction } from './transaction.mjs';
 import { withNormalizedPackagePlan } from './plan-normalizer.mjs';
 import { printCliValue } from './cli-output.mjs';
 
@@ -43,6 +43,33 @@ async function policyCommand(args) {
   throw new Error(`unknown enterprise policy action: ${action}`);
 }
 
+async function enforceTransactionPolicy(normalizedFile, options) {
+  const transaction = await buildPackageTransaction(normalizedFile, {
+    kind: options.kind,
+    catalog: options.catalog,
+    registryFile: options.registryFile,
+  });
+  await enforceEnterprisePolicy({
+    organization: options.organization,
+    plan_kind: options.kind,
+    plan_id: options.planId,
+    approved: options.policyApproved,
+  }, { policy: options.policy });
+  for (const pkg of transaction.packages) {
+    await enforceEnterprisePolicy({
+      organization: options.organization,
+      package: pkg,
+      publisher: pkg.publisher,
+      permissions: pkg.permissions,
+      registry: options.registry,
+      plan_kind: options.kind,
+      plan_id: options.planId,
+      approved: options.policyApproved,
+    }, { policy: options.policy });
+  }
+  return transaction;
+}
+
 async function organizationPlan(args) {
   const kind = args[1];
   const expected = kind === 'profile' ? 'apply' : kind === 'bundle' ? 'install' : null;
@@ -53,22 +80,28 @@ async function organizationPlan(args) {
   const policy = await readEnterprisePolicy(policyFile);
   const organization = option(args, '--organization', policy.organization || undefined);
   const planId = option(args, '--id', basename(file, '.json'));
-  await enforceEnterprisePolicy({
-    organization,
-    plan_kind: kind,
-    plan_id: planId,
-    approved: has(args, '--yes'),
-  }, { policy });
-  return withNormalizedPackagePlan(file, (normalizedFile) => executePackageTransaction(normalizedFile, {
-    kind,
-    organization,
-    planId,
-    enterprisePolicy: policy,
-    catalog: option(args, '--registry', 'catalog/registry-v3.json'),
-    registryFile: option(args, '--runtime-registry'),
-    approved: has(args, '--yes'),
-    dryRun: has(args, '--dry-run'),
-  }));
+  const catalog = option(args, '--registry', 'catalog/registry-v3.json');
+  const registryFile = option(args, '--runtime-registry');
+  const policyApproved = has(args, '--yes') || has(args, '--dry-run');
+  return withNormalizedPackagePlan(file, async (normalizedFile) => {
+    await enforceTransactionPolicy(normalizedFile, {
+      kind,
+      organization,
+      planId,
+      policy,
+      policyApproved,
+      catalog,
+      registryFile,
+      registry: option(args, '--registry') ? option(args, '--registry') : { name: 'official', trusted: true },
+    });
+    return executePackageTransaction(normalizedFile, {
+      kind,
+      catalog,
+      registryFile,
+      approved: has(args, '--yes'),
+      dryRun: has(args, '--dry-run'),
+    });
+  });
 }
 
 export async function runEnterpriseCli(args = process.argv.slice(2)) {
