@@ -130,7 +130,7 @@ describe('final acceptance: four-type package lifecycle matrix', () => {
       });
       const lock = await readInstallLock(installed.target);
       expect(lock).toMatchObject({ id: pkg.id, type: pkg.type, version: '1.0.0' });
-      await expect(verifyInstalledCommit(installed.target, v1Commit)).resolves.toBeUndefined();
+      await expect(verifyInstalledCommit(installed.target, v1Commit)).resolves.toBe(v1Commit.toLowerCase());
       await persistPending(registryFile, pkg, installed.target);
     }
 
