@@ -36,7 +36,7 @@ describe('Phase E private registry', () => {
   it('passes an injected bearer credential to a direct private Registry V3 fetch', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-private-fetch-'));
     const cacheFile = join(root, 'registry-v3.json');
-    let authorization = null;
+    let authorization: string | null = null;
     globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit) => {
       const headers = init?.headers as Record<string, string>;
       authorization = headers.Authorization || headers.authorization || null;
