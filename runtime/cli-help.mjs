@@ -20,6 +20,11 @@ ${translate('typed_package_commands', locale)}
   dsh <plugin|mcp|skill|agent> list|status|outdated|update|rollback|remove|uninstall|enable|disable|doctor|repair|history
   dsh <plugin|mcp|skill|agent> config get|set|unset ...
 
+Environment reproduction
+  dsh lock [--file <path>] [--runtime-registry <path>] [--store <path>]
+  dsh verify-lock [--file <path>] [--runtime-registry <path>] [--store <path>]
+  dsh restore [--file <path>] [--runtime-registry <path>] [--store <path>] [--yes|--dry-run]
+
 ${translate('runtime_controls', locale)}
   dsh mcp start|stop|restart|process-status|logs|probe|invoke ...
   dsh skill load|unload|inspect|invoke ...
@@ -50,6 +55,7 @@ ${translate('rules', locale)}
   - ${translate('rule_dry_run', locale)}
   - ${translate('rule_host_approval', locale)}
   - ${translate('rule_no_restart', locale)}
+  - Environment restore is local/CAS-backed, requires explicit --yes, and never auto-restarts the client.
   - ${translate('rule_pending_activation', locale)}
   - ${translate('rule_api', locale)}
 `;

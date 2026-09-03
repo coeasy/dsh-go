@@ -24,12 +24,16 @@ try {
   } else {
     const normalizedArgs = normalizeInstallVersionArgs(args);
     process.argv = [...process.argv.slice(0, 2), ...normalizedArgs];
-    const offline = await import('../runtime/offline-cli.mjs');
-    if (offline.isOfflineCommand(normalizedArgs)) await offline.runOfflineCli(normalizedArgs);
+    const environment = await import('../runtime/environment-cli.mjs');
+    if (environment.isEnvironmentCommand(normalizedArgs)) await environment.runEnvironmentCli(normalizedArgs);
     else {
-      const discovery = await import('../runtime/discovery-cli.mjs');
-      if (discovery.isDiscoveryCommand(normalizedArgs)) await discovery.runDiscoveryCli(normalizedArgs);
-      else await import('./dsh-core.mjs');
+      const offline = await import('../runtime/offline-cli.mjs');
+      if (offline.isOfflineCommand(normalizedArgs)) await offline.runOfflineCli(normalizedArgs);
+      else {
+        const discovery = await import('../runtime/discovery-cli.mjs');
+        if (discovery.isDiscoveryCommand(normalizedArgs)) await discovery.runDiscoveryCli(normalizedArgs);
+        else await import('./dsh-core.mjs');
+      }
     }
   }
 } catch (error) {
