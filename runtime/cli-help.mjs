@@ -27,10 +27,11 @@ Publisher ecosystem
 
 Registry federation
   dsh registry list [--file <path>]
-  dsh registry add <name> <url> [--priority <n>] [--trusted]
+  dsh registry add <name> <url> [--priority <n>] [--trusted] [--organization <id>] [--scope public|private] [--auth-env <ENV_VAR>]
   dsh registry remove <name>
   dsh registry refresh
   dsh registry doctor
+  dsh <plugin|mcp|skill|agent> install <id> --registry <name> [--yes|--dry-run]
 
 Desktop and enterprise
   dsh enterprise status [--policy-file <path>] [--registries-file <path>]
@@ -81,10 +82,11 @@ ${translate('rules', locale)}
   - ${translate('rule_no_restart', locale)}
   - Environment restore and .dshpkg install are local, integrity-checked, permission-gated, and never auto-restart the client.
   - Multi-registry package identity conflicts fail closed instead of silently overriding publishers.
+  - Private registry credentials are referenced by environment-variable name and are never persisted in registries.json.
   - Revoked or critical-advisory package versions are blocked by resolver and installer policy.
   - Enterprise policy can constrain registries, publishers, packages, permissions, lockfiles, profiles and bundles; enforcement is local and fail-closed.
   - Organization profile/bundle operations reuse the same Package Manager transaction engine instead of creating a separate enterprise installer.
-  - The desktop Marketplace plugin uses authenticated local Client Host IPC; it cannot restart DSH and only emits a host-owned restart intent.
+  - The desktop Marketplace plugin uses authenticated local Client Host/Tauri IPC; it cannot restart DSH and only emits a host-owned restart intent.
   - Publisher submission planning is local and non-mutating; Registry publication remains an explicit reviewed workflow.
   - Marketplace localization changes presentation only; package identity, permissions, versions, commits and trust evidence remain language-neutral.
   - Marketplace APIs and MCP are discovery/plan-only and cannot execute installation remotely.
