@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { resolveEdgePackageRequest } from '../functions/_package-request';
 import { packageDetailV2, trustFor } from '../functions/_marketplace-v4';
 import { normalizeManifestV2, validateManifestV2 } from '../runtime/manifest-v2.mjs';
-import { applyLocalizationOverlay } from '../runtime/localization-overlay.mjs';
 import { buildSearchIndexV3 } from '../scripts/build-search-index-v3.mjs';
 import { buildPublisherSubmission } from '../runtime/publisher-workflow.mjs';
 
@@ -77,6 +76,7 @@ describe('Marketplace Platform V4', () => {
       compatibility: { os: ['linux', 'darwin', 'win32'] }, security: { license: 'MIT', provenance: { uri: 'prov.json' }, signature: { uri: 'sig.json' }, sbom: { uri: 'sbom.json' } }, plugin: { entrypoint: 'index.mjs' },
     };
     await writeFile(join(root, 'dsh-package.json'), JSON.stringify(manifest));
+    await writeFile(join(root, 'package.json'), JSON.stringify({ name: 'demo', version: '0.1.0', type: 'module' }));
     await writeFile(join(root, 'index.mjs'), 'export default {};\n');
     const result = await buildPublisherSubmission(root);
     expect(result).toMatchObject({ publishable: true, mutation: false, registry_submission: 'pull-request-or-approved-publisher-workflow' });
