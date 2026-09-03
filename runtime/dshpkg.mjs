@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { chmod, lstat, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { assertPermissionConsent } from './permissions.mjs';
 import { assertPackageSecurityAllowed } from './advisory.mjs';
 import { packageKey } from './package-model.mjs';
@@ -94,9 +94,11 @@ export async function readDshPackage(file) {
 }
 
 async function materialize(files, root) {
+  const base = resolve(root);
   for (const item of files) {
-    const target = resolve(root, item.path);
-    if (!target.startsWith(resolve(root) + '/') && target !== resolve(root)) throw new Error(`unsafe .dshpkg path: ${item.path}`);
+    const target = resolve(base, item.path);
+    const rel = relative(base, target);
+    if (!rel || rel.startsWith('..') || isAbsolute(rel)) throw new Error(`unsafe .dshpkg path: ${item.path}`);
     if (item.kind === 'directory') await mkdir(target, { recursive: true });
     else if (item.kind === 'file') {
       await mkdir(dirname(target), { recursive: true });
