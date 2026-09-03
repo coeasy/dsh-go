@@ -45,9 +45,10 @@ describe('Package Manager Core V2', () => {
     const root = record('root', '1.2.0', { dependencies: [{ id: 'dep', type: 'plugin', range: '^2.0.0' }] });
     const old = record('root', '1.0.0');
     const result = explainResolution(registry([old, root, dep]), { type: 'plugin', id: 'root', version: '^1.0.0', channel: 'stable' });
+    const graph = result.graph as Record<string, Array<{ id: string; version: string }>>;
     expect(result.selected.version).toBe('1.2.0');
     expect(result.dependency_order.map((item: any) => item.key)).toEqual(['plugin:dep', 'plugin:root']);
-    expect(result.graph.root[0]).toMatchObject({ id: 'dep', version: '2.1.0' });
+    expect(graph.root[0]).toMatchObject({ id: 'dep', version: '2.1.0' });
   });
 
   it('fails closed when registries publish the same package under different publisher identities', async () => {
