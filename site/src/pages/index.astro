@@ -11,8 +11,9 @@ try {
   lastSyncAt = String(meta.last_sync?.at || meta.pipeline?.run_at || '');
 } catch { /* sync metadata is optional during isolated site checks */ }
 
-const lastSyncDate = lastSyncAt ? new Date(lastSyncAt) : null;
-const validLastSync = lastSyncDate && Number.isFinite(lastSyncDate.getTime());
+const lastSyncTimestamp = Date.parse(lastSyncAt);
+const validLastSync = Number.isFinite(lastSyncTimestamp);
+const lastSyncDate = validLastSync ? new Date(lastSyncTimestamp) : new Date(0);
 const lastSyncDateLabel = validLastSync
   ? new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Shanghai',
