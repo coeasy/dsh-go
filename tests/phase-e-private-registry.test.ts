@@ -1,4 +1,4 @@
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -66,6 +66,40 @@ describe('Phase E private registry', () => {
     expect(process.env.DSH_REGISTRY_AUTH_ENV).toBe('DSH_TEST_PRIVATE_REGISTRY_TOKEN');
   });
 
+  it('inherits the installed registry automatically for update and repair', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-private-update-'));
+    const runtimeFile = join(root, 'runtime.json');
+    await writeFile(runtimeFile, JSON.stringify({
+      schema_version: 3,
+      generation: 4,
+      packages: [{
+        type: 'plugin',
+        id: 'corp-package',
+        version: '1.0.0',
+        state: 'pending-restart',
+        enabled: true,
+        activated: false,
+        restart_required: true,
+        source: {
+          provider: 'github',
+          repo: 'acme/corp-package',
+          commit: 'a'.repeat(40),
+          registry: 'corp',
+          registry_url: 'https://registry.example.test/registry-v3.json',
+          registry_trusted: true,
+          registry_organization: 'acme',
+        },
+        runtime: {},
+        capabilities: [],
+        dependencies: [],
+      }],
+    }));
+    const update = await registryCli.inheritInstalledRegistryArgs(['plugin', 'update', 'corp-package', '--runtime-registry', runtimeFile]);
+    const repair = await registryCli.inheritInstalledRegistryArgs(['plugin', 'repair', 'corp-package', '--runtime-registry', runtimeFile]);
+    expect(update.slice(-2)).toEqual(['--registry', 'corp']);
+    expect(repair.slice(-2)).toEqual(['--registry', 'corp']);
+  });
+
   it('passes an injected bearer credential to a direct private Registry V3 fetch', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-private-fetch-'));
     const cacheFile = join(root, 'registry-v3.json');
@@ -85,6 +119,33 @@ describe('Phase E private registry', () => {
     });
     expect(result.registry_version).toBe(3);
     expect(authorization).toBe('Bearer enterprise-token');
+  });
+
+  it('never reuses a stale cache whose provenance belongs to another registry source', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-private-stale-'));
+    const cacheFile = join(root, 'registry-v3.json');
+    await writeFile(cacheFile, JSON.stringify({ registry_version: 3, schema_version: '3.0.0', plugins: [{ id: 'wrong-source' }] }));
+    await writeFile(`${cacheFile}.meta.json`, JSON.stringify({ source: 'https://registry-a.example/registry-v3.json', etag: 'a' }));
+    globalThis.fetch = async () => { throw new Error('network unavailable'); };
+    await expect(catalog.loadRegistrySource('https://registry-b.example/registry-v3.json', { cacheFile, allowStale: true })).rejects.toThrow('network unavailable');
+  });
+
+  it('does not leak private authorization by falling back to the public official registry', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-private-no-fallback-'));
+    const cacheFile = join(root, 'registry-v3.json');
+    const requests: string[] = [];
+    globalThis.fetch = async (input: RequestInfo | URL) => {
+      requests.push(String(input));
+      return new Response('unavailable', { status: 503 });
+    };
+    await expect(catalog.ensureRegistryCache('https://registry.example.test/distribution-v1/index.json', {
+      cacheFile,
+      allowStale: false,
+      headers: { Authorization: 'Bearer enterprise-token' },
+    })).rejects.toThrow();
+    expect(requests.length).toBeGreaterThan(0);
+    expect(requests.every((url) => url.startsWith('https://registry.example.test/'))).toBe(true);
+    expect(requests.some((url) => url.includes('coeasy.github.io'))).toBe(false);
   });
 
   it('fails closed when an auth_env is configured but not populated', async () => {
