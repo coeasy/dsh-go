@@ -19,6 +19,20 @@ function option(args, name, fallback = undefined) {
 }
 function has(args, name) { return args.includes(name); }
 
+function selectedRegistry(args) {
+  const selectedName = String(process.env.DSH_SELECTED_REGISTRY_NAME || '').trim();
+  const explicit = option(args, '--registry');
+  if (selectedName) {
+    return {
+      name: selectedName,
+      url: String(process.env.DSH_SELECTED_REGISTRY_URL || explicit || '').trim() || null,
+      trusted: process.env.DSH_SELECTED_REGISTRY_TRUSTED === '1',
+      organization: String(process.env.DSH_SELECTED_REGISTRY_ORGANIZATION || '').trim() || null,
+    };
+  }
+  return explicit ? { name: explicit, url: explicit, trusted: false, organization: null } : { name: 'official', trusted: true };
+}
+
 export function isEnterpriseCommand(args = []) {
   return args[0] === 'enterprise' || args[0] === 'organization';
 }
@@ -92,7 +106,7 @@ async function organizationPlan(args) {
       policyApproved,
       catalog,
       registryFile,
-      registry: option(args, '--registry') ? option(args, '--registry') : { name: 'official', trusted: true },
+      registry: selectedRegistry(args),
     });
     return executePackageTransaction(normalizedFile, {
       kind,
