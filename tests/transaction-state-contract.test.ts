@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { migrateRuntimeRegistry } from '../runtime/registry.mjs';
-import { deriveActivationState } from '../runtime/status.mjs';
+import { packageActivationState } from '../runtime/package-status.mjs';
 
 describe('Transaction lifecycle persistence contract', () => {
   it('writes new transaction completions as pending-restart rather than legacy installed', async () => {
@@ -28,6 +28,6 @@ describe('Transaction lifecycle persistence contract', () => {
       }],
     });
     expect(registry.packages[0].state).toBe('installed');
-    expect(deriveActivationState(registry.packages[0])).toBe('pending-restart');
+    expect(packageActivationState(registry.packages[0])).toBe('pending-restart');
   });
 });
