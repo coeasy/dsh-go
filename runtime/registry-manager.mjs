@@ -134,8 +134,7 @@ export async function resolveAcrossRegistries(raw, options = {}) {
       }
       candidates.push({ registry, data, package: resolved, publisher_identity: publisherIdentity(resolved) });
     } catch (error) {
-      if (!['DSH_PACKAGE_YANKED', 'DSH_PACKAGE_REVOKED'].includes(error.code)) continue;
-      throw error;
+      if (['DSH_PACKAGE_YANKED', 'DSH_PACKAGE_REVOKED', 'DSH_SECURITY_ADVISORY_BLOCKED'].includes(error.code)) throw error;
     }
   }
   if (!candidates.length) {
