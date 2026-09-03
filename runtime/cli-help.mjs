@@ -32,6 +32,14 @@ Registry federation
   dsh registry refresh
   dsh registry doctor
 
+Desktop and enterprise
+  dsh enterprise status [--policy-file <path>] [--registries-file <path>]
+  dsh enterprise policy show [--file <path>]
+  dsh enterprise policy validate <policy.json>
+  dsh enterprise policy apply <policy.json> --yes [--file <path>]
+  dsh organization profile apply <profile.json> [--organization <id>] [--yes|--dry-run]
+  dsh organization bundle install <bundle.json> [--organization <id>] [--yes|--dry-run]
+
 ${translate('typed_package_commands', locale)}
   dsh <plugin|mcp|skill|agent> search <query>
   dsh <plugin|mcp|skill|agent> info <id|owner/repo>[@version]
@@ -74,6 +82,9 @@ ${translate('rules', locale)}
   - Environment restore and .dshpkg install are local, integrity-checked, permission-gated, and never auto-restart the client.
   - Multi-registry package identity conflicts fail closed instead of silently overriding publishers.
   - Revoked or critical-advisory package versions are blocked by resolver and installer policy.
+  - Enterprise policy can constrain registries, publishers, packages, permissions, lockfiles, profiles and bundles; enforcement is local and fail-closed.
+  - Organization profile/bundle operations reuse the same Package Manager transaction engine instead of creating a separate enterprise installer.
+  - The desktop Marketplace plugin uses authenticated local Client Host IPC; it cannot restart DSH and only emits a host-owned restart intent.
   - Publisher submission planning is local and non-mutating; Registry publication remains an explicit reviewed workflow.
   - Marketplace localization changes presentation only; package identity, permissions, versions, commits and trust evidence remain language-neutral.
   - Marketplace APIs and MCP are discovery/plan-only and cannot execute installation remotely.
