@@ -174,7 +174,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
             const security: any = selection.package.security || {};
             result = { package: { id: item.id, type: item.type, version: item.version }, advisories: security.advisories || [], yanked: security.yanked === true, revoked: security.revoked === true, minimum_safe_version: security.minimum_safe_version || null };
           } else {
-            result = packageDetailV2(selection.package, overlay);
+            const detail = packageDetailV2(selection.package, overlay);
+            result = { ...item, ...detail, id: item.id, type: item.type, version: item.version, channel: item.channel, local_install: detail.local_install };
           }
           break;
         }
