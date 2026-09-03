@@ -10,6 +10,7 @@ interface Props {
 }
 const { title = 'DSH Plugin Marketplace', description = 'DeepSeek Harness Plugin / MCP / Skill / Agent Marketplace' } = Astro.props;
 const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
+const CANONICAL_URL = new URL(Astro.url.pathname, SITE).toString();
 ---
 
 <!doctype html>
@@ -26,13 +27,13 @@ const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="DSH Marketplace" />
     <link rel="apple-touch-icon" href={u('/favicon.svg')} />
-    <link rel="canonical" href={`${SITE}${Astro.url.pathname}`} />
+    <link rel="canonical" href={CANONICAL_URL} />
     <meta name="robots" content="index, follow" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="DSH Plugin Marketplace" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={`${SITE}${Astro.url.pathname}`} />
+    <meta property="og:url" content={CANONICAL_URL} />
     <meta name="twitter:card" content="summary" />
 
     <style>

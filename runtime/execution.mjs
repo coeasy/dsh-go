@@ -10,6 +10,14 @@ import { getRuntimePackage, readRuntimeRegistry, runtimeRoot } from './registry.
 import { buildExecutionEnv } from './execution-env.mjs';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
+const CHILD_CLEANUP_TIMEOUT_MS = 1_000;
+const localMcpProcesses = new Map();
+
+export function getLocalMcpProcessStartTime(pid) {
+  const entry = localMcpProcesses.get(Number(pid));
+  if (!entry || entry.child.exitCode !== null || entry.child.signalCode !== null) return null;
+  return entry.startedAt;
+}
 
 function executionRoot() {
   return resolve(process.env.DSH_EXECUTION_HOME || join(runtimeRoot(), 'run'));
@@ -127,6 +135,41 @@ async function waitSpawn(child) {
   });
 }
 
+function childHasExited(child) {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+function waitChildExit(child, timeoutMs = CHILD_CLEANUP_TIMEOUT_MS) {
+  if (childHasExited(child)) return Promise.resolve(true);
+  return new Promise((resolveWait) => {
+    const done = (exited) => {
+      clearTimeout(timer);
+      child.removeListener('exit', onExit);
+      child.removeListener('error', onError);
+      resolveWait(exited);
+    };
+    const onExit = () => done(true);
+    const onError = () => done(true);
+    const timer = setTimeout(() => done(false), timeoutMs);
+    child.once('exit', onExit);
+    child.once('error', onError);
+  });
+}
+
+async function terminateChild(child) {
+  if (!child?.pid || childHasExited(child)) return;
+  const gracefulExit = waitChildExit(child);
+  try { child.kill('SIGTERM'); } catch { /* process exited between checks */ }
+  if (await gracefulExit) return;
+
+  const forcedExit = waitChildExit(child);
+  try {
+    if (process.platform === 'win32') child.kill();
+    else child.kill('SIGKILL');
+  } catch { /* process exited between checks */ }
+  await forcedExit;
+}
+
 export async function startMcp(id, options = {}) {
   const record = await runtimeRecord('mcp', id, options);
   const config = await resolvedConfig(record, 'mcp', id);
@@ -151,6 +194,7 @@ export async function startMcp(id, options = {}) {
   const handle = await open(log, 'a', 0o600);
   let child;
   try {
+    const startedAt = new Date().toISOString();
     child = spawn(String(descriptor.command), descriptor.args, {
       cwd: record.path,
       env: buildExecutionEnv(descriptor.env),
@@ -159,14 +203,27 @@ export async function startMcp(id, options = {}) {
       windowsHide: true,
     });
     await waitSpawn(child);
+    localMcpProcesses.set(child.pid, { child, startedAt });
+    child.once('exit', () => {
+      if (localMcpProcesses.get(child.pid)?.child === child) localMcpProcesses.delete(child.pid);
+    });
+    if (childHasExited(child)) {
+      const error = new Error(`MCP process exited before startup completed: ${id}`);
+      error.code = 'DSH_MCP_START_FAILED';
+      throw error;
+    }
     child.unref();
+    return await writeState('mcp', id, {
+      type: 'mcp', id, transport: 'stdio', pid: child.pid, running: true, managed_process: true,
+      command: descriptor.command, args: descriptor.args, log, started_at: localMcpProcesses.get(child.pid)?.startedAt || startedAt,
+    });
+  } catch (error) {
+    await terminateChild(child);
+    if (child?.pid && localMcpProcesses.get(child.pid)?.child === child) localMcpProcesses.delete(child.pid);
+    throw error;
   } finally {
     await handle.close();
   }
-  return writeState('mcp', id, {
-    type: 'mcp', id, transport: 'stdio', pid: child.pid, running: true, managed_process: true,
-    command: descriptor.command, args: descriptor.args, log, started_at: new Date().toISOString(),
-  });
 }
 
 export async function stopMcp(id, options = {}) {
@@ -304,7 +361,7 @@ async function invokeStdioMcp(record, descriptor, tool, input, timeoutMs) {
   } finally {
     lines.close();
     child.stdin.end();
-    if (!child.killed) child.kill();
+    await terminateChild(child);
   }
 }
 
@@ -384,20 +441,20 @@ async function runExecutable(command, args, record, descriptor, input, timeoutMs
   child.stderr.on('data', (chunk) => { stderr += chunk; });
   let timer;
   const completed = new Promise((accept, reject) => {
+    const finish = (code, signal) => code === 0 ? accept(code) : reject(new Error(stderr || `executor exited ${code ?? signal}`));
     child.once('error', reject);
-    child.once('exit', (code, signal) => code === 0 ? accept(code) : reject(new Error(stderr || `executor exited ${code ?? signal}`)));
+    if (childHasExited(child)) finish(child.exitCode, child.signalCode);
+    else child.once('close', finish);
   });
   const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => {
-      if (!child.killed) child.kill();
-      reject(new Error('executor timed out'));
-    }, timeoutMs);
+    timer = setTimeout(() => reject(new Error('executor timed out')), timeoutMs);
   });
   child.stdin.end(`${JSON.stringify(input ?? {})}\n`);
   try {
     await Promise.race([completed, timeout]);
   } finally {
     clearTimeout(timer);
+    await terminateChild(child);
   }
   const trimmed = stdout.trim();
   let output = trimmed;

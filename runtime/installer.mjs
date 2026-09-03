@@ -98,7 +98,10 @@ export async function installPackage(inputPackage, options = {}) {
   if (!sourceVerification.ok) throw new Error('runtime package verification failed: ' + sourceVerification.errors.join('; '));
 
   let pkg = inputPackage;
-  if (!isReleaseArtifact(pkg.artifact) && options.releaseDiscovery !== false && !options.repositoryUrl) {
+  // A dry-run must be deterministic and side-effect free. Release discovery
+  // performs a network lookup, so defer it to the real install path; the
+  // caller can still explicitly provide a release artifact when planning.
+  if (!options.dryRun && !isReleaseArtifact(pkg.artifact) && options.releaseDiscovery !== false && !options.repositoryUrl) {
     const discovered = await discoverReleaseArtifact({ ...pkg, type }, {
       timeout: options.releaseDiscoveryTimeout,
       strict: options.releaseDiscoveryStrict === true,

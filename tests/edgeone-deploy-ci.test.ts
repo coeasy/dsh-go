@@ -1,3 +1,6 @@
+import { mkdtemp, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildDeployArgs,
@@ -330,6 +333,43 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(classifyFailure('no valid JSON result', 0)).toBe('protocol');
     expect(classifyFailure('unexpected provider error', 1)).toBe('api');
     expect(classifyFailure('', 124, true)).toBe('transport');
+  });
+
+  it('does not classify an informational existing-project message as a conflict', () => {
+    expect(classifyFailure(
+      'Project dsh-go already exists. Using existing project.\nDeployment failed with status: Failed',
+      1,
+    )).toBe('api');
+  });
+
+  it('persists failure diagnostics after a CLI deployment error', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const root = await mkdtemp(join(tmpdir(), 'dsh-edgeone-diagnostic-'));
+    const diagnosticFile = join(root, 'diagnostic.json');
+
+    await expect(deployEdgeOne({
+      env: {
+        EDGEONE_API_TOKEN: 'test-token',
+        EDGEONE_PROJECT: 'dsh-go',
+        EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+        EDGEONE_CLI_VERSION: '1.6.28',
+        EDGEONE_DEPLOY_RETRIES: '1',
+        EDGEONE_ATTEMPT_TIMEOUT_SECONDS: '30',
+        EDGEONE_DIAGNOSTIC_FILE: diagnosticFile,
+      },
+      execute: async () => ({
+        code: 1,
+        stdout: 'Project dsh-go already exists. Using existing project.\nDeployment failed with status: Failed',
+        stderr: '[cli] File uploaded successfully',
+        timedOut: false,
+      }),
+      wait: async () => undefined,
+    })).rejects.toThrow('EdgeOne deployment failed after retry policy [api]');
+
+    const diagnostic = JSON.parse(await readFile(diagnosticFile, 'utf8'));
+    expect(diagnostic.failure_class).toBe('api');
+    expect(diagnostic.transfer_diagnostics).toContain('File uploaded successfully');
   });
 
   it('extracts the last complete JSON object from mixed CLI output', () => {

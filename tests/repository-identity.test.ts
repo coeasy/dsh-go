@@ -76,6 +76,18 @@ describe('repository identity', () => {
     expect(ensureUniquePluginSlugs(merged, existing).map((p: any) => p.slug)).toEqual(merged.map((p: any) => p.slug));
   });
 
+  it('keeps advancing when the preferred repository-id slug is already claimed', () => {
+    const replacement: any[] = [
+      { full_name: 'owner/two', slug: 'owner-one', repo_id: '7' },
+    ];
+    expect(ensureUniquePluginSlugs(replacement, [
+      { full_name: 'owner/one', slug: 'owner-one', repo_id: '1' },
+      { full_name: 'owner/existing', slug: 'owner-one-7', repo_id: '8' },
+    ]).map((plugin: any) => plugin.slug)).toEqual([
+      'owner-one-7-2',
+    ]);
+  });
+
   it('prunes stale package-only and override-only history when repositories are no longer discoverable', () => {
     const existing: any[] = [
       { full_name: 'owner/package-only', name: 'package-name', category: 'tool', manifest_file: 'package.json', verified: true, topics: ['deepseek-harness'] },

@@ -4,7 +4,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { mcpStatus, startMcp } from './execution.mjs';
+import { getLocalMcpProcessStartTime, mcpStatus, startMcp } from './execution.mjs';
 import { safePackageId } from './package-model.mjs';
 import { runtimeRoot } from './registry.mjs';
 
@@ -49,6 +49,34 @@ export function parseWindowsWmicCreationDate(value) {
   return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
 }
 
+/**
+ * Linux exposes a stable process start tick in /proc/<pid>/stat. The comm
+ * field is parenthesized and may itself contain spaces or closing parens, so
+ * split only after the final closing paren. Field 22 is the twentieth field
+ * after state (field 3). `btime` converts the boot-relative tick to epoch.
+ */
+export function parseLinuxProcStartTime(statValue, procStatValue, clockTicks = 100) {
+  const stat = String(statValue || '');
+  const closingParen = stat.lastIndexOf(')');
+  if (closingParen < 0) return null;
+  const fields = stat.slice(closingParen + 1).trim().split(/\s+/);
+  const startTicks = Number(fields[19]);
+  const bootSeconds = Number(String(procStatValue || '').match(/(?:^|\n)btime\s+(\d+)/m)?.[1]);
+  const hz = Number(clockTicks);
+  if (!Number.isFinite(startTicks) || !Number.isFinite(bootSeconds) || !Number.isFinite(hz) || hz <= 0) return null;
+  const timestamp = (bootSeconds + startTicks / hz) * 1_000;
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+}
+
+async function linuxProcessStartTime(pid, options = {}) {
+  const readProcFile = options.readProcFile || readFile;
+  const [statValue, procStatValue] = await Promise.all([
+    readProcFile(`/proc/${pid}/stat`, 'utf8'),
+    readProcFile('/proc/stat', 'utf8'),
+  ]);
+  return parseLinuxProcStartTime(statValue, procStatValue, options.procClockTicks || 100);
+}
+
 async function windowsProcessStartTime(pid) {
   const windir = process.env.WINDIR || 'C:\\Windows';
   const wmic = join(windir, 'System32', 'wbem', 'WMIC.exe');
@@ -84,12 +112,31 @@ async function windowsProcessStartTime(pid) {
 async function defaultProcessStartTime(pid, platform = process.platform) {
   if (platform === 'win32') return windowsProcessStartTime(pid);
 
-  const { stdout } = await execFileAsync('ps', ['-p', String(pid), '-o', 'lstart='], {
-    encoding: 'utf8',
-    timeout: 3_000,
-    env: { PATH: process.env.PATH || '', LC_ALL: 'C' },
-  });
-  return stdout.trim() || null;
+  // Some minimal/container images ship a procps `ps` that fails while
+  // looking up its own process. Prefer the kernel-backed Linux source so
+  // managed-process stop/status never fails closed merely because `ps` is
+  // unavailable or broken.
+  if (platform === 'linux') {
+    try {
+      const procValue = await linuxProcessStartTime(pid);
+      if (procValue) return procValue;
+    } catch {
+      // Continue to ps and the in-process ChildProcess identity fallback.
+    }
+  }
+
+  try {
+    const { stdout } = await execFileAsync('ps', ['-p', String(pid), '-o', 'lstart='], {
+      encoding: 'utf8',
+      timeout: 3_000,
+      env: { PATH: process.env.PATH || '', LC_ALL: 'C' },
+    });
+    return stdout.trim() || null;
+  } catch (cause) {
+    const localStart = getLocalMcpProcessStartTime(pid);
+    if (localStart) return localStart;
+    throw cause;
+  }
 }
 
 export async function readProcessStartTime(pid, options = {}) {

@@ -11,6 +11,7 @@ import {
   packagePath,
   pathExists,
   readRuntimeRegistry,
+  registryPath,
   runtimeRoot,
   upsertRuntimePackage,
   writeRuntimeRegistry,
@@ -388,7 +389,14 @@ export async function executePackageTransaction(file, options = {}) {
 
     const written = await writeRuntimeRegistry(nextRegistry, options.registryFile);
     registryCommitted = true;
-    await writeJournal(root, { id: transaction.id, state: 'committed', generation: written.generation, order: transaction.order, moves }).catch(() => {});
+    await writeJournal(root, {
+      id: transaction.id,
+      state: 'committed',
+      generation: written.generation,
+      registry_file: options.registryFile || null,
+      order: transaction.order,
+      moves,
+    }).catch(() => {});
     await rm(root, { recursive: true, force: true }).catch(() => {});
     return {
       id: transaction.id,
@@ -419,6 +427,9 @@ export async function executePackageTransaction(file, options = {}) {
 
 export async function recoverPackageTransactions(options = {}) {
   const base = transactionsRoot();
+  const defaultRegistryFile = resolve(registryPath());
+  const requestedRegistryFile = resolve(options.registryFile || defaultRegistryFile);
+  const registryWasExplicit = Boolean(options.registryFile);
   let entries;
   try { entries = await readdir(base, { withFileTypes: true }); } catch (error) {
     if (error?.code === 'ENOENT') return { recovered: [] };
@@ -429,12 +440,29 @@ export async function recoverPackageTransactions(options = {}) {
     if (!entry.isDirectory()) continue;
     const root = join(base, entry.name);
     try {
-      const journal = JSON.parse(await readFile(join(root, 'journal.json'), 'utf8'));
+      let journal;
+      try {
+        journal = JSON.parse(await readFile(join(root, 'journal.json'), 'utf8'));
+      } catch (error) {
+        // Other local transaction implementations may use the same parent
+        // directory without this journal format. They are not recoverable by
+        // this module and must not make an unrelated startup unhealthy.
+        if (error?.code === 'ENOENT') continue;
+        throw error;
+      }
+      const journalRegistryFile = journal.registry_file ? resolve(journal.registry_file) : null;
+      // A shared transaction directory may contain journals for more than one
+      // explicitly selected runtime Registry. Never let startup for one
+      // Registry recover, delete, or report conflicts from another Registry.
+      // Legacy journals without a target are only safe for the process' own
+      // default Registry; an explicit alternate Registry must not claim them.
+      if (journalRegistryFile && journalRegistryFile !== requestedRegistryFile) continue;
+      if (!journalRegistryFile && registryWasExplicit && requestedRegistryFile !== defaultRegistryFile) continue;
       if (journal.state === 'committed') {
         await rm(root, { recursive: true, force: true });
         continue;
       }
-      const registryFile = journal.registry_file || options.registryFile;
+      const registryFile = journalRegistryFile || requestedRegistryFile;
       const currentRegistry = await readRuntimeRegistry(registryFile);
       if (transactionRecorded(currentRegistry, journal)) {
         await rm(root, { recursive: true, force: true });

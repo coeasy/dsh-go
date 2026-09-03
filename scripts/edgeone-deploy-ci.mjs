@@ -70,7 +70,7 @@ export function classifyFailure(text, status = 1, timedOut = false) {
   if (/(^|[^0-9])429([^0-9]|$)|rate[ _-]*limit|quota|exceed(?:ed|s)? .*limit|project exceeds [0-9]+ limit/i.test(value)) {
     return 'quota';
   }
-  if (/(^|[^0-9])409([^0-9]|$)|already exists|project.*exists|name.*conflict|duplicate project/i.test(value)) {
+  if (/(^|[^0-9])409([^0-9]|$)|(?:project|name).*(?:conflict|duplicate)|duplicate project|cannot create .*project|project .*already exists(?![. ]+using existing project)/i.test(value)) {
     return 'project_conflict';
   }
   if (status === 0) return 'protocol';
@@ -359,6 +359,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   let lastDeploymentId = '';
   let lastProjectId = '';
   let lastConsoleUrl = '';
+  let lastTransferDiagnostics = '';
 
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     attemptsMade = attempt;
@@ -376,6 +377,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     });
     const combined = `${result.stdout || ''}\n${result.stderr || ''}`;
     const transferDiagnostics = cliTransferDiagnostics(combined, token);
+    lastTransferDiagnostics = transferDiagnostics;
     if (transferDiagnostics) {
       console.log('EdgeOne CLI transfer diagnostics:');
       console.log(transferDiagnostics);
@@ -507,7 +509,7 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     failure_class: failureClass,
     attempts: attemptsMade,
     error: lastError,
-    transfer_diagnostics: transferDiagnostics || undefined,
+    transfer_diagnostics: lastTransferDiagnostics || undefined,
   }, token);
   console.error(`::error title=EdgeOne deployment failure [${failureClass}]::${annotationValue(lastError)}`);
   throw new Error(`EdgeOne deployment failed after retry policy [${failureClass}]: ${lastError}`);

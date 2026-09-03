@@ -22,6 +22,12 @@ export function environmentLockPath() {
   return resolve(process.env.DSH_ENVIRONMENT_LOCK || join(homedir(), '.dsh', 'dsh.lock'));
 }
 
+function environmentTransactionRoot(options = {}) {
+  if (options.transactionHome) return resolve(options.transactionHome);
+  if (options.registryFile) return join(dirname(resolve(options.registryFile)), 'environment-transactions');
+  return resolve(process.env.DSH_ENVIRONMENT_TRANSACTION_HOME || join(runtimeRoot(), 'environment-transactions'));
+}
+
 function canonicalLockPayload(lock) {
   return {
     schema_version: ENVIRONMENT_LOCK_SCHEMA_VERSION,
@@ -260,7 +266,7 @@ export async function restoreEnvironmentLock(options = {}) {
   }
 
   const transactionId = randomUUID();
-  const root = join(runtimeRoot(), 'transactions', `environment-restore-${transactionId}`);
+  const root = join(environmentTransactionRoot(options), `environment-restore-${transactionId}`);
   const moves = [];
   let nextRegistry = runtime;
   await mkdir(root, { recursive: true });

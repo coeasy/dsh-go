@@ -64,6 +64,7 @@ describe('CI and deployment hygiene', () => {
   it('requires Provider Adapter Registry artifacts in every production deploy', () => {
     for (const name of ['deploy.yml', 'deploy-pages.yml', 'deploy-edgeone.yml']) {
       expect(workflow(name)).toContain('site/dist/catalog/provider-adapters.json');
+      expect(workflow(name)).toContain('test -f site/dist/publishers/index.html');
     }
   });
 
@@ -73,14 +74,43 @@ describe('CI and deployment hygiene', () => {
     const gate = readFileSync(join(root, 'scripts', 'deploy-gate-v3.mjs'), 'utf8');
     expect(deploy).toContain('site/dist/catalog/plugins.json');
     expect(deploy).toContain('site/dist/catalog/catalog-v3/index.json');
+    expect(deploy).toContain("PUBLIC_SITE_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev");
+    expect(deploy).toContain("PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev");
     expect(deploy).toContain('Validate Cloudflare Pages file limits');
+    expect(deploy).toContain('static_file_count=$(find site/dist -type f | wc -l | tr -d \' \')');
+    expect(deploy).toContain('Cloudflare Pages static file count: $static_file_count/19000');
     expect(deploy).toContain('find site/dist -type f -size +26214400c');
     expect(deploy).toContain('pages deploy site/dist');
     expect(edgeone).toContain('Validate EdgeOne static file limits');
+    expect(edgeone).toContain('static_file_count=$(find site/dist -type f | wc -l | tr -d \' \')');
+    expect(edgeone).toContain('EdgeOne static file count: $static_file_count/19000');
     expect(edgeone).toContain('find site/dist -type f -size +26214400c');
     expect(gate).toContain('MAX_PUBLIC_REGISTRY_BYTES = 24 * 1024 * 1024');
     expect(gate).toContain('registry-v3.json exceeds the 24 MiB public single-file budget');
     expect(deploy).not.toContain('rm -f .deploy/cloudflare/catalog/plugins.json');
+  });
+
+  it('keeps the browser-only publisher directory compatible with inline scripts', () => {
+    const page = readFileSync(join(root, 'site', 'src', 'pages', 'publishers', 'index.astro'), 'utf8');
+    expect(page).toContain("fetch(registryUrl, { headers: { accept: 'application/json' } })");
+    expect(page).not.toContain('await fetch(registryUrl');
+    expect(page).toContain("u('/catalog/registry-v3.json')");
+  });
+
+  it('keeps API documentation links on the configured API origin', () => {
+    const docs = readFileSync(join(root, 'site', 'src', 'pages', 'docs.astro'), 'utf8');
+    expect(docs).toContain('href={`${BASE}/api/v1/meta`}');
+    expect(docs).not.toContain('href="/api/v1/meta"');
+    expect(docs).toContain('curl "${BASE}/api/v1/plugins');
+  });
+
+  it('does not duplicate the repository base in canonical URLs', () => {
+    const layout = readFileSync(join(root, 'site', 'src', 'layouts', 'Layout.astro'), 'utf8');
+    expect(layout).toContain('const CANONICAL_URL = new URL(Astro.url.pathname, SITE).toString();');
+    expect(layout).not.toContain('${SITE}${Astro.url.pathname}');
+    const localized = readFileSync(join(root, 'site', 'src', 'pages', '[locale]', 'index.astro'), 'utf8');
+    expect(localized).toContain('const absoluteUrl = (path: string) => new URL(path, SITE).toString();');
+    expect(localized).not.toContain('${SITE}${u(');
   });
 
   it('keeps EdgeOne production verification on a stable target and native upload config', () => {
@@ -94,6 +124,8 @@ describe('CI and deployment hygiene', () => {
     expect(edgeone).toContain('site/dist/edgeone.json');
     expect(edgeoneConfig).toContain('"source": "/version.json"');
     expect(edgeoneConfig).toContain('no-store, no-cache, must-revalidate');
+    expect(edgeone).toContain("PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev");
+    expect(edgeone).not.toContain('PUBLIC_API_URL: ${{ env.EDGEONE_SITE_URL }}');
   });
 
   it('monitors Provider Adapter Registry convergence across every production host without env-sized Registry payloads', () => {
