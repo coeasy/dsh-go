@@ -55,7 +55,7 @@ describe('final acceptance: plugin install runtime flow', () => {
     const lock = JSON.parse(await readFile(join(installed.target, '.dsh-install.json'), 'utf8'));
     expect(lock.type).toBe('plugin');
     expect(lock.version).toBe(version);
-    expect(lock.commit).toBe(commit);
+    expect(lock.source?.commit).toBe(commit);
 
     await writeRuntimeRegistry({
       schema_version: 3,
