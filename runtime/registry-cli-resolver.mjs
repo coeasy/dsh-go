@@ -1,7 +1,14 @@
+import { parsePackageRequest } from './package-model.mjs';
+import { getRuntimePackage, readRuntimeRegistry } from './registry.mjs';
 import { readRegistries } from './registry-manager.mjs';
 
 function optionIndex(args, name) {
   return args.indexOf(name);
+}
+
+function option(args, name, fallback = undefined) {
+  const index = optionIndex(args, name);
+  return index >= 0 ? args[index + 1] : fallback;
 }
 
 function shouldPreserveRegistryName(args) {
@@ -17,6 +24,32 @@ function looksLikeSource(value) {
     || input.includes('\\')
     || input.includes('/')
     || input.toLowerCase().endsWith('.json');
+}
+
+function updateTarget(args) {
+  const command = args[0];
+  if (['plugin', 'mcp', 'skill', 'agent'].includes(command) && ['update', 'repair'].includes(args[1]) && args[2]) {
+    const request = parsePackageRequest(args[2], { defaultType: command, defaultVersion: '*' });
+    return { type: request.type, id: request.id };
+  }
+  if (command === 'package' && ['update', 'repair'].includes(args[1]) && args[2]) {
+    const request = parsePackageRequest(args[2], { defaultType: option(args, '--type', 'plugin'), defaultVersion: '*' });
+    return { type: request.type, id: request.id };
+  }
+  return null;
+}
+
+export async function inheritInstalledRegistryArgs(args = []) {
+  const values = [...args];
+  if (optionIndex(values, '--registry') >= 0) return values;
+  const target = updateTarget(values);
+  if (!target) return values;
+  const runtime = await readRuntimeRegistry(option(values, '--runtime-registry'));
+  const record = getRuntimePackage(runtime, target.type, target.id);
+  const source = String(record?.source_registry || '').trim();
+  if (!source || source === 'official') return values;
+  values.push('--registry', source);
+  return values;
 }
 
 export async function resolveNamedRegistryArgs(args = []) {
