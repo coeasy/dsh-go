@@ -2,11 +2,14 @@
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { normalizeInstallVersionArgs } from '../runtime/command-normalizer.mjs';
+import { isHelpRequest, nativePackageManagerHelp } from '../runtime/cli-help.mjs';
 
 const args = process.argv.slice(2);
 
 try {
-  if (args[0] === 'provider') {
+  if (isHelpRequest(args)) {
+    console.log(nativePackageManagerHelp());
+  } else if (args[0] === 'provider') {
     const script = fileURLToPath(new URL('../runtime/provider-cli.mjs', import.meta.url));
     process.argv = [process.execPath, script, ...args.slice(1)];
     await import(pathToFileURL(resolve(script)).href);
