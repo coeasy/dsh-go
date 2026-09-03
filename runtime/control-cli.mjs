@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
+import { basename } from 'node:path';
 import {
   inspectSkill,
   invokeMcp,
@@ -13,10 +14,11 @@ import { mcpStatusSafely, restartMcpSafely, startMcpSafely, stopMcpSafely } from
 import { readPackageConfig, redactConfig, setPackageConfig, unsetPackageConfig } from './config-store.mjs';
 import { deleteSecret, getSecret, listSecrets, secretStoreStatus, setSecret } from './secret-store.mjs';
 import { planRuntimeRemoval, removeRuntimePackageSafe } from './dependency-guard.mjs';
-import { executePackageTransaction, recoverPackageTransactions } from './transaction.mjs';
+import { buildPackageTransaction, executePackageTransaction, recoverPackageTransactions } from './transaction.mjs';
 import { assertPackageType } from './package-model.mjs';
 import { withNormalizedPackagePlan } from './plan-normalizer.mjs';
 import { printCliError, printCliValue } from './cli-output.mjs';
+import { enforceEnterprisePolicy, readEnterprisePolicy } from './enterprise-policy.mjs';
 
 const args = process.argv.slice(2);
 
@@ -120,17 +122,43 @@ async function typedRemoval(type) {
   return print(await removeRuntimePackageSafe(type, id, { cascade: has('--cascade') }));
 }
 
+async function enforcePlanPolicy(kind, normalizedFile, catalog, registryFile) {
+  const transaction = await buildPackageTransaction(normalizedFile, { kind, catalog, registryFile });
+  const policy = await readEnterprisePolicy(option('--policy-file'));
+  const planId = transaction.document.name || basename(transaction.document.file, '.json');
+  const policyApproved = has('--yes') || has('--dry-run');
+  const registry = option('--registry') || { name: 'official', trusted: true };
+  await enforceEnterprisePolicy({ plan_kind: kind, plan_id: planId, approved: policyApproved }, { policy });
+  for (const pkg of transaction.packages) {
+    await enforceEnterprisePolicy({
+      package: pkg,
+      publisher: pkg.publisher,
+      permissions: pkg.permissions,
+      registry,
+      plan_kind: kind,
+      plan_id: planId,
+      approved: policyApproved,
+    }, { policy });
+  }
+}
+
 async function planCommand(kind) {
   const expected = kind === 'profile' ? 'apply' : 'install';
   if (args[1] !== expected) throw new Error(`unknown ${kind} action: ${args[1]}`);
   const file = args[2];
   if (!file) throw new Error(`${kind} ${expected} requires a JSON file`);
-  const result = await withNormalizedPackagePlan(file, (normalizedFile) => executePackageTransaction(normalizedFile, {
-    kind,
-    catalog: option('--registry', 'catalog/registry-v3.json'),
-    approved: has('--yes'),
-    dryRun: has('--dry-run'),
-  }));
+  const catalog = option('--registry', 'catalog/registry-v3.json');
+  const registryFile = option('--runtime-registry');
+  const result = await withNormalizedPackagePlan(file, async (normalizedFile) => {
+    await enforcePlanPolicy(kind, normalizedFile, catalog, registryFile);
+    return executePackageTransaction(normalizedFile, {
+      kind,
+      catalog,
+      registryFile,
+      approved: has('--yes'),
+      dryRun: has('--dry-run'),
+    });
+  });
   return print(result);
 }
 
