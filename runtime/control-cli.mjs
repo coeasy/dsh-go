@@ -29,6 +29,20 @@ function option(name, fallback = undefined) {
 function has(name) { return args.includes(name); }
 function print(value) { return printCliValue(value, { argv: args }); }
 
+function selectedRegistry() {
+  const selectedName = String(process.env.DSH_SELECTED_REGISTRY_NAME || '').trim();
+  const explicit = option('--registry');
+  if (selectedName) {
+    return {
+      name: selectedName,
+      url: String(process.env.DSH_SELECTED_REGISTRY_URL || explicit || '').trim() || null,
+      trusted: process.env.DSH_SELECTED_REGISTRY_TRUSTED === '1',
+      organization: String(process.env.DSH_SELECTED_REGISTRY_ORGANIZATION || '').trim() || null,
+    };
+  }
+  return explicit ? { name: explicit, url: explicit, trusted: false, organization: null } : { name: 'official', trusted: true };
+}
+
 async function inputValue() {
   const file = option('--input-file');
   const raw = file ? await readFile(file, 'utf8') : option('--input', '{}');
@@ -127,7 +141,7 @@ async function enforcePlanPolicy(kind, normalizedFile, catalog, registryFile) {
   const policy = await readEnterprisePolicy(option('--policy-file'));
   const planId = transaction.document.name || basename(transaction.document.file, '.json');
   const policyApproved = has('--yes') || has('--dry-run');
-  const registry = option('--registry') || { name: 'official', trusted: true };
+  const registry = selectedRegistry();
   await enforceEnterprisePolicy({ plan_kind: kind, plan_id: planId, approved: policyApproved }, { policy });
   for (const pkg of transaction.packages) {
     await enforceEnterprisePolicy({
