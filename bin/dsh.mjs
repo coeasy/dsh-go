@@ -26,21 +26,25 @@ try {
     await enterprise.runEnterpriseCli(args);
   } else {
     const normalizedArgs = normalizeInstallVersionArgs(args);
-    process.argv = [...process.argv.slice(0, 2), ...normalizedArgs];
+    const registrySelector = await import('../runtime/registry-cli-resolver.mjs');
+    const selected = await registrySelector.resolveNamedRegistryArgs(normalizedArgs);
+    const routedArgs = selected.args;
+    process.argv = [...process.argv.slice(0, 2), ...routedArgs];
     const environment = await import('../runtime/environment-cli.mjs');
-    if (environment.isEnvironmentCommand(normalizedArgs)) await environment.runEnvironmentCli(normalizedArgs);
+    if (environment.isEnvironmentCommand(routedArgs)) await environment.runEnvironmentCli(routedArgs);
     else {
       const manager = await import('../runtime/package-manager-v2-cli.mjs');
-      if (manager.isPackageManagerV2Command(normalizedArgs)) await manager.runPackageManagerV2Cli(normalizedArgs);
+      if (manager.isPackageManagerV2Command(routedArgs)) await manager.runPackageManagerV2Cli(routedArgs);
       else {
         const offline = await import('../runtime/offline-cli.mjs');
-        if (offline.isOfflineCommand(normalizedArgs)) await offline.runOfflineCli(normalizedArgs);
+        if (offline.isOfflineCommand(routedArgs)) await offline.runOfflineCli(routedArgs);
         else {
           const discovery = await import('../runtime/discovery-cli.mjs');
-          if (discovery.isDiscoveryCommand(normalizedArgs)) await discovery.runDiscoveryCli(normalizedArgs);
+          if (discovery.isDiscoveryCommand(routedArgs)) await discovery.runDiscoveryCli(routedArgs);
           else {
             const guard = await import('../runtime/enterprise-guard.mjs');
-            await guard.guardEnterpriseMutation(normalizedArgs);
+            await guard.guardEnterpriseMutation(routedArgs);
+            process.argv = [...process.argv.slice(0, 2), ...routedArgs];
             await import('./dsh-core.mjs');
           }
         }
