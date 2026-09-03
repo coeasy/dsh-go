@@ -8,10 +8,23 @@ ${translate('native_package_manager', locale)}
   dsh package info <type:id|type:owner/repo> [--channel stable|beta|nightly|dev]
   dsh package outdated [--type plugin|mcp|skill|agent]
   dsh package install <type:id|type:owner/repo>[@version] [--yes|--dry-run]
+  dsh package install ./package.dshpkg [--yes|--dry-run]
+  dsh package export <type:id> --output package.dshpkg
+  dsh package graph <type:id>[@range]
+  dsh package explain <type:id>[@range]
+  dsh package advisories <type:id>[@range]
+  dsh package resolve-registry <type:id>[@range] [--registry <name>]
   dsh package list [--type plugin|mcp|skill|agent]
   dsh package status [type:id]
   dsh package lock <type:id> [--runtime-registry <path>]
   dsh cache status [--registry-cache <path>]
+
+Registry federation
+  dsh registry list [--file <path>]
+  dsh registry add <name> <url> [--priority <n>] [--trusted]
+  dsh registry remove <name>
+  dsh registry refresh
+  dsh registry doctor
 
 ${translate('typed_package_commands', locale)}
   dsh <plugin|mcp|skill|agent> search <query>
@@ -55,7 +68,9 @@ ${translate('rules', locale)}
   - ${translate('rule_dry_run', locale)}
   - ${translate('rule_host_approval', locale)}
   - ${translate('rule_no_restart', locale)}
-  - Environment restore is local/CAS-backed, requires explicit --yes, and never auto-restarts the client.
+  - Environment restore and .dshpkg install are local, integrity-checked, permission-gated, and never auto-restart the client.
+  - Multi-registry package identity conflicts fail closed instead of silently overriding publishers.
+  - Revoked or critical-advisory package versions are blocked by resolver and installer policy.
   - ${translate('rule_pending_activation', locale)}
   - ${translate('rule_api', locale)}
 `;

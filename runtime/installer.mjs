@@ -7,6 +7,7 @@ import { packageRoot, pluginRoot } from './registry.mjs';
 import { verifyInstalledCommit, verifyResolvedPackage } from './verifier.mjs';
 import { assertCompatibility } from './compatibility.mjs';
 import { assertPermissionConsent, inspectPermissions } from './permissions.mjs';
+import { assertPackageSecurityAllowed } from './advisory.mjs';
 import { hasDeclaredSupplyChainEvidence, verifySecurityEvidence } from './supply-chain-verifier.mjs';
 import { verifySupplyChainIdentity } from './supply-chain-identity.mjs';
 import { installReleaseArtifact, isReleaseArtifact } from './artifact-installer.mjs';
@@ -65,6 +66,7 @@ function identityFailures(report) {
 export async function installPackage(inputPackage, options = {}) {
   const type = assertPackageType(inputPackage?.type || 'plugin');
   assertNotYanked({ ...inputPackage, type });
+  assertPackageSecurityAllowed({ ...inputPackage, type });
   const sourceVerification = verifyResolvedPackage({ ...inputPackage, type });
   if (!sourceVerification.ok) throw new Error('runtime package verification failed: ' + sourceVerification.errors.join('; '));
 
@@ -76,6 +78,7 @@ export async function installPackage(inputPackage, options = {}) {
     });
     if (discovered) pkg = { ...pkg, artifact: { ...pkg.artifact, ...discovered } };
   }
+  assertPackageSecurityAllowed({ ...pkg, type });
   const verification = verifyResolvedPackage({ ...pkg, type });
   if (!verification.ok) throw new Error('runtime package verification failed: ' + verification.errors.join('; '));
 
