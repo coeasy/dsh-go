@@ -3,9 +3,10 @@ import { compareVersions } from './semver.mjs';
 import { assertPackageType, inferPackageType, packageKey, parsePackageRequest } from './package-model.mjs';
 import { readRuntimeRegistry } from './registry.mjs';
 import { printCliValue } from './cli-output.mjs';
+import { dependencyGraphFromExplanation, explainPackageResolution } from './solver-explain.mjs';
 
 const PACKAGE_TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
-const DISCOVERY_ACTIONS = new Set(['search', 'info', 'outdated']);
+const DISCOVERY_ACTIONS = new Set(['search', 'info', 'outdated', 'graph', 'explain']);
 
 function option(args, name, fallback = undefined) {
   const index = args.indexOf(name);
@@ -64,7 +65,7 @@ export function latestSearchablePackages(registry, options = {}) {
     const type = inferPackageType(item);
     if (requestedType && type !== requestedType) continue;
     if (releaseChannel(item) !== channel) continue;
-    if (item.security?.yanked === true) continue;
+    if (item.security?.yanked === true || item.security?.revoked === true || item.security?.recalled === true) continue;
     const key = packageKey(type, item.id);
     const current = latest.get(key);
     if (!current || compareVersions(item.version, current.version) > 0) latest.set(key, item);
@@ -103,7 +104,9 @@ function resolveByIdOrRepo(registry, type, raw, version = '*', channel = 'stable
       inferPackageType(item) === parsed.type
       && item.source?.repo === parsed.id
       && releaseChannel(item) === parsed.channel
-      && item.security?.yanked !== true);
+      && item.security?.yanked !== true
+      && item.security?.revoked !== true
+      && item.security?.recalled !== true);
     if (!match) throw error;
     return resolvePackage(registry, parsed.type, match.id, parsed.versionRange, { channel: parsed.channel });
   }
@@ -204,8 +207,23 @@ export async function runDiscoveryCli(args = process.argv.slice(2)) {
   }
 
   if (action === 'outdated') {
-    const runtimeRegistry = await readRuntimeRegistry();
+    const runtimeRegistry = await readRuntimeRegistry(option(args, '--runtime-registry'));
     const result = computeOutdated(registry, runtimeRegistry, { type });
+    printCliValue(result, { argv: args });
+    return result;
+  }
+
+  if (action === 'graph' || action === 'explain') {
+    const raw = positional(args, 2);
+    if (!raw) throw new Error(`runtime package id is required for ${command} ${action}`);
+    const runtimeRegistry = await readRuntimeRegistry(option(args, '--runtime-registry'));
+    const explanation = explainPackageResolution(registry, raw, {
+      type: type || 'plugin',
+      channel,
+      registry: catalog,
+      installed: runtimeRegistry.packages,
+    });
+    const result = action === 'graph' ? dependencyGraphFromExplanation(explanation) : explanation;
     printCliValue(result, { argv: args });
     return result;
   }
