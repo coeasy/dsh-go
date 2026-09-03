@@ -47,6 +47,7 @@
     "phase7:test": "vitest run tests/runtime-platform/host-bridge.test.ts tests/runtime-platform/startup-batch.test.ts tests/runtime-platform/bin-cli.test.ts tests/runtime-platform/self-update.test.ts tests/runtime-platform/client-bridge-e2e.test.ts",
     "phase8:test": "vitest run tests/runtime-platform/package-model-v3.test.ts tests/runtime-platform/registry-v3.test.ts tests/runtime-platform/unified-resolver-v3.test.ts tests/runtime-platform/bindings-v3.test.ts tests/runtime-platform/host-bridge-v3.test.ts tests/runtime-platform/unified-cli-v3.test.ts tests/runtime-platform/unified-runtime-v3-e2e.test.ts tests/runtime-platform/v3-contracts.test.ts tests/runtime-platform/registry.test.ts tests/runtime-platform/resolver.test.ts tests/runtime-platform/activation.test.ts tests/runtime-platform/startup-batch.test.ts tests/runtime-platform/e2e.test.ts tests/runtime-platform/cli.test.ts tests/runtime-platform/bin-cli.test.ts tests/runtime-platform/host-bridge.test.ts tests/runtime-platform/client-bridge-e2e.test.ts",
     "test:production-v2": "vitest run tests/production-v2 tests/e2e",
+    "acceptance:test": "vitest run tests/e2e",
     "completion:test": "vitest run tests/completion",
     "contract:check": "node scripts/check-contract.mjs",
     "ecosystem:test": "vitest run tests/ecosystem-v1",
