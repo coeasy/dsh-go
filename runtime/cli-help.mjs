@@ -6,19 +6,33 @@ export function nativePackageManagerHelp(locale = cliLanguage()) {
 ${translate('native_package_manager', locale)}
   dsh package search <query> [--type plugin|mcp|skill|agent] [--channel stable|beta|nightly|dev]
   dsh package info <type:id|type:owner/repo> [--channel stable|beta|nightly|dev]
+  dsh package graph <type:id|type:owner/repo>[@range]
+  dsh package explain <type:id|type:owner/repo>[@range]
   dsh package outdated [--type plugin|mcp|skill|agent]
   dsh package install <type:id|type:owner/repo>[@version] [--yes|--dry-run]
   dsh package list [--type plugin|mcp|skill|agent]
   dsh package status [type:id]
   dsh package lock <type:id> [--runtime-registry <path>]
+  dsh package export <type:id> --output <file.dshpkg>
+  dsh package install-file <file.dshpkg> [--yes|--dry-run]
   dsh cache status [--registry-cache <path>]
 
 ${translate('typed_package_commands', locale)}
   dsh <plugin|mcp|skill|agent> search <query>
   dsh <plugin|mcp|skill|agent> info <id|owner/repo>[@version]
+  dsh <plugin|mcp|skill|agent> graph|explain <id|owner/repo>[@range]
   dsh <plugin|mcp|skill|agent> install <id|owner/repo>[@version] [--yes|--dry-run]
   dsh <plugin|mcp|skill|agent> list|status|outdated|update|rollback|remove|uninstall|enable|disable|doctor|repair|history
   dsh <plugin|mcp|skill|agent> config get|set|unset ...
+
+Registry management
+  dsh registry list [--file <registries.json>]
+  dsh registry add <name> <url-or-path> [--priority <n>] [--trust <level>] [--mirrors <url1,url2>]
+  dsh registry remove <name>
+  dsh registry refresh [name]
+  dsh registry doctor
+  dsh registry merge
+  Use --registry <name> for one configured Registry or --registry @all for deterministic multi-Registry merge.
 
 Environment reproduction
   dsh lock [--file <path>] [--runtime-registry <path>] [--store <path>]
@@ -52,10 +66,12 @@ ${translate('developer_package_workflow', locale)}
 ${translate('rules', locale)}
   - ${translate('rule_versionless', locale)}
   - ${translate('rule_permission', locale)}
+  - Any permission added by an update requires fresh explicit --yes approval.
+  - Revoked/yanked packages and high/critical active advisories fail closed during resolution.
   - ${translate('rule_dry_run', locale)}
   - ${translate('rule_host_approval', locale)}
   - ${translate('rule_no_restart', locale)}
-  - Environment restore is local/CAS-backed, requires explicit --yes, and never auto-restarts the client.
+  - Environment restore and .dshpkg install are local/CAS-backed, require explicit --yes, and never auto-restart the client.
   - ${translate('rule_pending_activation', locale)}
   - ${translate('rule_api', locale)}
 `;
