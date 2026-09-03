@@ -5,11 +5,20 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 const catalog = await import('../runtime/catalog.mjs');
 const registries = await import('../runtime/registry-manager.mjs');
+const registryCli = await import('../runtime/registry-cli-resolver.mjs');
 const originalFetch = globalThis.fetch;
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  delete process.env.DSH_TEST_PRIVATE_REGISTRY_TOKEN;
+  for (const name of [
+    'DSH_TEST_PRIVATE_REGISTRY_TOKEN',
+    'DSH_REGISTRIES_FILE',
+    'DSH_SELECTED_REGISTRY_NAME',
+    'DSH_SELECTED_REGISTRY_URL',
+    'DSH_SELECTED_REGISTRY_TRUSTED',
+    'DSH_SELECTED_REGISTRY_ORGANIZATION',
+    'DSH_REGISTRY_AUTH_ENV',
+  ]) delete process.env[name];
 });
 
 describe('Phase E private registry', () => {
@@ -31,6 +40,30 @@ describe('Phase E private registry', () => {
     const config = await registries.readRegistries(file);
     const corp = config.registries.find((item: { name: string }) => item.name === 'corp');
     expect(corp).toMatchObject({ name: 'corp', organization: 'acme', scope: 'private', auth_env: 'DSH_TEST_PRIVATE_REGISTRY_TOKEN', trusted: true });
+  });
+
+  it('routes a named private registry into the normal public install path without persisting its token', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-private-route-'));
+    const file = join(root, 'registries.json');
+    await registries.writeRegistries({
+      registries: [{
+        name: 'corp',
+        url: 'https://registry.example.test/registry-v3.json',
+        priority: 500,
+        trusted: true,
+        enabled: true,
+        organization: 'acme',
+        scope: 'private',
+        auth_env: 'DSH_TEST_PRIVATE_REGISTRY_TOKEN',
+      }],
+    }, file);
+    process.env.DSH_REGISTRIES_FILE = file;
+    const selected = await registryCli.resolveNamedRegistryArgs(['plugin', 'install', 'example', '--registry', 'corp', '--yes']);
+    expect(selected.registry).toMatchObject({ name: 'corp', trusted: true, organization: 'acme', auth_env: 'DSH_TEST_PRIVATE_REGISTRY_TOKEN' });
+    expect(selected.args).toContain('https://registry.example.test/registry-v3.json');
+    expect(process.env.DSH_SELECTED_REGISTRY_NAME).toBe('corp');
+    expect(process.env.DSH_SELECTED_REGISTRY_TRUSTED).toBe('1');
+    expect(process.env.DSH_REGISTRY_AUTH_ENV).toBe('DSH_TEST_PRIVATE_REGISTRY_TOKEN');
   });
 
   it('passes an injected bearer credential to a direct private Registry V3 fetch', async () => {
