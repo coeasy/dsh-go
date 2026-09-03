@@ -5,8 +5,19 @@ import { DSH_MANIFEST_FILES, canonicalRepoKey, canonicalRepoUrl, makeCatalogInst
 
 const DSH_MANIFEST_SET = new Set(DSH_MANIFEST_FILES);
 
+function legacyInstallProfile(category) {
+  if (category === 'web-ui') return 'web';
+  if (category === 'desktop') return 'desktop';
+  return 'tools';
+}
+
+function legacyInstallCmd(repo, category) {
+  return `dsh plugin --profile ${legacyInstallProfile(category)} add github:${repo}`;
+}
+
 export function auditCatalogIdentity(data) {
   const errors = [];
+  const warnings = [];
   const repos = new Set();
   const repoIds = new Set();
   for (const plugin of data?.plugins || []) {
@@ -23,7 +34,10 @@ export function auditCatalogIdentity(data) {
     }
     if (plugin.repo_name !== repoName) errors.push(`${label}: repo_name mismatch (${plugin.repo_name || '<missing>'})`);
     if (plugin.repo_url !== canonicalRepoUrl(plugin.full_name)) errors.push(`${label}: non-canonical repo_url (${plugin.repo_url || '<missing>'})`);
-    if (plugin.install_cmd !== makeCatalogInstallCmd(plugin)) errors.push(`${label}: install_cmd source mismatch`);
+    const canonicalInstallCmd = makeCatalogInstallCmd(plugin);
+    const historicalInstallCmd = legacyInstallCmd(plugin.full_name, plugin.category || 'other');
+    if (plugin.install_cmd !== canonicalInstallCmd && plugin.install_cmd !== historicalInstallCmd) errors.push(`${label}: install_cmd source mismatch`);
+    if (plugin.install_cmd === historicalInstallCmd && canonicalInstallCmd !== historicalInstallCmd) warnings.push(`${label}: historical install_cmd will migrate on next sync`);
     if (plugin.manifest_file && !DSH_MANIFEST_SET.has(plugin.manifest_file)) errors.push(`${label}: package/non-DSH manifest used (${plugin.manifest_file})`);
     if (plugin.verified && !DSH_MANIFEST_SET.has(plugin.manifest_file)) errors.push(`${label}: verified without a supported DSH manifest`);
     if (plugin.metadata_source === 'github' && plugin.name !== repoName) errors.push(`${label}: GitHub-sourced name mismatch (${plugin.name})`);
@@ -35,7 +49,7 @@ export function auditCatalogIdentity(data) {
     if (Object.prototype.hasOwnProperty.call(plugin, 'observed_at')) errors.push(`${label}: transient observed_at leaked into persisted catalog`);
     if (Object.prototype.hasOwnProperty.call(plugin, '_manifest_observed')) errors.push(`${label}: transient manifest observation leaked into persisted catalog`);
   }
-  return { errors, count: data?.plugins?.length || 0 };
+  return { errors, warnings, count: data?.plugins?.length || 0 };
 }
 
 export function buildAuditReport(data, result = auditCatalogIdentity(data)) {
@@ -46,8 +60,10 @@ export function buildAuditReport(data, result = auditCatalogIdentity(data)) {
     catalog_updated_at: catalogUpdatedAt,
     plugin_count: result.count,
     error_count: result.errors.length,
+    warning_count: result.warnings?.length || 0,
     ok: result.errors.length === 0,
     errors: [...result.errors],
+    warnings: [...(result.warnings || [])],
   };
 }
 
@@ -68,8 +84,9 @@ async function main() {
   const data = JSON.parse(await readFile(file, 'utf8'));
   const result = auditCatalogIdentity(data);
   const report = buildAuditReport(data, result);
-  console.log(`[identity-audit] plugins=${result.count} errors=${result.errors.length}`);
+  console.log(`[identity-audit] plugins=${result.count} errors=${result.errors.length} warnings=${result.warnings.length}`);
   result.errors.slice(0, 100).forEach((error) => console.error(`[identity-audit] ${error}`));
+  result.warnings.slice(0, 100).forEach((warning) => console.warn(`[identity-audit] ${warning}`));
   if (reportFile) {
     await writeFile(reportFile, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
     console.log(`[identity-audit] report=${reportFile}`);
