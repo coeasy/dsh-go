@@ -74,6 +74,9 @@ function enterpriseRegistryIdentity() {
       organization: String(process.env.DSH_SELECTED_REGISTRY_ORGANIZATION || '').trim() || null,
     };
   }
+  const registryIndex = process.argv.indexOf('--registry');
+  const directRegistry = registryIndex >= 0 ? String(process.argv[registryIndex + 1] || '').trim() : '';
+  if (directRegistry) return { name: directRegistry, url: directRegistry, trusted: false, organization: null };
   return { name: 'official', trusted: true };
 }
 
