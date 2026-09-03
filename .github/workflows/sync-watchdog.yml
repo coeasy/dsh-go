@@ -1,0 +1,58 @@
+name: Sync Watchdog
+
+on:
+  schedule:
+    - cron: "5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: sync-watchdog
+  cancel-in-progress: true
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SYNC_MAX_AGE_HOURS: "6.5"
+      FULL_SYNC_MAX_AGE_HOURS: "26"
+    steps:
+      - name: Checkout current control plane
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Recover stale canonical sync
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          LAST_SYNC=$(node -e "const m=require('./catalog/meta.json');process.stdout.write(String(m.last_sync?.at||''))")
+          STALE=$(LAST_SYNC="$LAST_SYNC" node -e "const t=Date.parse(process.env.LAST_SYNC||'');const max=Number(process.env.SYNC_MAX_AGE_HOURS||6.5)*3600000;process.stdout.write(String(!Number.isFinite(t)||Date.now()-t>max))")
+          echo "Last successful sync: ${LAST_SYNC:-missing}; stale=${STALE}"
+          if [ "$STALE" != "true" ]; then
+            echo "Canonical sync is fresh; no recovery required"
+            exit 0
+          fi
+
+          ACTIVE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/sync.yml/runs?per_page=20" --jq '[.workflow_runs[] | select(.status == "queued" or .status == "in_progress")] | length')
+          if [ "$ACTIVE" != "0" ]; then
+            echo "Canonical sync already queued or running (${ACTIVE}); watchdog will not duplicate it"
+            exit 0
+          fi
+
+          MODE=$(node -e "const m=require('./catalog/meta.json');const rows=[...(m.history||[]),m.last_sync].filter(Boolean);const full=rows.filter((r)=>r.mode==='full'&&Number.isFinite(Date.parse(r.at||''))).map((r)=>Date.parse(r.at)).sort((a,b)=>b-a)[0]||0;const max=Number(process.env.FULL_SYNC_MAX_AGE_HOURS||26)*3600000;process.stdout.write(!full||Date.now()-full>max?'full':'incremental')")
+          echo "Dispatching canonical sync recovery in ${MODE} mode"
+          gh workflow run sync.yml --ref main -f mode="$MODE"
