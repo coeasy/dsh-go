@@ -10,6 +10,8 @@ ${translate('native_package_manager', locale)}
   dsh package install <type:id|type:owner/repo>[@version] [--yes|--dry-run]
   dsh package list [--type plugin|mcp|skill|agent]
   dsh package status [type:id]
+  dsh package lock <type:id> [--runtime-registry <path>]
+  dsh cache status [--registry-cache <path>]
 
 ${translate('typed_package_commands', locale)}
   dsh <plugin|mcp|skill|agent> search <query>
