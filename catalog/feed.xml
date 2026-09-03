@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 03 Sep 2026 11:15:05 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 03 Sep 2026 16:33:16 GMT</lastBuildDate>
     <item>
       <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -16,8 +16,8 @@
     <item>
       <title>🔄 ds-harness-remote</title>
       <link>https://github.com/liguobao/ds-harness-remote</link>
-      <guid isPermaLink="false">liguobao/ds-harness-remote@2026-09-03T10:03:59Z</guid>
-      <pubDate>Thu, 03 Sep 2026 10:03:59 GMT</pubDate>
+      <guid isPermaLink="false">liguobao/ds-harness-remote@2026-09-03T16:28:34Z</guid>
+      <pubDate>Thu, 03 Sep 2026 16:28:34 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo.svg&quot; alt=&quot;DeepSeek Harness Remote&quot; width=&quot;600&quot; &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/strong &</description>
     </item>
     <item>
@@ -63,10 +63,17 @@
       <description>&lt;div align=&quot;center&quot; dsh omp tui OMP 风格的 DeepSeek Harness（dsh）终端界面 &lt;/div 简介 dsh omp tui 是 DeepSeek Harness（dsh）的独立 profile bundle（插件），负责终端呈现、输入交互与会话相关的 TUI 能力；agent、模型、工具、持久化和沙箱仍由 dsh h</description>
     </item>
     <item>
+      <title>🔄 dsh-theme-picker</title>
+      <link>https://github.com/yhPrime/dsh-theme-picker</link>
+      <guid isPermaLink="false">yhPrime/dsh-theme-picker@2026-09-03T16:21:09Z</guid>
+      <pubDate>Thu, 03 Sep 2026 16:21:09 GMT</pubDate>
+      <description>dsh theme picker DeepSeek Harness 主题选择插件 —— 在设置面板中添加「主题」页面：统一管理应用主题与已安装的主题插件，同一时间仅一个主题生效，其余自动禁用。 A theme picker plugin for DeepSeek Harness: adds a Themes page to the Settings panel. It manages both a</description>
+    </item>
+    <item>
       <title>🔄 DSH-ReasonixUI</title>
       <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-03T10:50:26Z</guid>
-      <pubDate>Thu, 03 Sep 2026 10:50:26 GMT</pubDate>
+      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-03T16:32:24Z</guid>
+      <pubDate>Thu, 03 Sep 2026 16:32:24 GMT</pubDate>
       <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
     </item>
     <item>
@@ -91,17 +98,10 @@
       <description>dsh music tui 在 dsh TUI 里查看并控制已经运行的 YesPlayMusic TUI。插件提供 /music 命令和提示框上方的紧凑音乐条，不修改 DeepSeek Harness、dsh TUI 或 YesPlayMusic 本体，也不会自动启动播放器。 能做什么 /music 或 /music show ：打开音乐条（默认隐藏） /music hide ：关闭音乐条 /mu</description>
     </item>
     <item>
-      <title>🔄 主题选择器</title>
-      <link>https://github.com/yhPrime/dsh-theme-picker</link>
-      <guid isPermaLink="false">yhPrime/dsh-theme-picker@2026-08-27T14:26:11Z</guid>
-      <pubDate>Thu, 27 Aug 2026 14:26:11 GMT</pubDate>
-      <description>dsh theme picker DeepSeek Harness 主题选择插件 —— 在设置面板中添加「主题」页面：统一管理应用主题与已安装的主题插件，同一时间仅一个主题生效，其余自动禁用。 A theme picker plugin for DeepSeek Harness: adds a Themes page to the Settings panel. It manages both a</description>
-    </item>
-    <item>
       <title>🔄 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-03T11:01:40Z</guid>
-      <pubDate>Thu, 03 Sep 2026 11:01:40 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-03T15:36:34Z</guid>
+      <pubDate>Thu, 03 Sep 2026 15:36:34 GMT</pubDate>
       <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
     </item>
     <item>
@@ -140,6 +140,13 @@
       <description>简体中文 Web Bridge — Browser Automation MCP Server (dsh plugin) Web Bridge is an automation MCP server that uses a real browser . It gives agents a browser&apos;s eyes and hands: open web pages, read pag</description>
     </item>
     <item>
+      <title>🆕 @all3cn/dsh-better-sidebar-n23</title>
+      <link>https://github.com/All3nCN/dsh-better-sidebar-N23</link>
+      <guid isPermaLink="false">All3nCN/dsh-better-sidebar-N23@2026-09-03T14:55:01Z</guid>
+      <pubDate>Thu, 03 Sep 2026 14:55:01 GMT</pubDate>
+      <description>@all3cn/dsh better sidebar n23 一个服务化的侧边栏框架 + 一套开箱即用的 DSH 完整工作台。本包是开源插件 dsh better sidebar（MIT）的社区 fork，在 @all3cn 作用域下独立发版；上游致谢见 UPSTREAM.md。 English 中文 功能一览 文件工作台 ：资源管理器（懒加载目录树、软链接按目标类型展示）+ CodeMirror</description>
+    </item>
+    <item>
       <title>🔄 Plugin Market</title>
       <link>https://github.com/FUSU123fusu/dsh-tui-market</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-market@2026-08-28T15:45:35Z</guid>
@@ -166,13 +173,6 @@
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-webhook@2026-08-28T15:45:26Z</guid>
       <pubDate>Fri, 28 Aug 2026 15:45:26 GMT</pubDate>
       <description>dsh tui webhook 适用于 dsh TUI（dshtui.com）的社区插件。 把 dsh TUI 的关键事件推送到 IM 机器人（飞书 / 钉钉 / 企业微信 / 任意通用 webhook）：长轮次完成、审批请求——人离开电脑也能收到提醒。 English below. 用法 配置在 /settings →「Webhook 通知」，保存后立即生效，无需重启。 设置 说明 默认 pla</description>
-    </item>
-    <item>
-      <title>🆕 @all3cn/dsh-better-sidebar-n23</title>
-      <link>https://github.com/All3nCN/dsh-better-sidebar-N23</link>
-      <guid isPermaLink="false">All3nCN/dsh-better-sidebar-N23@2026-09-01T02:43:07Z</guid>
-      <pubDate>Tue, 01 Sep 2026 02:43:07 GMT</pubDate>
-      <description>@all3cn/dsh better sidebar n23 一个服务化的侧边栏框架 + 一套开箱即用的 DSH 完整工作台。本包是开源插件 dsh better sidebar（MIT）的社区 fork，在 @all3cn 作用域下独立发版；上游致谢见 UPSTREAM.md。 English 中文 功能一览 文件工作台 ：资源管理器（懒加载目录树、软链接按目标类型展示）+ CodeMirror</description>
     </item>
     <item>
       <title>🔄 dsh-tui-mcp-manager</title>
