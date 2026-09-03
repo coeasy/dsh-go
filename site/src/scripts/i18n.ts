@@ -1,11 +1,19 @@
 import { CAT, tr } from '../i18n/dict';
 import { DEFAULT_LANG, normalizeLang, type Lang } from '../i18n/config';
+import { applyMarketplaceI18n } from './marketplace-i18n';
 
 function saveLang(value: Lang) {
   try { localStorage.setItem('dsh-lang', value); } catch { /* ignore storage failures */ }
 }
 
+function routeLang(): Lang | null {
+  if (typeof document === 'undefined') return null;
+  return normalizeLang(document.documentElement.dataset.routeLocale);
+}
+
 export function getLang(): Lang {
+  const routed = routeLang();
+  if (routed) return routed;
   try {
     const saved = normalizeLang(localStorage.getItem('dsh-lang'));
     if (saved) return saved;
@@ -60,6 +68,9 @@ export function apply(lang: Lang) {
       anchor.classList.toggle('active', target === path);
     });
   }
+
+  applyMarketplaceI18n(lang);
+  document.dispatchEvent(new CustomEvent('dsh:languagechange', { detail: { lang } }));
 }
 
 let initialized = false;
@@ -76,10 +87,5 @@ export function initI18n() {
       apply(next);
     });
   }
-  (window as unknown as { __dshI18n: unknown }).__dshI18n = { apply, getLang };
-}
-
-if (typeof document !== 'undefined') {
-  if (document.readyState !== 'loading') initI18n();
-  else document.addEventListener('DOMContentLoaded', initI18n);
+  (window as unknown as { __dshI18n: unknown }).__dshI18n = { apply, getLang, tr };
 }
