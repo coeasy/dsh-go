@@ -2,7 +2,7 @@ import { loadRegistryFile } from './resolver.mjs';
 import { parsePackageRequest } from './package-model.mjs';
 import { explainResolution } from './solver-v2.mjs';
 import { addRegistry, inspectRegistries, readRegistries, removeRegistry, resolveAcrossRegistries } from './registry-manager.mjs';
-import { packageSecurityDecision } from './advisory.mjs';
+import { inspectPackageAdvisories } from './advisory.mjs';
 import { exportDshPackage, installDshPackage } from './dshpkg.mjs';
 import { printCliValue } from './cli-output.mjs';
 
@@ -44,13 +44,13 @@ export async function runPackageManagerV2Cli(args = process.argv.slice(2)) {
       if (action === 'resolve-registry') result = await resolveAcrossRegistries(request.id, { type: request.type, version: request.versionRange, channel: request.channel, registry: option(args, '--registry'), file: option(args, '--registries-file') });
       else {
         const registry = await loadRegistryFile(option(args, '--registry', 'catalog/registry-v3.json'));
-        const explained = explainResolution(registry, { type: request.type, id: request.id, version: request.versionRange, channel: request.channel });
-        if (action === 'graph') result = { request: explained.request, selected: explained.selected, graph: explained.graph, dependency_order: explained.dependency_order };
-        else if (action === 'explain') result = explained;
-        else if (action === 'advisories') {
-          const pkg = registry.plugins.find((item) => item.id === explained.selected.id && item.version === explained.selected.version);
-          result = { package: explained.selected, security: packageSecurityDecision(pkg) };
-        } else throw new Error(`unknown package v2 action: ${action}`);
+        if (action === 'advisories') result = inspectPackageAdvisories(registry, { type: request.type, id: request.id, versionRange: request.versionRange, channel: request.channel });
+        else {
+          const explained = explainResolution(registry, { type: request.type, id: request.id, version: request.versionRange, channel: request.channel });
+          if (action === 'graph') result = { request: explained.request, selected: explained.selected, graph: explained.graph, dependency_order: explained.dependency_order };
+          else if (action === 'explain') result = explained;
+          else throw new Error(`unknown package v2 action: ${action}`);
+        }
       }
     }
   }
