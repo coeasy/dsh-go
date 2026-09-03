@@ -13,6 +13,7 @@ import { readPackageConfig, redactConfig, setPackageConfig, unsetPackageConfig }
 import { deleteSecret, listSecrets, setSecret } from './secret-store.mjs';
 import { buildDesktopCenter, desktopIpcContract } from './desktop-center.mjs';
 import { inspectEnterprisePolicy } from './enterprise-policy.mjs';
+import { addRegistry, readRegistries, removeRegistry } from './registry-manager.mjs';
 
 const CLI = fileURLToPath(new URL('../bin/dsh.mjs', import.meta.url));
 const MAX_BODY_BYTES = 64 * 1024;
@@ -124,6 +125,12 @@ function secretRoute(pathname) {
   return { name: match[1] ? decodeURIComponent(match[1]) : null };
 }
 
+function registryRoute(pathname) {
+  const match = pathname.match(/^\/v1\/registries(?:\/([^/]+))?$/);
+  if (!match) return null;
+  return { name: match[1] ? decodeURIComponent(match[1]) : null };
+}
+
 function requireApproval(request) {
   if (request.approved !== true) {
     const error = new Error('explicit approval required');
@@ -185,6 +192,28 @@ export async function createClientHost(options = {}) {
           .filter((record) => !type || record.type === type)
           .map(withPackageActivationState);
         return json(req, res, 200, { packages, generation: registry.generation });
+      }
+
+      const registries = registryRoute(requestUrl.pathname);
+      if (registries && req.method === 'GET' && !registries.name) {
+        return json(req, res, 200, await readRegistries());
+      }
+      if (registries && req.method === 'POST' && !registries.name) {
+        const request = await body(req);
+        requireApproval(request);
+        if (!request.name || !request.url) return json(req, res, 400, { error: 'registry name and url are required' });
+        return json(req, res, 200, await addRegistry(request.name, request.url, {
+          priority: request.priority,
+          trusted: request.trusted === true,
+          organization: request.organization,
+          scope: request.scope,
+          authEnv: request.auth_env,
+        }));
+      }
+      if (registries?.name && req.method === 'DELETE') {
+        const request = await body(req);
+        requireApproval(request);
+        return json(req, res, 200, await removeRegistry(registries.name));
       }
 
       const secrets = secretRoute(requestUrl.pathname);
