@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { ensureRegistryCache, resolveRegistrySource } from './catalog.mjs';
 import { compareVersions, satisfiesVersion } from './semver.mjs';
+import { resolveConfiguredRegistryReference } from './registry-manager.mjs';
 import {
   assertPackageType,
   inferPackageType,
@@ -27,14 +28,60 @@ function matchesCapability(item, token) {
   return (item.provides || []).some((capability) => String(capability).toLowerCase() === key);
 }
 
-function isYanked(item) {
-  return item?.security?.yanked === true;
+function activeAdvisories(item) {
+  const values = item?.security?.advisories || item?.advisories || [];
+  return (Array.isArray(values) ? values : [])
+    .filter((advisory) => advisory && advisory.withdrawn !== true && advisory.resolved !== true)
+    .map((advisory) => ({
+      id: advisory.id || advisory.cve || advisory.ghsa || 'unknown',
+      severity: String(advisory.severity || 'unknown').toLowerCase(),
+      title: advisory.title || advisory.summary || null,
+    }));
 }
 
-function yankedError(type, id, range, channel) {
-  const error = new Error(`Runtime package is yanked and cannot be selected: ${type}:${id}@${range} [${channel}]`);
-  error.code = 'DSH_PACKAGE_YANKED';
+function blockedSecurity(item, options = {}) {
+  if (item?.security?.revoked === true || item?.security?.recalled === true) {
+    return { code: 'DSH_PACKAGE_REVOKED', reason: 'revoked' };
+  }
+  if (item?.security?.yanked === true && options.allowYanked !== true) {
+    return { code: 'DSH_PACKAGE_YANKED', reason: 'yanked' };
+  }
+  const advisories = activeAdvisories(item);
+  const blocking = advisories.filter((advisory) => advisory.severity === 'critical' || advisory.severity === 'high');
+  if (blocking.length && options.allowVulnerable !== true) {
+    return { code: 'DSH_SECURITY_ADVISORY_BLOCKED', reason: 'security-advisory', advisories: blocking };
+  }
+  return null;
+}
+
+function selectionError(block, type, id, range, channel) {
+  const suffix = `${type}:${id}@${range} [${channel}]`;
+  const message = block.code === 'DSH_PACKAGE_REVOKED'
+    ? `Runtime package is revoked and cannot be selected: ${suffix}`
+    : block.code === 'DSH_PACKAGE_YANKED'
+      ? `Runtime package is yanked and cannot be selected: ${suffix}`
+      : `Runtime package is blocked by a high/critical security advisory: ${suffix}`;
+  const error = new Error(message);
+  error.code = block.code;
+  if (block.advisories) error.advisories = block.advisories;
   return error;
+}
+
+function selectAllowed(candidates, options, type, id, range, channel) {
+  const allowed = [];
+  const blocked = [];
+  for (const candidate of candidates) {
+    const block = blockedSecurity(candidate, options);
+    if (block) blocked.push({ candidate, block });
+    else allowed.push(candidate);
+  }
+  if (!allowed.length && blocked.length) {
+    const revoked = blocked.find((item) => item.block.code === 'DSH_PACKAGE_REVOKED');
+    const advisory = blocked.find((item) => item.block.code === 'DSH_SECURITY_ADVISORY_BLOCKED');
+    const chosen = revoked || advisory || blocked[0];
+    throw selectionError(chosen.block, type, id, range, channel);
+  }
+  return allowed;
 }
 
 export function resolvePackage(registry, type, id, version, options = {}) {
@@ -43,25 +90,37 @@ export function resolvePackage(registry, type, id, version, options = {}) {
   const range = version || defaultRegistryVersion(registry, normalizedType) || '*';
   const channel = options.channel || 'stable';
   const idKey = String(id || '').toLowerCase();
-  const matching = (registry.plugins || [])
+  const typeChannel = (registry.plugins || [])
     .filter((item) => inferPackageType(item) === normalizedType)
-    .filter((item) => releaseChannel(item) === channel)
-    .filter((item) => satisfiesVersion(item.version, range));
+    .filter((item) => releaseChannel(item) === channel);
+  const matching = typeChannel.filter((item) => satisfiesVersion(item.version, range));
 
+  const directIdentity = typeChannel.filter((item) => String(item.id || '').toLowerCase() === idKey);
   const directMatching = matching.filter((item) => String(item.id || '').toLowerCase() === idKey);
   let candidates;
   if (directMatching.length) {
-    candidates = options.allowYanked === true ? directMatching : directMatching.filter((item) => !isYanked(item));
-    if (!candidates.length) throw yankedError(normalizedType, id, range, channel);
+    candidates = selectAllowed(directMatching, options, normalizedType, id, range, channel);
   } else {
+    const providerIdentity = typeChannel.filter((item) => matchesCapability(item, idKey));
     const providerMatching = matching.filter((item) => matchesCapability(item, idKey));
-    candidates = options.allowYanked === true ? providerMatching : providerMatching.filter((item) => !isYanked(item));
-    if (!candidates.length && providerMatching.some(isYanked)) throw yankedError(normalizedType, id, range, channel);
+    if (providerMatching.length) candidates = selectAllowed(providerMatching, options, normalizedType, id, range, channel);
+    else {
+      const identityExists = directIdentity.length > 0 || providerIdentity.length > 0;
+      const error = new Error(identityExists
+        ? `Runtime package version not found: ${normalizedType}:${id}@${range} [${channel}]`
+        : `Runtime package not found: ${normalizedType}:${id}@${range} [${channel}]`);
+      error.code = identityExists ? 'DSH_VERSION_NOT_FOUND' : 'DSH_PACKAGE_NOT_FOUND';
+      throw error;
+    }
   }
 
   candidates.sort((a, b) => compareVersions(b.version, a.version));
   const pkg = candidates[0];
-  if (!pkg) throw new Error(`Runtime package not found: ${normalizedType}:${id}@${range} [${channel}]`);
+  if (!pkg) {
+    const error = new Error(`Runtime package not found: ${normalizedType}:${id}@${range} [${channel}]`);
+    error.code = 'DSH_PACKAGE_NOT_FOUND';
+    throw error;
+  }
 
   return {
     id: pkg.id,
@@ -81,6 +140,7 @@ export function resolvePackage(registry, type, id, version, options = {}) {
     compatibility: pkg.compatibility || {},
     publisher: pkg.publisher || null,
     security: pkg.security || null,
+    advisories: activeAdvisories(pkg),
     conflicts: pkg.conflicts || [],
     replaces: pkg.replaces || [],
     provides: pkg.provides || [],
@@ -88,6 +148,7 @@ export function resolvePackage(registry, type, id, version, options = {}) {
     metadata: pkg.metadata || {},
     source: pkg.source,
     artifact: pkg.artifact,
+    registry_sources: pkg.registry_sources || [],
     release_tag: pkg.release_tag || pkg.artifact?.release_tag || null,
   };
 }
@@ -124,13 +185,17 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
     const key = packageKey(pkg.type || 'plugin', pkg.id);
     const cycleIndex = visiting.indexOf(key);
     if (cycleIndex >= 0) {
-      throw new Error(`dependency cycle detected: ${[...visiting.slice(cycleIndex), key].join(' -> ')}`);
+      const error = new Error(`dependency cycle detected: ${[...visiting.slice(cycleIndex), key].join(' -> ')}`);
+      error.code = 'DSH_DEPENDENCY_CYCLE';
+      throw error;
     }
 
     const existing = selected.get(key);
     if (existing) {
       if (!satisfiesVersion(existing.version, requestedRange)) {
-        throw new Error(`dependency conflict: ${key}@${existing.version} does not satisfy ${requestedRange}`);
+        const error = new Error(`dependency conflict: ${key}@${existing.version} does not satisfy ${requestedRange}`);
+        error.code = 'DSH_DEPENDENCY_CONFLICT';
+        throw error;
       }
       return existing;
     }
@@ -148,6 +213,7 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
         resolved = resolveDependency(registry, dependency, {
           channel: options.channel || pkg.channel || 'stable',
           allowYanked: options.allowYanked === true,
+          allowVulnerable: options.allowVulnerable === true,
         });
       } catch (error) {
         if (dependency.optional) continue;
@@ -156,7 +222,9 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
       const dependencyKey = packageKey(resolved.type, resolved.id);
       const previousConstraint = constraints.get(dependencyKey);
       if (previousConstraint && !satisfiesVersion(resolved.version, previousConstraint)) {
-        throw new Error(`dependency conflict: ${dependencyKey} cannot satisfy ${previousConstraint} and ${dependency.range}`);
+        const error = new Error(`dependency conflict: ${dependencyKey} cannot satisfy ${previousConstraint} and ${dependency.range}`);
+        error.code = 'DSH_DEPENDENCY_CONFLICT';
+        throw error;
       }
       graph[outputKey].push({
         type: resolved.type,
@@ -186,7 +254,9 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
         packageKey(candidate.type || 'plugin', candidate.id) !== packageKey(pkg.type || 'plugin', pkg.id)
         && recordMatchesToken(candidate, conflict));
       if (selectedConflict || installedConflict) {
-        throw new Error(`package conflict: ${packageKey(pkg.type || 'plugin', pkg.id)} conflicts with ${conflict}`);
+        const error = new Error(`package conflict: ${packageKey(pkg.type || 'plugin', pkg.id)} conflicts with ${conflict}`);
+        error.code = 'DSH_DEPENDENCY_CONFLICT';
+        throw error;
       }
     }
   }
@@ -206,6 +276,7 @@ export function buildDependencyPlan(registry, rootPackage, options = {}) {
     channel: options.channel || rootPackage.channel || 'stable',
     order,
     graph,
+    constraints: Object.fromEntries(constraints.entries()),
     replacements,
     declared_replacements,
   };
@@ -217,6 +288,8 @@ async function readRegistrySourceFile(source) {
 }
 
 export async function loadRegistryFile(file = 'catalog/registry-v3.json') {
+  const configured = await resolveConfiguredRegistryReference(file);
+  if (configured) return configured;
   try {
     const source = await resolveRegistrySource(file);
     return await readRegistrySourceFile(source);
