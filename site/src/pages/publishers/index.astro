@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { u } from '../../lib/urls';
+import { DETAIL_THRESHOLD } from '../../lib/threshold';
 
 const registryUrl = u('/catalog/registry-v3.json');
 const ecosystemUrl = u('/ecosystem/');
@@ -8,31 +9,21 @@ const ecosystemUrl = u('/ecosystem/');
 
 <Layout title="Publishers · DSH Marketplace" description="Registry-backed DSH Marketplace publisher directory and package portfolios.">
   <section class="hero">
-    <div>
-      <span class="kicker">Marketplace V4</span>
-      <h1>Publisher directory</h1>
-      <p>Explore registry-backed publisher identities and their package portfolios. Ownership, trust and popularity remain separate signals.</p>
-    </div>
-    <div class="hero-actions">
-      <a class="secondary" href={u('/')}>Marketplace</a>
-      <a class="secondary" href={u('/trust')}>Trust Center</a>
-    </div>
+    <div><span class="kicker">Marketplace V4</span><h1 data-pub-i18n="title">Publisher directory</h1><p data-pub-i18n="intro">Explore registry-backed publisher identities and their package portfolios. Ownership, trust and popularity remain separate signals.</p></div>
+    <div class="hero-actions"><a class="secondary" href={u('/')}>Marketplace</a><a class="secondary" href={u('/trust')} data-pub-i18n="trust">Trust Center</a></div>
   </section>
 
   <form id="publisher-search" class="search" role="search">
-    <label for="publisher-query">Find a publisher</label>
-    <div class="search-row">
-      <input id="publisher-query" name="q" type="search" placeholder="Search by publisher or repository owner" autocomplete="off" />
-      <button type="submit">Search</button>
-    </div>
+    <label for="publisher-query" data-pub-i18n="find">Find a publisher</label>
+    <div class="search-row"><input id="publisher-query" name="q" type="search" placeholder="Search by publisher or repository owner" data-pub-placeholder autocomplete="off" /><button type="submit" data-pub-i18n="search">Search</button></div>
   </form>
 
-  <p id="publisher-status" class="status" role="status" aria-live="polite">Loading the Registry V3 publisher directory…</p>
+  <p id="publisher-status" class="status" role="status" aria-live="polite" data-pub-i18n="loading">Loading the Registry V3 publisher directory…</p>
   <section id="publisher-grid" class="grid" aria-live="polite"></section>
-  <p id="publisher-empty" class="empty" hidden>No publisher matches this search.</p>
+  <p id="publisher-empty" class="empty" hidden data-pub-i18n="empty">No publisher matches this search.</p>
 </Layout>
 
-<script is:inline define:vars={{ registryUrl, ecosystemUrl }}>
+<script is:inline define:vars={{ registryUrl, ecosystemUrl, detailThreshold: DETAIL_THRESHOLD }}>
   const grid = document.querySelector('#publisher-grid');
   const empty = document.querySelector('#publisher-empty');
   const status = document.querySelector('#publisher-status');
@@ -40,157 +31,32 @@ const ecosystemUrl = u('/ecosystem/');
   const input = document.querySelector('#publisher-query');
   let publishers = [];
 
-  const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-  function escapeHtml(value) {
-    return String(value == null ? '' : value).replace(/[&<>"']/g, (character) => escapeMap[character]);
-  }
+  const strings = {
+    en:{title:'Publisher directory',intro:'Explore registry-backed publisher identities and their package portfolios. Ownership, trust and popularity remain separate signals.',trust:'Trust Center',find:'Find a publisher',placeholder:'Search by publisher or repository owner',search:'Search',loading:'Loading the Registry V3 publisher directory…',empty:'No publisher matches this search.',publisher:'Publisher',verified:'Verified',unverified:'Unverified',packages:'packages',avgTrust:'avg trust',stars:'stars',openPortfolio:'Open portfolio →',all:'← All publishers',portfolio:'Registry-backed package portfolio. Ownership and trust are independent from popularity.',ownership:'repository ownership',source:'Source ↗',detail:'Registry detail →',unavailable:'Publisher directory is temporarily unavailable. Open the Trust Center or try again later.',loadFailed:'Registry V3 could not be loaded'},
+    'zh-CN':{title:'发布者目录',intro:'浏览 Registry 支持的发布者身份与包组合。所有权、信任和热度始终作为独立信号展示。',trust:'信任中心',find:'查找发布者',placeholder:'按发布者或仓库所有者搜索',search:'搜索',loading:'正在加载 Registry V3 发布者目录…',empty:'没有匹配的发布者。',publisher:'发布者',verified:'已验证',unverified:'未验证',packages:'包',avgTrust:'平均信任分',stars:'Stars',openPortfolio:'打开包组合 →',all:'← 所有发布者',portfolio:'Registry 支持的包组合。所有权与信任独立于热度。',ownership:'仓库所有权',source:'源码 ↗',detail:'Registry 详情 →',unavailable:'发布者目录暂时不可用，请打开信任中心或稍后重试。',loadFailed:'无法加载 Registry V3'},
+    ja:{title:'公開者ディレクトリ',intro:'Registry に基づく公開者 ID とパッケージ一覧を確認できます。所有権、信頼、人気は独立した指標です。',trust:'トラストセンター',find:'公開者を検索',placeholder:'公開者またはリポジトリ所有者で検索',search:'検索',loading:'Registry V3 の公開者ディレクトリを読み込み中…',empty:'一致する公開者はありません。',publisher:'公開者',verified:'検証済み',unverified:'未検証',packages:'パッケージ',avgTrust:'平均信頼度',stars:'Stars',openPortfolio:'ポートフォリオを開く →',all:'← すべての公開者',portfolio:'Registry ベースのパッケージポートフォリオ。所有権と信頼は人気とは独立しています。',ownership:'リポジトリ所有権',source:'ソース ↗',detail:'Registry 詳細 →',unavailable:'公開者ディレクトリは一時的に利用できません。トラストセンターを開くか、後でもう一度お試しください。',loadFailed:'Registry V3 を読み込めませんでした'},
+    ko:{title:'게시자 디렉터리',intro:'Registry 기반 게시자 ID와 패키지 포트폴리오를 살펴보세요. 소유권, 신뢰도, 인기도는 서로 독립된 신호입니다.',trust:'신뢰 센터',find:'게시자 찾기',placeholder:'게시자 또는 저장소 소유자로 검색',search:'검색',loading:'Registry V3 게시자 디렉터리를 불러오는 중…',empty:'일치하는 게시자가 없습니다.',publisher:'게시자',verified:'검증됨',unverified:'미검증',packages:'패키지',avgTrust:'평균 신뢰도',stars:'Stars',openPortfolio:'포트폴리오 열기 →',all:'← 모든 게시자',portfolio:'Registry 기반 패키지 포트폴리오입니다. 소유권과 신뢰도는 인기도와 독립적입니다.',ownership:'저장소 소유권',source:'소스 ↗',detail:'Registry 상세 →',unavailable:'게시자 디렉터리를 일시적으로 사용할 수 없습니다. 신뢰 센터를 열거나 나중에 다시 시도하세요.',loadFailed:'Registry V3를 불러올 수 없습니다'},
+    es:{title:'Directorio de publicadores',intro:'Explora identidades de publicadores respaldadas por el Registry y sus portafolios de paquetes. Propiedad, confianza y popularidad son señales separadas.',trust:'Centro de confianza',find:'Buscar un publicador',placeholder:'Buscar por publicador o propietario del repositorio',search:'Buscar',loading:'Cargando el directorio de publicadores de Registry V3…',empty:'No hay publicadores que coincidan con la búsqueda.',publisher:'Publicador',verified:'Verificado',unverified:'No verificado',packages:'paquetes',avgTrust:'confianza media',stars:'Stars',openPortfolio:'Abrir portafolio →',all:'← Todos los publicadores',portfolio:'Portafolio de paquetes respaldado por Registry. La propiedad y la confianza son independientes de la popularidad.',ownership:'propiedad del repositorio',source:'Fuente ↗',detail:'Detalle de Registry →',unavailable:'El directorio de publicadores no está disponible temporalmente. Abre el Centro de confianza o inténtalo más tarde.',loadFailed:'No se pudo cargar Registry V3'},
+  };
+  function lang(){ return strings[document.documentElement.lang] ? document.documentElement.lang : 'en'; }
+  function t(key){ return strings[lang()][key] || strings.en[key] || key; }
+  function applyStatic(){ document.querySelectorAll('[data-pub-i18n]').forEach((node)=>{ const key=node.getAttribute('data-pub-i18n'); if(strings[lang()][key])node.textContent=t(key); }); if(input)input.placeholder=t('placeholder'); }
 
-  function publisherId(item) {
-    return String(item.publisher && (item.publisher.id || item.publisher.login || item.publisher.name)
-      || (item.source && item.source.repo && item.source.repo.split('/')[0]) || 'unknown').trim();
-  }
-
-  function packageType(item) {
-    return String(item.type || (item.runtime && item.runtime.type) || 'plugin');
-  }
-
-  function trust(item) {
-    const security = item.security || {};
-    const publisher = item.publisher || {};
-    const ownership = publisher.repository_ownership || 'unverified';
-    const advisories = security.advisories || [];
-    let score = 0;
-    if (security.provenance) score += 20;
-    if (security.signature) score += 25;
-    if (security.sbom) score += 15;
-    if (security.license) score += 10;
-    if (ownership === 'verified' || publisher.verified === true) score += 25;
-    else if (ownership === 'declared' || ownership === 'required') score += 10;
-    if (item.metadata && item.metadata.verified === true) score += 10;
-    if (security.yanked === true) score -= 25;
-    if (security.revoked === true) score -= 100;
-    const critical = advisories.some((advisory) => String(advisory && advisory.severity || '').toLowerCase() === 'critical');
-    if (critical) score -= 50;
-    score = Math.max(0, Math.min(100, score));
-    return {
-      score,
-      tier: security.revoked || critical ? 'unverified' : score >= 80 ? 'trusted' : score >= 55 ? 'verified' : score >= 25 ? 'community' : 'unverified',
-    };
-  }
-
-  function compareVersions(left, right) {
-    return String(left || '').localeCompare(String(right || ''), undefined, { numeric: true });
-  }
-
-  function repoHref(item) {
-    const repo = String(item.source && item.source.repo || '').trim();
-    return /^[\w.-]+\/[\w.-]+$/.test(repo) ? 'https://github.com/' + repo : '';
-  }
-
-  function queryHref(values) {
-    const url = new URL(window.location.href);
-    url.search = '';
-    Object.entries(values).forEach(([key, value]) => {
-      if (value) url.searchParams.set(key, value);
-    });
-    return url.pathname + url.search;
-  }
-
-  function groupedPublishers(entries) {
-    const groups = new Map();
-    entries.forEach((item) => {
-      const id = publisherId(item);
-      if (!id || id === 'unknown') return;
-      const group = groups.get(id) || { id, packages: new Map() };
-      const key = packageType(item) + ':' + item.id;
-      const current = group.packages.get(key);
-      if (!current || compareVersions(item.version, current.version) > 0) group.packages.set(key, item);
-      groups.set(id, group);
-    });
-    return Array.from(groups.values()).map((group) => {
-      const items = Array.from(group.packages.values()).sort((left, right) => Number(right.metadata && right.metadata.stars || 0) - Number(left.metadata && left.metadata.stars || 0));
-      const signals = items.map(trust);
-      const stars = items.reduce((sum, item) => sum + Number(item.metadata && item.metadata.stars || 0), 0);
-      return {
-        id: group.id,
-        items,
-        avgTrust: items.length ? Math.round(signals.reduce((sum, signal) => sum + signal.score, 0) / items.length) : 0,
-        verified: items.some((item) => item.publisher && (item.publisher.repository_ownership === 'verified' || item.publisher.verified === true)),
-        stars,
-      };
-    }).sort((left, right) => right.items.length - left.items.length || right.stars - left.stars || left.id.localeCompare(right.id));
-  }
-
-  function packageCard(item) {
-    const type = packageType(item);
-    const signal = trust(item);
-    const repo = repoHref(item);
-    const detail = ecosystemUrl + encodeURIComponent(item.id) + '?type=' + encodeURIComponent(type);
-    const metadata = item.metadata || {};
-    return '<article class="card package-card">'
-      + '<div class="top"><span class="tier ' + escapeHtml(signal.tier) + '">' + escapeHtml(signal.tier) + ' · ' + signal.score + '</span><span>★ ' + Number(metadata.stars || 0).toLocaleString() + '</span></div>'
-      + '<h3>' + escapeHtml(metadata.name || item.id) + '</h3>'
-      + '<code>' + escapeHtml(type) + ':' + escapeHtml(item.id) + '@' + escapeHtml(item.version) + '</code>'
-      + '<p>' + escapeHtml(metadata.description || (item.source && item.source.repo) || '') + '</p>'
-      + '<div class="links">' + (repo ? '<a href="' + repo + '" target="_blank" rel="noopener noreferrer">Source ↗</a>' : '') + '<a href="' + detail + '">Registry detail →</a></div>'
-      + '</article>';
-  }
-
-  function renderDirectory(query) {
-    const normalized = String(query || '').trim().toLowerCase();
-    const visible = publishers.filter((publisher) => publisher.id.toLowerCase().includes(normalized));
-    empty.hidden = visible.length !== 0;
-    grid.className = 'grid';
-    grid.innerHTML = visible.map((publisher) => '<a class="card publisher-card" href="' + queryHref({ id: publisher.id }) + '">'
-      + '<div class="top"><span class="kicker">Publisher</span><span>' + (publisher.verified ? '✓ Verified' : 'Unverified') + '</span></div>'
-      + '<h2>' + escapeHtml(publisher.id) + '</h2>'
-      + '<div class="summary"><span><b>' + publisher.items.length + '</b><small>packages</small></span><span><b>' + publisher.avgTrust + '</b><small>avg trust</small></span><span><b>★ ' + publisher.stars.toLocaleString() + '</b><small>stars</small></span></div>'
-      + '<span class="profile-link">Open portfolio →</span></a>').join('');
-    status.textContent = visible.length.toLocaleString() + ' of ' + publishers.length.toLocaleString() + ' publishers · Registry V3';
-  }
-
-  function renderProfile(publisher) {
-    empty.hidden = true;
-    grid.className = 'profile-grid';
-    grid.innerHTML = '<a class="back-link" href="' + queryHref({}) + '">← All publishers</a>'
-      + '<section class="profile-hero"><div><span class="kicker">Publisher</span><h2>' + escapeHtml(publisher.id) + '</h2><p>Registry-backed package portfolio. Ownership and trust are independent from popularity.</p></div>'
-      + '<div class="summary"><span><b>' + publisher.items.length + '</b><small>packages</small></span><span><b>' + publisher.avgTrust + '</b><small>avg trust</small></span><span><b>' + (publisher.verified ? 'Verified' : 'Unverified') + '</b><small>repository ownership</small></span></div></section>'
-      + '<section class="package-grid">' + publisher.items.map(packageCard).join('') + '</section>';
-    status.textContent = publisher.id + ' · ' + publisher.items.length + ' package(s) · Registry V3';
-  }
-
-  function render() {
-    const params = new URLSearchParams(window.location.search);
-    const selected = params.get('id');
-    const query = params.get('q') || '';
-    input.value = query;
-    const publisher = selected && publishers.find((candidate) => candidate.id.toLowerCase() === selected.toLowerCase());
-    if (publisher) renderProfile(publisher);
-    else renderDirectory(query);
-  }
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    window.history.pushState({}, '', queryHref({ q: input.value.trim() }));
-    render();
-  });
-  window.addEventListener('popstate', render);
-
-  fetch(registryUrl, { headers: { accept: 'application/json' } })
-    .then((response) => {
-      if (!response.ok) throw new Error('Registry V3 returned HTTP ' + response.status);
-      return response.json();
-    })
-    .then((payload) => {
-    publishers = groupedPublishers(Array.isArray(payload.plugins) ? payload.plugins : []);
-    render();
-    })
-    .catch((error) => {
-    grid.innerHTML = '';
-    empty.hidden = false;
-    empty.textContent = 'Publisher directory is temporarily unavailable. Open the Trust Center or try again later.';
-    status.textContent = error instanceof Error ? error.message : 'Registry V3 could not be loaded';
-    });
+  const escapeMap = { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' };
+  function escapeHtml(value){ return String(value == null ? '' : value).replace(/[&<>"']/g,(character)=>escapeMap[character]); }
+  function publisherId(item){ return String(item.publisher && (item.publisher.id || item.publisher.login || item.publisher.name) || (item.source && item.source.repo && item.source.repo.split('/')[0]) || 'unknown').trim(); }
+  function packageType(item){ return String(item.type || (item.runtime && item.runtime.type) || 'plugin'); }
+  function trust(item){ const security=item.security||{};const publisher=item.publisher||{};const ownership=publisher.repository_ownership||'unverified';const advisories=security.advisories||[];let score=0;if(security.provenance)score+=20;if(security.signature)score+=25;if(security.sbom)score+=15;if(security.license)score+=10;if(ownership==='verified'||publisher.verified===true)score+=25;else if(ownership==='declared'||ownership==='required')score+=10;if(item.metadata&&item.metadata.verified===true)score+=10;if(security.yanked===true)score-=25;if(security.revoked===true)score-=100;const critical=advisories.some((a)=>String(a&&a.severity||'').toLowerCase()==='critical');if(critical)score-=50;score=Math.max(0,Math.min(100,score));return{score,tier:security.revoked||critical?'unverified':score>=80?'trusted':score>=55?'verified':score>=25?'community':'unverified'}; }
+  function compareVersions(left,right){ return String(left||'').localeCompare(String(right||''),undefined,{numeric:true}); }
+  function repoHref(item){ const repo=String(item.source&&item.source.repo||'').trim(); return /^[\w.-]+\/[\w.-]+$/.test(repo)?'https://github.com/'+repo:''; }
+  function queryHref(values){ const url=new URL(window.location.href);url.search='';Object.entries(values).forEach(([key,value])=>{if(value)url.searchParams.set(key,value);});return url.pathname+url.search; }
+  function groupedPublishers(entries){ const groups=new Map();entries.forEach((item)=>{const id=publisherId(item);if(!id||id==='unknown')return;const group=groups.get(id)||{id,packages:new Map()};const key=packageType(item)+':'+item.id;const current=group.packages.get(key);if(!current||compareVersions(item.version,current.version)>0)group.packages.set(key,item);groups.set(id,group);});return Array.from(groups.values()).map((group)=>{const items=Array.from(group.packages.values()).sort((a,b)=>Number(b.metadata&&b.metadata.stars||0)-Number(a.metadata&&a.metadata.stars||0));const signals=items.map(trust);const stars=items.reduce((sum,item)=>sum+Number(item.metadata&&item.metadata.stars||0),0);return{id:group.id,items,avgTrust:items.length?Math.round(signals.reduce((sum,signal)=>sum+signal.score,0)/items.length):0,verified:items.some((item)=>item.publisher&&(item.publisher.repository_ownership==='verified'||item.publisher.verified===true)),stars};}).sort((a,b)=>b.items.length-a.items.length||b.stars-a.stars||a.id.localeCompare(b.id)); }
+  function packageCard(item){ const type=packageType(item);const signal=trust(item);const repo=repoHref(item);const metadata=item.metadata||{};const stars=Number(metadata.stars||0);const detail=stars>=detailThreshold?ecosystemUrl+encodeURIComponent(item.id)+'?type='+encodeURIComponent(type):'';const links=(repo?'<a href="'+repo+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(t('source'))+'</a>':'')+(detail?'<a href="'+detail+'">'+escapeHtml(t('detail'))+'</a>':'');return '<article class="card package-card"><div class="top"><span class="tier '+escapeHtml(signal.tier)+'">'+escapeHtml(signal.tier)+' · '+signal.score+'</span><span>★ '+stars.toLocaleString()+'</span></div><h3>'+escapeHtml(metadata.name||item.id)+'</h3><code>'+escapeHtml(type)+':'+escapeHtml(item.id)+'@'+escapeHtml(item.version)+'</code><p>'+escapeHtml(metadata.description||(item.source&&item.source.repo)||'')+'</p><div class="links">'+links+'</div></article>'; }
+  function renderDirectory(query){ const normalized=String(query||'').trim().toLowerCase();const visible=publishers.filter((publisher)=>publisher.id.toLowerCase().includes(normalized));empty.hidden=visible.length!==0;grid.className='grid';grid.innerHTML=visible.map((publisher)=>'<a class="card publisher-card" href="'+queryHref({id:publisher.id})+'"><div class="top"><span class="kicker">'+escapeHtml(t('publisher'))+'</span><span>'+(publisher.verified?'✓ '+escapeHtml(t('verified')):escapeHtml(t('unverified')))+'</span></div><h2>'+escapeHtml(publisher.id)+'</h2><div class="summary"><span><b>'+publisher.items.length+'</b><small>'+escapeHtml(t('packages'))+'</small></span><span><b>'+publisher.avgTrust+'</b><small>'+escapeHtml(t('avgTrust'))+'</small></span><span><b>★ '+publisher.stars.toLocaleString()+'</b><small>'+escapeHtml(t('stars'))+'</small></span></div><span class="profile-link">'+escapeHtml(t('openPortfolio'))+'</span></a>').join('');status.textContent=visible.length.toLocaleString()+' / '+publishers.length.toLocaleString()+' '+t('publisher')+' · Registry V3'; }
+  function renderProfile(publisher){ empty.hidden=true;grid.className='profile-grid';grid.innerHTML='<a class="back-link" href="'+queryHref({})+'">'+escapeHtml(t('all'))+'</a><section class="profile-hero"><div><span class="kicker">'+escapeHtml(t('publisher'))+'</span><h2>'+escapeHtml(publisher.id)+'</h2><p>'+escapeHtml(t('portfolio'))+'</p></div><div class="summary"><span><b>'+publisher.items.length+'</b><small>'+escapeHtml(t('packages'))+'</small></span><span><b>'+publisher.avgTrust+'</b><small>'+escapeHtml(t('avgTrust'))+'</small></span><span><b>'+(publisher.verified?escapeHtml(t('verified')):escapeHtml(t('unverified')))+'</b><small>'+escapeHtml(t('ownership'))+'</small></span></div></section><section class="package-grid">'+publisher.items.map(packageCard).join('')+'</section>';status.textContent=publisher.id+' · '+publisher.items.length+' '+t('packages')+' · Registry V3'; }
+  function render(){ const params=new URLSearchParams(window.location.search);const selected=params.get('id');const query=params.get('q')||'';input.value=query;const publisher=selected&&publishers.find((candidate)=>candidate.id.toLowerCase()===selected.toLowerCase());if(publisher)renderProfile(publisher);else renderDirectory(query); }
+  form.addEventListener('submit',(event)=>{event.preventDefault();window.history.pushState({},'',queryHref({q:input.value.trim()}));render();});window.addEventListener('popstate',render);document.addEventListener('dsh:languagechange',()=>{applyStatic();if(publishers.length)render();});applyStatic();
+  fetch(registryUrl,{headers:{accept:'application/json'}}).then((response)=>{if(!response.ok)throw new Error('Registry V3 returned HTTP '+response.status);return response.json();}).then((payload)=>{publishers=groupedPublishers(Array.isArray(payload.plugins)?payload.plugins:[]);render();}).catch((error)=>{grid.innerHTML='';empty.hidden=false;empty.textContent=t('unavailable');status.textContent=error instanceof Error?error.message:t('loadFailed');});
 </script>
 
 <style>
