@@ -27,7 +27,11 @@ async function filesUnder(directory, extensions = null) {
 }
 
 async function contents(files) {
-  return Promise.all(files.map(async (file) => ({ file, path: relative(ROOT, file).replaceAll('\\', '/'), text: await readFile(file, 'utf8') })));
+  return Promise.all(files.map(async (file) => ({
+    file,
+    path: relative(ROOT, file).replaceAll('\\', '/'),
+    text: await readFile(file, 'utf8'),
+  })));
 }
 
 function fail(path, rule, detail) {
@@ -43,21 +47,29 @@ const sourceFiles = await contents([
   ...await filesUnder('packages', ['.mjs', '.js', '.ts', '.mts']),
   ...await filesUnder('functions', ['.ts', '.js', '.mjs']),
   ...await filesUnder('site/src', ['.ts', '.js', '.mjs', '.astro']),
+  ...await filesUnder('scripts', ['.mjs', '.js', '.ts']),
 ]);
 
 for (const entry of sourceFiles) {
-  if (/runtime\/(?:package-model|semver)\.mjs$/.test(entry.path)) fail(entry.path, 'duplicate protocol implementation is forbidden');
-  if (/from\s+['"]\.\/package-model\.mjs['"]|from\s+['"]\.\/semver\.mjs['"]/.test(entry.text)) fail(entry.path, 'deleted runtime protocol implementation import');
+  if (/runtime\/(?:package-model|semver|resolver|solver-v2)\.mjs$/.test(entry.path)) fail(entry.path, 'duplicate protocol/resolver implementation is forbidden');
+  if (/from\s+['"]\.\/(?:package-model|semver|resolver|solver-v2)\.mjs['"]/.test(entry.text)) fail(entry.path, 'deleted runtime protocol/resolver implementation import');
   if (entry.path.startsWith('site/src/') && imports(entry.text).some((value) => value.includes('/runtime/') || value.startsWith('../../../runtime') || value.startsWith('../../runtime'))) fail(entry.path, 'Site must not import Local Runtime');
-  if (entry.path.startsWith('functions/') && imports(entry.text).some((value) => /runtime\/(?:installer|registry|transaction|supervisor|environment-lock|secret-store)/.test(value))) fail(entry.path, 'Edge functions must not import local mutation/runtime state modules');
+  if (entry.path.startsWith('functions/') && imports(entry.text).some((value) => /runtime\/(?:installer|registry|transaction|supervisor|environment-lock|secret-store|trust-store|cas-store)/.test(value))) fail(entry.path, 'Edge functions must not import local mutation/runtime state modules');
   if (entry.path.startsWith('functions/') && /\/api\/v1(?:\/|['"`])/.test(entry.text)) fail(entry.path, 'API V1 reference is forbidden');
   if ((entry.path.startsWith('runtime/') || entry.path.startsWith('site/src/') || entry.path.startsWith('functions/')) && entry.text.includes('dsh://install?plugin=')) fail(entry.path, 'legacy Deep Link is forbidden');
+  if (entry.path.startsWith('functions/') && /RegistryV3|registry-v3|registry_version\s*[:=]\s*3/.test(entry.text)) fail(entry.path, 'Registry V3 Edge authority is forbidden');
+  if (entry.path.startsWith('runtime/') && /function\s+(?:compareVersions|satisfiesVersion|parsePackageRequest)\b/.test(entry.text)) fail(entry.path, 'Runtime must not reimplement Package Protocol V2');
 }
 
 for (const legacy of [
   'functions/api/v1',
+  'functions/_package-request.ts',
+  'functions/_registry.ts',
+  'functions/_marketplace-v4.ts',
   'runtime/package-model.mjs',
   'runtime/semver.mjs',
+  'runtime/resolver.mjs',
+  'runtime/solver-v2.mjs',
   'site/src/pages/plugin/[slug].astro',
   'site/src/pages/ecosystem/[id].astro',
 ]) {
@@ -73,17 +85,34 @@ else {
   if (/\bfetch\s*\(/.test(resolver.text)) fail(resolver.path, 'Resolver must not perform network I/O');
 }
 
-const mutationFrontends = ['runtime/dsh.mjs', 'runtime/client-host.mjs', 'runtime/environment-cli.mjs'];
+const mutationFrontends = [
+  'runtime/dsh.mjs',
+  'runtime/client-host.mjs',
+  'runtime/environment-cli.mjs',
+  'runtime/host-bridge.mjs',
+];
 for (const path of mutationFrontends) {
   const entry = sourceFiles.find((item) => item.path === path);
   if (!entry) continue;
   const specs = imports(entry.text);
   if (specs.some((value) => value.endsWith('/registry.mjs') || value === './registry.mjs')) fail(path, 'mutation frontend must not write Runtime State directly');
-  if (path !== 'runtime/client-host.mjs' && specs.some((value) => value === './package-service.mjs') && /(?:installPackageRequest|updatePackageRequest|removePackageRequest|rollbackPackageRequest|setPackageEnabled)/.test(entry.text)) fail(path, 'mutation frontend bypasses Runtime Supervisor');
-  if (path === 'runtime/client-host.mjs' && /from ['"]\.\/package-service\.mjs['"]/.test(entry.text) && /\b(?:installPackageRequest|updatePackageRequest|removePackageRequest|rollbackPackageRequest|setPackageEnabled)\b/.test(entry.text)) fail(path, 'Local Host bypasses Runtime Supervisor');
+  if (specs.some((value) => value === './package-service.mjs') && /(?:installPackageRequest|updatePackageRequest|removePackageRequest|rollbackPackageRequest|setPackageEnabled)/.test(entry.text)) fail(path, 'mutation frontend bypasses Runtime Supervisor');
 }
 
-const packageDirs = (await readdir(resolve(ROOT, 'packages'), { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+const runtimePermissions = sourceFiles.find((entry) => entry.path === 'runtime/permissions.mjs');
+if (runtimePermissions && !runtimePermissions.text.includes('packages/policy-core/permissions.mjs')) fail(runtimePermissions.path, 'Runtime permission semantics must delegate to Policy Core');
+
+const candidateSource = sourceFiles.find((entry) => entry.path === 'scripts/registry-v4-source.mjs');
+if (!candidateSource) fail('scripts/registry-v4-source.mjs', 'Registry V4 discovery ingress is missing');
+else {
+  for (const required of ["'accepted'", "'quarantined'", "'rejected'", 'candidateReport']) {
+    if (!candidateSource.text.includes(required)) fail(candidateSource.path, 'candidate/quarantine pipeline contract missing', required);
+  }
+}
+
+const packageDirs = (await readdir(resolve(ROOT, 'packages'), { withFileTypes: true }))
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
 const graph = new Map(packageDirs.map((name) => [name, new Set()]));
 for (const entry of sourceFiles.filter((item) => item.path.startsWith('packages/'))) {
   const owner = entry.path.split('/')[1];
@@ -112,12 +141,17 @@ const expectedAuthorities = [
   'packages/registry-core/index.mjs',
   'packages/resolver/index.mjs',
   'packages/policy-core/index.mjs',
+  'packages/policy-core/permissions.mjs',
   'runtime/supervisor.mjs',
   'runtime/transaction.mjs',
   'runtime/activation-manager.mjs',
   'runtime/cas-store.mjs',
   'runtime/trust-store.mjs',
+  'runtime/secret-store.mjs',
+  'runtime/secret-provider.mjs',
+  'runtime/audit-log.mjs',
   'runtime/adapters/index.mjs',
+  'scripts/registry-v4-source.mjs',
 ];
 for (const path of expectedAuthorities) if (!await exists(resolve(ROOT, path))) fail(path, 'required canonical authority is missing');
 
