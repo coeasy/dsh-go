@@ -4,12 +4,8 @@
   "description": "DeepSeek Harness native package manager, Registry V4 and Marketplace",
   "type": "module",
   "private": false,
-  "engines": {
-    "node": ">=22"
-  },
-  "bin": {
-    "dsh": "bin/dsh.mjs"
-  },
+  "engines": { "node": ">=22" },
+  "bin": { "dsh": "bin/dsh.mjs" },
   "files": [
     "bin/dsh.mjs",
     "runtime/",
@@ -41,7 +37,7 @@
     "completion:test": "vitest run tests/completion tests/architecture-v4",
     "contract:check": "node scripts/check-contract.mjs",
     "architecture:check": "node scripts/check-architecture.mjs",
-    "deploy:gate": "node scripts/deploy-gate-v3.mjs",
+    "deploy:gate": "node scripts/deploy-gate-v4.mjs",
     "validate": "node scripts/validate.mjs",
     "audit:identity": "node scripts/audit-catalog-identity.mjs",
     "readme:update": "node scripts/update-readme.mjs",
