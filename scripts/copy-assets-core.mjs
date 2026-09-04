@@ -28,10 +28,10 @@ const TARGET_DIR = resolve(ROOT, 'site/public/catalog');
 const SCRIPTS_SRC = resolve(ROOT, 'site/src/scripts');
 const SCRIPTS_DST = resolve(ROOT, 'site/public/scripts');
 const INSTALL_DIR = resolve(ROOT, 'site/public/install');
-const MARKETPLACE_POLICY = JSON.parse(await readFile(resolve(ROOT, 'config', 'marketplace-policy.json'), 'utf8'));
+const MARKETPLACE_POLICY = JSON.parse(await readFile(resolve(ROOT, 'site', 'src', 'config', 'marketplace-policy.json'), 'utf8'));
 const INSTALL_SCRIPT_THRESHOLD = Number(MARKETPLACE_POLICY.generated_install_scripts?.min_stars);
 if (!Number.isFinite(INSTALL_SCRIPT_THRESHOLD) || INSTALL_SCRIPT_THRESHOLD < 0) {
-  throw new Error('config/marketplace-policy.json has an invalid generated_install_scripts.min_stars');
+  throw new Error('site/src/config/marketplace-policy.json has an invalid generated_install_scripts.min_stars');
 }
 async function exists(path) { try { await access(path); return true; } catch { return false; } }
 
