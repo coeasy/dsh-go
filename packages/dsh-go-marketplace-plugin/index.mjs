@@ -8,9 +8,31 @@ function trimBase(value) {
 }
 
 function assertType(type) {
-  const value = String(type || 'plugin').toLowerCase();
+  const value = String(type || '').trim().toLowerCase();
   if (!PACKAGE_TYPES.has(value)) throw new Error(`unsupported DSH package type: ${value}`);
   return value;
+}
+
+function assertId(id) {
+  const value = String(id || '').trim().toLowerCase();
+  if (!/^[a-z0-9_.-]+(?:\/[a-z0-9_.-]+)?$/.test(value) || value.includes('..')) throw new Error(`invalid DSH package id: ${id}`);
+  return value;
+}
+
+function canonicalSpec(request, fallbackRange = '*') {
+  if (typeof request === 'string') {
+    if (!/^(?:plugin|mcp|skill|agent):[^@]+@.+$/.test(request)) throw new Error('canonical package coordinate <type>:<id>@<range> is required');
+    return request;
+  }
+  const type = assertType(request?.type);
+  const id = assertId(request?.id);
+  const range = String(request?.range || request?.version || fallbackRange).trim() || '*';
+  return `${type}:${id}@${range}`;
+}
+
+function unwrap(payload) {
+  if (payload && typeof payload === 'object' && 'data' in payload) return payload.data;
+  return payload;
 }
 
 async function parseResponse(response) {
@@ -25,13 +47,18 @@ async function parseResponse(response) {
     error.response = body;
     throw error;
   }
-  return body;
+  return unwrap(body);
 }
 
 function bodyValue(init = {}) {
   if (!init.body) return null;
   if (typeof init.body !== 'string') return init.body;
   try { return JSON.parse(init.body); } catch { return init.body; }
+}
+
+function remotePackagePath(type, id) {
+  const parts = assertId(id).split('/').map(encodeURIComponent);
+  return `/api/v2/packages/${encodeURIComponent(assertType(type))}/${parts.join('/')}`;
 }
 
 export function createMarketplaceDesktopClient(options = {}) {
@@ -49,24 +76,34 @@ export function createMarketplaceDesktopClient(options = {}) {
       throw error;
     }
     if (invoke) {
-      return invoke(DSH_TAURI_IPC_COMMAND, {
+      const result = await invoke(DSH_TAURI_IPC_COMMAND, {
         request: {
+          api: 'v2',
           path,
           method: init.method || 'GET',
           body: bodyValue(init),
           token,
         },
       });
+      if (result?.error) {
+        const error = new Error(result.error.message || 'DSH local IPC request failed');
+        error.code = result.error.code || 'DSH_DESKTOP_REQUEST_FAILED';
+        throw error;
+      }
+      return unwrap(result);
     }
     const headers = new Headers(init.headers || {});
     headers.set('authorization', `Bearer ${token}`);
     if (init.body && !headers.has('content-type')) headers.set('content-type', 'application/json');
-    return parseResponse(await fetchImpl(`${localBaseUrl}${path}`, { ...init, headers }));
+    return parseResponse(await fetchImpl(`${localBaseUrl}${path}`, { ...init, headers, cache: 'no-store' }));
   }
 
   async function health() {
-    if (invoke) return invoke(DSH_TAURI_IPC_COMMAND, { request: { path: '/health', method: 'GET', body: null, token } });
-    return parseResponse(await fetchImpl(`${localBaseUrl}/health`));
+    if (invoke) {
+      const result = await invoke(DSH_TAURI_IPC_COMMAND, { request: { api: 'v2', path: '/health', method: 'GET', body: null, token } });
+      return unwrap(result);
+    }
+    return parseResponse(await fetchImpl(`${localBaseUrl}/health`, { cache: 'no-store' }));
   }
 
   async function marketplace(path, params = {}) {
@@ -74,7 +111,62 @@ export function createMarketplaceDesktopClient(options = {}) {
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));
     }
-    return parseResponse(await fetchImpl(url));
+    return parseResponse(await fetchImpl(url, { cache: 'no-store', headers: { accept: 'application/json' } }));
+  }
+
+  async function runtimeStatus() { return local('/v2/runtime/status'); }
+  async function registryStatus() { return local('/v2/registry/status'); }
+  async function installed({ all = false } = {}) { return local(`/v2/packages?all=${all ? 'true' : 'false'}`); }
+
+  async function center() {
+    const [runtime, installedResult, registry] = await Promise.all([runtimeStatus(), installed(), registryStatus()]);
+    const packages = installedResult?.packages || [];
+    const counts = { installed: packages.length, active: 0, pending_activation: 0, failed: 0, disabled: 0 };
+    for (const item of packages) {
+      if (item.state === 'active' || item.activated === true) counts.active += 1;
+      if (item.state === 'pending-restart' || item.restart_required === true) counts.pending_activation += 1;
+      if (item.state === 'failed') counts.failed += 1;
+      if (item.state === 'disabled' || item.enabled === false) counts.disabled += 1;
+    }
+    return {
+      runtime,
+      registry,
+      packages,
+      counts,
+      restart_required: packages.some((item) => item.restart_required === true),
+      mutation_authority: runtime?.mutation_authority || 'Runtime Supervisor',
+      auto_restart: false,
+    };
+  }
+
+  async function installPlan(request) {
+    return local('/v2/install/plan', {
+      method: 'POST',
+      body: JSON.stringify({ spec: canonicalSpec(request), channel: request?.channel || 'stable' }),
+    });
+  }
+
+  async function install(request, options = {}) {
+    if (options.approved !== true) return { executed: false, confirmation_required: true, request, auto_restart: false };
+    return local('/v2/install/execute', {
+      method: 'POST',
+      body: JSON.stringify({ spec: canonicalSpec(request), channel: request?.channel || 'stable', approved: true, dry_run: options.dryRun === true }),
+    });
+  }
+
+  async function packageAction(type, id, action, options = {}) {
+    const normalizedAction = String(action || '').trim().toLowerCase();
+    if (!['update', 'remove', 'rollback', 'enable', 'disable', 'verify'].includes(normalizedAction)) throw new Error(`unsupported package action: ${action}`);
+    if (options.approved !== true) return { executed: false, confirmation_required: true, type, id, action: normalizedAction, auto_restart: false };
+    return local('/v2/packages/action', {
+      method: 'POST',
+      body: JSON.stringify({ spec: canonicalSpec({ type, id, range: options.range || '*' }), action: normalizedAction, approved: true }),
+    });
+  }
+
+  async function activate(options = {}) {
+    if (options.approved !== true) return { executed: false, confirmation_required: true, action: 'activate', auto_restart: false };
+    return local('/v2/runtime/activate', { method: 'POST', body: JSON.stringify({ approved: true }) });
   }
 
   return Object.freeze({
@@ -82,84 +174,31 @@ export function createMarketplaceDesktopClient(options = {}) {
     marketplaceBaseUrl,
     transport: invoke ? 'tauri-ipc' : 'client-host-http',
     health,
-    contract: () => local('/v1/desktop/contract'),
-    center: () => local('/v1/desktop/center'),
-    enterprisePolicy: () => local('/v1/enterprise/policy'),
-    registries: () => local('/v1/registries'),
-    addRegistry: async (registry, options = {}) => {
-      if (options.approved !== true) return { executed: false, confirmation_required: true, registry, auto_restart: false };
-      return local('/v1/registries', { method: 'POST', body: JSON.stringify({ ...(registry || {}), approved: true }) });
-    },
-    removeRegistry: async (name, options = {}) => {
-      if (options.approved !== true) return { executed: false, confirmation_required: true, name, auto_restart: false };
-      return local(`/v1/registries/${encodeURIComponent(name)}`, { method: 'DELETE', body: JSON.stringify({ approved: true }) });
-    },
-    search: (query, options = {}) => marketplace(String(query || '').trim() ? '/api/v1/search' : '/api/v1/marketplace', {
-      q: query,
-      type: options.type,
-      locale: options.locale,
-      limit: options.limit || 40,
-    }),
-    packageDetail: (id, options = {}) => marketplace('/api/v1/package-detail', {
-      id,
-      type: options.type,
-      version: options.version,
-      channel: options.channel,
-      locale: options.locale,
-    }),
-    installPlan: (request) => local('/v1/install/plan', { method: 'POST', body: JSON.stringify(request || {}) }),
-    install: async (request, options = {}) => {
-      if (options.approved !== true) return { executed: false, confirmation_required: true, request, auto_restart: false };
-      return local('/v1/install/execute', { method: 'POST', body: JSON.stringify({ ...(request || {}), approved: true }) });
-    },
-    packageAction: async (type, id, action, options = {}) => {
-      if (options.approved !== true) return { executed: false, confirmation_required: true, type, id, action, auto_restart: false };
-      const normalizedType = assertType(type);
-      return local(`/v1/packages/${normalizedType}/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ action, version: options.version, approved: true }),
-      });
-    },
-    doctor: async (type, id, options = {}) => {
-      if (options.approved !== true) return { executed: false, confirmation_required: true, type, id, action: 'doctor', auto_restart: false };
-      const normalizedType = assertType(type);
-      return local(`/v1/packages/${normalizedType}/${encodeURIComponent(id)}/doctor`, {
-        method: 'POST',
-        body: JSON.stringify({ approved: true }),
-      });
-    },
-    logs: (type, id) => {
-      const normalizedType = assertType(type);
-      if (normalizedType !== 'mcp') {
-        const error = new Error(`desktop logs are currently available for MCP packages only: ${normalizedType}:${id}`);
-        error.code = 'DSH_DESKTOP_LOGS_UNSUPPORTED';
-        throw error;
-      }
-      return local(`/v1/packages/mcp/${encodeURIComponent(id)}/logs`);
-    },
-    removePackage: async (type, id, options = {}) => {
-      if (options.approved !== true) return { executed: false, confirmation_required: true, type, id, action: 'remove', auto_restart: false };
-      const normalizedType = assertType(type);
-      return local(`/v1/packages/${normalizedType}/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        body: JSON.stringify({ approved: true, cascade: options.cascade === true }),
-      });
-    },
-    restartIntent: () => ({
-      requested: true,
-      delegated_to_host: true,
-      event: 'dsh:restart-requested',
-      auto_restart: false,
-    }),
+    contract: () => local('/v2/contract'),
+    center,
+    runtimeStatus,
+    registryStatus,
+    installed,
+    search: (query, options = {}) => marketplace('/api/v2/search', { q: query, type: options.type, limit: options.limit || 50 }),
+    packageDetail: (id, options = {}) => marketplace(remotePackagePath(options.type, id)),
+    installPlan,
+    install,
+    packageAction,
+    removePackage: (type, id, options = {}) => packageAction(type, id, 'remove', options),
+    verifyPackage: (type, id, options = {}) => packageAction(type, id, 'verify', options),
+    activate,
+    canonicalSpec,
   });
 }
 
 export const marketplaceDesktopPlugin = Object.freeze({
-  id: 'dsh-go-marketplace-plugin',
-  version: '0.1.0',
-  local_protocol: 'dsh-client-host-v1',
+  id: 'coeasy/dsh-go-marketplace-plugin',
+  version: '0.1.2',
+  package_protocol: 2,
+  local_api: 'v2',
+  registry_schema: 4,
   ipc_command: DSH_TAURI_IPC_COMMAND,
   remote_role: 'discovery-only',
-  local_role: 'authenticated-package-manager-ipc',
+  local_role: 'runtime-supervisor-client',
   auto_restart: false,
 });
