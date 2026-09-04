@@ -70,13 +70,13 @@ describe('deployment dispatch fan-out', () => {
     expect(wait).toHaveBeenCalledTimes(1);
   });
 
-  it('waits for all provider runs before dispatching monitor', async () => {
+  it('waits for all provider runs and the final monitor before succeeding', async () => {
     const calls: string[] = [];
     const execute = vi.fn(async (args: string[], _options?: { timeoutMs?: number }) => {
       if (args[0] === 'workflow') {
         const workflow = args[2];
         calls.push(`dispatch:${workflow}`);
-        const runId = workflow === 'deploy.yml' ? '101' : '102';
+        const runId = workflow === 'deploy.yml' ? '101' : workflow === 'deploy-pages.yml' ? '102' : '103';
         return { code: 0, stdout: `https://github.com/example/repo/actions/runs/${runId}\n`, stderr: '', timedOut: false };
       }
       calls.push(`watch:${args[2]}`);
@@ -98,13 +98,46 @@ describe('deployment dispatch fan-out', () => {
       'watch:101',
       'watch:102',
       'dispatch:monitor.yml',
+      'watch:103',
     ]);
     expect(result.map((item) => [item.workflow, item.status])).toEqual([
       ['deploy.yml', 'completed'],
       ['deploy-pages.yml', 'completed'],
-      ['monitor.yml', 'dispatched'],
+      ['monitor.yml', 'completed'],
     ]);
     expect(execute.mock.calls[2][1]).toMatchObject({ timeoutMs: 60000 });
+    expect(execute.mock.calls[5][1]).toMatchObject({ timeoutMs: 60000 });
+  });
+
+  it('fails when the final production monitor fails', async () => {
+    const calls: string[] = [];
+    const execute = vi.fn(async (args: string[]) => {
+      if (args[0] === 'workflow') {
+        const workflow = args[2];
+        calls.push(`dispatch:${workflow}`);
+        const runId = workflow === 'monitor.yml' ? '302' : '301';
+        return { code: 0, stdout: `https://github.com/example/repo/actions/runs/${runId}\n`, stderr: '', timedOut: false };
+      }
+      calls.push(`watch:${args[2]}`);
+      if (args[2] === '302') return { code: 1, stdout: '', stderr: 'final convergence mismatch', timedOut: false };
+      return { code: 0, stdout: 'completed', stderr: '', timedOut: false };
+    });
+
+    await expect(dispatchDeployments({
+      env: {
+        DEPLOY_REVISION: 'e'.repeat(40),
+        DEPLOY_WORKFLOWS: 'deploy.yml monitor.yml',
+        DEPLOY_WAIT_TIMEOUT_MS: '60000',
+      },
+      execute,
+    })).rejects.toThrow('monitor.yml');
+
+    expect(calls).toEqual([
+      'dispatch:deploy.yml',
+      'watch:301',
+      'dispatch:monitor.yml',
+      'watch:302',
+    ]);
   });
 
   it('blocks monitor when a provider dispatch fails', async () => {
