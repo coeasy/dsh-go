@@ -69,7 +69,7 @@ async function main() {
   const root = resolve(option('--root', process.cwd()));
   const scope = packageScope(root, option('--package-path', ''));
   const packageRoot = scope.root;
-  const outDir = resolve(option('--out-dir', join(root, 'dist'));
+  const outDir = resolve(option('--out-dir', join(root, 'dist')));
   const repository = option('--repository', process.env.GITHUB_REPOSITORY || '');
   const commandOptions = { timeoutMs: option('--timeout') };
   const commit = String(option('--commit', process.env.GITHUB_SHA || await git(root, ['rev-parse', 'HEAD'], commandOptions))).toLowerCase();
