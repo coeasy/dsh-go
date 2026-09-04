@@ -3,7 +3,7 @@
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
-const DEFAULT_REGISTRY_PATH = 'catalog/registry-v3.json';
+const DEFAULT_REGISTRY_PATH = 'catalog/registry-v4.json';
 const DEFAULT_ATTEMPTS = 9;
 const DEFAULT_DELAY_MS = 10_000;
 const DEFAULT_TIMEOUT_MS = 20_000;
@@ -14,7 +14,7 @@ export function buildRegistryUrl(baseUrl) {
   base.search = '';
   base.hash = '';
   if (!base.pathname.endsWith('/')) base.pathname += '/';
-  const registryUrl = new URL('catalog/registry-v3.json', base);
+  const registryUrl = new URL('catalog/registry-v4.json', base);
   registryUrl.search = inheritedSearch;
   return registryUrl;
 }
@@ -27,35 +27,36 @@ export function safeDisplayUrl(value) {
 }
 
 export function expectedRegistryState(registry) {
-  if (!registry || registry.registry_version !== 3) {
-    throw new Error('Local Registry must use registry_version=3');
-  }
-  const hash = registry.generated?.content_hash;
-  if (typeof hash !== 'string' || hash.length === 0) {
-    throw new Error('Local Registry is missing generated.content_hash');
-  }
-  if (!Array.isArray(registry.plugins)) {
-    throw new Error('Local Registry is missing plugins[]');
-  }
-  return { version: 3, hash, count: registry.plugins.length };
+  if (!registry || registry.schema_version !== 4) throw new Error('Local Registry must use schema_version=4');
+  const revision = registry.revision;
+  if (typeof revision !== 'string' || !/^[0-9a-f]{64}$/i.test(revision)) throw new Error('Local Registry V4 is missing a canonical revision');
+  if (!Array.isArray(registry.packages)) throw new Error('Local Registry V4 is missing packages[]');
+  const releases = registry.packages.reduce((sum, item) => sum + (Array.isArray(item.releases) ? item.releases.length : 0), 0);
+  return { schema: 4, revision, packages: registry.packages.length, releases };
 }
 
 export function deployedRegistryState(registry) {
   return {
-    version: registry?.registry_version,
-    hash: registry?.generated?.content_hash,
-    count: Array.isArray(registry?.plugins) ? registry.plugins.length : -1,
+    schema: registry?.schema_version,
+    revision: registry?.revision,
+    packages: Array.isArray(registry?.packages) ? registry.packages.length : -1,
+    releases: Array.isArray(registry?.packages)
+      ? registry.packages.reduce((sum, item) => sum + (Array.isArray(item?.releases) ? item.releases.length : 0), 0)
+      : -1,
   };
 }
 
 export function registryMatches(expected, deployed) {
   const actual = deployedRegistryState(deployed);
-  return actual.version === expected.version && actual.hash === expected.hash && actual.count === expected.count;
+  return actual.schema === expected.schema
+    && actual.revision === expected.revision
+    && actual.packages === expected.packages
+    && actual.releases === expected.releases;
 }
 
 export function describeRegistryMismatch(expected, deployed) {
   const actual = deployedRegistryState(deployed);
-  return `expected version=${expected.version} hash=${expected.hash} count=${expected.count}; got version=${String(actual.version)} hash=${String(actual.hash)} count=${actual.count}`;
+  return `expected schema=${expected.schema} revision=${expected.revision} packages=${expected.packages} releases=${expected.releases}; got schema=${String(actual.schema)} revision=${String(actual.revision)} packages=${actual.packages} releases=${actual.releases}`;
 }
 
 function parsePositiveInt(value, name, fallback, min, max) {
@@ -94,7 +95,6 @@ export async function checkDeploymentConvergence({
   wait = sleep,
 }) {
   if (!baseUrl) throw new Error('A deployment base URL is required');
-
   const localRegistry = JSON.parse(await readFile(registryPath, 'utf8'));
   const expected = expectedRegistryState(localRegistry);
   const registryUrl = buildRegistryUrl(baseUrl);
@@ -102,19 +102,17 @@ export async function checkDeploymentConvergence({
   let lastProblem = 'no response received';
 
   log(`${label} convergence target: ${safeUrl}`);
-
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
       const response = await fetchImpl(registryUrl, {
         headers: { accept: 'application/json', 'cache-control': 'no-cache' },
         signal: AbortSignal.timeout(timeoutMs),
       });
-      if (!response.ok) {
-        lastProblem = `HTTP ${response.status}`;
-      } else {
+      if (!response.ok) lastProblem = `HTTP ${response.status}`;
+      else {
         const deployed = await response.json();
         if (registryMatches(expected, deployed)) {
-          log(`${label} Registry V3 converged: hash=${expected.hash}, count=${expected.count}`);
+          log(`${label} Registry V4 converged: revision=${expected.revision}, packages=${expected.packages}, releases=${expected.releases}`);
           return { expected, registryUrl };
         }
         lastProblem = describeRegistryMismatch(expected, deployed);
@@ -122,14 +120,12 @@ export async function checkDeploymentConvergence({
     } catch (error) {
       lastProblem = error instanceof Error ? error.message : String(error);
     }
-
     if (attempt < attempts) {
       log(`${label} not converged (${attempt}/${attempts}): ${lastProblem}`);
       await wait(delayMs);
     }
   }
-
-  throw new Error(`${label} did not converge to the exact Registry V3 revision after ${attempts} attempts: ${lastProblem}`);
+  throw new Error(`${label} did not converge to the exact Registry V4 revision after ${attempts} attempts: ${lastProblem}`);
 }
 
 async function main() {
@@ -140,7 +136,6 @@ async function main() {
   const attempts = parsePositiveInt(args.attempts || process.env.DEPLOY_CONVERGENCE_ATTEMPTS, 'attempts', DEFAULT_ATTEMPTS, 1, 30);
   const delayMs = parsePositiveInt(args['delay-ms'] || process.env.DEPLOY_CONVERGENCE_DELAY_MS, 'delay-ms', DEFAULT_DELAY_MS, 0, 120_000);
   const timeoutMs = parsePositiveInt(args['timeout-ms'] || process.env.DEPLOY_CONVERGENCE_TIMEOUT_MS, 'timeout-ms', DEFAULT_TIMEOUT_MS, 1_000, 120_000);
-
   await checkDeploymentConvergence({ baseUrl, label, registryPath, attempts, delayMs, timeoutMs });
 }
 
