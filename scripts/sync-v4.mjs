@@ -4,6 +4,10 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { buildRegistryV4FromDiscovery } from './registry-v4-source.mjs';
+import {
+  loadRegistryV4SourceConfig,
+  requiredRegistryPackageFailures,
+} from './registry-v4-config.mjs';
 import { validateRegistryV4 } from '../packages/registry-core/index.mjs';
 import { buildSearchIndexV3 } from './build-search-index-v3.mjs';
 import { writeRegistryDistributionV2 } from './registry-distribution-v2.mjs';
@@ -29,42 +33,6 @@ function runDiscovery(mode) {
 
 async function loadJson(file) { return JSON.parse(await readFile(file, 'utf8')); }
 
-async function loadRegistrySourceConfig() {
-  const config = await loadJson(SOURCE_FILE);
-  if (config?.schema_version !== 1 || !Array.isArray(config.sources) || !Array.isArray(config.required_packages)) {
-    throw new Error('config/registry-v4-sources.json must use schema_version=1 with sources[] and required_packages[]');
-  }
-  return config;
-}
-
-function requiredPackageFailures(built, requiredPackages) {
-  const candidates = Array.isArray(built?.candidates?.candidates) ? built.candidates.candidates : [];
-  return requiredPackages.map((required) => {
-    const repository = String(required.repository || '').toLowerCase();
-    const packagePath = String(required.package_path || '').replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/+$/, '');
-    const type = String(required.type || '').toLowerCase();
-    const id = String(required.id || '').toLowerCase();
-    const accepted = candidates.find((candidate) => candidate.status === 'accepted'
-      && String(candidate.repo || '').toLowerCase() === repository
-      && String(candidate.package_path || '') === packagePath
-      && String(candidate.type || '').toLowerCase() === type
-      && String(candidate.id || '').toLowerCase() === id);
-    if (accepted) return null;
-    const observed = candidates.find((candidate) => String(candidate.repo || '').toLowerCase() === repository
-      && String(candidate.package_path || '') === packagePath
-      && String(candidate.type || '').toLowerCase() === type
-      && String(candidate.id || '').toLowerCase() === id);
-    return {
-      repository,
-      package_path: packagePath,
-      type,
-      id,
-      status: observed?.status || 'missing',
-      reason: observed?.reason || 'required-package-not-observed',
-    };
-  }).filter(Boolean);
-}
-
 async function writePublicationStatus(payload) {
   await writeFile(PUBLICATION_STATUS_FILE, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 }
@@ -75,7 +43,7 @@ async function main() {
 
   const [discovery, sourceConfig] = await Promise.all([
     loadJson(resolve(CATALOG, 'plugins.json')),
-    loadRegistrySourceConfig(),
+    loadRegistryV4SourceConfig(SOURCE_FILE),
   ]);
   const built = await buildRegistryV4FromDiscovery(discovery, {
     token: process.env.GITHUB_TOKEN || '',
@@ -83,7 +51,7 @@ async function main() {
     explicitSources: sourceConfig.sources,
   });
 
-  const requiredFailures = requiredPackageFailures(built, sourceConfig.required_packages);
+  const requiredFailures = requiredRegistryPackageFailures(built, sourceConfig.required_packages);
   if (requiredFailures.length) {
     const status = {
       schema_version: 1,
