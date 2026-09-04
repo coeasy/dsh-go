@@ -6,6 +6,7 @@ import {
   normalizePackageId,
   normalizePackageType,
   normalizeReleaseChannel,
+  normalizeVersionRange,
   packageKey,
   parseVersion,
 } from '../protocol-core/index.mjs';
@@ -17,40 +18,26 @@ function clone(value) {
 }
 
 function sourceRecordType(record) {
-  if (record?.type) return normalizePackageType(record.type);
-  const runtimeType = String(record?.runtime?.type || '').toLowerCase();
-  if (['plugin', 'mcp', 'skill', 'agent'].includes(runtimeType)) return normalizePackageType(runtimeType);
-  const capabilities = Array.isArray(record?.capabilities) ? record.capabilities.map((value) => String(value).toLowerCase()) : [];
-  for (const candidate of ['mcp', 'skill', 'agent']) if (capabilities.includes(candidate)) return candidate;
-  return 'plugin';
+  if (!record?.type) throw new ProtocolError(ERROR_CODES.INVALID_PACKAGE_TYPE, 'Registry V4 source record requires explicit type');
+  return normalizePackageType(record.type);
 }
 
 function publisherId(record) {
-  const declared = record?.publisher?.id || record?.publisher?.login || record?.publisher?.name;
-  if (declared) return String(declared).trim().toLowerCase();
-  const repo = String(record?.source?.repo || '');
-  return (repo.split('/')[0] || 'unknown').toLowerCase();
+  const declared = String(record?.publisher?.id || '').trim().toLowerCase();
+  if (!declared) throw new Error(`Registry V4 source record requires explicit publisher.id: ${record?.id || '<unknown>'}`);
+  if (!/^[a-z0-9_.-]+$/.test(declared)) throw new Error(`Registry V4 publisher.id is invalid: ${declared}`);
+  return declared;
 }
 
-function normalizeDependency(value, defaultType) {
-  if (typeof value === 'string') {
-    const coordinate = String(value).trim();
-    const colon = coordinate.indexOf(':');
-    const explicitType = colon > 0 ? coordinate.slice(0, colon) : defaultType;
-    const body = colon > 0 ? coordinate.slice(colon + 1) : coordinate;
-    const at = body.lastIndexOf('@');
-    return {
-      type: normalizePackageType(explicitType),
-      id: normalizePackageId(at > 0 ? body.slice(0, at) : body),
-      range: at > 0 ? body.slice(at + 1) || '*' : '*',
-      optional: false,
-    };
-  }
+function normalizeDependency(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Registry V4 dependencies must be canonical PackageRequest objects');
+  for (const key of ['type', 'id', 'range', 'channel']) if (value[key] === undefined) throw new Error(`Registry V4 dependency.${key} is required`);
   return {
-    type: normalizePackageType(value?.type || defaultType),
-    id: normalizePackageId(value?.id),
-    range: String(value?.range || value?.version || '*').trim() || '*',
-    optional: value?.optional === true,
+    type: normalizePackageType(value.type),
+    id: normalizePackageId(value.id),
+    range: normalizeVersionRange(value.range),
+    channel: normalizeReleaseChannel(value.channel),
+    optional: value.optional === true,
   };
 }
 
@@ -63,13 +50,13 @@ function normalizeRelease(record, type) {
     throw new ProtocolError(ERROR_CODES.ARTIFACT_DIGEST_MISMATCH, `registry release requires an immutable 40-character commit: ${type}:${record?.id}@${version}`);
   }
   const artifact = record?.artifact && typeof record.artifact === 'object' ? clone(record.artifact) : {};
-  const integrity = String(artifact.integrity || artifact.sha256 || '').trim();
+  const integrity = String(artifact.integrity || artifact.digest || artifact.sha256 || '').trim();
   return {
     version,
-    channel: normalizeReleaseChannel(record?.channel || record?.release_channel || 'stable'),
+    channel: normalizeReleaseChannel(record?.channel),
     commit: commit.toLowerCase(),
     published_at: String(record?.published_at || record?.updated_at || record?.metadata?.updated_at || ''),
-    dependencies: (Array.isArray(record?.dependencies) ? record.dependencies : []).map((dependency) => normalizeDependency(dependency, type)),
+    dependencies: (Array.isArray(record?.dependencies) ? record.dependencies : []).map(normalizeDependency),
     compatibility: clone(record?.compatibility || {}),
     permissions: [...new Set((Array.isArray(record?.permissions) ? record.permissions : []).map(String))].sort(),
     artifact: {
@@ -77,7 +64,8 @@ function normalizeRelease(record, type) {
       ...(integrity ? { integrity } : {}),
     },
     security: clone(record?.security || {}),
-    entrypoints: clone(record?.entrypoints || record?.runtime?.entrypoints || {}),
+    entrypoints: clone(record?.entrypoints || {}),
+    runtime: clone(record?.runtime || {}),
     capabilities: [...new Set((Array.isArray(record?.capabilities) ? record.capabilities : []).map(String))].sort(),
     yanked: record?.security?.yanked === true || record?.yanked === true,
     revoked: record?.security?.revoked === true || record?.revoked === true,
@@ -111,17 +99,21 @@ export function buildRegistryV4(records, options = {}) {
     const key = packageKey(type, id);
     const release = normalizeRelease(record, type);
     const publisher_id = publisherId(record);
+    const sourceRepo = String(record?.source?.repo || '').trim().toLowerCase();
+    if (!/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/i.test(sourceRepo)) throw new Error(`Registry V4 source.repo must be explicit owner/name: ${key}`);
     const existing = groups.get(key) || {
       type,
       id,
       publisher_id,
       source: {
-        provider: String(record?.source?.provider || 'github'),
-        repo: String(record?.source?.repo || '').toLowerCase(),
+        provider: String(record?.source?.provider || 'github').trim().toLowerCase(),
+        repo: sourceRepo,
       },
       metadata: clone(record?.metadata || {}),
       releases: [],
     };
+    if (existing.publisher_id !== publisher_id) throw new ProtocolError(ERROR_CODES.TRANSACTION_CONFLICT, `publisher identity changed across releases: ${key}`);
+    if (existing.source.repo !== sourceRepo) throw new ProtocolError(ERROR_CODES.TRANSACTION_CONFLICT, `repository identity changed across releases: ${key}`);
     if (existing.releases.some((candidate) => candidate.version === release.version && candidate.channel === release.channel)) {
       throw new ProtocolError(ERROR_CODES.TRANSACTION_CONFLICT, `duplicate registry release: ${key}@${release.version} [${release.channel}]`);
     }
@@ -131,9 +123,10 @@ export function buildRegistryV4(records, options = {}) {
     if (!publishers.has(publisher_id)) {
       publishers.set(publisher_id, {
         id: publisher_id,
-        display_name: String(record?.publisher?.name || record?.publisher?.login || publisher_id),
+        display_name: String(record?.publisher?.name || publisher_id),
         repository_ownership: String(record?.publisher?.repository_ownership || 'unverified'),
         verified: record?.publisher?.verified === true,
+        identity: record?.publisher?.identity || null,
       });
     }
 
@@ -145,7 +138,7 @@ export function buildRegistryV4(records, options = {}) {
         id: advisoryId,
         package: { type, id },
         severity: String(advisory?.severity || 'unknown').toLowerCase(),
-        affected: String(advisory?.affected || advisory?.range || '*'),
+        affected: normalizeVersionRange(advisory?.affected || advisory?.range || '*'),
         fixed: advisory?.fixed || advisory?.fixed_version || null,
         url: advisory?.url || null,
         title: advisory?.title || advisory?.summary || null,
@@ -177,6 +170,7 @@ export function validateRegistryV4(registry) {
   if (!registry || registry.schema_version !== REGISTRY_SCHEMA_VERSION || !Array.isArray(registry.packages)) {
     throw new Error('invalid Registry V4 payload');
   }
+  const publisherIds = new Set((Array.isArray(registry.publishers) ? registry.publishers : []).map((publisher) => String(publisher?.id || '').toLowerCase()).filter(Boolean));
   const seen = new Set();
   for (const item of registry.packages) {
     item.type = normalizePackageType(item.type);
@@ -184,12 +178,15 @@ export function validateRegistryV4(registry) {
     const key = packageKey(item.type, item.id);
     if (seen.has(key)) throw new Error(`duplicate Registry V4 package: ${key}`);
     seen.add(key);
+    if (!item.publisher_id || !publisherIds.has(String(item.publisher_id).toLowerCase())) throw new Error(`Registry V4 package publisher is missing from publishers: ${key}`);
+    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(String(item.source?.repo || ''))) throw new Error(`Registry V4 package has invalid source.repo: ${key}`);
     if (!Array.isArray(item.releases) || item.releases.length === 0) throw new Error(`Registry V4 package has no releases: ${key}`);
     const releaseKeys = new Set();
     for (const release of item.releases) {
       parseVersion(release.version);
       release.channel = normalizeReleaseChannel(release.channel);
       if (!/^[0-9a-f]{40}$/i.test(String(release.commit || ''))) throw new Error(`Registry V4 release has invalid commit: ${key}@${release.version}`);
+      for (const dependency of release.dependencies || []) normalizeDependency(dependency);
       const releaseKey = `${release.channel}:${release.version}`;
       if (releaseKeys.has(releaseKey)) throw new Error(`duplicate Registry V4 release: ${key}@${release.version} [${release.channel}]`);
       releaseKeys.add(releaseKey);

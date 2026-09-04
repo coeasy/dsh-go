@@ -97,13 +97,13 @@ describe('architecture hardening contracts', () => {
     expect(snapshot.trust_root_revision).toBe(root.revision);
   });
 
-  it('quarantines discovery records without Manifest V2 while preserving discovery search', async () => {
+  it('re-reads Manifest V2 at the immutable commit and quarantines discovery-only records', async () => {
     const commit = 'a'.repeat(40);
     const discovery = {
       plugins: [
         {
           id: 'owner/installable', full_name: 'owner/installable', package_type: 'plugin',
-          package_id: 'owner/installable', package_version: '1.2.3', manifest_file: 'dsh-package.json', verified: true,
+          package_id: 'owner/installable', package_version: '0.0.1', manifest_file: 'dsh-package.json', verified: true,
           snapshot_commit: commit, stars: 300, name: 'Installable', description: 'canonical package',
         },
         {
@@ -112,8 +112,31 @@ describe('architecture hardening contracts', () => {
         },
       ],
     };
-    const built = await buildRegistryV4FromDiscovery(discovery, { generated_at: '2026-09-04T00:00:00.000Z', concurrency: 1 });
+    const built = await buildRegistryV4FromDiscovery(discovery, {
+      generated_at: '2026-09-04T00:00:00.000Z',
+      concurrency: 1,
+      loadManifest: async (repo: string, immutableCommit: string) => repo === 'owner/installable' && immutableCommit === commit ? ({
+        manifest_version: 2,
+        type: 'plugin',
+        id: 'owner/installable',
+        version: '1.2.3',
+        channel: 'stable',
+        name: 'Installable',
+        description: 'immutable canonical package',
+        runtime: { type: 'plugin' },
+        entrypoints: { main: 'index.mjs' },
+        capabilities: [],
+        permissions: [],
+        dependencies: [],
+        compatibility: {},
+        publisher: { id: 'owner' },
+        security: {},
+        metadata: { category: 'tool' },
+        source: { provider: 'github', repo: 'owner/installable' },
+      }) : null,
+    });
     expect(built.registry.packages.map((item: any) => item.id)).toEqual(['owner/installable']);
+    expect(built.registry.packages[0].releases[0].version).toBe('1.2.3');
     expect(built.candidates.counts.accepted).toBe(1);
     expect(built.candidates.counts.quarantined).toBe(1);
     const index = buildSearchIndexV3(built.registry, built.candidates as any);

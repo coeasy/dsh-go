@@ -68,9 +68,16 @@ describe('Registry V4 and Resolver V2', () => {
     expect(validateRegistryV4(structuredClone(registry)).revision).toBe(registry.revision);
   });
 
+  it('refuses implicit type, publisher and dependency compatibility inference', () => {
+    expect(() => buildRegistryV4([record({ type: undefined })])).toThrow(/explicit type/i);
+    expect(() => buildRegistryV4([record({ publisher: undefined })])).toThrow(/publisher\.id/i);
+    expect(() => buildRegistryV4([record({ dependencies: ['skill:owner/helper@1.0.0'] })])).toThrow(/PackageRequest objects/i);
+    expect(() => buildRegistryV4([record({ dependencies: [{ type: 'skill', id: 'owner/helper', range: '^1.0.0' }] })])).toThrow(/dependency\.channel/i);
+  });
+
   it('resolves dependency graph in dependency-first order and aggregates permissions', () => {
     const registry = buildRegistryV4([
-      record({ type: 'plugin', id: 'owner/root', version: '2.0.0', source: { provider: 'github', repo: 'owner/root', commit: commit('c') }, dependencies: [{ type: 'skill', id: 'owner/example', range: '^1.0.0' }], permissions: ['filesystem:workspace'] }),
+      record({ type: 'plugin', id: 'owner/root', version: '2.0.0', source: { provider: 'github', repo: 'owner/root', commit: commit('c') }, dependencies: [{ type: 'skill', id: 'owner/example', range: '^1.0.0', channel: 'stable' }], permissions: ['filesystem:workspace'] }),
       record(),
       record({ version: '1.4.0', source: { provider: 'github', repo: 'owner/example', commit: commit('d') } }),
     ], { generated_at: '2026-09-04T00:00:00.000Z' });
@@ -94,8 +101,8 @@ describe('Registry V4 and Resolver V2', () => {
 
   it('detects dependency cycles', () => {
     const registry = buildRegistryV4([
-      record({ type: 'plugin', id: 'owner/a', source: { provider: 'github', repo: 'owner/a', commit: commit('e') }, dependencies: [{ type: 'skill', id: 'owner/b', range: '*' }] }),
-      record({ id: 'owner/b', source: { provider: 'github', repo: 'owner/b', commit: commit('f') }, dependencies: [{ type: 'plugin', id: 'owner/a', range: '*' }] }),
+      record({ type: 'plugin', id: 'owner/a', source: { provider: 'github', repo: 'owner/a', commit: commit('e') }, dependencies: [{ type: 'skill', id: 'owner/b', range: '*', channel: 'stable' }] }),
+      record({ id: 'owner/b', source: { provider: 'github', repo: 'owner/b', commit: commit('f') }, dependencies: [{ type: 'plugin', id: 'owner/a', range: '*', channel: 'stable' }] }),
     ]);
     expect(() => resolvePackage(registry, { type: 'plugin', id: 'owner/a', range: '*', channel: 'stable' })).toThrow(/cycle/i);
   });

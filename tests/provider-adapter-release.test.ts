@@ -26,11 +26,14 @@ describe('Provider Adapter release workflow contracts', () => {
     expect(workflow).toContain('gh pr create');
   });
 
-  it('routes dsh provider separately without changing the stable CLI core', async () => {
+  it('routes provider commands through the single canonical dsh facade', async () => {
     const wrapper = await readFile('bin/dsh.mjs', 'utf8');
-    expect(wrapper).toContain("args[0] === 'provider'");
-    expect(wrapper).toContain("../runtime/provider-cli.mjs");
-    expect(wrapper).toContain("./dsh-core.mjs");
+    const runtime = await readFile('runtime/dsh.mjs', 'utf8');
+    expect(wrapper).toContain("from '../runtime/dsh.mjs'");
+    expect(wrapper).toContain('runDsh(process.argv.slice(2))');
+    expect(wrapper).not.toContain('dsh-core.mjs');
+    expect(runtime).toContain("from './provider-cli.mjs'");
+    expect(runtime).toContain('runProviderCli');
   });
 
   it('keeps a valid empty Provider Adapter Registry V1 in source control', async () => {

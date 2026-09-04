@@ -4,6 +4,7 @@ export interface RegistryV4Dependency {
   type: PackageType;
   id: string;
   range: string;
+  channel: ReleaseChannel;
   optional?: boolean;
 }
 
@@ -17,8 +18,9 @@ export interface RegistryV4Release {
   permissions: string[];
   artifact: Record<string, unknown>;
   security: Record<string, unknown>;
-  entrypoints?: Record<string, unknown>;
-  capabilities?: string[];
+  entrypoints: Record<string, unknown>;
+  runtime: Record<string, unknown>;
+  capabilities: string[];
   yanked: boolean;
   revoked: boolean;
 }
@@ -27,7 +29,7 @@ export interface RegistryV4Package {
   type: PackageType;
   id: string;
   publisher_id: string;
-  source: { provider?: string; repo?: string };
+  source: { provider: string; repo: string };
   metadata: Record<string, unknown>;
   releases: RegistryV4Release[];
 }

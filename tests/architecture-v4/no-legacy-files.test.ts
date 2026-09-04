@@ -37,6 +37,7 @@ describe('no legacy compatibility surfaces', () => {
       'scripts/registry-builder.mjs',
       'scripts/registry-distribution.mjs',
       'scripts/catalog-distribution.mjs',
+      'scripts/validate.mjs',
       'scripts/sync.mjs',
       'scripts/sync-v3.mjs',
       'scripts/sync-v3-final.mjs',
@@ -51,14 +52,17 @@ describe('no legacy compatibility surfaces', () => {
     for (const path of forbidden) expect(await exists(path), path).toBe(false);
   });
 
-  it('publishes only Manifest V2 package manifests', async () => {
+  it('publishes only canonical Manifest V2 package manifests with no compatibility marker', async () => {
     for (const file of [
       'dsh-package.json',
       'packages/dsh-go-marketplace/dsh-package.json',
       'packages/dsh-go-marketplace-plugin/dsh-package.json',
     ]) {
       const manifest = JSON.parse(await readFile(resolve(file), 'utf8'));
-      expect(manifest.manifest_version ?? manifest.schema_version, file).toBe(2);
+      expect(manifest.manifest_version, file).toBe(2);
+      expect(manifest, file).not.toHaveProperty('schema_version');
+      expect(manifest.publisher?.id, file).toBeTruthy();
+      expect(manifest.security, file).toBeTypeOf('object');
     }
   });
 
