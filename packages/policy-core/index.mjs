@@ -1,4 +1,4 @@
-import { normalizePackageId, normalizePackageType, packageKey } from '../protocol-core/index.mjs';
+import { normalizePackageId, normalizePackageType, packageKey, satisfiesRange } from '../protocol-core/index.mjs';
 
 export const POLICY_DECISIONS = Object.freeze({
   ALLOW: 'allow',
@@ -17,10 +17,6 @@ function clean(value) {
   return text || null;
 }
 
-function bool(value) {
-  return value === true;
-}
-
 function releaseSecurity(pkg = {}, input = {}) {
   return {
     ...(pkg.security && typeof pkg.security === 'object' ? pkg.security : {}),
@@ -36,8 +32,21 @@ function advisoryList(pkg = {}, input = {}) {
   return values.filter((item) => item && typeof item === 'object');
 }
 
+function advisoryApplies(item, pkg) {
+  const target = item.package || item.target || {};
+  if (target.type && (!pkg.type || normalizePackageType(target.type) !== normalizePackageType(pkg.type))) return false;
+  if (target.id && (!pkg.id || normalizePackageId(target.id) !== normalizePackageId(pkg.id))) return false;
+  const affected = item.affected || item.range || '*';
+  if (pkg.version && affected) {
+    try { if (!satisfiesRange(pkg.version, affected)) return false; }
+    catch { return false; }
+  }
+  return true;
+}
+
 function criticalAdvisories(pkg, input) {
   return advisoryList(pkg, input).filter((item) => {
+    if (!advisoryApplies(item, pkg)) return false;
     const severity = String(item.severity || item.level || '').trim().toLowerCase();
     return item.revoked === true || CRITICAL_SEVERITIES.has(severity) || item.blocked === true;
   });
