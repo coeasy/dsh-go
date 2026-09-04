@@ -9,33 +9,35 @@ permissions:
   contents: read
 
 concurrency:
-  group: final-acceptance-${{ github.event.pull_request.number || github.ref }}
+  group: final-acceptance-v4-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   acceptance:
-    name: Acceptance (${{ matrix.os }})
+    name: Package lifecycle V4 (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-
       - name: Install dependencies
         run: npm ci
-
       - name: Typecheck
         run: npm run typecheck
-
-      - name: Final acceptance E2E
-        run: npm run acceptance:test
+      - name: Protocol / Registry / Resolver / State
+        run: npx vitest run tests/architecture-v4/protocol-registry-resolver.test.ts tests/architecture-v4/runtime-state-host.test.ts
+      - name: Full local package lifecycle
+        run: npx vitest run tests/architecture-v4/package-lifecycle-e2e.test.ts
+      - name: No-legacy platform contract
+        run: npx vitest run tests/architecture-v4/platform-contract.test.ts
+      - name: Package smoke
+        run: npm pack --dry-run
