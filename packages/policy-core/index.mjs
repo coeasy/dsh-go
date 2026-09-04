@@ -1,4 +1,5 @@
 import { normalizePackageId, normalizePackageType, packageKey, satisfiesRange } from '../protocol-core/index.mjs';
+import { normalizePermissions } from './permissions.mjs';
 
 export const POLICY_DECISIONS = Object.freeze({
   ALLOW: 'allow',
@@ -50,15 +51,6 @@ function criticalAdvisories(pkg, input) {
     const severity = String(item.severity || item.level || '').trim().toLowerCase();
     return item.revoked === true || CRITICAL_SEVERITIES.has(severity) || item.blocked === true;
   });
-}
-
-function permissionNames(value) {
-  const permissions = Array.isArray(value) ? value : [];
-  return [...new Set(permissions.map((item) => {
-    if (typeof item === 'string') return item.trim();
-    if (item && typeof item === 'object') return clean(item.name || item.id || item.permission);
-    return null;
-  }).filter(Boolean))].sort();
 }
 
 function registryIdentity(input = {}) {
@@ -128,7 +120,7 @@ export function evaluatePackagePolicy(input = {}) {
   const key = type && id ? packageKey(type, id) : null;
   const security = releaseSecurity(pkg, input);
   const trust = classifyTrust(pkg, input);
-  const permissions = permissionNames(input.permissions ?? pkg.permissions);
+  const permissions = normalizePermissions(input.permissions ?? pkg.permissions);
   const registry = registryIdentity(input);
   const critical = criticalAdvisories(pkg, input);
   const reasons = [];
