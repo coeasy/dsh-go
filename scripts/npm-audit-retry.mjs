@@ -4,8 +4,8 @@ import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-export const MAX_ATTEMPTS = 3;
-export const AUDIT_TIMEOUT_MS = 60_000;
+export const MAX_ATTEMPTS = 4;
+export const AUDIT_TIMEOUT_MS = 45_000;
 export const RETRY_DELAY_MS = 10_000;
 
 const AUDIT_ARGS = [

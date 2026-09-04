@@ -12,8 +12,8 @@ import {
 
 describe('npm audit retry gate', () => {
   it('keeps the audit command bounded and fail-closed', () => {
-    expect(MAX_ATTEMPTS).toBe(3);
-    expect(AUDIT_TIMEOUT_MS).toBe(60_000);
+    expect(MAX_ATTEMPTS).toBe(4);
+    expect(AUDIT_TIMEOUT_MS).toBe(45_000);
     expect(RETRY_DELAY_MS).toBe(10_000);
     expect(buildAuditArgs()).toEqual([
       'audit',
@@ -25,7 +25,9 @@ describe('npm audit retry gate', () => {
 
   it('classifies npm service failures as retryable but vulnerability findings as final', () => {
     expect(isTransientAuditFailure('npm warn audit 503 Service Unavailable')).toBe(true);
+    expect(isTransientAuditFailure('npm warn audit 400 Bad Request')).toBe(false);
     expect(isTransientAuditFailure('npm error audit endpoint returned an error')).toBe(true);
+    expect(isTransientAuditFailure('npm warn audit 500 Internal Server Error\nnpm error audit endpoint returned an error')).toBe(true);
     expect(isTransientAuditFailure('npm error code ECONNRESET')).toBe(true);
     expect(isTransientAuditFailure('found 1 high severity vulnerability')).toBe(false);
   });
@@ -55,8 +57,27 @@ describe('npm audit retry gate', () => {
     });
 
     expect(exitCode).toBe(1);
-    expect(attempts).toHaveLength(3);
-    expect(sleeps).toEqual([10_000, 20_000]);
+    expect(attempts).toHaveLength(4);
+    expect(sleeps).toEqual([10_000, 20_000, 30_000]);
+  });
+
+  it('retries a timed-out audit and accepts the next successful result', async () => {
+    let attempts = 0;
+    const sleeps: number[] = [];
+    const exitCode = await run(['--label', 'site'], {
+      audit: async () => {
+        attempts += 1;
+        if (attempts === 1) return { code: 124, output: '', timedOut: true };
+        return { code: 0, output: 'found 0 vulnerabilities', timedOut: false };
+      },
+      sleep: async (milliseconds: number) => {
+        sleeps.push(milliseconds);
+      },
+    });
+
+    expect(exitCode).toBe(0);
+    expect(attempts).toBe(2);
+    expect(sleeps).toEqual([10_000]);
   });
 
   it('does not retry a vulnerability failure', async () => {
