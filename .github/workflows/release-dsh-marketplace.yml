@@ -1,6 +1,11 @@
 name: Release DSH Go Marketplace MCP
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/dsh-go-marketplace/dsh-package.json"
+      - "packages/dsh-go-marketplace/package.json"
   workflow_dispatch:
     inputs:
       channel:
@@ -24,7 +29,7 @@ jobs:
   release:
     uses: ./.github/workflows/package-release.yml
     with:
-      channel: ${{ inputs.channel }}
+      channel: ${{ inputs.channel || 'stable' }}
       package_path: packages/dsh-go-marketplace
       marketplace_repository: coeasy/dsh-go
     secrets: inherit
