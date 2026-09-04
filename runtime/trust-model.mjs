@@ -1,44 +1,42 @@
+import { classifyTrust } from '../packages/policy-core/index.mjs';
 import { packageSecurityDecision } from './advisory.mjs';
 
 export const TRUST_TIERS = Object.freeze(['unverified', 'community', 'verified', 'trusted']);
 
-function evidenceScore(security = {}) {
-  let score = 0;
-  if (security.provenance) score += 20;
-  if (security.signature) score += 25;
-  if (security.sbom) score += 15;
-  if (security.license) score += 10;
-  return score;
-}
-
 export function packageTrust(pkg) {
   const security = packageSecurityDecision(pkg, { blockCritical: false });
-  const ownership = pkg?.publisher?.repository_ownership || 'unverified';
-  const verifiedPublisher = ownership === 'verified' || pkg?.publisher?.verified === true;
-  const verifiedMetadata = pkg?.metadata?.verified === true;
-  const evidence = evidenceScore(pkg?.security || {});
-  let score = evidence;
-  if (verifiedPublisher) score += 25;
-  else if (ownership === 'declared' || ownership === 'required') score += 10;
-  if (verifiedMetadata) score += 10;
-  if (security.yanked) score -= 25;
-  if (security.revoked) score -= 100;
-  if (security.critical) score -= 50;
-  if (security.below_minimum_safe_version) score -= 50;
-  score = Math.max(0, Math.min(100, score));
-  const tier = security.revoked || security.critical || security.below_minimum_safe_version
-    ? 'unverified'
-    : score >= 80 ? 'trusted' : score >= 55 ? 'verified' : score >= 25 ? 'community' : 'unverified';
+  const snapshot = pkg?.trust_snapshot || {};
+  const verification = pkg?.supply_chain_verification || pkg?.verification || {};
+  const trust = classifyTrust(pkg, {
+    publisher: pkg?.publisher,
+    security: pkg?.security,
+    verification: {
+      ...verification,
+      cryptographic_signature_verified: snapshot.cryptographic_signature_verified ?? verification.cryptographic_signature_verified,
+      slsa_provenance_verified: snapshot.slsa_provenance_verified ?? verification.slsa_provenance_verified,
+      signer_identity: snapshot.signer_identity || verification.signer_identity,
+    },
+    publisher_verified: snapshot.publisher_verified,
+    signer_identity: snapshot.signer_identity,
+    signer_revoked: snapshot.signer_revoked,
+  });
+  const blocked = security.revoked || security.critical || security.below_minimum_safe_version || snapshot.signer_revoked === true;
+  const tier = blocked ? 'unverified' : trust.level;
   return {
     tier,
-    score,
-    publisher_verified: verifiedPublisher,
-    repository_ownership: ownership,
+    trusted: tier === 'trusted',
+    publisher_verified: trust.publisher_verified,
+    repository_ownership: trust.repository_ownership,
+    cryptographic_signature_verified: trust.cryptographic_signature_verified,
+    slsa_provenance_verified: trust.slsa_provenance_verified,
+    signer_identity: trust.signer_identity,
+    signer_revoked: trust.signer_revoked,
+    trust_root_revision: snapshot.trust_root_revision || null,
     evidence: {
-      provenance: Boolean(pkg?.security?.provenance),
-      signature: Boolean(pkg?.security?.signature),
-      sbom: Boolean(pkg?.security?.sbom),
-      license: Boolean(pkg?.security?.license),
+      provenance_declared: Boolean(pkg?.security?.provenance),
+      signature_declared: Boolean(pkg?.security?.signature),
+      sbom_declared: Boolean(pkg?.security?.sbom),
+      license_declared: Boolean(pkg?.security?.license),
     },
     security,
   };
