@@ -42,6 +42,9 @@ jobs:
       - name: Breaking architecture contract
         run: npm run contract:check
 
+      - name: Architecture conformance
+        run: npm run architecture:check
+
       - name: Typecheck and lint
         run: |
           npm run typecheck
@@ -61,11 +64,14 @@ jobs:
         run: cd site && npm run check
 
       - name: Build Registry V4 marketplace
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: cd site && npm run build
 
       - name: Verify generated Registry V4 assets
         run: |
           test -f catalog/registry-v4.json
+          test -f catalog/registry-candidates-v1.json
           test -f site/public/catalog/registry-v4.json
           test -f site/public/catalog/registry-v4/index.json
           test -f site/public/catalog/search-index-v3.json
@@ -73,14 +79,17 @@ jobs:
           test ! -e site/public/catalog/registry-v3.json
           test ! -e site/public/catalog/search-index-v2.json
           test ! -e site/public/catalog/distribution-v1
+          test ! -e site/public/catalog/registry-candidates-v1.json
+
+      - name: Deployment Gate V4
+        run: npm run deploy:gate
 
       - name: Runtime and build syntax
         shell: bash
         run: |
+          find packages/protocol-core packages/registry-core packages/resolver packages/policy-core runtime bin -type f -name '*.mjs' -print0 \
+            | xargs -0 -n1 node --check
           for file in \
-            packages/protocol-core/index.mjs \
-            packages/registry-core/index.mjs \
-            packages/resolver/index.mjs \
             scripts/sync-v4.mjs \
             scripts/registry-v4-source.mjs \
             scripts/registry-v4-builder.mjs \
@@ -88,19 +97,8 @@ jobs:
             scripts/build-search-index-v3.mjs \
             scripts/copy-assets-core.mjs \
             scripts/check-contract.mjs \
-            bin/dsh.mjs \
-            runtime/dsh.mjs \
-            runtime/package-service.mjs \
-            runtime/registry-client.mjs \
-            runtime/registry.mjs \
-            runtime/lifecycle.mjs \
-            runtime/installer.mjs \
-            runtime/verifier.mjs \
-            runtime/loader.mjs \
-            runtime/startup.mjs \
-            runtime/host-bridge.mjs \
-            runtime/client-bridge.mjs \
-            runtime/client-host.mjs; do
+            scripts/check-architecture.mjs \
+            scripts/deploy-gate-v4.mjs; do
               node --check "$file"
           done
 
