@@ -22,33 +22,27 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - name: Checkout exact deployment revision
         uses: actions/checkout@v7
         with:
           ref: ${{ env.DEPLOYMENT_SHA }}
           fetch-depth: 1
-      - name: Verify deployment revision
+
+      - name: Verify deployment revision and Registry V4 authority
         shell: bash
         run: |
           set -euo pipefail
           EXPECTED="${DEPLOYMENT_SHA}"
           ACTUAL=$(git rev-parse HEAD)
           [ "$ACTUAL" = "$EXPECTED" ] || { echo "Deployment revision mismatch: expected=$EXPECTED actual=$ACTUAL"; exit 1; }
-          echo "Deploying exact revision $ACTUAL"
-      - name: Check canonical Registry V3
-        id: registry
-        shell: bash
-        run: |
-          if [ -f catalog/registry-v3.json ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "Registry V3 is not committed yet; deployment is a successful no-op"
-          fi
+          test -s catalog/registry-v4.json
+          node scripts/validate-registry-v4.mjs catalog/registry-v4.json
+          test ! -e functions/api/v1
+          echo "Deploying exact Protocol V2 / Registry V4 revision $ACTUAL"
+
       - name: Setup Node.js
-        if: ${{ steps.registry.outputs.ready == 'true' }}
         uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -56,67 +50,62 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             site/package-lock.json
+
       - name: Install dependencies
-        if: ${{ steps.registry.outputs.ready == 'true' }}
         run: |
           npm ci
           cd site && npm ci
-      - name: Deploy Gate V3
-        if: ${{ steps.registry.outputs.ready == 'true' }}
-        run: npm run deploy:gate
-      - name: Run checks
-        if: ${{ steps.registry.outputs.ready == 'true' }}
+
+      - name: Canonical pre-deploy validation
         run: |
+          npm run contract:check
+          npm run architecture:check
           npm run typecheck
-          npm test
           npm run lint
-      - name: Copy catalog into site
-        if: ${{ steps.registry.outputs.ready == 'true' }}
-        run: npm run copy-assets
-      - name: Prepare deployment identity before build
-        if: ${{ steps.registry.outputs.ready == 'true' }}
+          npm test
+
+      - name: Prepare deployment identity
         run: node scripts/write-deployment-version.mjs site/public/version.json
+
       - name: Build site
-        if: ${{ steps.registry.outputs.ready == 'true' }}
-        run: cd site && npm run build
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           PUBLIC_SITE_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
           PUBLIC_API_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
-      - name: Verify build output
-        if: ${{ steps.registry.outputs.ready == 'true' }}
+        run: cd site && npm run build
+
+      - name: Deployment Gate V4
         run: |
-          test -f site/dist/index.html
-          test -f site/dist/publishers/index.html
+          npm run deploy:gate
           test -f site/dist/version.json
           node scripts/check-platform-discovery.mjs --file site/dist/.well-known/dsh-marketplace.json
-          test -f site/dist/catalog/plugins.json
-          test -f site/dist/catalog/catalog-v3/index.json
-          test -f site/dist/catalog/registry-v3.json
-          test -f site/dist/catalog/schema-v3.json
-          test -f site/dist/catalog/provider-adapters.json
-          node -e "const fs=require('node:fs'); const v=JSON.parse(fs.readFileSync('site/dist/version.json','utf8')); if(v.git_sha!==process.env.DEPLOYMENT_SHA) process.exit(1)"
-          node -e "const fs=require('node:fs'); const c=require('./site/dist/catalog/plugins.json'); const i=require('./site/dist/catalog/catalog-v3/index.json'); if(i.format!=='dsh-catalog-distribution'||i.distribution_version!==1||i.count!==c.meta.count||!Array.isArray(i.shards)||!i.shards.length) process.exit(1); if(fs.statSync('site/dist/catalog/plugins.json').size>25165824) process.exit(1)"
-          node -e "const fs=require('node:fs'); const r=require('./site/dist/catalog/registry-v3.json'); if(r.registry_version!==3 || !r.generated?.content_hash || !r.plugins.length || fs.statSync('site/dist/catalog/registry-v3.json').size>25165824) process.exit(1)"
-          node -e "const r=require('./site/dist/catalog/provider-adapters.json'); if(r.registry_version!==1 || !r.generated?.content_hash || !Array.isArray(r.providers) || r.generated.count!==r.providers.length) process.exit(1)"
+          test -f site/dist/catalog/registry-v4.json
+          test -f site/dist/catalog/registry-v4/index.json
+          test -f site/dist/catalog/search-index-v3.json
+          test ! -e site/dist/catalog/registry-v3.json
+          test ! -e site/dist/catalog/search-index-v2.json
+          test ! -e site/dist/catalog/plugins.json
+          test ! -e site/dist/catalog/registry-candidates-v1.json
+          node -e "const fs=require('node:fs');const v=JSON.parse(fs.readFileSync('site/dist/version.json','utf8'));if(v.git_sha!==process.env.DEPLOYMENT_SHA)process.exit(1)"
+
       - name: Validate Cloudflare Pages file limits
-        if: ${{ steps.registry.outputs.ready == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
           static_file_count=$(find site/dist -type f | wc -l | tr -d ' ')
           if [ "$static_file_count" -gt 19000 ]; then
-            echo "::error::Cloudflare Pages artifact contains $static_file_count files; the production budget is 19000 (platform limit: 20000)."
+            echo "::error::Cloudflare Pages artifact contains $static_file_count files; budget=19000"
             exit 1
           fi
-          echo "Cloudflare Pages static file count: $static_file_count/19000"
           oversized=$(find site/dist -type f -size +26214400c -print)
           if [ -n "$oversized" ]; then
             echo "::error::Cloudflare Pages artifact contains files larger than 25 MiB:"
             printf '%s\n' "$oversized"
             exit 1
           fi
+          echo "Cloudflare Pages static file count: $static_file_count/19000"
+
       - name: Deploy to Cloudflare Pages
-        if: ${{ steps.registry.outputs.ready == 'true' }}
         id: cloudflare
         uses: cloudflare/wrangler-action@v4
         with:
@@ -128,8 +117,8 @@ jobs:
             --branch=main
             --commit-hash=${{ env.DEPLOYMENT_SHA }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Post-deploy exact SHA check
-        if: ${{ steps.registry.outputs.ready == 'true' }}
         env:
           DEPLOY_BASE_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
           EXPECTED_DEPLOYMENT_SHA: ${{ env.DEPLOYMENT_SHA }}
@@ -137,19 +126,20 @@ jobs:
           DEPLOY_SHA_ATTEMPTS: "12"
           DEPLOY_SHA_DELAY_MS: "10000"
         run: node scripts/check-production-sha.mjs
-      - name: Post-deploy Registry V3 convergence check
-        if: ${{ steps.registry.outputs.ready == 'true' }}
+
+      - name: Post-deploy Registry V4 convergence check
         env:
           DEPLOY_BASE_URL: https://${{ vars.CF_PAGES_PROJECT || 'dsh-go' }}.pages.dev
           DEPLOY_LABEL: Cloudflare Pages
           DEPLOY_CONVERGENCE_ATTEMPTS: "12"
           DEPLOY_CONVERGENCE_DELAY_MS: "10000"
         run: node scripts/check-deployment-convergence.mjs
+
       - name: Deployment summary
         if: always()
         run: |
-          echo "### Cloudflare Pages" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Cloudflare Pages · V4" >> "$GITHUB_STEP_SUMMARY"
           echo "- revision: ${DEPLOYMENT_SHA}" >> "$GITHUB_STEP_SUMMARY"
           echo "- deployment URL: ${{ steps.cloudflare.outputs.deployment-url || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- gates: exact SHA + Registry V3 convergence" >> "$GITHUB_STEP_SUMMARY"
-          echo "- catalog: compact compatibility export + bounded Catalog Distribution V1 shards" >> "$GITHUB_STEP_SUMMARY"
+          echo "- authority: Package Protocol V2 + Registry V4" >> "$GITHUB_STEP_SUMMARY"
+          echo "- gates: Architecture Conformance + Deployment Gate V4 + exact SHA + exact Registry V4 revision" >> "$GITHUB_STEP_SUMMARY"
