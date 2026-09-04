@@ -24,7 +24,7 @@ concurrency:
 jobs:
   freeze-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - name: Checkout exact revision
         uses: actions/checkout@v7
@@ -40,6 +40,8 @@ jobs:
           [[ "$EXPECTED" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "Release revision must be an exact 40-character SHA"; exit 1; }
           ACTUAL="$(git rev-parse HEAD)"
           [ "$ACTUAL" = "$EXPECTED" ] || { echo "Release revision mismatch: expected=$EXPECTED actual=$ACTUAL"; exit 1; }
+          test -s catalog/registry-v4.json
+          node scripts/validate-registry-v4.mjs catalog/registry-v4.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -60,14 +62,13 @@ jobs:
           node scripts/npm-audit-retry.mjs --label root
           node scripts/npm-audit-retry.mjs --cwd site --label site
 
-      - name: Public contract gate
-        run: npm run contract:check
-
-      - name: Registry and deployment gates
+      - name: Architecture and contract gates
         run: |
+          npm run contract:check
+          npm run architecture:check
           npm run registry:verify
-          npm run runtime:check
-          npm run deploy:gate
+          npm run typecheck
+          npm run lint
 
       - name: Provider Adapter Registry gate
         shell: bash
@@ -82,26 +83,32 @@ jobs:
           if (registry.generated?.count !== registry.providers.length) throw new Error('Provider Adapter Registry count mismatch');
           NODE
 
-      - name: Typecheck and lint
-        run: |
-          npm run typecheck
-          npm run lint
-
       - name: Full regression suite
         run: npm test
 
       - name: Site validation and release build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           cd site
           npm run check
+          npm run build
           cd ..
-          npm run site:build
           test -f site/dist/index.html
-          test -f site/dist/catalog/registry-v3.json
+          test -f site/dist/catalog/registry-v4.json
+          test -f site/dist/catalog/registry-v4/index.json
+          test -f site/dist/catalog/search-index-v3.json
           test -f site/dist/catalog/provider-adapters.json
+          test ! -e site/dist/catalog/registry-v3.json
+          test ! -e site/dist/catalog/search-index-v2.json
+          test ! -e site/dist/catalog/plugins.json
+          test ! -e site/dist/catalog/registry-candidates-v1.json
+
+      - name: Deployment Gate V4
+        run: npm run deploy:gate
 
       - name: Package smoke
         run: npm pack --dry-run
 
       - name: Release freeze passed
-        run: echo "Release freeze gate passed for ${{ inputs.commit_sha || github.sha }}"
+        run: echo "Release freeze gate passed for ${{ inputs.commit_sha || github.sha }} on Protocol V2 / Registry V4 / Runtime State V4"
