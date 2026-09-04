@@ -41,22 +41,37 @@ describe('EdgeOne CI deployment helpers', () => {
   });
 
   it('pins deployment to the canonical EdgeOne project', () => {
-    expect(resolveProject({
-      EDGEONE_PROJECT: 'dsh-go',
-      EDGEONE_EXPECTED_PROJECT: 'dsh-go',
-    })).toBe('dsh-go');
+    expect(
+      resolveProject({
+        EDGEONE_PROJECT: 'dsh-go',
+        EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+      }),
+    ).toBe('dsh-go');
     expect(resolveProject({})).toBe('dsh-go');
-    expect(() => resolveProject({
-      EDGEONE_PROJECT: 'dsh',
-      EDGEONE_EXPECTED_PROJECT: 'dsh-go',
-    })).toThrow('EdgeOne project mismatch: expected=dsh-go actual=dsh');
+    expect(() =>
+      resolveProject({
+        EDGEONE_PROJECT: 'dsh',
+        EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+      }),
+    ).toThrow('EdgeOne project mismatch: expected=dsh-go actual=dsh');
   });
 
   it('builds the direct named-project deployment contract', () => {
     const args = buildDeployArgs({ project: 'dsh-go', token: 'secret', cliVersion: '1.6.28' });
 
     expect(args).toEqual([
-      '--yes', 'edgeone@1.6.28', 'makers', 'deploy', './', '-n', 'dsh-go', '-t', 'secret', '-e', 'production', '--json',
+      '--yes',
+      'edgeone@1.6.28',
+      'makers',
+      'deploy',
+      './',
+      '-n',
+      'dsh-go',
+      '-t',
+      'secret',
+      '-e',
+      'production',
+      '--json',
     ]);
     expect(args).not.toContain('link');
     expect(args).not.toContain('--name');
@@ -64,27 +79,46 @@ describe('EdgeOne CI deployment helpers', () => {
 
   it('selects a root ZIP upload path without changing the default contract', () => {
     expect(resolveUploadSpec({})).toEqual({ directory: './', cwd: './site/dist' });
-    expect(resolveUploadSpec({
-      EDGEONE_UPLOAD_PATH: './site/edgeone-root.zip',
-      EDGEONE_UPLOAD_CWD: '.',
-    })).toEqual({ directory: './site/edgeone-root.zip', cwd: '.' });
+    expect(
+      resolveUploadSpec({
+        EDGEONE_UPLOAD_PATH: './site/edgeone-root.zip',
+        EDGEONE_UPLOAD_CWD: '.',
+      }),
+    ).toEqual({ directory: './site/edgeone-root.zip', cwd: '.' });
     expect(() => resolveUploadSpec({ EDGEONE_UPLOAD_PATH: ' ' })).toThrow('non-empty path');
   });
 
   it('builds the auto-build EdgeOne CLI contract without a positional path', () => {
-    expect(buildDeployArgs({
-      project: 'dsh-go',
-      token: 'secret',
-      cliVersion: '1.6.28',
-      directory: '',
-    })).toEqual([
-      '--yes', 'edgeone@1.6.28', 'makers', 'deploy', '-n', 'dsh-go', '-t', 'secret', '-e', 'production', '--json',
+    expect(
+      buildDeployArgs({
+        project: 'dsh-go',
+        token: 'secret',
+        cliVersion: '1.6.28',
+        directory: '',
+      }),
+    ).toEqual([
+      '--yes',
+      'edgeone@1.6.28',
+      'makers',
+      'deploy',
+      '-n',
+      'dsh-go',
+      '-t',
+      'secret',
+      '-e',
+      'production',
+      '--json',
     ]);
-    expect(resolveUploadSpec({ EDGEONE_UPLOAD_MODE: 'auto' })).toEqual({ directory: '', cwd: './site' });
-    expect(resolveUploadSpec({
-      EDGEONE_UPLOAD_MODE: 'auto',
-      EDGEONE_UPLOAD_CWD: '.',
-    })).toEqual({ directory: '', cwd: '.' });
+    expect(resolveUploadSpec({ EDGEONE_UPLOAD_MODE: 'auto' })).toEqual({
+      directory: '',
+      cwd: './site',
+    });
+    expect(
+      resolveUploadSpec({
+        EDGEONE_UPLOAD_MODE: 'auto',
+        EDGEONE_UPLOAD_CWD: '.',
+      }),
+    ).toEqual({ directory: '', cwd: '.' });
   });
 
   it('executes exactly one direct deploy and uses the configured URL when available', async () => {
@@ -160,7 +194,8 @@ describe('EdgeOne CI deployment helpers', () => {
         timedOut: false,
       };
     });
-    const verifyDeployment = vi.fn()
+    const verifyDeployment = vi
+      .fn()
       .mockRejectedValueOnce(new Error('HTTP 404'))
       .mockResolvedValueOnce({ expectedSha: 'a'.repeat(40), actualSha: 'a'.repeat(40) });
     const wait = vi.fn(async () => undefined);
@@ -201,14 +236,22 @@ describe('EdgeOne CI deployment helpers', () => {
       stderr: '',
       timedOut: false,
     }));
-    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
-      Code: 0,
-      Data: { Response: { Token: 'signed', Timestamp: 123 } },
-    }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    }));
-    const verifyDeployment = vi.fn().mockResolvedValue({ expectedSha: 'a'.repeat(40), actualSha: 'a'.repeat(40) });
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            Code: 0,
+            Data: { Response: { Token: 'signed', Timestamp: 123 } },
+          }),
+          {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          },
+        ),
+    );
+    const verifyDeployment = vi
+      .fn()
+      .mockResolvedValue({ expectedSha: 'a'.repeat(40), actualSha: 'a'.repeat(40) });
 
     const result = await deployEdgeOne({
       env: {
@@ -228,20 +271,28 @@ describe('EdgeOne CI deployment helpers', () => {
     });
 
     expect(execute).toHaveBeenCalledTimes(1);
-    expect(fetchImpl).toHaveBeenCalledWith('https://pages-api.edgeone.ai/v1', expect.objectContaining({
-      method: 'POST',
-      body: JSON.stringify({ Action: 'DescribePagesEncipherToken', Text: 'dsh-go.edgeone.cool' }),
-    }));
-    expect(verifyDeployment).toHaveBeenCalledWith(expect.objectContaining({
-      baseUrl: 'https://dsh-go.edgeone.cool/?eo_token=signed&eo_time=123',
-    }));
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'https://pages-api.edgeone.ai/v1',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ Action: 'DescribePagesEncipherToken', Text: 'dsh-go.edgeone.cool' }),
+      }),
+    );
+    expect(verifyDeployment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseUrl: 'https://dsh-go.edgeone.cool/?eo_token=signed&eo_time=123',
+      }),
+    );
     expect(result.healthUrl).toBe('https://dsh-go.edgeone.cool/?eo_token=signed&eo_time=123');
   });
 
   it('does not alter an already signed preset URL', async () => {
     const fetchImpl = vi.fn();
     const url = await resolveDeploymentUrl({
-      deployment: { type: 'preset', url: 'https://preview.edgeone.cool?eo_token=signed&eo_time=123' },
+      deployment: {
+        type: 'preset',
+        url: 'https://preview.edgeone.cool?eo_token=signed&eo_time=123',
+      },
       token: 'test-token',
       fetchImpl,
     });
@@ -251,38 +302,49 @@ describe('EdgeOne CI deployment helpers', () => {
   });
 
   it('signs unsigned TLD preset URLs before verification', async () => {
-    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
-      Code: 0,
-      Data: { Response: { Token: 'signed', Timestamp: 123 } },
-    }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    }));
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            Code: 0,
+            Data: { Response: { Token: 'signed', Timestamp: 123 } },
+          }),
+          {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          },
+        ),
+    );
     const url = await resolveDeploymentUrl({
       deployment: { type: 'preset', isTld: 1, url: 'https://dsh-go.edgeone.cool' },
       token: 'test-token',
       fetchImpl,
     });
 
-    expect(fetchImpl).toHaveBeenCalledWith('https://pages-api.edgeone.ai/v1', expect.objectContaining({
-      method: 'POST',
-      body: JSON.stringify({ Action: 'DescribePagesEncipherToken', Text: 'dsh-go.edgeone.cool' }),
-    }));
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'https://pages-api.edgeone.ai/v1',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ Action: 'DescribePagesEncipherToken', Text: 'dsh-go.edgeone.cool' }),
+      }),
+    );
     expect(url).toBe('https://dsh-go.edgeone.cool/?eo_token=signed&eo_time=123');
   });
 
   it('fails before invoking the CLI when the project drifts from canonical production', async () => {
     const execute = vi.fn(async () => ({ code: 0, stdout: '', stderr: '', timedOut: false }));
 
-    await expect(deployEdgeOne({
-      env: {
-        EDGEONE_API_TOKEN: 'test-token',
-        EDGEONE_PROJECT: 'dsh',
-        EDGEONE_EXPECTED_PROJECT: 'dsh-go',
-      },
-      execute,
-      wait: async () => undefined,
-    })).rejects.toThrow('EdgeOne project mismatch: expected=dsh-go actual=dsh');
+    await expect(
+      deployEdgeOne({
+        env: {
+          EDGEONE_API_TOKEN: 'test-token',
+          EDGEONE_PROJECT: 'dsh',
+          EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+        },
+        execute,
+        wait: async () => undefined,
+      }),
+    ).rejects.toThrow('EdgeOne project mismatch: expected=dsh-go actual=dsh');
 
     expect(execute).not.toHaveBeenCalled();
   });
@@ -315,6 +377,9 @@ describe('EdgeOne CI deployment helpers', () => {
     });
     expect(calls[0].options.cwd).toContain('dsh-edgeone-cli-');
     expect(calls[0].options.cwd).not.toBe('./site/dist');
+    expect(calls[0].options.env?.npm_config_cache).toContain('dsh-edgeone-cli-');
+    expect(calls[0].options.env?.npm_config_userconfig).toContain('dsh-edgeone-cli-');
+    expect(calls[0].options.env?.npm_config_workspaces).toBe('false');
     expect(calls.flatMap((call) => call.args)).not.toContain('link');
   });
 
@@ -340,17 +405,24 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(classifyFailure('HTTP 401 unauthorized invalid token', 1)).toBe('authentication');
     expect(classifyFailure('HTTP 429 quota exceeded', 1)).toBe('quota');
     expect(classifyFailure('HTTP 409 project already exists', 1)).toBe('project_conflict');
-    expect(classifyFailure('The project dsh has finished versions. Uploads are only allowed for the latest version.', 1)).toBe('version_state');
+    expect(
+      classifyFailure(
+        'The project dsh has finished versions. Uploads are only allowed for the latest version.',
+        1,
+      ),
+    ).toBe('version_state');
     expect(classifyFailure('no valid JSON result', 0)).toBe('protocol');
     expect(classifyFailure('unexpected provider error', 1)).toBe('api');
     expect(classifyFailure('', 124, true)).toBe('transport');
   });
 
   it('does not classify an informational existing-project message as a conflict', () => {
-    expect(classifyFailure(
-      'Project dsh-go already exists. Using existing project.\nDeployment failed with status: Failed',
-      1,
-    )).toBe('api');
+    expect(
+      classifyFailure(
+        'Project dsh-go already exists. Using existing project.\nDeployment failed with status: Failed',
+        1,
+      ),
+    ).toBe('api');
   });
 
   it('persists failure diagnostics after a CLI deployment error', async () => {
@@ -359,24 +431,27 @@ describe('EdgeOne CI deployment helpers', () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-edgeone-diagnostic-'));
     const diagnosticFile = join(root, 'diagnostic.json');
 
-    await expect(deployEdgeOne({
-      env: {
-        EDGEONE_API_TOKEN: 'test-token',
-        EDGEONE_PROJECT: 'dsh-go',
-        EDGEONE_EXPECTED_PROJECT: 'dsh-go',
-        EDGEONE_CLI_VERSION: '1.6.28',
-        EDGEONE_DEPLOY_RETRIES: '1',
-        EDGEONE_ATTEMPT_TIMEOUT_SECONDS: '30',
-        EDGEONE_DIAGNOSTIC_FILE: diagnosticFile,
-      },
-      execute: async () => ({
-        code: 1,
-        stdout: 'Project dsh-go already exists. Using existing project.\nDeployment failed with status: Failed',
-        stderr: '[cli] File uploaded successfully',
-        timedOut: false,
+    await expect(
+      deployEdgeOne({
+        env: {
+          EDGEONE_API_TOKEN: 'test-token',
+          EDGEONE_PROJECT: 'dsh-go',
+          EDGEONE_EXPECTED_PROJECT: 'dsh-go',
+          EDGEONE_CLI_VERSION: '1.6.28',
+          EDGEONE_DEPLOY_RETRIES: '1',
+          EDGEONE_ATTEMPT_TIMEOUT_SECONDS: '30',
+          EDGEONE_DIAGNOSTIC_FILE: diagnosticFile,
+        },
+        execute: async () => ({
+          code: 1,
+          stdout:
+            'Project dsh-go already exists. Using existing project.\nDeployment failed with status: Failed',
+          stderr: '[cli] File uploaded successfully',
+          timedOut: false,
+        }),
+        wait: async () => undefined,
       }),
-      wait: async () => undefined,
-    })).rejects.toThrow('EdgeOne deployment failed after retry policy [api]');
+    ).rejects.toThrow('EdgeOne deployment failed after retry policy [api]');
 
     const diagnostic = JSON.parse(await readFile(diagnosticFile, 'utf8'));
     expect(diagnostic.failure_class).toBe('api');
@@ -384,14 +459,43 @@ describe('EdgeOne CI deployment helpers', () => {
   });
 
   it('extracts the last complete JSON object from mixed CLI output', () => {
-    const result = parseLastJson(['{"status":"progress"}', '{"status":"success","url":"https://preview.edgeone.app","projectId":"project-1","deploymentId":"deployment-1","meta":{"nested":true}}'].join('\n'));
-    expect(result).toEqual({ status: 'success', url: 'https://preview.edgeone.app', projectId: 'project-1', deploymentId: 'deployment-1', meta: { nested: true } });
+    const result = parseLastJson(
+      [
+        '{"status":"progress"}',
+        '{"status":"success","url":"https://preview.edgeone.app","projectId":"project-1","deploymentId":"deployment-1","meta":{"nested":true}}',
+      ].join('\n'),
+    );
+    expect(result).toEqual({
+      status: 'success',
+      url: 'https://preview.edgeone.app',
+      projectId: 'project-1',
+      deploymentId: 'deployment-1',
+      meta: { nested: true },
+    });
   });
 
   it('validates structured deployment success payloads', () => {
-    expect(validateDeployResult({ status: 'success', url: 'https://example.com', projectId: 123, deploymentId: 'dp-1' }).projectId).toBe(123);
-    expect(() => validateDeployResult({ status: 'success', url: '', projectId: 123, deploymentId: 'dp-1' })).toThrow('invalid success payload');
-    expect(() => validateDeployResult({ status: 'success', url: 'https://example.com', projectId: 123 })).toThrow('invalid success payload');
-    expect(() => validateDeployResult({ status: 'error', url: 'https://example.com', projectId: 123, deploymentId: 'dp-1' })).toThrow('invalid success payload');
+    expect(
+      validateDeployResult({
+        status: 'success',
+        url: 'https://example.com',
+        projectId: 123,
+        deploymentId: 'dp-1',
+      }).projectId,
+    ).toBe(123);
+    expect(() =>
+      validateDeployResult({ status: 'success', url: '', projectId: 123, deploymentId: 'dp-1' }),
+    ).toThrow('invalid success payload');
+    expect(() =>
+      validateDeployResult({ status: 'success', url: 'https://example.com', projectId: 123 }),
+    ).toThrow('invalid success payload');
+    expect(() =>
+      validateDeployResult({
+        status: 'error',
+        url: 'https://example.com',
+        projectId: 123,
+        deploymentId: 'dp-1',
+      }),
+    ).toThrow('invalid success payload');
   });
 });
