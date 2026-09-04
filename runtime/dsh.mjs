@@ -13,6 +13,7 @@ import {
   updatePackageRequest,
   verifyPackageRequest,
 } from './package-service.mjs';
+import { parseDshUri, registerProtocolHandler } from './host-bridge.mjs';
 import { runProviderCli } from './provider-cli.mjs';
 import { runEnvironmentCli } from './environment-cli.mjs';
 import { PACKAGE_TYPES, RELEASE_CHANNELS, formatPackageCoordinate } from '../packages/protocol-core/index.mjs';
@@ -21,6 +22,7 @@ const HELP = `DSH Go · canonical CLI
 
 Usage:
   dsh package install <type:id@range> [--channel stable] --yes [--dry-run]
+  dsh package install-link <dsh://package/install?...> --yes
   dsh package update <type:id@range> --yes [--channel stable]
   dsh package remove <type:id@range> --yes
   dsh package rollback <type:id@range> --yes
@@ -36,6 +38,7 @@ Usage:
 
   dsh runtime status
   dsh runtime activate
+  dsh runtime register-protocol
 
   dsh provider <list|search|info|install|update|rollback> ...
   dsh environment <lock|verify-lock|restore> ...
@@ -92,6 +95,11 @@ async function runPackage(args, options) {
   const action = args[0];
   const coordinate = positional(args.slice(1))[0];
   if (action === 'list') return { packages: await listPackages(options) };
+  if (action === 'install-link') {
+    if (!coordinate) throw new Error('package install-link requires a canonical dsh://package/install URL');
+    const link = parseDshUri(coordinate);
+    return installPackageRequest(link.request, { ...options, channel: link.request.channel });
+  }
   if (!coordinate) throw new Error(`package ${action || '<command>'} requires canonical coordinate <type>:<id>@<range>`);
   if (action === 'install') return installPackageRequest(coordinate, options);
   if (action === 'update') return updatePackageRequest(coordinate, options);
@@ -119,7 +127,11 @@ async function runRegistry(args, options) {
     const coordinate = positional(args.slice(1))[0];
     if (!coordinate) throw new Error('registry package requires canonical coordinate');
     const plan = await planPackage(coordinate, { ...options, registryData: registry });
-    return { coordinate: formatPackageCoordinate({ type: plan.root.type, id: plan.root.id, range: plan.root.version, channel: plan.root.channel }), resolved: plan.root, registry_revision: plan.registry_revision };
+    return {
+      coordinate: formatPackageCoordinate({ type: plan.root.type, id: plan.root.id, range: plan.root.version, channel: plan.root.channel }),
+      resolved: plan.root,
+      registry_revision: plan.registry_revision,
+    };
   }
   throw new Error(`unknown registry command: ${action}`);
 }
@@ -128,6 +140,7 @@ async function runRuntime(args, options) {
   const action = args[0] || 'status';
   if (action === 'status') return runtimeStatus(options);
   if (action === 'activate') return activatePendingPackages({ registryFile: options.registryFile });
+  if (action === 'register-protocol') return registerProtocolHandler();
   throw new Error(`unknown runtime command: ${action}`);
 }
 
