@@ -3,25 +3,18 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import {
-  normalizePackageType,
-  packageKey,
-  parsePackageCoordinate,
-} from '../packages/protocol-core/index.mjs';
+import { normalizePackageType, parsePackageCoordinate } from '../packages/protocol-core/index.mjs';
 import { parseDshUri } from './host-bridge.mjs';
+import { listPackages, packageInfo, planPackage, runtimeStatus, verifyPackageRequest } from './package-service.mjs';
 import {
-  installPackageRequest,
-  listPackages,
-  packageInfo,
-  planPackage,
-  removePackageRequest,
-  rollbackPackageRequest,
-  runtimeStatus,
-  setPackageEnabled,
-  updatePackageRequest,
-  verifyPackageRequest,
-} from './package-service.mjs';
-import { activatePendingPackages } from './startup.mjs';
+  superviseMutation,
+  supervisedActivate,
+  supervisedInstall,
+  supervisedRemove,
+  supervisedRollback,
+  supervisedSetEnabled,
+  supervisedUpdate,
+} from './supervisor.mjs';
 import { readPackageConfig, redactConfig, setPackageConfig, unsetPackageConfig } from './config-store.mjs';
 import { deleteSecret, listSecrets, setSecret } from './secret-store.mjs';
 import { loadRuntimeRegistryV4 } from './registry-client.mjs';
@@ -127,6 +120,7 @@ function localOptions(options, request = {}) {
     dryRun: request.dry_run === true,
     force: request.force === true,
     environment: request.environment || options.environment || {},
+    source: 'local-host',
   };
 }
 
@@ -152,7 +146,7 @@ function errorStatus(error) {
   if (error.code === 'DSH_APPROVAL_REQUIRED' || error.code === 'DSH_PERMISSION_DENIED') return 409;
   if (error.code === 'DSH_REQUEST_TOO_LARGE') return 413;
   if (error.code === 'DSH_PACKAGE_NOT_FOUND') return 404;
-  if (error.code === 'DSH_PACKAGE_REVOKED' || error.code === 'DSH_PACKAGE_YANKED' || error.code === 'DSH_SECURITY_ADVISORY_BLOCKED' || error.code === 'DSH_DEPENDENCY_CONFLICT') return 409;
+  if (error.code === 'DSH_PACKAGE_REVOKED' || error.code === 'DSH_PACKAGE_YANKED' || error.code === 'DSH_SECURITY_ADVISORY_BLOCKED' || error.code === 'DSH_DEPENDENCY_CONFLICT' || error.code === 'DSH_POLICY_DENIED') return 409;
   return 400;
 }
 
@@ -163,6 +157,7 @@ export function localHostContract() {
     runtime_state_schema: 4,
     registry_schema: 4,
     authentication: 'Bearer token',
+    mutation_authority: 'Runtime Supervisor',
     remote_registry_override_in_deep_link: false,
     auto_restart: false,
     endpoints: {
@@ -209,7 +204,7 @@ export async function createClientHost(options = {}) {
       }
       if (requestUrl.pathname === '/v2/runtime/activate' && req.method === 'POST') {
         const request = await body(req); requireApproval(request);
-        return json(req, res, 200, { data: await activatePendingPackages({ registryFile: options.runtimeRegistry || options.registryFile }), meta: {} });
+        return json(req, res, 200, { data: await supervisedActivate(localOptions(options, request)), meta: {} });
       }
       if (requestUrl.pathname === '/v2/registry/status' && req.method === 'GET') {
         const registry = await loadRuntimeRegistryV4({ registry: options.registry });
@@ -224,7 +219,7 @@ export async function createClientHost(options = {}) {
       if (requestUrl.pathname === '/v2/install/execute' && req.method === 'POST') {
         const request = await body(req); requireApproval(request);
         const target = request.url ? parseDshUri(request.url).request : parsePackageCoordinate(request.spec, { channel: request.channel || 'stable' });
-        const result = await installPackageRequest(target, localOptions(options, request));
+        const result = await supervisedInstall(target, localOptions(options, request));
         return json(req, res, 200, { data: { ...result, auto_restart: false }, meta: { registry_revision: result.plan?.registry_revision } });
       }
       if (requestUrl.pathname === '/v2/packages' && req.method === 'GET') {
@@ -239,11 +234,11 @@ export async function createClientHost(options = {}) {
         if (!request.spec) throw new Error('package action requires spec');
         const local = localOptions(options, request);
         let result;
-        if (action === 'update') result = await updatePackageRequest(request.spec, local);
-        else if (action === 'remove') result = await removePackageRequest(request.spec, local);
-        else if (action === 'rollback') result = await rollbackPackageRequest(request.spec, local);
-        else if (action === 'enable') result = await setPackageEnabled(request.spec, true, local);
-        else if (action === 'disable') result = await setPackageEnabled(request.spec, false, local);
+        if (action === 'update') result = await supervisedUpdate(request.spec, local);
+        else if (action === 'remove') result = await supervisedRemove(request.spec, local);
+        else if (action === 'rollback') result = await supervisedRollback(request.spec, local);
+        else if (action === 'enable') result = await supervisedSetEnabled(request.spec, true, local);
+        else if (action === 'disable') result = await supervisedSetEnabled(request.spec, false, local);
         else if (action === 'verify') result = await verifyPackageRequest(request.spec, local);
         else throw new Error(`unsupported package action: ${action}`);
         return json(req, res, 200, { data: { ...result, auto_restart: false }, meta: {} });
@@ -266,10 +261,14 @@ export async function createClientHost(options = {}) {
         const request = await body(req); requireApproval(request);
         if (!request.key) throw new Error('config key is required');
         const id = decodeURIComponent(route.id);
-        const result = request.unset === true
-          ? await unsetPackageConfig(route.type, id, request.key)
-          : request.value === undefined ? null : await setPackageConfig(route.type, id, request.key, typeof request.value === 'string' ? request.value : JSON.stringify(request.value));
-        if (!result) throw new Error('config value is required unless unset=true');
+        const local = localOptions(options, request);
+        const result = await superviseMutation('config-write', { package_coordinate: `${route.type}:${id}@*`, source: 'local-host' }, async () => {
+          const changed = request.unset === true
+            ? await unsetPackageConfig(route.type, id, request.key)
+            : request.value === undefined ? null : await setPackageConfig(route.type, id, request.key, typeof request.value === 'string' ? request.value : JSON.stringify(request.value));
+          if (!changed) throw new Error('config value is required unless unset=true');
+          return changed;
+        }, local);
         return json(req, res, 200, { data: { ...result, config: redactConfig(result.config) }, meta: {} });
       }
 
@@ -278,12 +277,13 @@ export async function createClientHost(options = {}) {
       if (secret?.name && (req.method === 'PUT' || req.method === 'POST')) {
         const request = await body(req); requireApproval(request);
         if (request.value === undefined || request.value === null || request.value === '') throw new Error('secret value is required');
-        const result = await setSecret(secret.name, request.value);
+        const result = await superviseMutation('secret-write', { source: 'local-host' }, () => setSecret(secret.name, request.value), localOptions(options, request));
         return json(req, res, 200, { data: { ...result, value: '<secret>' }, meta: {} });
       }
       if (secret?.name && req.method === 'DELETE') {
         const request = await body(req); requireApproval(request);
-        return json(req, res, 200, { data: await deleteSecret(secret.name), meta: {} });
+        const result = await superviseMutation('secret-delete', { source: 'local-host' }, () => deleteSecret(secret.name), localOptions(options, request));
+        return json(req, res, 200, { data: result, meta: {} });
       }
       if (secret?.name && req.method === 'GET') return json(req, res, 405, { error: { code: 'DSH_SECRET_READ_FORBIDDEN', message: 'secret values are never returned by the local HTTP API' }, meta: {} });
 
