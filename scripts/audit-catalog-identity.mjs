@@ -5,16 +5,6 @@ import { DSH_MANIFEST_FILES, canonicalRepoKey, canonicalRepoUrl, makeCatalogInst
 
 const DSH_MANIFEST_SET = new Set(DSH_MANIFEST_FILES);
 
-function legacyInstallProfile(category) {
-  if (category === 'web-ui') return 'web';
-  if (category === 'desktop') return 'desktop';
-  return 'tools';
-}
-
-function legacyInstallCmd(repo, category) {
-  return `dsh plugin --profile ${legacyInstallProfile(category)} add github:${repo}`;
-}
-
 export function auditCatalogIdentity(data) {
   const errors = [];
   const warnings = [];
@@ -34,10 +24,12 @@ export function auditCatalogIdentity(data) {
     }
     if (plugin.repo_name !== repoName) errors.push(`${label}: repo_name mismatch (${plugin.repo_name || '<missing>'})`);
     if (plugin.repo_url !== canonicalRepoUrl(plugin.full_name)) errors.push(`${label}: non-canonical repo_url (${plugin.repo_url || '<missing>'})`);
+
+    // Protocol V2 has exactly one install command shape. Discovery-only repositories
+    // intentionally expose no install command until Manifest V2 makes them authoritative.
     const canonicalInstallCmd = makeCatalogInstallCmd(plugin);
-    const historicalInstallCmd = legacyInstallCmd(plugin.full_name, plugin.category || 'other');
-    if (plugin.install_cmd !== canonicalInstallCmd && plugin.install_cmd !== historicalInstallCmd) errors.push(`${label}: install_cmd source mismatch`);
-    if (plugin.install_cmd === historicalInstallCmd && canonicalInstallCmd !== historicalInstallCmd) warnings.push(`${label}: historical install_cmd will migrate on next sync`);
+    if (plugin.install_cmd !== canonicalInstallCmd) errors.push(`${label}: install_cmd source mismatch`);
+
     if (plugin.manifest_file && !DSH_MANIFEST_SET.has(plugin.manifest_file)) errors.push(`${label}: package/non-DSH manifest used (${plugin.manifest_file})`);
     if (plugin.verified && !DSH_MANIFEST_SET.has(plugin.manifest_file)) errors.push(`${label}: verified without a supported DSH manifest`);
     if (plugin.metadata_source === 'github' && plugin.name !== repoName) errors.push(`${label}: GitHub-sourced name mismatch (${plugin.name})`);

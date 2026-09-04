@@ -48,14 +48,10 @@ jobs:
         id: lint
         continue-on-error: true
         run: npm run lint
-      - name: Canonical tests
+      - name: Full test suite
         id: tests
         continue-on-error: true
-        run: >-
-          npx vitest run
-          tests/architecture-v4
-          tests/deployment-convergence.test.ts
-          tests/production-sha-gate.test.ts
+        run: npm test
       - name: Site check
         id: sitecheck
         continue-on-error: true
@@ -75,15 +71,20 @@ jobs:
           test -s site/public/catalog/registry-v4.json
           test -s site/public/catalog/registry-v4/index.json
           test -s site/public/catalog/search-index-v3.json
+          test -s site/public/catalog/meta.json
           test ! -e site/public/catalog/registry-v3.json
+          test ! -e site/public/catalog/search-index-v2.json
           test ! -e site/public/catalog/distribution-v1
           test ! -e site/public/catalog/registry-candidates-v1.json
+          test ! -e site/public/install
+          node scripts/check-platform-discovery.mjs --file site/public/.well-known/dsh-marketplace.json
           npm run deploy:gate
       - name: Canonical runtime syntax
         id: syntax
         continue-on-error: true
         run: |
           find packages/protocol-core packages/registry-core packages/resolver packages/policy-core runtime bin -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
+          node --check scripts/check-platform-discovery.mjs
           node --check scripts/check-architecture.mjs
           node --check scripts/deploy-gate-v4.mjs
 

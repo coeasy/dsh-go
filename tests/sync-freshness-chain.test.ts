@@ -7,11 +7,13 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
 
 describe('Sync freshness chain', () => {
-  it('deploys authoritative freshness metadata with successful canonical syncs', () => {
+  it('publishes authoritative freshness metadata with successful Registry V4 syncs', () => {
     const sync = read('.github/workflows/sync.yml');
+    const assets = read('scripts/copy-assets-core.mjs');
     expect(sync).toContain('catalog/meta.json');
     expect(sync).toContain('DEPLOY_WORKFLOWS: deploy.yml deploy-pages.yml deploy-edgeone.yml monitor.yml');
-    expect(sync).toContain('public freshness state');
+    expect(assets).toContain("copyOptionalJson('meta.json')");
+    expect(assets).toContain("resolve(ROOT, 'site/public/install')");
   });
 
   it('uses a bounded watchdog that recovers both missed cadence and missed daily full syncs', () => {
@@ -31,12 +33,12 @@ describe('Sync freshness chain', () => {
     expect(watchdog).not.toContain('node scripts/sync-v3.mjs');
   });
 
-  it('renders last successful sync from catalog metadata in Beijing time without brittle metric DOM mutation', () => {
-    const homepage = read('site/src/pages/index.astro');
-    expect(homepage).toContain("'catalog', 'meta.json'");
-    expect(homepage).toContain("timeZone: 'Asia/Shanghai'");
-    expect(homepage).toContain('data-market-sync-status');
-    expect(homepage).toContain('<time datetime={lastSyncAt}>{lastSyncTimeLabel}</time>');
-    expect(homepage).not.toContain("document.querySelector('.market-hero .metrics span:last-child b')");
+  it('renders last successful sync from public catalog metadata in Beijing time', () => {
+    const marketplace = read('site/src/components/MarketplaceV2.astro');
+    expect(marketplace).toContain("resolve('public', 'catalog', 'meta.json')");
+    expect(marketplace).toContain("timeZone: 'Asia/Shanghai'");
+    expect(marketplace).toContain('data-market-sync-status');
+    expect(marketplace).toContain('<time datetime={lastSyncAt}>{lastSyncTimeLabel}</time>');
+    expect(marketplace).not.toContain("document.querySelector('.market-hero .metrics span:last-child b')");
   });
 });

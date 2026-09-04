@@ -8,8 +8,5 @@
   },
   "detail": {
     "min_stars": 200
-  },
-  "generated_install_scripts": {
-    "min_stars": 200
   }
 }

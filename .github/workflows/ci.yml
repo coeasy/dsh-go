@@ -50,15 +50,8 @@ jobs:
           npm run typecheck
           npm run lint
 
-      - name: Canonical architecture tests
-        run: >-
-          npx vitest run
-          tests/architecture-v4
-          tests/deployment-convergence.test.ts
-          tests/production-sha-gate.test.ts
-          tests/edgeone-deploy-ci.test.ts
-          tests/deployment-dispatch.test.ts
-          tests/npm-audit-retry.test.ts
+      - name: Full test suite
+        run: npm test
 
       - name: Astro check
         run: cd site && npm run check
@@ -75,11 +68,13 @@ jobs:
           test -f site/public/catalog/registry-v4.json
           test -f site/public/catalog/registry-v4/index.json
           test -f site/public/catalog/search-index-v3.json
+          test -f site/public/catalog/meta.json
           node scripts/validate-registry-v4.mjs catalog/registry-v4.json
           test ! -e site/public/catalog/registry-v3.json
           test ! -e site/public/catalog/search-index-v2.json
           test ! -e site/public/catalog/distribution-v1
           test ! -e site/public/catalog/registry-candidates-v1.json
+          test ! -e site/public/install
 
       - name: Deployment Gate V4
         run: npm run deploy:gate
@@ -96,6 +91,7 @@ jobs:
             scripts/registry-distribution-v2.mjs \
             scripts/build-search-index-v3.mjs \
             scripts/copy-assets-core.mjs \
+            scripts/check-platform-discovery.mjs \
             scripts/check-contract.mjs \
             scripts/check-architecture.mjs \
             scripts/deploy-gate-v4.mjs; do

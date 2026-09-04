@@ -4,36 +4,99 @@ import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 const REQUIRED_TYPES = ['plugin', 'mcp', 'skill', 'agent'];
+const REQUIRED_CHANNELS = ['stable', 'beta', 'nightly', 'dev'];
+const REQUIRED_LOCALES = ['en', 'zh-CN', 'ja', 'ko', 'es'];
 const REQUIRED_DEPLOYMENTS = ['cloudflare-pages', 'github-pages', 'edgeone-pages'];
-const REQUIRED_ENDPOINTS = ['health', 'capabilities', 'registry', 'registry_delta', 'mcp'];
+const REQUIRED_API_ENDPOINTS = [
+  'index',
+  'health',
+  'capabilities',
+  'packages',
+  'package_detail',
+  'package_releases',
+  'search',
+  'resolve',
+  'install_plan',
+  'publishers',
+  'advisories',
+  'registry_revision',
+  'registry_delta',
+  'mcp',
+];
+
+function sameArray(actual, expected) {
+  return Array.isArray(actual)
+    && actual.length === expected.length
+    && actual.every((value, index) => value === expected[index]);
+}
+
+function absoluteHttpUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
 
 export function validatePlatformDiscovery(document) {
   const errors = [];
   if (!document || typeof document !== 'object' || Array.isArray(document)) {
     return { valid: false, errors: ['discovery manifest must be an object'] };
   }
-  if (document.schema !== 'dsh-marketplace-discovery.v1') errors.push('schema must be dsh-marketplace-discovery.v1');
+
+  if (document.schema !== 'dsh-marketplace-discovery.v2') errors.push('schema must be dsh-marketplace-discovery.v2');
   if (document.service?.id !== 'dsh-go') errors.push('service.id must be dsh-go');
-  if (document.service?.version !== '0.1.0') errors.push('service.version must be 0.1.0');
-  if (document.service?.mode !== 'read-only') errors.push('service.mode must be read-only');
-  if (document.api?.version !== 'v1') errors.push('api.version must be v1');
-  if (!/^https?:\/\//.test(String(document.api?.base_url || ''))) errors.push('api.base_url must be an absolute URL');
-  if (document.registry?.version !== 3) errors.push('registry.version must be 3');
-  if (typeof document.registry?.distribution?.index_path !== 'string') errors.push('registry.distribution.index_path is required');
-  if (document.registry?.distribution?.version !== 1) errors.push('registry.distribution.version must be 1');
-  if (JSON.stringify(document.package_types) !== JSON.stringify(REQUIRED_TYPES)) errors.push('package_types must be plugin,mcp,skill,agent');
-  if (document.installation?.mode !== 'plan-only') errors.push('installation.mode must be plan-only');
-  if (document.installation?.deep_link_scheme !== 'dsh') errors.push('installation.deep_link_scheme must be dsh');
-  if (document.installation?.explicit_confirmation_required !== true) errors.push('installation must require explicit confirmation');
-  if (document.installation?.restart_required_after_install !== true) errors.push('installation must declare restart_required_after_install');
-  const endpoints = document.api?.endpoints;
-  if (endpoints && typeof endpoints === 'object') {
-    for (const name of REQUIRED_ENDPOINTS) if (typeof endpoints[name] !== 'string') errors.push('api.endpoints.' + name + ' is required');
-  } else {
-    for (const name of REQUIRED_ENDPOINTS) if (typeof document.api?.[name] !== 'string') errors.push('api.' + name + ' is required');
+  if (!String(document.service?.version || '').trim()) errors.push('service.version is required');
+  if (document.service?.mode !== 'read-only-discovery') errors.push('service.mode must be read-only-discovery');
+
+  if (document.protocol?.version !== 2) errors.push('protocol.version must be 2');
+  if (!sameArray(document.protocol?.package_types, REQUIRED_TYPES)) errors.push('protocol.package_types must be plugin,mcp,skill,agent');
+  if (!sameArray(document.protocol?.release_channels, REQUIRED_CHANNELS)) errors.push('protocol.release_channels must be stable,beta,nightly,dev');
+  if (document.protocol?.package_coordinate !== '<type>:<id>@<semver-range>') errors.push('protocol.package_coordinate must declare the canonical V2 coordinate');
+
+  if (document.api?.version !== 'v2') errors.push('api.version must be v2');
+  if (!absoluteHttpUrl(document.api?.base_url)) errors.push('api.base_url must be an absolute HTTP(S) URL');
+  if (!absoluteHttpUrl(document.api?.openapi_url)) errors.push('api.openapi_url must be an absolute HTTP(S) URL');
+  for (const name of REQUIRED_API_ENDPOINTS) {
+    const value = document.api?.[name];
+    if (typeof value !== 'string' || !value.startsWith('/api/v2')) errors.push(`api.${name} must be a canonical /api/v2 endpoint`);
   }
-  const deploymentIds = Array.isArray(document.deployments) ? document.deployments.map((entry) => entry?.id) : [];
+
+  if (document.registry?.version !== 4) errors.push('registry.version must be 4');
+  if (document.registry?.authority_path !== '/catalog/registry-v4.json') errors.push('registry.authority_path must be /catalog/registry-v4.json');
+  if (document.registry?.distribution?.version !== 2) errors.push('registry.distribution.version must be 2');
+  if (document.registry?.distribution?.index_path !== '/catalog/registry-v4/index.json') errors.push('registry.distribution.index_path must be /catalog/registry-v4/index.json');
+  if (document.registry?.search_index?.version !== 3) errors.push('registry.search_index.version must be 3');
+  if (document.registry?.search_index?.path !== '/catalog/search-index-v3.json') errors.push('registry.search_index.path must be /catalog/search-index-v3.json');
+
+  if (Number(document.marketplace?.detail_min_stars) < 200) errors.push('marketplace.detail_min_stars must be at least 200');
+  if (document.marketplace?.trust_is_popularity !== false) errors.push('marketplace.trust_is_popularity must be false');
+  if (!sameArray(document.marketplace?.locales, REQUIRED_LOCALES)) errors.push('marketplace.locales must be en,zh-CN,ja,ko,es');
+
+  if (document.installation?.remote_mode !== 'plan-only') errors.push('installation.remote_mode must be plan-only');
+  if (document.installation?.remote_mutation !== false) errors.push('installation.remote_mutation must be false');
+  if (document.installation?.local_runtime_is_write_authority !== true) errors.push('installation.local_runtime_is_write_authority must be true');
+  if (document.installation?.cli_template !== 'dsh package install {type}:{id}@{range}') errors.push('installation.cli_template must use the canonical package command');
+  if (!String(document.installation?.deep_link_template || '').startsWith('dsh://package/install?spec=')) errors.push('installation.deep_link_template must use dsh://package/install');
+  if (document.installation?.deep_link_registry_override !== false) errors.push('installation.deep_link_registry_override must be false');
+  if (document.installation?.explicit_confirmation_required !== true) errors.push('installation must require explicit confirmation');
+  if (document.installation?.auto_restart !== false) errors.push('installation.auto_restart must be false');
+
+  const deployments = Array.isArray(document.deployments) ? document.deployments : [];
+  const deploymentIds = deployments.map((entry) => entry?.id);
   for (const id of REQUIRED_DEPLOYMENTS) if (!deploymentIds.includes(id)) errors.push('deployments must include ' + id);
+  const cloudflare = deployments.find((entry) => entry?.id === 'cloudflare-pages');
+  if (cloudflare && (cloudflare.role !== 'api-and-static-authority' || cloudflare.api !== true || cloudflare.static !== true)) {
+    errors.push('cloudflare-pages must be the API and static authority');
+  }
+  for (const id of ['github-pages', 'edgeone-pages']) {
+    const replica = deployments.find((entry) => entry?.id === id);
+    if (replica && (replica.role !== 'static-replica' || replica.api !== false || replica.static !== true)) {
+      errors.push(`${id} must be a static replica`);
+    }
+  }
+
   return { valid: errors.length === 0, errors };
 }
 
