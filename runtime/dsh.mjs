@@ -1,300 +1,159 @@
 #!/usr/bin/env node
-import { writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { spawn } from 'node:child_process';
-import { createInterface } from 'node:readline/promises';
-import { stdin as input, stdout as output } from 'node:process';
-import { ensureRegistryCache, loadRegistrySource, resolveRegistrySource } from './catalog.mjs';
-import { buildInstallDeepLink, deepLinkInstallPlan, parseDshUrl, registerProtocolHandler } from './client-bridge.mjs';
-import { findPackageManifest, writeManifestTemplate } from './package-manifest.mjs';
-import { preflightPackage } from './preflight.mjs';
-import { assertPackageType, parsePackageSpec } from './package-model.mjs';
-import { findRuntimePackage, readRuntimeRegistry } from './registry.mjs';
-import { versionInfo } from './version.mjs';
-import { startClientHost } from './client-host.mjs';
-import { executePackageTransaction } from './transaction.mjs';
-import { auditPackageSecurity } from '../scripts/package-security-audit.mjs';
-import { generateSbom } from '../scripts/generate-sbom.mjs';
+import { activatePendingPackages } from './startup.mjs';
+import { loadRuntimeRegistryV4 } from './registry-client.mjs';
+import {
+  installPackageRequest,
+  listPackages,
+  packageInfo,
+  planPackage,
+  removePackageRequest,
+  rollbackPackageRequest,
+  runtimeStatus,
+  setPackageEnabled,
+  updatePackageRequest,
+  verifyPackageRequest,
+} from './package-service.mjs';
+import { runProviderCli } from './provider-cli.mjs';
+import { runEnvironmentCli } from './environment-cli.mjs';
+import { PACKAGE_TYPES, RELEASE_CHANNELS, formatPackageCoordinate } from '../packages/protocol-core/index.mjs';
 
-const LEGACY_CLI = fileURLToPath(new URL('./cli.mjs', import.meta.url));
-const ECOSYSTEM_TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
-const MUTATING_ACTIONS = new Set(['install', 'add', 'update', 'repair']);
+const HELP = `DSH Go · canonical CLI
+
+Usage:
+  dsh package install <type:id@range> [--channel stable] --yes [--dry-run]
+  dsh package update <type:id@range> --yes [--channel stable]
+  dsh package remove <type:id@range> --yes
+  dsh package rollback <type:id@range> --yes
+  dsh package enable <type:id@range>
+  dsh package disable <type:id@range>
+  dsh package verify <type:id@range>
+  dsh package info <type:id@range>
+  dsh package list [--all]
+  dsh package plan <type:id@range> [--channel stable]
+
+  dsh registry status [--registry <https-url-or-file>]
+  dsh registry package <type:id@range> [--channel stable]
+
+  dsh runtime status
+  dsh runtime activate
+
+  dsh provider <list|search|info|install|update|rollback> ...
+  dsh environment <lock|verify-lock|restore> ...
+
+Global:
+  --json
+  --registry <https-url-or-file>
+  --runtime-registry <file>
+  --channel <stable|beta|nightly|dev>
+  --yes
+  --dry-run
+
+Canonical package coordinate is mandatory: <type>:<id>@<range>.
+Package types: ${PACKAGE_TYPES.join(', ')}.
+Channels: ${RELEASE_CHANNELS.join(', ')}.
+Legacy plugin aliases, implicit package types, github: specs and old command shapes are not supported.`;
 
 function option(args, name, fallback = undefined) {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : fallback;
 }
-function has(args, name) { return args.includes(name); }
-function stripFlag(args, name) { return args.filter((value) => value !== name); }
-function print(value) { console.log(JSON.stringify(value, null, 2)); }
 
-function help() {
-  console.log(`DSH CLI 0.1.0 - local runtime and ecosystem manager
-
-Usage:
-  dsh version
-  dsh plugin|mcp|skill|agent install <id[@version]> [--channel stable] [--yes] [--dry-run]
-  dsh plugin|mcp|skill|agent list|status|update|remove|rollback|doctor|repair|enable|disable|history ...
-  dsh ecosystem list|status
-  dsh preflight <id[@version]> [--type plugin|mcp|skill|agent]
-  dsh bridge link <id[@version]> [--type plugin|mcp|skill|agent]
-  dsh bridge parse <dsh://...>
-  dsh bridge register [--dry-run]
-  dsh bridge handle <dsh://...> [--yes]
-  dsh bridge serve [--port 43731]
-  dsh package init|validate|audit|sbom|publish-check ...
-  dsh profile apply <profile.json> [--yes|--dry-run]
-  dsh bundle install <bundle.json> [--yes|--dry-run]
-
-Public release version remains 0.1.0 and remote APIs remain under /api/v1.
-Install/update never restarts the client automatically. Successful changes are activated by the startup loader after a manual restart.`);
-}
-
-async function registryContext(args) {
-  const explicit = option(args, '--registry');
-  const source = await resolveRegistrySource(explicit);
-  const registry = await loadRegistrySource(source);
-  const file = await ensureRegistryCache(source);
-  return { registry, file, source };
-}
-
-async function confirm(message) {
-  if (!input.isTTY || !output.isTTY) return false;
-  const rl = createInterface({ input, output });
-  try {
-    const answer = (await rl.question(`${message} [y/N] `)).trim().toLowerCase();
-    return answer === 'y' || answer === 'yes';
-  } finally { rl.close(); }
-}
-
-async function runLegacy(args, registryFile, approved = false) {
-  const forwarded = [...args];
-  if (registryFile && !forwarded.includes('--registry')) forwarded.push('--registry', registryFile);
-  const env = { ...process.env };
-  if (approved) env.DSH_PERMISSION_APPROVED = '1';
-  else delete env.DSH_PERMISSION_APPROVED;
-  const exitCode = await new Promise((accept, reject) => {
-    const child = spawn(process.execPath, [LEGACY_CLI, ...forwarded], { stdio: 'inherit', windowsHide: false, env });
-    child.on('error', reject);
-    child.on('exit', (code, signal) => signal ? reject(new Error(`runtime terminated by ${signal}`)) : accept(code ?? 1));
-  });
-  if (exitCode !== 0) throw new Error(`runtime command failed with exit code ${exitCode}`);
-}
-
-async function approvedPreflight(type, spec, args) {
-  const ctx = await registryContext(args);
-  const channel = option(args, '--channel');
-  const runtimeRegistry = await readRuntimeRegistry(option(args, '--runtime-registry'));
-  const preflight = preflightPackage(ctx.registry, spec, { type, channel, installed: runtimeRegistry.packages });
-  if (!preflight.allowed) throw new Error(`preflight blocked operation: ${preflight.reasons.join('; ')}`);
-  if (has(args, '--dry-run')) return { ctx, preflight, approved: false };
-  let approved = has(args, '--yes');
-  const escalated = preflight.permission_diff.added.filter((permission) => preflight.permissions.dangerous.includes(permission) || preflight.permissions.unknown.includes(permission));
-  if ((preflight.permissions.requires_consent || escalated.length) && !approved) {
-    const packageCount = preflight.dependency_plan?.order?.length || 1;
-    approved = await confirm(`${packageCount} package(s) request ${preflight.permissions.permissions.join(', ') || 'no special permissions'}. Continue?`);
-    if (!approved) {
-      const error = new Error('operation cancelled: explicit permission consent is required');
-      error.code = 'DSH_PERMISSION_CONSENT_REQUIRED';
-      error.permissionReport = preflight.permissions;
-      throw error;
+function positional(args) {
+  const values = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const value = args[index];
+    if (value.startsWith('--')) {
+      if (!['--json', '--yes', '--dry-run', '--force', '--all'].includes(value)) index += 1;
+      continue;
     }
+    values.push(value);
   }
-  return { ctx, preflight, approved };
+  return values;
 }
 
-async function installOrUpdate(type, action, spec, args) {
-  if (!spec) throw new Error(`${action} requires a package id`);
-  const normalizedType = assertPackageType(type);
-  const { ctx, preflight, approved } = await approvedPreflight(normalizedType, spec, args);
-  if (has(args, '--dry-run')) {
-    print({ ...preflight, deep_link: buildInstallDeepLink({ id: preflight.id, version: preflight.version, channel: preflight.channel, type: preflight.type }) });
-    return;
-  }
-
-  const parsed = parsePackageSpec(spec, action === 'update' ? '*' : preflight.version, normalizedType);
-  const flags = [];
-  const channel = option(args, '--channel');
-  if (channel) flags.push('--channel', channel);
-  const runtimeRegistry = option(args, '--runtime-registry');
-  if (runtimeRegistry) flags.push('--runtime-registry', runtimeRegistry);
-  const root = option(args, '--root');
-  if (root) flags.push('--root', root);
-  const policyFile = option(args, '--policy-file');
-  if (policyFile) flags.push('--policy-file', policyFile);
-  if (has(args, '--force')) flags.push('--force');
-  let runtimeArgs;
-  if (action === 'update') runtimeArgs = [normalizedType, 'update', parsed.id, parsed.version || preflight.version, ...flags];
-  else runtimeArgs = [normalizedType, 'install', `${parsed.id}@${preflight.version}`, ...flags];
-  await runLegacy(runtimeArgs, ctx.file, approved);
-  console.log('Install/update completed. Restart the client manually to activate changes.');
+function commonOptions(args) {
+  return {
+    registry: option(args, '--registry'),
+    registryFile: option(args, '--runtime-registry'),
+    channel: option(args, '--channel', 'stable'),
+    approved: args.includes('--yes'),
+    dryRun: args.includes('--dry-run'),
+    force: args.includes('--force'),
+    all: args.includes('--all'),
+  };
 }
 
-async function repairPackage(type, id, args) {
-  if (!id) throw new Error('repair requires a package id');
-  const normalizedType = assertPackageType(type);
-  const runtime = await readRuntimeRegistry(option(args, '--runtime-registry'));
-  const current = findRuntimePackage(runtime, id, { type: normalizedType });
-  if (!current) throw new Error(`${normalizedType} is not installed: ${id}`);
-  const spec = `${normalizedType}:${id}@${current.version}`;
-  const { ctx, approved } = await approvedPreflight(normalizedType, spec, args);
-  if (has(args, '--dry-run')) return;
-  const runtimeArgs = [normalizedType, 'repair', id];
-  const runtimeRegistry = option(args, '--runtime-registry');
-  if (runtimeRegistry) runtimeArgs.push('--runtime-registry', runtimeRegistry);
-  const root = option(args, '--root');
-  if (root) runtimeArgs.push('--root', root);
-  const policyFile = option(args, '--policy-file');
-  if (policyFile) runtimeArgs.push('--policy-file', policyFile);
-  return runLegacy(runtimeArgs, ctx.file, approved);
+function output(value, json = false) {
+  if (json || typeof value === 'object') console.log(JSON.stringify(value, null, 2));
+  else console.log(String(value));
 }
 
-async function packageCommand(action, args) {
-  if (action === 'init') {
-    const result = await writeManifestTemplate(option(args, '--file', 'dsh-package.json'), option(args, '--type', 'plugin'), { id: option(args, '--id'), name: option(args, '--name') });
-    return print(result);
-  }
-  const root = resolve(args[2] && !args[2].startsWith('--') ? args[2] : process.cwd());
-  if (action === 'validate') {
-    const found = await findPackageManifest(root);
-    if (!found) throw new Error('no DSH package manifest found');
-    print({ file: found.file, valid: found.valid, errors: found.errors, warnings: found.warnings, manifest: found.manifest });
-    if (!found.valid) process.exitCode = 1;
-    return;
-  }
-  if (action === 'audit') {
-    const result = await auditPackageSecurity(root);
-    print(result);
-    if (!result.safe) process.exitCode = 1;
-    return;
-  }
-  if (action === 'sbom') {
-    const sbom = await generateSbom(root);
-    const outputFile = resolve(args[3] || `${root}/sbom.cdx.json`);
-    await writeFile(outputFile, `${JSON.stringify(sbom, null, 2)}\n`, 'utf8');
-    return print({ generated: true, file: outputFile, components: sbom.components.length });
-  }
-  if (action === 'publish-check') {
-    const found = await findPackageManifest(root);
-    if (!found) throw new Error('no DSH package manifest found');
-    const audit = await auditPackageSecurity(root);
-    const security = found.manifest?.security || {};
-    const missingEvidence = [];
-    if (!security.provenance) missingEvidence.push('provenance');
-    if (!security.signature) missingEvidence.push('signature');
-    if (!security.sbom) missingEvidence.push('sbom');
-    if (!security.license) missingEvidence.push('license');
-    if (!found.manifest?.publisher?.id) missingEvidence.push('publisher.id');
-    const result = {
-      publishable: found.valid && audit.safe && missingEvidence.length === 0,
-      manifest: { file: found.file, errors: found.errors, warnings: found.warnings },
-      audit,
-      missing_release_evidence: missingEvidence,
-    };
-    print(result);
-    if (!result.publishable) process.exitCode = 1;
-    return;
-  }
-  throw new Error(`unknown package action: ${action}`);
+async function runPackage(args, options) {
+  const action = args[0];
+  const coordinate = positional(args.slice(1))[0];
+  if (action === 'list') return { packages: await listPackages(options) };
+  if (!coordinate) throw new Error(`package ${action || '<command>'} requires canonical coordinate <type>:<id>@<range>`);
+  if (action === 'install') return installPackageRequest(coordinate, options);
+  if (action === 'update') return updatePackageRequest(coordinate, options);
+  if (action === 'remove') return removePackageRequest(coordinate, options);
+  if (action === 'rollback') return rollbackPackageRequest(coordinate, options);
+  if (action === 'enable') return setPackageEnabled(coordinate, true, options);
+  if (action === 'disable') return setPackageEnabled(coordinate, false, options);
+  if (action === 'verify') return verifyPackageRequest(coordinate, options);
+  if (action === 'info') return packageInfo(coordinate, options);
+  if (action === 'plan') return planPackage(coordinate, options);
+  throw new Error(`unknown package command: ${action || '<empty>'}`);
 }
 
-async function applyPackagePlan(kind, file, args) {
-  if (!file) throw new Error(`${kind} requires a JSON file`);
-    const result = await executePackageTransaction(file, {
-      kind,
-      catalog: option(args, '--registry', 'catalog/registry-v3.json'),
-      registryFile: option(args, '--runtime-registry'),
-      approved: has(args, '--yes'),
-    dryRun: has(args, '--dry-run'),
+async function runRegistry(args, options) {
+  const action = args[0] || 'status';
+  const registry = await loadRuntimeRegistryV4(options);
+  if (action === 'status') return {
+    schema_version: registry.schema_version,
+    revision: registry.revision,
+    generated_at: registry.generated_at,
+    package_count: registry.packages.length,
+    release_count: registry.metadata?.release_count ?? registry.packages.reduce((sum, item) => sum + item.releases.length, 0),
+  };
+  if (action === 'package') {
+    const coordinate = positional(args.slice(1))[0];
+    if (!coordinate) throw new Error('registry package requires canonical coordinate');
+    const plan = await planPackage(coordinate, { ...options, registryData: registry });
+    return { coordinate: formatPackageCoordinate({ type: plan.root.type, id: plan.root.id, range: plan.root.version, channel: plan.root.channel }), resolved: plan.root, registry_revision: plan.registry_revision };
+  }
+  throw new Error(`unknown registry command: ${action}`);
+}
+
+async function runRuntime(args, options) {
+  const action = args[0] || 'status';
+  if (action === 'status') return runtimeStatus(options);
+  if (action === 'activate') return activatePendingPackages({ registryFile: options.registryFile });
+  throw new Error(`unknown runtime command: ${action}`);
+}
+
+export async function runDsh(args = process.argv.slice(2)) {
+  if (!args.length || args.includes('--help') || args.includes('-h') || args[0] === 'help') {
+    console.log(HELP);
+    return { help: true };
+  }
+  const namespace = args[0];
+  const rest = args.slice(1);
+  const options = commonOptions(args);
+  let result;
+  if (namespace === 'package') result = await runPackage(rest, options);
+  else if (namespace === 'registry') result = await runRegistry(rest, options);
+  else if (namespace === 'runtime') result = await runRuntime(rest, options);
+  else if (namespace === 'provider') result = await runProviderCli(rest);
+  else if (namespace === 'environment') result = await runEnvironmentCli(rest);
+  else throw new Error(`unknown namespace: ${namespace}. Use one of: package, registry, runtime, provider, environment`);
+  output(result, args.includes('--json'));
+  return result;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runDsh().catch((error) => {
+    console.error(`[dsh] ${error.code ? `${error.code}: ` : ''}${error.message}`);
+    if (process.env.DSH_DEBUG === '1' && error.stack) console.error(error.stack);
+    process.exitCode = 1;
   });
-  print(result);
 }
-
-async function bridgeCommand(action, args) {
-  if (action === 'parse') return print(parseDshUrl(args[2]));
-  if (action === 'register') return print(await registerProtocolHandler({ dryRun: has(args, '--dry-run') }));
-  if (action === 'serve') {
-    const host = await startClientHost({
-      port: option(args, '--port'),
-      runtimeRegistry: option(args, '--runtime-registry'),
-      catalog: option(args, '--registry'),
-      enterprisePolicyFile: option(args, '--policy-file'),
-      registriesFile: option(args, '--registries-file'),
-    });
-    console.log(`DSH client host listening on http://${host.host}:${host.port}`);
-    return;
-  }
-  if (action === 'link') {
-    const type = assertPackageType(option(args, '--type', 'plugin'));
-    const spec = parsePackageSpec(args[2], '*', type);
-    return console.log(buildInstallDeepLink({ id: spec.id, version: spec.version, channel: option(args, '--channel'), type: spec.type, registry: option(args, '--registry') }));
-  }
-  if (action === 'handle') {
-    const plan = deepLinkInstallPlan(args[2]);
-    if (!has(args, '--yes')) {
-      const approved = await confirm(`DSH Marketplace requests ${plan.request.action} of ${plan.request.type || 'plugin'}:${plan.request.id}@${plan.request.version}. Continue?`);
-      if (!approved) return print({ ...plan, executed: false, reason: 'confirmation-required' });
-      args = [...args, '--yes'];
-    }
-    const type = plan.request.type || 'plugin';
-    const synthetic = [type, plan.request.action === 'update' ? 'update' : 'install', `${plan.request.id}@${plan.request.version}`, '--yes'];
-    if (plan.request.channel) synthetic.push('--channel', plan.request.channel);
-    if (plan.request.registry) synthetic.push('--registry', plan.request.registry);
-    const runtimeRegistry = option(args, '--runtime-registry');
-    if (runtimeRegistry) synthetic.push('--runtime-registry', runtimeRegistry);
-    const root = option(args, '--root');
-    if (root) synthetic.push('--root', root);
-    const policyFile = option(args, '--policy-file');
-    if (policyFile) synthetic.push('--policy-file', policyFile);
-    await installOrUpdate(type, plan.request.action === 'update' ? 'update' : 'install', `${plan.request.id}@${plan.request.version}`, synthetic);
-    return;
-  }
-  throw new Error(`unknown bridge action: ${action}`);
-}
-
-async function ecosystemLifecycle(type, action, spec, args) {
-  if (type === 'ecosystem') {
-    if (!['list', 'status'].includes(action)) throw new Error(`ecosystem ${action} requires an explicit package type`);
-    const runtimeArgs = ['package', action];
-    if (spec) runtimeArgs.push(spec);
-    if (has(args, '--all')) runtimeArgs.push('--all');
-    const type = option(args, '--type');
-    if (type) runtimeArgs.push('--type', type);
-    const runtimeRegistry = option(args, '--runtime-registry');
-    if (runtimeRegistry) runtimeArgs.push('--runtime-registry', runtimeRegistry);
-    return runLegacy(runtimeArgs);
-  }
-  const normalizedType = assertPackageType(type);
-  if (action === 'install' || action === 'add' || action === 'update') return installOrUpdate(normalizedType, action === 'add' ? 'install' : action, spec, args);
-  if (action === 'repair') return repairPackage(normalizedType, spec, args);
-  const runtimeArgs = [normalizedType, action, ...stripFlag(args.slice(2), '--yes')];
-  return runLegacy(runtimeArgs, undefined, has(args, '--yes'));
-}
-
-async function main() {
-  const args = process.argv.slice(2);
-  const command = args[0] || 'help';
-  if (command === 'help' || command === '--help' || command === '-h') return help();
-  if (command === 'version' || command === '--version' || command === '-v') return print(versionInfo());
-  if (command === 'preflight') {
-    const ctx = await registryContext(args);
-    const runtimeRegistry = await readRuntimeRegistry(option(args, '--runtime-registry'));
-    return print(preflightPackage(ctx.registry, args[1], { type: option(args, '--type'), channel: option(args, '--channel'), installed: runtimeRegistry.packages }));
-  }
-  if (command === 'bridge') return bridgeCommand(args[1] || 'parse', args);
-  if (command === 'package') return packageCommand(args[1] || 'validate', args);
-  if (command === 'profile' && args[1] === 'apply') return applyPackagePlan('profile', args[2], args);
-  if (command === 'bundle' && args[1] === 'install') return applyPackagePlan('bundle', args[2], args);
-  if (ECOSYSTEM_TYPES.has(command) || command === 'ecosystem') return ecosystemLifecycle(command, args[1] || 'list', args[2], args);
-  if (command === 'install') return installOrUpdate('plugin', 'install', args[1], ['plugin', 'install', ...args.slice(1)]);
-  if (MUTATING_ACTIONS.has(command)) throw new Error(`unsupported top-level mutation: ${command}`);
-  return runLegacy(args);
-}
-
-main().catch((error) => {
-  console.error(`[dsh] ${error.stack || error.message}`);
-  if (error.permissionReport) console.error(JSON.stringify(error.permissionReport, null, 2));
-  if (error.compatibilityReport) console.error(JSON.stringify(error.compatibilityReport, null, 2));
-  process.exit(1);
-});
