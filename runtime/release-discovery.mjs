@@ -1,4 +1,4 @@
-import { assertPackageType } from './package-model.mjs';
+import { normalizePackageType } from '../packages/protocol-core/index.mjs';
 import { validateReleaseArtifact } from './artifact-installer.mjs';
 
 export const RELEASE_DESCRIPTOR_NAME = 'dsh-package-release.json';
@@ -23,11 +23,11 @@ function sameIdentity(descriptor, pkg) {
     && String(descriptor?.commit || '').toLowerCase() === String(pkg.commit || '').toLowerCase()
     && descriptor?.id === pkg.id
     && descriptor?.version === pkg.version
-    && descriptor?.type === assertPackageType(pkg.type || 'plugin');
+    && descriptor?.type === normalizePackageType(pkg.type);
 }
 
 export async function discoverReleaseArtifact(pkg, options = {}) {
-  if (!pkg?.repo || !pkg?.version || !pkg?.commit || !pkg?.id) return null;
+  if (!pkg?.repo || !pkg?.version || !pkg?.commit || !pkg?.id || !pkg?.type) return null;
   const url = descriptorUrl(pkg, options);
   let response;
   try {

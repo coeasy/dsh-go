@@ -1,5 +1,5 @@
 import { assertProviderAdapterRelease, providerAdapterChannel, sha256Hex, stableStringify } from './provider-adapter.mjs';
-import { compareVersions, selectHighestVersion } from './semver.mjs';
+import { compareVersion, selectHighest } from '../packages/protocol-core/index.mjs';
 
 export const PROVIDER_ADAPTER_REGISTRY_VERSION = 1;
 export const PROVIDER_ADAPTER_REGISTRY_SCHEMA_VERSION = '1.0.0';
@@ -12,7 +12,7 @@ function groupContent(group) {
     description: group.description || '',
     kind: group.kind,
     channels: Object.fromEntries(Object.entries(group.channels || {}).sort(([a], [b]) => a.localeCompare(b))),
-    versions: [...(group.versions || [])].sort((a, b) => compareVersions(a.version, b.version)),
+    versions: [...(group.versions || [])].sort((a, b) => compareVersion(a.version, b.version)),
   };
 }
 
@@ -117,7 +117,7 @@ export function registerProviderAdapter(registry, adapterRelease, options = {}) 
     }
   } else {
     group.versions.push(release);
-    group.versions.sort((a, b) => compareVersions(a.version, b.version));
+    group.versions.sort((a, b) => compareVersion(a.version, b.version));
     group.name = release.name;
     group.description = release.description;
     changed = true;
@@ -126,7 +126,7 @@ export function registerProviderAdapter(registry, adapterRelease, options = {}) 
   const currentChannelVersion = group.channels[channel];
   const shouldMoveChannel = !currentChannelVersion
     || options.forceChannel === true
-    || compareVersions(release.version, currentChannelVersion) >= 0;
+    || compareVersion(release.version, currentChannelVersion) >= 0;
   if (shouldMoveChannel && currentChannelVersion !== release.version) {
     group.channels[channel] = release.version;
     changed = true;
@@ -143,7 +143,7 @@ export function resolveProviderAdapter(registry, id, selector = 'stable') {
   const requested = String(selector || 'stable');
   const channelVersion = group.channels[requested];
   let version = channelVersion || group.versions.find((item) => item.version === requested)?.version || null;
-  if (!version) version = selectHighestVersion(group.versions.map((item) => item.version), requested);
+  if (!version) version = selectHighest(group.versions.map((item) => item.version), requested);
   if (!version) throw new Error(`provider adapter version not found: ${id}@${requested}`);
   const release = group.versions.find((item) => item.version === version);
   if (!release) throw new Error(`provider adapter release missing: ${id}@${version}`);
@@ -163,8 +163,8 @@ export function rollbackProviderAdapterChannel(registry, id, channel = 'stable',
     const candidates = group.versions
       .filter((release) => channel !== 'stable' || !release.version.includes('-'))
       .map((release) => release.version)
-      .filter((version) => compareVersions(version, active) < 0)
-      .sort(compareVersions);
+      .filter((version) => compareVersion(version, active) < 0)
+      .sort(compareVersion);
     target = candidates.at(-1) || null;
   }
   if (!target || !group.versions.some((release) => release.version === target)) throw new Error(`provider adapter rollback target not found: ${id}@${target || '<previous>'}`);

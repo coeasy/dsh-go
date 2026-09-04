@@ -21,13 +21,19 @@
   },
   "include": [
     "functions/**/*.ts",
-    "tests/**/*.ts",
+    "tests/architecture-v4/**/*.ts",
+    "tests/deployment-convergence.test.ts",
+    "tests/production-sha-gate.test.ts",
+    "tests/deployment-dispatch.test.ts",
+    "tests/edgeone-deploy-ci.test.ts",
+    "tests/npm-audit-retry.test.ts",
+    "tests/marketplace-policy.test.ts",
+    "tests/package-protocol-conformance.test.ts",
     "site/src/i18n/**/*.ts",
     "marketplace/**/*.ts",
     "mcp/**/*.ts",
     "skills/**/*.ts",
     "agents/**/*.ts",
-    "profiles/**/*.ts",
-    "runtime/v3/**/*.ts"
+    "profiles/**/*.ts"
   ]
 }

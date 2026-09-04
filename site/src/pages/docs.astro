@@ -33,7 +33,7 @@ const mcpBody = JSON.stringify({ jsonrpc:'2.0', id:1, method:'tools/call', param
 agent:owner/agent@*
 mcp:owner/server@2.0.0</code></pre></section>
 
-    <section class="doc-section"><h2>Response contract</h2><p>Success is always <code>{ data, meta }</code>. Failure is always <code>{ error: { code, message, details? }, meta }</code>. <code>meta.request_id</code> is present on API responses and Registry-backed endpoints also expose the active Registry revision.</p><pre><code>{`{
+    <section class="doc-section"><h2>Response contract</h2><p>Success is always <code>&#123; data, meta &#125;</code>. Failure is always <code>&#123; error: &#123; code, message, details? &#125;, meta &#125;</code>. <code>meta.request_id</code> is present on API responses and Registry-backed endpoints also expose the active Registry revision.</p><pre><code>{`{
   "data": { ... },
   "meta": {
     "request_id": "...",

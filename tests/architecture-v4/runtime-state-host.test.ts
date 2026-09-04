@@ -38,7 +38,7 @@ describe('Runtime State V4', () => {
     const first = await writeRuntimeRegistry({ schema_version: 4, generation: 0, packages: [] }, file);
     expect(first.generation).toBe(1);
     const skill = createRuntimePackageRecord('skill', 'owner/example', '1.0.0', { state: 'pending-restart', restart_required: true });
-    const second = await updateRuntimeRegistry((state) => upsertRuntimePackage(state, skill), file);
+    const second = await updateRuntimeRegistry((state: any) => upsertRuntimePackage(state, skill), file);
     expect(second.generation).toBe(2);
     expect(getRuntimePackage(second, 'skill', 'owner/example')).toMatchObject({ type: 'skill', id: 'owner/example', version: '1.0.0' });
     await expect(writeRuntimeRegistry(first, file)).rejects.toMatchObject({ code: 'DSH_TRANSACTION_CONFLICT' });

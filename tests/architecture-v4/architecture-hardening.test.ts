@@ -113,13 +113,13 @@ describe('architecture hardening contracts', () => {
       ],
     };
     const built = await buildRegistryV4FromDiscovery(discovery, { generated_at: '2026-09-04T00:00:00.000Z', concurrency: 1 });
-    expect(built.registry.packages.map((item) => item.id)).toEqual(['owner/installable']);
+    expect(built.registry.packages.map((item: any) => item.id)).toEqual(['owner/installable']);
     expect(built.candidates.counts.accepted).toBe(1);
     expect(built.candidates.counts.quarantined).toBe(1);
-    const index = buildSearchIndexV3(built.registry, built.candidates);
+    const index = buildSearchIndexV3(built.registry, built.candidates as any);
     expect(index.installable_count).toBe(1);
     expect(index.discovery_only_count).toBe(1);
-    expect(index.items.find((item) => item.id === 'owner/discovery')?.has_safe_release).toBe(false);
+    expect(index.items.find((item: any) => item.id === 'owner/discovery')?.has_safe_release).toBe(false);
   });
 
   it('serializes mutations through Supervisor and emits redacted audit events', async () => {

@@ -31,7 +31,7 @@ describe('Breaking architecture contract', () => {
   });
 
   it('uses only canonical Marketplace V2 discovery and package routes', () => {
-    expect(text('site/src/pages/index.astro')).toContain("MarketplaceV2");
+    expect(text('site/src/pages/index.astro')).toContain('MarketplaceV2');
     expect(text('site/src/components/MarketplaceV2.astro')).toContain('/catalog/search-index-v3.json');
     expect(text('site/src/components/MarketplaceV2.astro')).toContain('dsh://package/install?');
     expect(text('site/src/components/MarketplaceV2.astro')).toContain('dsh package install');
@@ -51,7 +51,7 @@ describe('Breaking architecture contract', () => {
     const trust = text('site/src/pages/trust.astro');
     expect(trust).toContain('cryptographic_signature_verified');
     expect(trust).toContain("publisherVerified && cryptoVerified ? 'trusted'");
-    expect(trust).toContain('popularity');
+    expect(trust).toMatch(/never marked trusted because it is popular/i);
     expect(trust).toContain('Digest equality confirms bytes, not signer identity');
   });
 });
