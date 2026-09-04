@@ -9,8 +9,10 @@ on:
       - "packages/protocol-core/**"
       - "packages/registry-core/**"
       - "packages/resolver/**"
+      - "packages/policy-core/**"
       - "schemas/**"
       - "scripts/check-contract.mjs"
+      - "scripts/check-architecture.mjs"
       - "scripts/registry-v4-*.mjs"
       - "scripts/registry-distribution-v2.mjs"
       - "scripts/build-search-index-v3.mjs"
@@ -40,18 +42,21 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Canonical contract
-        run: npm run contract:check
+        run: |
+          npm run contract:check
+          npm run architecture:check
       - name: Runtime architecture tests
         run: npx vitest run tests/architecture-v4
       - name: Runtime syntax
         shell: bash
         run: |
-          find packages/protocol-core packages/registry-core packages/resolver runtime bin -type f -name '*.mjs' -print0 \
+          find packages/protocol-core packages/registry-core packages/resolver packages/policy-core runtime bin -type f -name '*.mjs' -print0 \
             | xargs -0 -n1 node --check
       - name: CLI contract
         run: |
           node bin/dsh.mjs --help | grep -F 'dsh package install <type:id@range>'
           node bin/dsh.mjs --help | grep -F 'dsh://package/install'
+          node bin/dsh.mjs --help | grep -F 'Runtime Supervisor'
       - name: Package smoke
         run: npm pack --dry-run
 
@@ -70,12 +75,16 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Protocol, Registry, Resolver, State and Deep Link tests
-        run: npx vitest run tests/architecture-v4/protocol-registry-resolver.test.ts tests/architecture-v4/runtime-state-host.test.ts
+      - name: Architecture conformance
+        run: npm run architecture:check
+      - name: Protocol, Policy, Registry, Resolver, State and Deep Link tests
+        run: npx vitest run tests/architecture-v4
       - name: Canonical CLI syntax
         run: |
           node --check bin/dsh.mjs
           node --check runtime/dsh.mjs
+          node --check runtime/supervisor.mjs
+          node --check runtime/activation-manager.mjs
           node --check runtime/host-bridge.mjs
           node --check runtime/client-host.mjs
       - name: Protocol registration plan is canonical
