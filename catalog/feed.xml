@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 04 Sep 2026 02:30:52 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 04 Sep 2026 05:11:25 GMT</lastBuildDate>
     <item>
       <title>🔄 DSH Data Agent</title>
       <link>https://github.com/omdsh-dev/dsh-data-agent</link>
@@ -16,8 +16,8 @@
     <item>
       <title>🔄 ds-harness-remote</title>
       <link>https://github.com/liguobao/ds-harness-remote</link>
-      <guid isPermaLink="false">liguobao/ds-harness-remote@2026-09-04T01:23:47Z</guid>
-      <pubDate>Fri, 04 Sep 2026 01:23:47 GMT</pubDate>
+      <guid isPermaLink="false">liguobao/ds-harness-remote@2026-09-04T03:50:47Z</guid>
+      <pubDate>Fri, 04 Sep 2026 03:50:47 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo.svg&quot; alt=&quot;DeepSeek Harness Remote&quot; width=&quot;600&quot; &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/strong &</description>
     </item>
     <item>
@@ -47,13 +47,6 @@
       <guid isPermaLink="false">baobaolaodie/dsh-tui-vscode@2026-08-31T16:47:14Z</guid>
       <pubDate>Mon, 31 Aug 2026 16:47:14 GMT</pubDate>
       <description>&lt;! BEAUTIFIED &lt;h1 align=&quot;center&quot; dsh tui vscode&lt;/h1 &lt;p align=&quot;center&quot; &lt;strong dsh TUI 的 VS Code companion 扩展——体验与 Claude Code 官方 VS Code 扩展几乎一致&lt;/strong &lt;br / &</description>
-    </item>
-    <item>
-      <title>🔄 NoLetMe</title>
-      <link>https://github.com/Yuer6327/NoLetMe</link>
-      <guid isPermaLink="false">Yuer6327/NoLetMe@2026-08-28T02:42:54Z</guid>
-      <pubDate>Fri, 28 Aug 2026 02:42:54 GMT</pubDate>
-      <description>&lt;img width=&quot;1710&quot; height=&quot;1082&quot; alt=&quot;&quot; src=&quot;https://github.com/user attachments/assets/ef968872 f49b 4183 9b20 9e9fe6846466&quot; / NoLetMe · dsh 推理轨迹面板 NoLetMe 是</description>
     </item>
     <item>
       <title>🔄 dsh-omp-tui</title>
@@ -100,8 +93,8 @@
     <item>
       <title>🔄 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T02:23:12Z</guid>
-      <pubDate>Fri, 04 Sep 2026 02:23:12 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T03:43:59Z</guid>
+      <pubDate>Fri, 04 Sep 2026 03:43:59 GMT</pubDate>
       <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
     </item>
     <item>
@@ -140,13 +133,6 @@
       <description>简体中文 Web Bridge — Browser Automation MCP Server (dsh plugin) Web Bridge is an automation MCP server that uses a real browser . It gives agents a browser&apos;s eyes and hands: open web pages, read pag</description>
     </item>
     <item>
-      <title>🆕 @all3cn/dsh-better-sidebar-n23</title>
-      <link>https://github.com/All3nCN/dsh-better-sidebar-N23</link>
-      <guid isPermaLink="false">All3nCN/dsh-better-sidebar-N23@2026-09-03T14:55:01Z</guid>
-      <pubDate>Thu, 03 Sep 2026 14:55:01 GMT</pubDate>
-      <description>@all3cn/dsh better sidebar n23 一个服务化的侧边栏框架 + 一套开箱即用的 DSH 完整工作台。本包是开源插件 dsh better sidebar（MIT）的社区 fork，在 @all3cn 作用域下独立发版；上游致谢见 UPSTREAM.md。 English 中文 功能一览 文件工作台 ：资源管理器（懒加载目录树、软链接按目标类型展示）+ CodeMirror</description>
-    </item>
-    <item>
       <title>🔄 Plugin Market</title>
       <link>https://github.com/FUSU123fusu/dsh-tui-market</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-market@2026-08-28T15:45:35Z</guid>
@@ -175,6 +161,13 @@
       <description>dsh tui webhook 适用于 dsh TUI（dshtui.com）的社区插件。 把 dsh TUI 的关键事件推送到 IM 机器人（飞书 / 钉钉 / 企业微信 / 任意通用 webhook）：长轮次完成、审批请求——人离开电脑也能收到提醒。 English below. 用法 配置在 /settings →「Webhook 通知」，保存后立即生效，无需重启。 设置 说明 默认 pla</description>
     </item>
     <item>
+      <title>🆕 @all3cn/dsh-better-sidebar-n23</title>
+      <link>https://github.com/All3nCN/dsh-better-sidebar-N23</link>
+      <guid isPermaLink="false">All3nCN/dsh-better-sidebar-N23@2026-09-03T14:55:01Z</guid>
+      <pubDate>Thu, 03 Sep 2026 14:55:01 GMT</pubDate>
+      <description>@all3cn/dsh better sidebar n23 一个服务化的侧边栏框架 + 一套开箱即用的 DSH 完整工作台。本包是开源插件 dsh better sidebar（MIT）的社区 fork，在 @all3cn 作用域下独立发版；上游致谢见 UPSTREAM.md。 English 中文 功能一览 文件工作台 ：资源管理器（懒加载目录树、软链接按目标类型展示）+ CodeMirror</description>
+    </item>
+    <item>
       <title>🔄 dsh-tui-mcp-manager</title>
       <link>https://github.com/0N3-0/dsh-tui-mcp-manager</link>
       <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-30T06:17:26Z</guid>
@@ -184,8 +177,8 @@
     <item>
       <title>🆕 dsh-github-installer</title>
       <link>https://github.com/yhPrime/dsh-github-installer</link>
-      <guid isPermaLink="false">yhPrime/dsh-github-installer@2026-09-02T16:53:01Z</guid>
-      <pubDate>Wed, 02 Sep 2026 16:53:01 GMT</pubDate>
+      <guid isPermaLink="false">yhPrime/dsh-github-installer@2026-09-03T16:41:16Z</guid>
+      <pubDate>Thu, 03 Sep 2026 16:41:16 GMT</pubDate>
       <description>dsh github installer 基于 dsh std 标准化协议的插件管理器 —— 粘贴 GitHub 仓库网址 / npm 包名 / 其他 Git 仓库地址，即可安装；支持卸载与更新。 A dsh std standard component for managing plugins — install from a GitHub repo URL, npm package name,</description>
     </item>
     <item>
@@ -214,6 +207,13 @@
       <link>https://github.com/FUSU123fusu/dsh-tui-keys</link>
       <guid isPermaLink="false">FUSU123fusu/dsh-tui-keys@2026-08-28T15:45:14Z</guid>
       <pubDate>Fri, 28 Aug 2026 15:45:14 GMT</pubDate>
+      <description></description>
+    </item>
+    <item>
+      <title>🔄 Cron Schedules</title>
+      <link>https://github.com/FUSU123fusu/dsh-tui-cron</link>
+      <guid isPermaLink="false">FUSU123fusu/dsh-tui-cron@2026-08-28T15:44:57Z</guid>
+      <pubDate>Fri, 28 Aug 2026 15:44:57 GMT</pubDate>
       <description></description>
     </item>
   </channel>
