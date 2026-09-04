@@ -36,6 +36,10 @@ jobs:
         id: contract
         continue-on-error: true
         run: npm run contract:check
+      - name: Architecture conformance
+        id: architecture
+        continue-on-error: true
+        run: npm run architecture:check
       - name: Typecheck
         id: typecheck
         continue-on-error: true
@@ -59,26 +63,34 @@ jobs:
       - name: Site build
         id: sitebuild
         continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: cd site && npm run build
       - name: Generated artifact gate
         id: artifacts
         continue-on-error: true
         run: |
           node scripts/validate-registry-v4.mjs catalog/registry-v4.json
+          test -s catalog/registry-candidates-v1.json
           test -s site/public/catalog/registry-v4.json
           test -s site/public/catalog/registry-v4/index.json
           test -s site/public/catalog/search-index-v3.json
           test ! -e site/public/catalog/registry-v3.json
           test ! -e site/public/catalog/distribution-v1
+          test ! -e site/public/catalog/registry-candidates-v1.json
+          npm run deploy:gate
       - name: Canonical runtime syntax
         id: syntax
         continue-on-error: true
         run: |
-          find packages/protocol-core packages/registry-core packages/resolver runtime bin -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
+          find packages/protocol-core packages/registry-core packages/resolver packages/policy-core runtime bin -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
+          node --check scripts/check-architecture.mjs
+          node --check scripts/deploy-gate-v4.mjs
 
       - name: Validation gate
         env:
           CONTRACT: ${{ steps.contract.outcome }}
+          ARCHITECTURE: ${{ steps.architecture.outcome }}
           TYPECHECK: ${{ steps.typecheck.outcome }}
           LINT: ${{ steps.lint.outcome }}
           TESTS: ${{ steps.tests.outcome }}
@@ -87,8 +99,9 @@ jobs:
           ARTIFACTS: ${{ steps.artifacts.outcome }}
           SYNTAX: ${{ steps.syntax.outcome }}
         run: |
-          printf 'contract=%s\ntypecheck=%s\nlint=%s\ntests=%s\nsitecheck=%s\nsitebuild=%s\nartifacts=%s\nsyntax=%s\n' "$CONTRACT" "$TYPECHECK" "$LINT" "$TESTS" "$SITECHECK" "$SITEBUILD" "$ARTIFACTS" "$SYNTAX"
+          printf 'contract=%s\narchitecture=%s\ntypecheck=%s\nlint=%s\ntests=%s\nsitecheck=%s\nsitebuild=%s\nartifacts=%s\nsyntax=%s\n' "$CONTRACT" "$ARCHITECTURE" "$TYPECHECK" "$LINT" "$TESTS" "$SITECHECK" "$SITEBUILD" "$ARTIFACTS" "$SYNTAX"
           test "$CONTRACT" = success
+          test "$ARCHITECTURE" = success
           test "$TYPECHECK" = success
           test "$LINT" = success
           test "$TESTS" = success
