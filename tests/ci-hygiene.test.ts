@@ -103,7 +103,7 @@ describe('CI and deployment hygiene', () => {
 
   it('keeps the browser-only publisher directory compatible with inline scripts', () => {
     const page = readFileSync(join(root, 'site', 'src', 'pages', 'publishers', 'index.astro'), 'utf8');
-    expect(page).toContain("fetch(registryUrl, { headers: { accept: 'application/json' } })");
+    expect(page).toMatch(/fetch\(registryUrl\s*,\s*\{\s*headers\s*:\s*\{\s*accept\s*:\s*['"]application\/json['"]\s*\}\s*\}\s*\)/);
     expect(page).not.toContain('await fetch(registryUrl');
     expect(page).toContain("u('/catalog/registry-v3.json')");
   });

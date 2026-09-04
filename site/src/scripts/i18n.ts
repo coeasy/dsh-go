@@ -1,5 +1,6 @@
 import { CAT, tr } from '../i18n/dict';
 import { DEFAULT_LANG, normalizeLang, type Lang } from '../i18n/config';
+import { applyLegacyPageText } from '../i18n/legacy-page-text';
 import { applyMarketplaceI18n } from './marketplace-i18n';
 
 function saveLang(value: Lang) {
@@ -70,6 +71,7 @@ export function apply(lang: Lang) {
   }
 
   applyMarketplaceI18n(lang);
+  applyLegacyPageText(lang);
   document.dispatchEvent(new CustomEvent('dsh:languagechange', { detail: { lang } }));
 }
 
