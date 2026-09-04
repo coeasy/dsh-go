@@ -27,7 +27,7 @@ function manifest() {
   };
 }
 
-function descriptor(releaseVersion = PACKAGE_RELEASE_DESCRIPTOR_VERSION) {
+function descriptor(releaseVersion: number = PACKAGE_RELEASE_DESCRIPTOR_VERSION) {
   return {
     release_version: releaseVersion,
     protocol_version: 2,
