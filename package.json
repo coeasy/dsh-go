@@ -16,6 +16,7 @@
     "packages/protocol-core/",
     "packages/registry-core/",
     "packages/resolver/",
+    "packages/policy-core/",
     "schemas/",
     "docs/"
   ],
@@ -28,7 +29,7 @@
     "registry:build": "node scripts/registry-v4-builder.mjs",
     "registry:verify": "node scripts/validate-registry-v4.mjs",
     "registry:distribution": "node scripts/registry-distribution-v2.mjs catalog/registry-v4.json site/public/catalog/registry-v4",
-    "search:index": "node scripts/build-search-index-v3.mjs catalog/registry-v4.json site/public/catalog/search-index-v3.json",
+    "search:index": "node scripts/build-search-index-v3.mjs catalog/registry-v4.json site/public/catalog/search-index-v3.json catalog/registry-candidates-v1.json",
     "runtime:check": "node bin/dsh.mjs runtime status --json",
     "runtime:resolve": "node bin/dsh.mjs package plan",
     "runtime:install": "node bin/dsh.mjs package install",
@@ -39,6 +40,7 @@
     "acceptance:test": "vitest run tests/e2e tests/architecture-v4",
     "completion:test": "vitest run tests/completion tests/architecture-v4",
     "contract:check": "node scripts/check-contract.mjs",
+    "architecture:check": "node scripts/check-architecture.mjs",
     "deploy:gate": "node scripts/deploy-gate-v3.mjs",
     "validate": "node scripts/validate.mjs",
     "audit:identity": "node scripts/audit-catalog-identity.mjs",
@@ -55,7 +57,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run typecheck && npm run lint && npm test && cd site && npm run check && npm run build",
+    "check": "npm run contract:check && npm run architecture:check && npm run typecheck && npm run lint && npm test && cd site && npm run check && npm run build",
     "platform:check": "node scripts/check-platform-discovery.mjs --file site/public/.well-known/dsh-marketplace.json"
   },
   "devDependencies": {
