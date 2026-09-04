@@ -1,7 +1,6 @@
 import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
-import { packageKey } from '../packages/protocol-core/index.mjs';
 import { installPackage } from './installer.mjs';
 import { createRuntimePackageRecord, recordRuntimeEvent } from './lifecycle.mjs';
 import {
