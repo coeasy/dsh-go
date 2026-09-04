@@ -530,9 +530,15 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
 
 export async function checkCliContract({ env = process.env, execute = runProcess } = {}) {
   const cliVersion = validateCliVersion(env.EDGEONE_CLI_VERSION || DEFAULT_CLI_VERSION);
+  // Run the contract probe from the same upload working directory as the
+  // real deploy.  Invoking npx from the repository root can make npm resolve
+  // the root dependency graph instead of the static site workspace and has
+  // triggered npm's Arborist `edgesOut` crash before the EdgeOne CLI starts.
+  const { cwd } = resolveUploadSpec(env);
   const result = await execute('npx', ['--yes', `edgeone@${cliVersion}`, 'makers', 'deploy', '--help'], {
     timeoutMs: 120_000,
     env: edgeOneProcessEnv(env),
+    cwd,
   });
   if (result.code !== 0) {
     throw new Error(`EdgeOne CLI deploy contract check failed: ${sanitizeLog(tailLines(`${result.stdout}\n${result.stderr}`), env.EDGEONE_API_TOKEN || '')}`);
