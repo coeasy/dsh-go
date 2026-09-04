@@ -11,9 +11,18 @@ export const KNOWN_PERMISSIONS = Object.freeze([
 
 const DANGEROUS = new Set(['filesystem.write', 'network.unrestricted', 'shell', 'secrets.read', 'process.spawn']);
 
+function permissionName(item) {
+  if (typeof item === 'string') return item.trim().toLowerCase();
+  if (item && typeof item === 'object') {
+    const value = item.name ?? item.id ?? item.permission;
+    return typeof value === 'string' ? value.trim().toLowerCase() : '';
+  }
+  return '';
+}
+
 export function normalizePermissions(value) {
-  const input = Array.isArray(value) ? value : value?.required || [];
-  return [...new Set(input.map((item) => String(item || '').trim().toLowerCase()).filter(Boolean))].sort();
+  const input = Array.isArray(value) ? value : Array.isArray(value?.required) ? value.required : [];
+  return [...new Set(input.map(permissionName).filter(Boolean))].sort();
 }
 
 export function permissionRisk(permission) {
