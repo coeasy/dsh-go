@@ -67,11 +67,25 @@ function recordFor(node, result, plan, transactionId, previous) {
     publisher: node.publisher || (node.publisher_id ? { id: node.publisher_id } : null),
     security: node.security || null,
     artifact: node.artifact || null,
+    content_digest: result.content_digest || result.content?.digest || null,
+    content: result.content || null,
+    trust_snapshot: result.trust_snapshot || null,
+    policy_snapshot: result.policy_snapshot || null,
+    supply_chain_verification: result.supply_chain_verification || null,
+    adapter: result.adapter || null,
+    activation: {
+      attempts: 0,
+      failed_attempts: 0,
+      failure_fingerprint: null,
+      installed_transaction_id: transactionId,
+    },
     registry_revision: plan.registry_revision,
     resolution_hash: plan.resolution_hash,
     rollback: previous && result.backup ? {
       previous_version: previous.version,
       previous_commit: previous.commit || previous.source?.commit || null,
+      previous_content_digest: previous.content_digest || previous.content?.digest || null,
+      previous_trust_snapshot: previous.trust_snapshot || null,
       backup_path: result.backup,
       created_at: new Date().toISOString(),
     } : null,
@@ -80,6 +94,7 @@ function recordFor(node, result, plan, transactionId, previous) {
     transaction_id: transactionId,
     registry_revision: plan.registry_revision,
     resolution_hash: plan.resolution_hash,
+    content_digest: result.content_digest || result.content?.digest || null,
   });
 }
 
@@ -161,6 +176,7 @@ export async function executeResolutionTransaction(plan, options = {}) {
         target: result.target,
         backup: result.backup || null,
         had_previous: Boolean(previous && previous.state !== 'removed'),
+        content_digest: result.content_digest || null,
       };
       moves.push(move);
       journal.state = 'installing';
@@ -173,7 +189,13 @@ export async function executeResolutionTransaction(plan, options = {}) {
     journal.state = 'committing-state';
     journal.updated_at = new Date().toISOString();
     await writeJournal(dir, journal);
-    const committed = await writeRuntimeRegistry(nextState, options.registryFile);
+    const committed = await writeRuntimeRegistry({
+      ...nextState,
+      activation: {
+        ...(nextState.activation || {}),
+        candidate_generation: snapshot.generation,
+      },
+    }, options.registryFile);
     journal.state = 'committed';
     journal.committed_generation = committed.generation;
     journal.committed_at = new Date().toISOString();
