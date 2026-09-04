@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.mjs"
+    ".": "./index.mjs",
+    "./permissions": "./permissions.mjs"
   }
 }
