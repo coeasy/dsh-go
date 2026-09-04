@@ -172,7 +172,7 @@ PR #136 后的规则：
 本轮架构收敛进一步新增：
 
 ```text
-config/marketplace-policy.json
+site/src/config/marketplace-policy.json
 ```
 
 它成为 Marketplace Stars 门槛和首页限制的单一配置源，避免页面阈值是 200、安装脚本生成器却仍使用 100 这种跨层漂移。
@@ -507,7 +507,7 @@ runtime/adapters            CLI / Host / Desktop / MCP / legacy compatibility
 本轮已引入：
 
 ```text
-config/marketplace-policy.json
+site/src/config/marketplace-policy.json
 ```
 
 把发现范围、详情门槛、安装脚本门槛统一配置，并增加回归测试。
@@ -601,7 +601,7 @@ docs/history/...                   历史方案
 
 状态：**本分支已开始实现。**
 
-- [x] 新增 `config/marketplace-policy.json`；
+- [x] 新增 `site/src/config/marketplace-policy.json`；
 - [x] UI detail threshold 从配置读取；
 - [x] 首页推荐边界从配置读取；
 - [x] build-time install script threshold 从配置读取；
