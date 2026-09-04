@@ -4,7 +4,7 @@ import { execFile } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, join, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
-import { findPackageManifest } from '../runtime/package-manifest.mjs';
+import { readDshManifest } from '../runtime/package-manifest.mjs';
 import { generateSbom } from './generate-sbom.mjs';
 
 const exec = promisify(execFile);
@@ -25,7 +25,7 @@ async function sha256File(file) {
 }
 
 function safeName(value) {
-  return String(value || 'package').replace(/[^A-Za-z0-9_.-]+/g, '-');
+  return String(value || 'package').replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 async function git(root, args, options = {}) {
@@ -42,14 +42,10 @@ async function git(root, args, options = {}) {
 function packageScope(root, rawPath) {
   const raw = String(rawPath || '').trim().replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/+$/, '');
   if (!raw || raw === '.') return { root, path: '', stripComponents: 1 };
-  if (raw.startsWith('/') || raw.split('/').some((part) => !part || part === '..')) {
-    throw new Error('package-path must be a safe repository-relative directory');
-  }
+  if (raw.startsWith('/') || raw.split('/').some((part) => !part || part === '..')) throw new Error('package-path must be a safe repository-relative directory');
   const packageRoot = resolve(root, raw);
   const relativePath = relative(root, packageRoot).split(sep).join('/');
-  if (!relativePath || relativePath.startsWith('../') || relativePath.includes('/../')) {
-    throw new Error('package-path must stay inside repository root');
-  }
+  if (!relativePath || relativePath.startsWith('../') || relativePath.includes('/../')) throw new Error('package-path must stay inside repository root');
   return { root: packageRoot, path: relativePath, stripComponents: relativePath.split('/').length + 1 };
 }
 
@@ -75,20 +71,19 @@ async function main() {
   const commandOptions = { timeoutMs: option('--timeout') };
   const commit = String(option('--commit', process.env.GITHUB_SHA || await git(root, ['rev-parse', 'HEAD'], commandOptions))).toLowerCase();
   const githubOutput = option('--github-output', process.env.GITHUB_OUTPUT || '');
-  const found = await findPackageManifest(packageRoot);
-  if (!found) throw new Error('no DSH package manifest found');
-  if (!found.valid) throw new Error(`DSH package manifest is invalid: ${found.errors.join('; ')}`);
+  const found = await readDshManifest(packageRoot);
   if (!repository.includes('/')) throw new Error('repository must be owner/name');
   if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error('commit must be an immutable 40-character SHA');
 
   const manifest = found.manifest;
-  if (!manifest.id || !/^[A-Za-z0-9_.-]+$/.test(manifest.id)) throw new Error('package manifest id is required and must be release-safe');
-  if (!manifest.type || !['plugin', 'mcp', 'skill', 'agent'].includes(manifest.type)) throw new Error('package manifest type is required');
-  if (!manifest.version) throw new Error('package manifest version is required');
-  const tag = option('--tag', manifest.release_tag || (scope.path ? `${safeName(manifest.id)}-v${manifest.version}` : `v${manifest.version}`));
-  const channel = option('--channel', 'stable');
+  const safeId = safeName(manifest.id);
+  if (!safeId) throw new Error('package manifest id cannot produce a release-safe artifact name');
+  const canonicalTag = scope.path ? `${safeId}-v${manifest.version}` : `v${manifest.version}`;
+  const tag = option('--tag', canonicalTag);
+  if (tag !== canonicalTag) throw new Error(`release tag must be canonical for this package scope: ${canonicalTag}`);
+  const channel = option('--channel', manifest.channel || 'stable');
   if (!['stable', 'beta', 'nightly', 'dev'].includes(channel)) throw new Error(`unsupported release channel: ${channel}`);
-  const archiveName = `${safeName(manifest.id)}-${manifest.version}.tgz`;
+  const archiveName = `${safeId}-${manifest.version}.tgz`;
   const archiveFile = join(outDir, archiveName);
   const descriptorFile = join(outDir, 'dsh-package-release.json');
   const sbomFile = join(outDir, 'dsh-package-sbom.cdx.json');
@@ -107,7 +102,9 @@ async function main() {
   const digest = await sha256File(archiveFile);
   const artifactUrl = `https://github.com/${repository}/releases/download/${encodeURIComponent(tag)}/${archiveName}`;
   const descriptor = {
-    release_version: 1,
+    release_version: 2,
+    protocol_version: 2,
+    manifest_schema_version: 2,
     id: manifest.id,
     type: manifest.type,
     version: manifest.version,
@@ -115,7 +112,7 @@ async function main() {
     repository,
     commit,
     tag,
-    manifest_file: found.file,
+    manifest_file: relative(root, found.file).split(sep).join('/'),
     package_path: scope.path || null,
     manifest,
     artifact: {
@@ -140,10 +137,12 @@ async function main() {
 
   const output = {
     id: manifest.id,
+    safe_id: safeId,
     type: manifest.type,
     version: manifest.version,
     channel,
     tag,
+    canonical_tag: canonicalTag,
     commit,
     package_path: scope.path || null,
     archive_name: archiveName,
@@ -153,9 +152,7 @@ async function main() {
     sbom_file: sbomFile,
     sums_file: sumsFile,
   };
-  if (githubOutput) {
-    await writeFile(githubOutput, Object.entries(output).map(([key, value]) => `${key}=${value}`).join('\n') + '\n', { flag: 'a' });
-  }
+  if (githubOutput) await writeFile(githubOutput, Object.entries(output).map(([key, value]) => `${key}=${value}`).join('\n') + '\n', { flag: 'a' });
   console.log(JSON.stringify(output, null, 2));
 }
 
