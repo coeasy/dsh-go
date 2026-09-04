@@ -50,7 +50,7 @@ function descriptor(releaseVersion: number = PACKAGE_RELEASE_DESCRIPTOR_VERSION)
       url: 'https://github.com/owner/example/releases/download/owner-example-v1.2.3/owner-example-1.2.3.tgz',
       digest: `sha256-${'b'.repeat(64)}`,
       format: 'tgz',
-      strip_components: 2,
+      strip_components: 3,
     },
   };
 }
