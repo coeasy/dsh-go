@@ -1,7 +1,7 @@
 {
   "schema_version": 4,
-  "generated_at": "2026-09-04T15:18:58.604Z",
-  "revision": "332d7d15a77451b2486fbdb93176e6da26e48babe0183b2bcfe5095817aa0eea",
+  "generated_at": "2026-09-04T15:31:53.824Z",
+  "revision": "b34b19048b7abe1c9e1c5ac16be070758df132cd95d3e1a8029268b3b78ec1f5",
   "packages": [
     {
       "type": "mcp",
@@ -26,7 +26,7 @@
         "verified": true,
         "stars": 1,
         "rank": 1,
-        "updated_at": "2026-09-04T15:17:11Z",
+        "updated_at": "2026-09-04T15:30:31Z",
         "repo_url": "https://github.com/coeasy/dsh-go",
         "manifest_file": "dsh-package.json",
         "language": "JavaScript",
