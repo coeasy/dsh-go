@@ -14,7 +14,7 @@ describe('complete discovery resilience', () => {
 });
 
 describe('catalog identity audit report', () => {
-  it('emits a machine-readable clean report for canonical data', () => {
+  it('emits a machine-readable clean report for discovery-only canonical data', () => {
     const data: any = {
       meta: { updated_at: '2026-08-25T00:00:00.000Z' },
       plugins: [{
@@ -23,9 +23,9 @@ describe('catalog identity audit report', () => {
         repo_name: 'demo',
         name: 'demo',
         metadata_source: 'github',
-        category: 'tool',
+        category: 'other',
         repo_url: 'https://github.com/owner/demo',
-        install_cmd: 'dsh plugin install github:owner/demo',
+        install_cmd: '',
         homepage: null,
         manifest_file: null,
         verified: false,
@@ -44,7 +44,7 @@ describe('catalog identity audit report', () => {
     expect(report.errors).toEqual([]);
   });
 
-  it('accepts a verified dsh-package manifest record', () => {
+  it('accepts a verified Manifest V2 record with the canonical package install command', () => {
     const data: any = {
       plugins: [{
         slug: 'owner-package',
@@ -54,11 +54,11 @@ describe('catalog identity audit report', () => {
         metadata_source: 'dsh-package',
         category: 'mcp',
         repo_url: 'https://github.com/owner/package',
-        install_cmd: 'dsh mcp install marketplace-package',
+        install_cmd: 'dsh package install mcp:owner/package@1.2.3',
         homepage: null,
         manifest_file: 'dsh-package.json',
         verified: true,
-        package_id: 'marketplace-package',
+        package_id: 'owner/package',
         package_type: 'mcp',
         package_version: '1.2.3',
       }],
@@ -66,7 +66,7 @@ describe('catalog identity audit report', () => {
     expect(auditCatalogIdentity(data).errors).toEqual([]);
   });
 
-  it('accepts historical install commands only as migration warnings', () => {
+  it('rejects historical install commands instead of keeping a compatibility path', () => {
     const data: any = {
       plugins: [{
         slug: 'owner-legacy',
@@ -74,7 +74,7 @@ describe('catalog identity audit report', () => {
         repo_name: 'legacy',
         name: 'legacy',
         metadata_source: 'github',
-        category: 'tool',
+        category: 'other',
         repo_url: 'https://github.com/owner/legacy',
         install_cmd: 'dsh plugin --profile tools add github:owner/legacy',
         homepage: null,
@@ -83,9 +83,8 @@ describe('catalog identity audit report', () => {
       }],
     };
     const result = auditCatalogIdentity(data);
-    expect(result.errors).toEqual([]);
-    expect(result.warnings).toHaveLength(1);
-    expect(result.warnings[0]).toContain('historical install_cmd');
+    expect(result.errors).toContain('owner/legacy: install_cmd source mismatch');
+    expect(result.warnings).toEqual([]);
   });
 
   it('captures stale package metadata and API URLs as audit errors', () => {
@@ -103,7 +102,8 @@ describe('catalog identity audit report', () => {
     }] };
     const report = buildAuditReport(data);
     expect(report.ok).toBe(false);
-    expect(report.error_count).toBeGreaterThanOrEqual(3);
+    expect(report.error_count).toBeGreaterThanOrEqual(4);
+    expect(report.errors.some((error: string) => error.includes('install_cmd source mismatch'))).toBe(true);
     expect(report.errors.some((error: string) => error.includes('package/non-DSH manifest'))).toBe(true);
     expect(report.errors.some((error: string) => error.includes('GitHub-sourced name mismatch'))).toBe(true);
     expect(report.errors.some((error: string) => error.includes('GitHub API URL'))).toBe(true);
