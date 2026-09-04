@@ -1,107 +1,41 @@
 ---
-// 趋势 / 热门榜：按热度评分（trend_score）降序排名，静态构建。
-// trend_score 已由同步引擎综合 Star、增速与更新频率计算。
 import Layout from '../layouts/Layout.astro';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { u } from '../lib/urls';
 import { DETAIL_THRESHOLD } from '../lib/threshold';
-import { fmtK } from '../lib/format';
 
-let data: any = { meta: { count: 0, stats: {} }, plugins: [] };
+let items: any[] = [];
 try {
-  data = JSON.parse(readFileSync(resolve('..', 'catalog', 'plugins.json'), 'utf-8'));
-} catch { /* 无数据时保持空态 */ }
+  const index = JSON.parse(readFileSync(resolve('public', 'catalog', 'search-index-v3.json'), 'utf8'));
+  items = Array.isArray(index.items) ? index.items : [];
+} catch { /* generated at build time */ }
 
-const TOP = 100;
-const ranked = [...(data.plugins || [])]
-  .sort((a: any, b: any) => Number(b.trend_score || 0) - Number(a.trend_score || 0))
-  .slice(0, TOP);
-
-function relTime(iso?: string): string {
-  if (!iso) return '—';
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 864e5);
-  if (days <= 0) return 'today';
-  if (days === 1) return '1d';
-  if (days < 30) return `${days}d`;
-  if (days < 365) return `${Math.floor(days / 30)}mo`;
-  return `${Math.floor(days / 365)}y`;
-}
-const maxTrend = ranked[0]?.trend_score || 1;
+const ranked = [...items]
+  .sort((a,b) => Number(b.rank || 0) - Number(a.rank || 0) || Number(b.stars || 0) - Number(a.stars || 0) || Date.parse(b.updated_at || '') - Date.parse(a.updated_at || ''))
+  .slice(0, 100);
+const hrefFor = (item: any) => item.has_safe_release && Number(item.stars || 0) >= DETAIL_THRESHOLD
+  ? u(`/package/${item.type}/${item.id}`)
+  : item.repo ? `https://github.com/${item.repo}` : u('/');
 ---
 
-<Layout title="Trending · DSH Go" description="DeepSeek Harness 插件热度排行榜，按趋势评分排序">
-  <section class="tr-head">
-    <span class="kicker">Marketplace signals</span>
-    <h1 data-i18n="tr_title">趋势 / 热门榜</h1>
-    <p class="sub" data-i18n="tr_sub" data-n={ranked.length}>按热度评分（综合 Star、增速与更新频率）排序的热门插件</p>
-  </section>
-
-  <ol class="tr-list">
-    {ranked.map((p: any, i: number) => {
-      const hasDetail = p.stars >= DETAIL_THRESHOLD;
-      const href = hasDetail ? u(`/plugin/${p.slug}`) : `https://github.com/${p.full_name}`;
-      const pct = Math.max(6, Math.round((Number(p.trend_score || 0) / maxTrend) * 100));
-      return (
-        <li class="tr-item">
-          <span class={`rank${i < 3 ? ' hot' : ''}`}>{i + 1}</span>
-          <a class="main" href={href}>
-            <span class="headline"><span class="name">{p.name}</span><span class="cat" data-i18n-cat={p.category}>{p.category}</span></span>
-            <span class="desc">{p.description}</span>
-          </a>
-          <div class="trend">
-            <div class="bar" style={`width:${pct}%`}></div>
-            <b>★ {fmtK(p.stars)}</b>
-            <i data-i18n="tr_trend">trend {p.trend_score}</i>
-          </div>
-          <span class="age" title="updated">{relTime(p.updated_at)}</span>
-        </li>
-      );
-    })}
+<Layout title="Trending · DSH Marketplace" description="Trending Registry V4 packages">
+  <section class="head"><span>Search Index V3</span><h1>Trending</h1><p>Registry-backed package ranking across Plugin, MCP, Skill and Agent resources.</p></section>
+  <ol class="list">
+    {ranked.map((item, index) => (
+      <li>
+        <span class={`rank ${index < 3 ? 'top' : ''}`}>{index + 1}</span>
+        <a class="main" href={hrefFor(item)} target={hrefFor(item).startsWith('https://github.com/') ? '_blank' : undefined} rel={hrefFor(item).startsWith('https://github.com/') ? 'noopener noreferrer' : undefined}>
+          <div><strong>{item.name || item.id}</strong><span>{String(item.type).toUpperCase()}</span></div>
+          <code>{item.type}:{item.id}</code>
+          <p>{item.description || item.repo}</p>
+        </a>
+        <div class="metrics"><strong>★ {Number(item.stars || 0).toLocaleString()}</strong><small>{item.updated_at ? new Date(item.updated_at).toISOString().slice(0,10) : '—'}</small></div>
+      </li>
+    ))}
   </ol>
-
-  <a class="back" href={u('/')} data-i18n="pl_back">← 返回首页</a>
 </Layout>
 
 <style>
-  .tr-head { text-align: center; padding: 34px 0 22px; }
-  .kicker { color:var(--accent); font-size:12px; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
-  .tr-head h1 { margin: 7px 0 0; font-size: clamp(34px, 4vw, 46px); letter-spacing: -.035em; font-weight: 850; }
-  .tr-head .sub { color: var(--muted); font-size: 16px; margin: 9px 0 0; }
-
-  .tr-list { list-style: none; margin: 20px auto 0; padding: 0; display: flex; flex-direction: column; gap: 10px; max-width: 1320px; }
-  .tr-item {
-    display: flex; align-items: center; gap: 16px;
-    border: 1px solid var(--border); border-radius: 14px; background: var(--card);
-    padding: 13px 18px; box-shadow: var(--shadow-sm); transition: transform .15s, box-shadow .15s, border-color .15s;
-  }
-  .tr-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
-  .rank {
-    flex: none; width: 36px; height: 36px; border-radius: 11px;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--bg-soft); color: var(--muted); font-weight: 850; font-size: 15px;
-  }
-  .rank.hot { background: var(--grad-accent); color: #fff; box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 40%, transparent); }
-  .main { display: flex; flex-direction: column; gap: 5px; min-width: 0; text-decoration: none; color: inherit; flex: 1; }
-  .main:hover { text-decoration: none; }
-  .main:hover .name { color: var(--accent); }
-  .headline { display:flex; align-items:center; gap:8px; min-width:0; }
-  .main .name { font-weight: 780; font-size: 16.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .main .desc { color: var(--muted); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .cat { display: inline-block; flex:none; width: fit-content; font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 9px; }
-  .trend { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 112px; }
-  .trend .bar { height: 4px; border-radius: 2px; background: var(--grad-accent); align-self: stretch; opacity: .85; }
-  .trend b { font-size: 13.5px; color: var(--amber); white-space: nowrap; }
-  .trend i { font-style: normal; font-size: 11.5px; color: var(--muted); }
-  .age { flex: none; color: var(--muted); font-size: 12.5px; width: 46px; text-align: right; }
-  .back { display: inline-block; margin-top: 30px; font-size: 14px; font-weight: 650; color: var(--muted); }
-  .back:hover { color: var(--accent); text-decoration: none; }
-
-  @media (max-width: 700px) {
-    .tr-item { gap: 11px; padding: 11px 12px; align-items:flex-start; }
-    .trend { min-width: 72px; }
-    .age { display: none; }
-    .main .desc { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .headline { align-items:flex-start; flex-direction:column; gap:4px; }
-  }
+  .head{text-align:center;padding:32px 0 20px}.head>span{font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}.head h1{margin:5px 0;font-size:clamp(38px,5vw,52px);letter-spacing:-.045em}.head p{margin:0;color:var(--muted)}.list{max-width:1200px;margin:12px auto 0;padding:0;list-style:none;display:grid;gap:9px}.list li{display:flex;align-items:center;gap:14px;padding:13px 16px;border:1px solid var(--border);border-radius:14px;background:var(--card);box-shadow:var(--shadow-sm)}.rank{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:var(--bg-soft);font-weight:900;color:var(--muted)}.rank.top{background:var(--accent);color:white}.main{min-width:0;flex:1;color:var(--fg);text-decoration:none}.main>div{display:flex;gap:8px;align-items:center}.main strong{font-size:15px;overflow-wrap:anywhere}.main>div span{font-size:9px;font-weight:900;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 6px}.main code{font-size:10px;color:var(--muted)}.main p{margin:4px 0 0;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.metrics{display:flex;flex-direction:column;align-items:flex-end;min-width:90px}.metrics strong{font-size:12px}.metrics small{font-size:10px;color:var(--muted)}@media(max-width:650px){.list li{align-items:flex-start}.metrics{min-width:65px}.main p{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}
 </style>
