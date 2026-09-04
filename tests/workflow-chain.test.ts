@@ -37,6 +37,7 @@ describe('authoritative deployment routing', () => {
     expect(sync).not.toContain('CN Mirrors');
     expect(sync).toContain('run: node scripts/dispatch-deployments.mjs');
     expect(sync).toContain("steps.dispatch.outputs.dispatch_failures || 'none'");
+    expect(sync).toContain('DEPLOY_WAIT_TIMEOUT_MS: "2100000"');
   });
 
   it('routes ordinary pushes directly but defers every Registry-owned producer path', () => {
@@ -54,6 +55,8 @@ describe('authoritative deployment routing', () => {
     expect(router).not.toContain('CN Mirrors');
     expect(router).toContain('SHA=$(git rev-parse HEAD)');
     expect(router).toContain('DEPLOY_REVISION: ${{ steps.changes.outputs.revision }}');
+    expect(router).toContain('timeout-minutes: 40');
+    expect(router).toContain('DEPLOY_WAIT_TIMEOUT_MS: "2100000"');
     expect(router).toContain('run: node scripts/dispatch-deployments.mjs');
   });
 

@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
 import { appendFileSync, writeFileSync } from 'node:fs';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { checkProductionSha } from './check-production-sha.mjs';
 
@@ -528,22 +531,32 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
   throw new Error(`EdgeOne deployment failed after retry policy [${failureClass}]: ${lastError}`);
 }
 
-export async function checkCliContract({ env = process.env, execute = runProcess } = {}) {
+export async function checkCliContract({
+  env = process.env,
+  execute = runProcess,
+  createTempDir = () => mkdtemp(join(tmpdir(), 'dsh-edgeone-cli-')),
+  removeTempDir = (directory) => rm(directory, { recursive: true, force: true }),
+} = {}) {
   const cliVersion = validateCliVersion(env.EDGEONE_CLI_VERSION || DEFAULT_CLI_VERSION);
-  // Run the contract probe from the same upload working directory as the
-  // real deploy.  Invoking npx from the repository root can make npm resolve
-  // the root dependency graph instead of the static site workspace and has
-  // triggered npm's Arborist `edgesOut` crash before the EdgeOne CLI starts.
-  const { cwd } = resolveUploadSpec(env);
-  const result = await execute('npx', ['--yes', `edgeone@${cliVersion}`, 'makers', 'deploy', '--help'], {
-    timeoutMs: 120_000,
-    env: edgeOneProcessEnv(env),
-    cwd,
-  });
-  if (result.code !== 0) {
-    throw new Error(`EdgeOne CLI deploy contract check failed: ${sanitizeLog(tailLines(`${result.stdout}\n${result.stderr}`), env.EDGEONE_API_TOKEN || '')}`);
+  // The probe does not upload files.  Running npx from site/dist still lets
+  // npm walk up into the repository root package graph, which has triggered
+  // npm's Arborist `edgesOut` crash before the EdgeOne CLI starts.  Use an
+  // isolated workspace for the probe while keeping the real deployment cwd
+  // unchanged in deployEdgeOne().
+  const probeCwd = await createTempDir();
+  try {
+    const result = await execute('npx', ['--yes', `edgeone@${cliVersion}`, 'makers', 'deploy', '--help'], {
+      timeoutMs: 120_000,
+      env: edgeOneProcessEnv(env),
+      cwd: probeCwd,
+    });
+    if (result.code !== 0) {
+      throw new Error(`EdgeOne CLI deploy contract check failed: ${sanitizeLog(tailLines(`${result.stdout}\n${result.stderr}`), env.EDGEONE_API_TOKEN || '')}`);
+    }
+    console.log(`EdgeOne CLI contract verified: edgeone@${cliVersion} makers deploy`);
+  } finally {
+    await removeTempDir(probeCwd);
   }
-  console.log(`EdgeOne CLI contract verified: edgeone@${cliVersion} makers deploy`);
 }
 
 async function main() {
