@@ -43,6 +43,33 @@ export interface PackageManifestV2 {
   agent?: Record<string, unknown>;
 }
 
+export interface PackageReleaseArtifactV2 {
+  kind: 'release-archive';
+  url: string;
+  digest: string;
+  format: 'tgz';
+  strip_components: number;
+  [key: string]: unknown;
+}
+
+export interface PackageReleaseDescriptorV2 {
+  release_version: 2;
+  protocol_version: 2;
+  manifest_version: 2;
+  id: string;
+  type: PackageType;
+  version: string;
+  channel: ReleaseChannel;
+  repository: string;
+  commit: string;
+  tag: string;
+  published_at: string;
+  manifest_file: string;
+  package_path: string | null;
+  manifest: PackageManifestV2;
+  artifact: PackageReleaseArtifactV2;
+}
+
 export const PACKAGE_MANIFEST_VERSION: 2;
 export const PACKAGE_MANIFEST_FILE: 'dsh-package.json';
 export const PACKAGE_RELEASE_DESCRIPTOR_VERSION: 2;
@@ -53,3 +80,16 @@ export function validatePackageManifest(
   input: unknown,
   options?: { type?: unknown; id?: unknown; version?: unknown },
 ): PackageManifestV2;
+export function validatePackageReleaseDescriptor(
+  input: unknown,
+  options?: {
+    type?: unknown;
+    id?: unknown;
+    version?: unknown;
+    channel?: unknown;
+    repository?: unknown;
+    commit?: unknown;
+    tag?: unknown;
+    package_path?: unknown;
+  },
+): PackageReleaseDescriptorV2;
