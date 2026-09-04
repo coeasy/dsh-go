@@ -161,7 +161,8 @@ export async function prepareInstalledPackage(type, id, options = {}) {
 async function loadInstalledPackageUnlocked(type, id, options = {}) {
   const prepared = await prepareInstalledPackage(type, id, options);
   await updateRuntimeRegistry((current) => upsertRuntimePackage(current, prepared.activated_record), options.registryFile);
-  const { activated_record: _record, ...result } = prepared;
+  const result = { ...prepared };
+  delete result.activated_record;
   return result;
 }
 

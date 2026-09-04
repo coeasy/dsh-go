@@ -7,21 +7,43 @@ import { DETAIL_THRESHOLD } from '../../../lib/threshold';
 import { u } from '../../../lib/urls';
 
 type Release = {
-  version: string; channel: string; commit: string; published_at?: string; dependencies?: any[]; compatibility?: Record<string, unknown>; permissions?: string[]; artifact?: Record<string, unknown>; security?: Record<string, any>; capabilities?: string[]; yanked?: boolean; revoked?: boolean;
+  version: string;
+  channel: string;
+  commit: string;
+  published_at?: string;
+  dependencies?: Array<{ type?: string; id?: string; range?: string; optional?: boolean }>;
+  compatibility?: Record<string, unknown>;
+  permissions?: string[];
+  artifact?: Record<string, unknown>;
+  security?: Record<string, any>;
+  capabilities?: string[];
+  yanked?: boolean;
+  revoked?: boolean;
 };
-type Package = { type: string; id: string; publisher_id?: string; source?: { repo?: string }; metadata?: Record<string, any>; releases: Release[] };
-
-function registry(): { revision: string; packages: Package[] } {
-  try { return JSON.parse(readFileSync(resolve('..', 'catalog', 'registry-v4.json'), 'utf8')); }
-  catch { return { revision: '', packages: [] }; }
-}
+type Package = {
+  type: string;
+  id: string;
+  publisher_id?: string;
+  source?: { repo?: string };
+  metadata?: Record<string, any>;
+  releases: Release[];
+};
+type Registry = { revision: string; packages: Package[] };
 
 export function getStaticPaths() {
-  const data = registry();
+  let data: Registry;
+  try {
+    data = JSON.parse(readFileSync(resolve('..', 'catalog', 'registry-v4.json'), 'utf8')) as Registry;
+  } catch {
+    data = { revision: '', packages: [] };
+  }
   return data.packages
     .filter((pkg) => Number(pkg.metadata?.stars || 0) >= DETAIL_THRESHOLD)
     .filter((pkg) => pkg.releases.some((release) => !release.revoked && !release.yanked))
-    .map((pkg) => ({ params: { type: pkg.type, id: pkg.id }, props: { pkg, registryRevision: data.revision } }));
+    .map((pkg) => ({
+      params: { type: pkg.type, id: pkg.id },
+      props: { pkg, registryRevision: data.revision },
+    }));
 }
 
 const { pkg, registryRevision } = Astro.props as { pkg: Package; registryRevision: string };
@@ -42,7 +64,10 @@ const publisherVerified = security.publisher_verified === true || pkg.metadata?.
     <a class="back" href={u('/')} data-msg="back_marketplace">← Marketplace</a>
     <header class="hero">
       <div>
-        <div class="badges"><span>{pkg.type.toUpperCase()}</span>{pkg.metadata?.verified && <span>✓ <i data-msg="verified">Verified</i></span>}</div>
+        <div class="badges">
+          <span>{pkg.type.toUpperCase()}</span>
+          {pkg.metadata?.verified && <span>✓ <i data-msg="verified">Verified</i></span>}
+        </div>
         <h1>{title}</h1>
         <code>{pkg.type}:{pkg.id}</code>
         <p>{description}</p>
@@ -51,7 +76,11 @@ const publisherVerified = security.publisher_verified === true || pkg.metadata?.
     </header>
 
     <section class="install-panel">
-      <div><strong data-msg="latest_release">Latest safe release</strong><code>{coordinate}</code><p data-msg="local_install_notice">Installation is executed only by the local DSH runtime after explicit confirmation.</p></div>
+      <div>
+        <strong data-msg="latest_release">Latest safe release</strong>
+        <code>{coordinate}</code>
+        <p data-msg="local_install_notice">Installation is executed only by the local DSH runtime after explicit confirmation.</p>
+      </div>
       <div class="actions">
         {sourceHref && <a class="secondary" href={sourceHref} target="_blank" rel="noopener noreferrer" data-msg="source">Source ↗</a>}
         <button class="secondary" type="button" data-copy={coordinate} data-msg="install">Copy install</button>
@@ -77,12 +106,23 @@ const publisherVerified = security.publisher_verified === true || pkg.metadata?.
 
 <script is:inline define:vars={{ messages: MESSAGES }}>
   (() => {
-    const root = document.querySelector('[data-package-detail]'); if (!root) return;
+    const root = document.querySelector('[data-package-detail]');
+    if (!root) return;
     const lang = () => messages[document.documentElement.lang] ? document.documentElement.lang : 'en';
     const t = (key) => messages[lang()][key] || messages.en[key] || key;
-    const apply = () => root.querySelectorAll('[data-msg]').forEach((node) => { const key=node.getAttribute('data-msg'); if(key) node.textContent=t(key); });
-    root.addEventListener('click', async (event) => { const button=event.target.closest('[data-copy]'); if(!button)return; await navigator.clipboard.writeText(`dsh package install ${button.dataset.copy}`); button.textContent=t('copied'); setTimeout(()=>button.textContent=t('install'),1400); });
-    document.addEventListener('dsh:languagechange', apply); apply();
+    const apply = () => root.querySelectorAll('[data-msg]').forEach((node) => {
+      const key = node.getAttribute('data-msg');
+      if (key) node.textContent = t(key);
+    });
+    root.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-copy]');
+      if (!button) return;
+      await navigator.clipboard.writeText(`dsh package install ${button.dataset.copy}`);
+      button.textContent = t('copied');
+      setTimeout(() => { button.textContent = t('install'); }, 1400);
+    });
+    document.addEventListener('dsh:languagechange', apply);
+    apply();
   })();
 </script>
 
