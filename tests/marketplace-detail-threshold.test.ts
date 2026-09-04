@@ -13,11 +13,15 @@ describe('Marketplace detail generation and filtered-card UI contract', () => {
     expect(ecosystemDetail).toContain('variant._stars >= DETAIL_THRESHOLD');
   });
 
-  it('does not point low-star discovery cards at non-generated detail routes', () => {
+  it('does not point low-star discovery or publisher cards at non-generated detail routes', () => {
     const marketplace = readFileSync(new URL('../site/src/components/UnifiedMarketplace.astro', import.meta.url), 'utf8');
     expect(marketplace).toContain('stars >= DETAIL_THRESHOLD');
     expect(marketplace).toContain('hasDetail(item)');
     expect(marketplace).toContain('sourceHref(item)');
+
+    const publishers = readFileSync(new URL('../site/src/pages/publishers/index.astro', import.meta.url), 'utf8');
+    expect(publishers).toContain('DETAIL_THRESHOLD');
+    expect(publishers).toContain('stars>=detailThreshold');
   });
 
   it('re-localizes cards after dynamic category/search rendering', () => {
