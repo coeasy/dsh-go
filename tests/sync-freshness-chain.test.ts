@@ -16,6 +16,17 @@ describe('Sync freshness chain', () => {
     expect(assets).toContain("resolve(ROOT, 'site/public/install')");
   });
 
+  it('serializes queued repository dispatches from current main without rebasing generated Registry data', () => {
+    const sync = read('.github/workflows/sync.yml');
+    expect(sync).toContain('ref: main');
+    expect(sync).toContain('git fetch origin main');
+    expect(sync).toContain('source:"sync-race-retry"');
+    expect(sync).toContain('main-advanced-before-publish');
+    expect(sync).toContain('main-advanced-during-publish');
+    expect(sync).toContain('git push origin HEAD:main');
+    expect(sync).not.toContain('git pull --rebase');
+  });
+
   it('uses a bounded watchdog that recovers both missed cadence and missed daily full syncs', () => {
     const watchdog = read('.github/workflows/sync-watchdog.yml');
     expect(watchdog).toContain('cron: "55 * * * *"');
