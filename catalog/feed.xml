@@ -5,216 +5,216 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 04 Sep 2026 05:11:25 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 04 Sep 2026 13:23:41 GMT</lastBuildDate>
     <item>
-      <title>🔄 DSH Data Agent</title>
-      <link>https://github.com/omdsh-dev/dsh-data-agent</link>
-      <guid isPermaLink="false">omdsh-dev/dsh-data-agent@2026-08-31T04:03:29Z</guid>
-      <pubDate>Mon, 31 Aug 2026 04:03:29 GMT</pubDate>
-      <description>DSH Data Agent · 用对话分析数据与商业洞察 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;assets/banner.webp&quot; alt=&quot;DSH Data Agent Banner&quot; width=&quot;100%&quot; &lt;/p &lt;p align=&quot</description>
-    </item>
-    <item>
-      <title>🔄 ds-harness-remote</title>
-      <link>https://github.com/liguobao/ds-harness-remote</link>
-      <guid isPermaLink="false">liguobao/ds-harness-remote@2026-09-04T03:50:47Z</guid>
-      <pubDate>Fri, 04 Sep 2026 03:50:47 GMT</pubDate>
-      <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo.svg&quot; alt=&quot;DeepSeek Harness Remote&quot; width=&quot;600&quot; &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/strong &</description>
-    </item>
-    <item>
-      <title>🔄 ego-browser</title>
-      <link>https://github.com/Fisfzy/dsh-ego-browser</link>
-      <guid isPermaLink="false">Fisfzy/dsh-ego-browser@2026-08-28T15:55:58Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:55:58 GMT</pubDate>
-      <description>ego browser — 看得见的 Agent 浏览器 &lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshfind.com/zh/plugins/Fisfzy/ego browser?ref=badge&quot; &lt;img src=&quot;https://dshfind.com/api/badge/Fisfzy/eg</description>
-    </item>
-    <item>
-      <title>🔄 DeepRead</title>
-      <link>https://github.com/xiehuan123/dsh-deepread</link>
-      <guid isPermaLink="false">xiehuan123/dsh-deepread@2026-09-03T17:12:50Z</guid>
-      <pubDate>Thu, 03 Sep 2026 17:12:50 GMT</pubDate>
-      <description>📖 DeepRead — Make AI reading traceable Website · Real outputs · English · 中文 Turn articles, books, PDFs, and document sets into claims you can trace back to evidence and source locations. DeepRead is</description>
-    </item>
-    <item>
-      <title>🔄 dsh-lark-bot</title>
-      <link>https://github.com/PlutoKeating/dsh-lark-bot</link>
-      <guid isPermaLink="false">PlutoKeating/dsh-lark-bot@2026-08-25T15:57:37Z</guid>
-      <pubDate>Tue, 25 Aug 2026 15:57:37 GMT</pubDate>
-      <description>&lt;h1 align=&quot;center&quot; dsh lark bot&lt;/h1 &lt;p align=&quot;center&quot; 🌏 &lt;a href=&quot;README EN.md&quot; English&lt;/a · 🌐 官网wiki &lt;a href=&quot;https://dsh lark bot.arr2018.dpdns.</description>
-    </item>
-    <item>
-      <title>🔄 dsh-tui-vscode (VS Code companion)</title>
-      <link>https://github.com/baobaolaodie/dsh-tui-vscode</link>
-      <guid isPermaLink="false">baobaolaodie/dsh-tui-vscode@2026-08-31T16:47:14Z</guid>
-      <pubDate>Mon, 31 Aug 2026 16:47:14 GMT</pubDate>
-      <description>&lt;! BEAUTIFIED &lt;h1 align=&quot;center&quot; dsh tui vscode&lt;/h1 &lt;p align=&quot;center&quot; &lt;strong dsh TUI 的 VS Code companion 扩展——体验与 Claude Code 官方 VS Code 扩展几乎一致&lt;/strong &lt;br / &</description>
-    </item>
-    <item>
-      <title>🔄 dsh-omp-tui</title>
-      <link>https://github.com/mytianyi0712/dsh-tui-plugin-OhMyPi</link>
-      <guid isPermaLink="false">mytianyi0712/dsh-tui-plugin-OhMyPi@2026-09-03T02:29:53Z</guid>
-      <pubDate>Thu, 03 Sep 2026 02:29:53 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; dsh omp tui OMP 风格的 DeepSeek Harness（dsh）终端界面 &lt;/div 简介 dsh omp tui 是 DeepSeek Harness（dsh）的独立 profile bundle（插件），负责终端呈现、输入交互与会话相关的 TUI 能力；agent、模型、工具、持久化和沙箱仍由 dsh h</description>
-    </item>
-    <item>
-      <title>🔄 dsh-theme-picker</title>
-      <link>https://github.com/yhPrime/dsh-theme-picker</link>
-      <guid isPermaLink="false">yhPrime/dsh-theme-picker@2026-09-03T16:21:09Z</guid>
-      <pubDate>Thu, 03 Sep 2026 16:21:09 GMT</pubDate>
-      <description>dsh theme picker DeepSeek Harness 主题选择插件 —— 在设置面板中添加「主题」页面：统一管理应用主题与已安装的主题插件，同一时间仅一个主题生效，其余自动禁用。 A theme picker plugin for DeepSeek Harness: adds a Themes page to the Settings panel. It manages both a</description>
-    </item>
-    <item>
-      <title>🔄 dsh-large-proj-perf</title>
-      <link>https://github.com/orangeofcarl0-sys/dsh-large-proj-perf</link>
-      <guid isPermaLink="false">orangeofcarl0-sys/dsh-large-proj-perf@2026-09-03T18:12:18Z</guid>
-      <pubDate>Thu, 03 Sep 2026 18:12:18 GMT</pubDate>
-      <description>dsh large proj perf DSH（DeepSeek Harness）大会话性能插件：零拷贝 fork、投影分片预热、分片 materialize、 冷会话内存治理——一次装齐，消除 fork / 历史加载 / 落盘对超大会话（数十万事件）的 事件循环阻塞与 OOM。所有优化带源码特征校验与三层回退，上游吸收某项能力后对应 补丁 自动退役 。 特性一览 能力 解决什么 实测 状态（rc</description>
-    </item>
-    <item>
-      <title>🔄 dsh-fresh-start</title>
-      <link>https://github.com/orangeofcarl0-sys/dsh-fresh-start</link>
-      <guid isPermaLink="false">orangeofcarl0-sys/dsh-fresh-start@2026-09-03T18:14:26Z</guid>
-      <pubDate>Thu, 03 Sep 2026 18:14:26 GMT</pubDate>
-      <description>dsh fresh start DSH（DeepSeek Harness） /fresh 命令： 一键总结当前对话 → 开启新对话（自动跳转）→ 归档老对话 。 为什么需要它 超大会话（数十万事件）工作一段时间后，live 事件树越滚越大，每次构建上下文都更慢、更占内存—— 在一个 67 万事件的会话里继续工作，卡顿和内存压力会持续恶化。 /fresh 把这个收尾动作变成一键操作：把历史压缩成一份</description>
-    </item>
-    <item>
-      <title>🔄 DSH-ReasonixUI</title>
-      <link>https://github.com/sealfly/dsh-reasonix-desktop</link>
-      <guid isPermaLink="false">sealfly/dsh-reasonix-desktop@2026-09-03T16:32:36Z</guid>
-      <pubDate>Thu, 03 Sep 2026 16:32:36 GMT</pubDate>
-      <description>DSH ReasonixUI（Wails 版） Reasonix v1.29.0 前端的 Wails 外壳，桥接到 DSH 后端（127.0.0.1:3080）。 为什么从 Electron 迁到 Wails Reasonix 前端是为 Wails 写的（依赖 window.go.main.App + window.runtime + wails draggable 原生拖拽）。之前的 Elect</description>
-    </item>
-    <item>
-      <title>🆕 dsh Music TUI</title>
-      <link>https://github.com/Nagi-ovo/dsh-music-tui</link>
-      <guid isPermaLink="false">Nagi-ovo/dsh-music-tui@2026-08-31T18:57:44Z</guid>
-      <pubDate>Mon, 31 Aug 2026 18:57:44 GMT</pubDate>
-      <description>dsh music tui 在 dsh TUI 里查看并控制已经运行的 YesPlayMusic TUI。插件提供 /music 命令和提示框上方的紧凑音乐条，不修改 DeepSeek Harness、dsh TUI 或 YesPlayMusic 本体，也不会自动启动播放器。 能做什么 /music 或 /music show ：打开音乐条（默认隐藏） /music hide ：关闭音乐条 /mu</description>
-    </item>
-    <item>
-      <title>🔄 DSH Go Marketplace</title>
+      <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T03:43:59Z</guid>
-      <pubDate>Fri, 04 Sep 2026 03:43:59 GMT</pubDate>
-      <description>DSH Go DeepSeek Harness 插件市场导航站 —— 全自动同步、真·RESTful API、绝对 0 元部署。 API调用使用域名：https://dsh go.pages.dev/ 特性 全自动更新 ：每日 08:18 全量同步 + 每 6 小时增量同步（多主题并集抓取： dsh plugin + DeepSeek Harness 生态，自动过滤非插件） 趋势 / 热门榜 ： </description>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T13:21:57Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:21:57 GMT</pubDate>
+      <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
-      <title>🆕 dsh-overleaf</title>
-      <link>https://github.com/gychen-NJU/dsh-overleaf</link>
-      <guid isPermaLink="false">gychen-NJU/dsh-overleaf@2026-09-02T18:16:08Z</guid>
-      <pubDate>Wed, 02 Sep 2026 18:16:08 GMT</pubDate>
-      <description>dsh overleaf English 中文 An embedded Overleaf workbench plugin for DeepSeek Harness (DSH) Web. It adds a fourth tab next to Chat / Trajectory / Context on the session page: the tab loads your Overleaf </description>
+      <title>🆕 deepseek-harness</title>
+      <link>https://github.com/deepseek-ai/deepseek-harness</link>
+      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-09-04T11:34:31Z</guid>
+      <pubDate>Fri, 04 Sep 2026 11:34:31 GMT</pubDate>
+      <description>DeepSeek Harness English 中文 DeepSeek Harness ( dsh ) is an open source agent harness developed by DeepSeek AI. It is built on an everything is a plugin architecture and powered by Cordis, whose design</description>
     </item>
     <item>
-      <title>🆕 DSH Composer Dynamic Island</title>
-      <link>https://github.com/says693/dsh-composer-dynamic-island</link>
-      <guid isPermaLink="false">says693/dsh-composer-dynamic-island@2026-09-02T03:38:27Z</guid>
-      <pubDate>Wed, 02 Sep 2026 03:38:27 GMT</pubDate>
-      <description>DSH Composer Dynamic Island English 简体中文 Collapse selected DeepSeek Harness Web composer controls into a compact, upward expanding island without moving their DOM nodes or changing the host React tree</description>
+      <title>🆕 open-design</title>
+      <link>https://github.com/nexu-io/open-design</link>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-04T10:36:03Z</guid>
+      <pubDate>Fri, 04 Sep 2026 10:36:03 GMT</pubDate>
+      <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
-      <title>🆕 dsh-tui-browser-use</title>
-      <link>https://github.com/FlameTN7/dsh-tui-browser-use</link>
-      <guid isPermaLink="false">FlameTN7/dsh-tui-browser-use@2026-09-02T17:29:20Z</guid>
-      <pubDate>Wed, 02 Sep 2026 17:29:20 GMT</pubDate>
-      <description>dsh tui browser use 简体中文 English 给 dsh tui 的 agent 装上&quot;看得见网页&quot;的浏览器自动化工具。 dsh tui browser use 是 dsh tui 的子插件（Cordis 插件），随 dsh profile dsh tui 组合加载。它向 agent 注册 21 个 browser 工具 ，用 Playwright 驱动真实</description>
+      <title>🔄 ruflo</title>
+      <link>https://github.com/ruvnet/ruflo</link>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-03T06:26:27Z</guid>
+      <pubDate>Thu, 03 Sep 2026 06:26:27 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo An agent meta harness for Claude C</description>
     </item>
     <item>
-      <title>🔄 DSH PPT</title>
-      <link>https://github.com/yejiming/dsh-ppt</link>
-      <guid isPermaLink="false">yejiming/dsh-ppt@2026-08-31T08:07:59Z</guid>
-      <pubDate>Mon, 31 Aug 2026 08:07:59 GMT</pubDate>
-      <description>DSH PPT · 一句话生成专业可编辑 PPT 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;assets/banner.jpeg&quot; alt=&quot;DSH PPT Banner&quot; width=&quot;100%&quot; &lt;/p &lt;p align=&quot;center&quot</description>
+      <title>🆕 archify</title>
+      <link>https://github.com/tt-a1i/archify</link>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-04T13:17:55Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:17:55 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;strong English&lt;/strong · &lt;a href=&quot;./README ZH.md&quot; 简体中文&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;a href=&quot;https://trendshift.io/repositorie</description>
     </item>
     <item>
-      <title>🔄 Web Bridge</title>
-      <link>https://github.com/JohnXu22786/browser-automation</link>
-      <guid isPermaLink="false">JohnXu22786/browser-automation@2026-08-29T16:53:26Z</guid>
-      <pubDate>Sat, 29 Aug 2026 16:53:26 GMT</pubDate>
-      <description>简体中文 Web Bridge — Browser Automation MCP Server (dsh plugin) Web Bridge is an automation MCP server that uses a real browser . It gives agents a browser&apos;s eyes and hands: open web pages, read pag</description>
+      <title>🆕 reactive-resume</title>
+      <link>https://github.com/amruthpillai/reactive-resume</link>
+      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-09-04T09:05:27Z</guid>
+      <pubDate>Fri, 04 Sep 2026 09:05:27 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://rxresu.me&quot; &lt;img src=&quot;apps/web/public/opengraph/banner.jpg&quot; alt=&quot;Reactive Resume&quot; / &lt;/a &lt;h1 Reactive Resume&l</description>
     </item>
     <item>
-      <title>🔄 Plugin Market</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-market</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-market@2026-08-28T15:45:35Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:35 GMT</pubDate>
-      <description>dsh tui market English below dsh TUI 的插件市场插件：在 TUI 里用 /market 浏览、搜索、安装、移除 dsh 插件，不用离开终端。 功能 /market — 浏览生态精选列表（分页，多选安装，可直接进搜索） /market search &lt;关键词 — 按 GitHub topic:dsh plugin 搜索全网插件 /market all （或 </description>
+      <title>🆕 OpenViking</title>
+      <link>https://github.com/volcengine/OpenViking</link>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-04T12:12:54Z</guid>
+      <pubDate>Fri, 04 Sep 2026 12:12:54 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
-      <title>🆕 @all3cn/dsh-qa-suite-n23</title>
-      <link>https://github.com/All3nCN/dsh-qa-suite-N23</link>
-      <guid isPermaLink="false">All3nCN/dsh-qa-suite-N23@2026-09-01T16:41:43Z</guid>
-      <pubDate>Tue, 01 Sep 2026 16:41:43 GMT</pubDate>
-      <description>@all3cn/dsh qa suite n23 DSH 质量套件插件（host 侧，无 UI 半区）。一个包合并两份上游能力： 能力 1. code check 工具（自动类型检查） 吸收自 a179 sanae/dsh code check （BSD 3 Clause）。 监听 fs/observed 事件：模型经 edit / write 工具改动 .ts / .tsx / .mts / .</description>
+      <title>🆕 DeepSeek-Reasonix</title>
+      <link>https://github.com/esengine/DeepSeek-Reasonix</link>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-04T13:07:18Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:07:18 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
-      <title>🔄 Jobs Panel</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-jobs</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-jobs@2026-08-28T15:45:09Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:09 GMT</pubDate>
-      <description>dsh tui jobs 适用于 dsh TUI（dshtui.com）的社区插件。 dsh TUI 的后台任务面板： /jobs 列出当前所有可见的后台任务（bash、子 agent 等），状态变化实时刷新，可查看已完成任务的输出、取消运行中的任务。补齐官方 WebUI 有而 TUI 没有的任务列表面。 English below. 用法 列表：↑/↓ 选择 · Enter 查看详情与输出 · </description>
+      <title>🔄 awesome-gpt-image-2</title>
+      <link>https://github.com/freestylefly/awesome-gpt-image-2</link>
+      <guid isPermaLink="false">freestylefly/awesome-gpt-image-2@2026-09-03T03:26:32Z</guid>
+      <pubDate>Thu, 03 Sep 2026 03:26:32 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;./data/images/banner.svg&quot; alt=&quot;GPT Image2 Prompt System&quot; width=&quot;800&quot; / &lt;/p &lt;h3 align=&quot;center&quot; Prompt as Code G</description>
     </item>
     <item>
-      <title>🔄 Webhook 通知</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-webhook</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-webhook@2026-08-28T15:45:26Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:26 GMT</pubDate>
-      <description>dsh tui webhook 适用于 dsh TUI（dshtui.com）的社区插件。 把 dsh TUI 的关键事件推送到 IM 机器人（飞书 / 钉钉 / 企业微信 / 任意通用 webhook）：长轮次完成、审批请求——人离开电脑也能收到提醒。 English below. 用法 配置在 /settings →「Webhook 通知」，保存后立即生效，无需重启。 设置 说明 默认 pla</description>
+      <title>🔄 PicGo</title>
+      <link>https://github.com/Molunerfinn/PicGo</link>
+      <guid isPermaLink="false">Molunerfinn/PicGo@2026-09-01T12:01:25Z</guid>
+      <pubDate>Tue, 01 Sep 2026 12:01:25 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; markdown=&quot;1&quot; &lt;sup Special thanks to:&lt;/sup &lt;br &lt;a href=&quot;https://www.nocobase.com/?utm source=picgo&quot; &lt;img alt=&quot;NocoBase sponsorsh</description>
     </item>
     <item>
-      <title>🆕 @all3cn/dsh-better-sidebar-n23</title>
-      <link>https://github.com/All3nCN/dsh-better-sidebar-N23</link>
-      <guid isPermaLink="false">All3nCN/dsh-better-sidebar-N23@2026-09-03T14:55:01Z</guid>
-      <pubDate>Thu, 03 Sep 2026 14:55:01 GMT</pubDate>
-      <description>@all3cn/dsh better sidebar n23 一个服务化的侧边栏框架 + 一套开箱即用的 DSH 完整工作台。本包是开源插件 dsh better sidebar（MIT）的社区 fork，在 @all3cn 作用域下独立发版；上游致谢见 UPSTREAM.md。 English 中文 功能一览 文件工作台 ：资源管理器（懒加载目录树、软链接按目标类型展示）+ CodeMirror</description>
+      <title>🆕 distilly</title>
+      <link>https://github.com/titanwings/distilly</link>
+      <guid isPermaLink="false">titanwings/distilly@2026-09-04T11:54:10Z</guid>
+      <pubDate>Fri, 04 Sep 2026 11:54:10 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/social preview distilly v7.png&quot; alt=&quot;Distilly — Distill how they think into Person Profiles for Agents&quot; width=&quot;100%&quot; &l</description>
     </item>
     <item>
-      <title>🔄 dsh-tui-mcp-manager</title>
-      <link>https://github.com/0N3-0/dsh-tui-mcp-manager</link>
-      <guid isPermaLink="false">0N3-0/dsh-tui-mcp-manager@2026-08-30T06:17:26Z</guid>
-      <pubDate>Sun, 30 Aug 2026 06:17:26 GMT</pubDate>
-      <description>dsh tui mcp manager English 中文 在 dsh TUI 中集中管理 MCP 服务器、Set、工具与运行状态。 无需离开终端，输入 /mcp manager 即可打开全屏界面。 安装 需要 Node.js ^22.19 =24 和 dsh TUI =0.9.3 &lt;0.10.0 。 进入 TUI 后运行 /mcp manager 。界面语言跟随 dsh TUI，可用 /</description>
+      <title>🆕 nocobase</title>
+      <link>https://github.com/nocobase/nocobase</link>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-04T13:19:26Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:19:26 GMT</pubDate>
+      <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
-      <title>🆕 dsh-github-installer</title>
-      <link>https://github.com/yhPrime/dsh-github-installer</link>
-      <guid isPermaLink="false">yhPrime/dsh-github-installer@2026-09-03T16:41:16Z</guid>
-      <pubDate>Thu, 03 Sep 2026 16:41:16 GMT</pubDate>
-      <description>dsh github installer 基于 dsh std 标准化协议的插件管理器 —— 粘贴 GitHub 仓库网址 / npm 包名 / 其他 Git 仓库地址，即可安装；支持卸载与更新。 A dsh std standard component for managing plugins — install from a GitHub repo URL, npm package name,</description>
+      <title>🆕 dsh-desktop</title>
+      <link>https://github.com/anywhere-labs/dsh-desktop</link>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-04T13:14:49Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:14:49 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
-      <title>🔄 Subagent Viewer</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-subagents</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-subagents@2026-08-28T15:45:20Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:20 GMT</pubDate>
-      <description>dsh tui subagents dsh TUI 的子 agent 会话视图： /subagents 列出当前会话的子 agent，Enter 进入全屏轨迹视图， 实时 跟着子 agent 的思考、工具调用和回复滚动；对 可续（continuable） 子 agent 可以直接发消息纠偏、中断当前轮。对应上游 issue dsh TUI 223。 English below. 用法 轨迹视图按键</description>
+      <title>🆕 WeKnora</title>
+      <link>https://github.com/Tencent/WeKnora</link>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-09-04T09:35:26Z</guid>
+      <pubDate>Fri, 04 Sep 2026 09:35:26 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;picture &lt;img src=&quot;./docs/images/logo.png&quot; alt=&quot;WeKnora Logo&quot; height=&quot;120&quot;/ &lt;/picture &lt;/p &lt;p align=&quot;center&quot; &lt;pi</description>
     </item>
     <item>
-      <title>🔄 Herdr 状态上报</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-herdr</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-herdr@2026-08-28T15:45:40Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:40 GMT</pubDate>
-      <description></description>
+      <title>🆕 voyager</title>
+      <link>https://github.com/Nagi-ovo/voyager</link>
+      <guid isPermaLink="false">Nagi-ovo/voyager@2026-09-04T00:03:39Z</guid>
+      <pubDate>Fri, 04 Sep 2026 00:03:39 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/public/logo.png&quot; alt=&quot;Voyager logo&quot; width=&quot;120&quot; height=&quot;120&quot; &lt;h3 Make Your AI Experience Truly Yours ✨&lt;</description>
     </item>
     <item>
-      <title>🔄 Checkpoints</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-checkpoints</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-checkpoints@2026-08-28T15:45:46Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:46 GMT</pubDate>
-      <description></description>
+      <title>🔄 learn-harness-engineering</title>
+      <link>https://github.com/walkinglabs/learn-harness-engineering</link>
+      <guid isPermaLink="false">walkinglabs/learn-harness-engineering@2026-08-26T01:08:59Z</guid>
+      <pubDate>Wed, 26 Aug 2026 01:08:59 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;README.md&quot; &lt;img alt=&quot;English&quot; src=&quot;https://img.shields.io/badge/EN English blue?style=flat square&quot; &lt;/a &lt;a href=&quot;d</description>
     </item>
     <item>
-      <title>🔄 Keybindings Cheatsheet</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-keys</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-keys@2026-08-28T15:45:14Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:45:14 GMT</pubDate>
-      <description></description>
+      <title>🔄 awesome-dsh-plugin</title>
+      <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-03T13:19:16Z</guid>
+      <pubDate>Thu, 03 Sep 2026 13:19:16 GMT</pubDate>
+      <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
-      <title>🔄 Cron Schedules</title>
-      <link>https://github.com/FUSU123fusu/dsh-tui-cron</link>
-      <guid isPermaLink="false">FUSU123fusu/dsh-tui-cron@2026-08-28T15:44:57Z</guid>
-      <pubDate>Fri, 28 Aug 2026 15:44:57 GMT</pubDate>
-      <description></description>
+      <title>🆕 EverOS</title>
+      <link>https://github.com/EverMind-AI/EverOS</link>
+      <guid isPermaLink="false">EverMind-AI/EverOS@2026-09-04T02:27:51Z</guid>
+      <pubDate>Fri, 04 Sep 2026 02:27:51 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
+    </item>
+    <item>
+      <title>🔄 MemOS</title>
+      <link>https://github.com/MemTensor/MemOS</link>
+      <guid isPermaLink="false">MemTensor/MemOS@2026-09-03T12:30:14Z</guid>
+      <pubDate>Thu, 03 Sep 2026 12:30:14 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
+    </item>
+    <item>
+      <title>🔄 yao</title>
+      <link>https://github.com/YaoApp/yao</link>
+      <guid isPermaLink="false">YaoApp/yao@2026-09-03T07:19:19Z</guid>
+      <pubDate>Thu, 03 Sep 2026 07:19:19 GMT</pubDate>
+      <description>Yao Agents ✨ All your agents and workspaces in one place, on every device you own. Track tasks on a board, accessible from desktop, mobile, browser, or API. Self hosted. 🏠 Homepage: https://yaoagents</description>
+    </item>
+    <item>
+      <title>🔄 dsh-routing-suite</title>
+      <link>https://github.com/yjh051108/dsh-routing-suite</link>
+      <guid isPermaLink="false">yjh051108/dsh-routing-suite@2026-09-02T17:34:41Z</guid>
+      <pubDate>Wed, 02 Sep 2026 17:34:41 GMT</pubDate>
+      <description>dsh routing suite — 注入器 × 思维模式路由 × 分级模式 套装 一个仓库装齐三件套： 运行时注入器 （免重启运行时管理层）+ 思维模式路由预设 （任务感知推理模式，P1 P23 实测）+ 分级任务协议 （脑暴出题 → 规格化计划 → 打卡制 → 组收官 → 终验，含红队门与审计端点）。 中文 English 组件入口（快速跳转） 组件 说明 入口 injector 运行时注入</description>
+    </item>
+    <item>
+      <title>🆕 honcho</title>
+      <link>https://github.com/plastic-labs/honcho</link>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-04T13:16:41Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:16:41 GMT</pubDate>
+      <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
+    </item>
+    <item>
+      <title>🆕 dsh-web</title>
+      <link>https://github.com/zhu1090093659/dsh-web</link>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-04T12:55:47Z</guid>
+      <pubDate>Fri, 04 Sep 2026 12:55:47 GMT</pubDate>
+      <description>dsh web · DeepSeek Harness（DSH）Web GUI 插件聚合生态包 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/dsh web banner.png&quot; alt=&quot;dsh web&quot; width=&quot;100%&quot; &lt;/p &lt;p ali</description>
+    </item>
+    <item>
+      <title>🆕 skill</title>
+      <link>https://github.com/anbeime/skill</link>
+      <guid isPermaLink="false">anbeime/skill@2026-09-04T07:00:53Z</guid>
+      <pubDate>Fri, 04 Sep 2026 07:00:53 GMT</pubDate>
+      <description>🎯 技能商店 Skill Store 收录最全、更新最快的AI Agent技能库，涵盖 文档处理、内容创作、编程开发、机器学习、自动化工作流 等多个领域的精选技能包。 🧠 知易（ZhiYi）多模型智能知识管家 — 一个对话框调度所有模型，240+技能即插即用，四色卡片让AI真正记住你。 👉 立即体验 · ⭐ 知易开源版 📊 统计数据 官方技能 : 182 个（来自 awesome agen</description>
+    </item>
+    <item>
+      <title>🆕 openpencil</title>
+      <link>https://github.com/ZSeven-W/openpencil</link>
+      <guid isPermaLink="false">ZSeven-W/openpencil@2026-09-04T09:22:30Z</guid>
+      <pubDate>Fri, 04 Sep 2026 09:22:30 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;./crates/op host desktop/assets/icon.png&quot; alt=&quot;OpenPencil&quot; width=&quot;120&quot; / &lt;/p &lt;h1 align=&quot;center&quot; OpenPencil&lt;</description>
+    </item>
+    <item>
+      <title>🆕 ouroboros</title>
+      <link>https://github.com/Q00/ouroboros</link>
+      <guid isPermaLink="false">Q00/ouroboros@2026-09-04T11:08:26Z</guid>
+      <pubDate>Fri, 04 Sep 2026 11:08:26 GMT</pubDate>
+      <description>&lt;! mcp name: io.github.Q00/ouroboros &lt;p align=&quot;right&quot; &lt;strong English&lt;/strong &lt;a href=&quot;./README.ko.md&quot; 한국어&lt;/a &lt;a href=&quot;./README.zh CN.md&quot; 简体中文&lt;/a </description>
+    </item>
+    <item>
+      <title>🆕 loopx</title>
+      <link>https://github.com/huangruiteng/loopx</link>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-04T13:13:22Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:13:22 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
+    </item>
+    <item>
+      <title>🆕 iPolloWork</title>
+      <link>https://github.com/Devin-AXIS/iPolloWork</link>
+      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-04T11:30:26Z</guid>
+      <pubDate>Fri, 04 Sep 2026 11:30:26 GMT</pubDate>
+      <description>iPolloWork &lt;p align=&quot;center&quot; English · &lt;a href=&quot;./docs/translations/README ZH.md&quot; 简体中文&lt;/a · &lt;a href=&quot;./docs/translations/README ZH hk.md&quot; 繁體中文&lt;/a · &lt;a h</description>
+    </item>
+    <item>
+      <title>🔄 petdex</title>
+      <link>https://github.com/crafter-station/petdex</link>
+      <guid isPermaLink="false">crafter-station/petdex@2026-08-31T11:47:51Z</guid>
+      <pubDate>Mon, 31 Aug 2026 11:47:51 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;public/brand/petdex desktop icon.png&quot; alt=&quot;Petdex&quot; width=&quot;120&quot; / &lt;h1 Petdex&lt;/h1 &lt;p The public gallery of animated c</description>
+    </item>
+    <item>
+      <title>🔄 modlens</title>
+      <link>https://github.com/liustack/modlens</link>
+      <guid isPermaLink="false">liustack/modlens@2026-09-01T06:47:52Z</guid>
+      <pubDate>Tue, 01 Sep 2026 06:47:52 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;https://raw.githubusercontent.com/liustack/modlens/main/assets/banner.jpg&quot; width=&quot;100%&quot; alt=&quot;ModLens&quot; / &lt;/p &lt;h1 align=&q</description>
     </item>
   </channel>
 </rss>
