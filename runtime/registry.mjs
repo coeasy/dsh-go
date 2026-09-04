@@ -4,10 +4,10 @@ import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { createRuntimePackageRecord, recordRuntimeEvent } from './lifecycle.mjs';
 import { lockOwnerAlive } from './file-lock.mjs';
-import { assertPackageType, packageKey, safePackageId } from './package-model.mjs';
+import { normalizePackageId, normalizePackageType, packageKey } from '../packages/protocol-core/index.mjs';
 import { readInstallLock } from './verifier.mjs';
 
-export const RUNTIME_REGISTRY_SCHEMA_VERSION = 3;
+export const RUNTIME_STATE_SCHEMA_VERSION = 4;
 const REGISTRY_LOCK_STALE_MS = 30_000;
 const REGISTRY_LOCK_TIMEOUT_MS = 5_000;
 
@@ -15,88 +15,51 @@ export function runtimeRoot() {
   return resolve(process.env.DSH_RUNTIME_HOME || join(homedir(), '.dsh'));
 }
 
-function looksLikeCatalogRegistrySource(value) {
-  const input = String(value || '').trim();
-  if (!input) return false;
-  return /^https?:\/\//i.test(input)
-    || /(?:^|[\\/])catalog[\\/]/i.test(input)
-    || /registry-v\d+\.json(?:$|[?#])/i.test(input);
-}
-
-export function runtimeRegistryEnv() {
-  const explicit = String(process.env.DSH_RUNTIME_REGISTRY || '').trim();
-  if (explicit) return { name: 'DSH_RUNTIME_REGISTRY', value: explicit, legacy: false };
-  const legacy = String(process.env.DSH_REGISTRY || '').trim();
-  if (!legacy || looksLikeCatalogRegistrySource(legacy)) return null;
-  return { name: 'DSH_REGISTRY', value: legacy, legacy: true };
-}
-
 export function registryPath() {
-  const configured = runtimeRegistryEnv();
-  return resolve(configured?.value || join(runtimeRoot(), 'registry', 'runtime.json'));
+  return resolve(process.env.DSH_RUNTIME_REGISTRY || join(runtimeRoot(), 'state', 'runtime-v4.json'));
 }
 
 export function registryLockPath(file = registryPath()) {
   return `${resolve(file)}.lock`;
 }
 
-export function pluginRoot() {
-  return resolve(process.env.DSH_PLUGIN_HOME || join(runtimeRoot(), 'plugins'));
-}
-
 export function packageRoot(type) {
-  const normalizedType = assertPackageType(type);
-  if (normalizedType === 'plugin') return pluginRoot();
-  const explicit = {
-    mcp: process.env.DSH_MCP_HOME,
-    skill: process.env.DSH_SKILL_HOME,
-    agent: process.env.DSH_AGENT_HOME,
-  }[normalizedType];
-  if (explicit) return resolve(explicit);
+  const normalizedType = normalizePackageType(type);
   const base = resolve(process.env.DSH_PACKAGE_HOME || join(runtimeRoot(), 'packages'));
   return join(base, normalizedType);
 }
 
 function normalizeRecord(item) {
-  const type = assertPackageType(item?.type || 'plugin');
-  const id = safePackageId(item?.id);
-  const base = createRuntimePackageRecord(type, id, item.version || '0.1.0');
+  const type = normalizePackageType(item?.type);
+  const id = normalizePackageId(item?.id);
+  const version = String(item?.version || '').trim();
+  if (!version) throw new Error(`runtime package version is required: ${type}:${id}`);
+  const base = createRuntimePackageRecord(type, id, version);
   const state = item.state || 'installed';
   return {
     ...base,
     ...item,
     id,
     type,
+    version,
     state,
     channel: item.channel || 'stable',
     enabled: item.enabled ?? (state !== 'disabled' && state !== 'removed'),
     activated: item.activated ?? false,
-    restart_required: item.restart_required ?? item.restartRequired ?? false,
+    restart_required: item.restart_required ?? false,
     health: item.health || null,
     rollback: item.rollback || null,
     binding: item.binding || null,
     capabilities: Array.isArray(item.capabilities) ? item.capabilities : [],
     dependencies: Array.isArray(item.dependencies) ? item.dependencies : [],
     permissions: Array.isArray(item.permissions) ? item.permissions : [],
-    permission_policy: item.permission_policy && typeof item.permission_policy === 'object' ? item.permission_policy : null,
-    permission_manifest: item.permission_manifest && typeof item.permission_manifest === 'object' ? item.permission_manifest : null,
     compatibility: item.compatibility && typeof item.compatibility === 'object' ? item.compatibility : {},
-    conflicts: Array.isArray(item.conflicts) ? item.conflicts : [],
-    replaces: Array.isArray(item.replaces) ? item.replaces : [],
-    provides: Array.isArray(item.provides) ? item.provides : [],
     publisher: item.publisher || null,
     security: item.security || null,
-    type_config: item.type_config || null,
+    artifact: item.artifact || null,
+    resolution_hash: item.resolution_hash || null,
+    registry_revision: item.registry_revision || null,
     history: Array.isArray(item.history) && item.history.length ? item.history.slice(-100) : base.history,
-  };
-}
-
-function withCompatibility(registry) {
-  const packages = (registry.packages || []).map(normalizeRecord);
-  return {
-    ...registry,
-    packages,
-    plugins: packages.filter((item) => item.type === 'plugin'),
   };
 }
 
@@ -104,14 +67,12 @@ async function hydrateRecordFromInstallLock(item) {
   if (!item?.path || item.state === 'removed') return item;
   try {
     const lock = await readInstallLock(resolve(item.path));
-    const type = assertPackageType(item.type || 'plugin');
-    const id = safePackageId(item.id);
-    if (lock.type !== type || lock.id !== id) return item;
-    if (item.version && lock.version !== item.version) return item;
+    const type = normalizePackageType(item.type);
+    const id = normalizePackageId(item.id);
+    if (lock.type !== type || lock.id !== id || lock.version !== item.version) return item;
     if (item.commit && String(lock.source.commit).toLowerCase() !== String(item.commit).toLowerCase()) return item;
     return {
       ...item,
-      version: lock.version,
       channel: lock.channel || item.channel || 'stable',
       source: lock.source || item.source,
       commit: lock.source.commit,
@@ -119,15 +80,10 @@ async function hydrateRecordFromInstallLock(item) {
       capabilities: lock.capabilities || [],
       dependencies: lock.dependencies || [],
       permissions: lock.permissions || [],
-      permission_policy: lock.permission_policy || null,
-      permission_manifest: lock.permission_manifest || null,
       compatibility: lock.compatibility || {},
       publisher: lock.publisher || null,
       security: lock.security || null,
-      conflicts: lock.conflicts || [],
-      replaces: lock.replaces || [],
-      provides: lock.provides || [],
-      type_config: lock.type_config || null,
+      artifact: lock.artifact || null,
       installed_at: lock.installed_at || item.installed_at,
     };
   } catch {
@@ -135,59 +91,43 @@ async function hydrateRecordFromInstallLock(item) {
   }
 }
 
-async function hydrateRegistry(registry) {
-  const packages = [];
-  for (const item of registry.packages || []) {
-    packages.push(normalizeRecord(await hydrateRecordFromInstallLock(item)));
+export function validateRuntimeState(data) {
+  if (!data || typeof data !== 'object') throw new Error('invalid runtime state');
+  if (data.schema_version !== RUNTIME_STATE_SCHEMA_VERSION) {
+    const error = new Error(`unsupported runtime state schema: ${data.schema_version}; expected ${RUNTIME_STATE_SCHEMA_VERSION}`);
+    error.code = 'DSH_STATE_SCHEMA_UNSUPPORTED';
+    throw error;
   }
-  return withCompatibility({ ...registry, packages });
-}
-
-export function migrateRuntimeRegistry(data) {
-  if (!data || typeof data !== 'object') throw new Error('invalid runtime registry');
-  if (![1, 2, RUNTIME_REGISTRY_SCHEMA_VERSION].includes(data.schema_version)) {
-    throw new Error(`unsupported runtime registry schema: ${data.schema_version}`);
-  }
-
-  let source;
-  if (data.schema_version === RUNTIME_REGISTRY_SCHEMA_VERSION) source = Array.isArray(data.packages) ? data.packages : data.plugins;
-  else source = data.plugins;
-  if (!Array.isArray(source)) throw new Error('invalid runtime registry packages');
-
+  if (!Array.isArray(data.packages)) throw new Error('runtime state packages must be an array');
+  if ('plugins' in data) throw new Error('runtime state contains removed legacy plugins mirror');
   const seen = new Set();
-  const packages = source.map((item) => {
+  const packages = data.packages.map((item) => {
     const normalized = normalizeRecord(item);
     const key = packageKey(normalized.type, normalized.id);
     if (seen.has(key)) throw new Error(`duplicate runtime package: ${key}`);
     seen.add(key);
     return normalized;
   });
-
-  if (data.schema_version === RUNTIME_REGISTRY_SCHEMA_VERSION && Array.isArray(data.plugins)) {
-    for (const plugin of data.plugins) {
-      const normalized = normalizeRecord({ ...plugin, type: 'plugin' });
-      const canonical = packages.find((item) => packageKey(item.type, item.id) === packageKey('plugin', normalized.id));
-      if (!canonical) throw new Error(`runtime registry plugin mirror missing canonical package: ${normalized.id}`);
-      if (canonical.version !== normalized.version || canonical.state !== normalized.state) {
-        throw new Error(`runtime registry plugin mirror drift: ${normalized.id}`);
-      }
-    }
-  }
-
-  return withCompatibility({
-    schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION,
-    updated_at: data.updated_at || new Date().toISOString(),
+  return {
+    schema_version: RUNTIME_STATE_SCHEMA_VERSION,
     generation: Number(data.generation) || 0,
+    updated_at: data.updated_at || new Date().toISOString(),
     packages,
-  });
+  };
+}
+
+async function hydrateState(state) {
+  const packages = [];
+  for (const item of state.packages) packages.push(normalizeRecord(await hydrateRecordFromInstallLock(item)));
+  return { ...state, packages };
 }
 
 export async function readRuntimeRegistry(file = registryPath()) {
   try {
-    return hydrateRegistry(migrateRuntimeRegistry(JSON.parse(await readFile(file, 'utf8'))));
+    return hydrateState(validateRuntimeState(JSON.parse(await readFile(file, 'utf8'))));
   } catch (error) {
     if (error?.code === 'ENOENT') {
-      return withCompatibility({ schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION, generation: 0, packages: [] });
+      return { schema_version: RUNTIME_STATE_SCHEMA_VERSION, generation: 0, updated_at: new Date().toISOString(), packages: [] };
     }
     throw error;
   }
@@ -196,6 +136,11 @@ export async function readRuntimeRegistry(file = registryPath()) {
 async function diskGeneration(file) {
   try {
     const data = JSON.parse(await readFile(file, 'utf8'));
+    if (data.schema_version !== RUNTIME_STATE_SCHEMA_VERSION) {
+      const error = new Error(`unsupported runtime state schema: ${data.schema_version}`);
+      error.code = 'DSH_STATE_SCHEMA_UNSUPPORTED';
+      throw error;
+    }
     return Number(data.generation) || 0;
   } catch (error) {
     if (error?.code === 'ENOENT') return 0;
@@ -209,7 +154,6 @@ async function acquireRegistryLock(file, options = {}) {
   const timeout = Number.isFinite(requestedTimeout) && requestedTimeout > 0 ? requestedTimeout : REGISTRY_LOCK_TIMEOUT_MS;
   const deadline = Date.now() + timeout;
   await mkdir(dirname(lockFile), { recursive: true });
-
   while (true) {
     try {
       const handle = await open(lockFile, 'wx', 0o600);
@@ -243,8 +187,8 @@ async function acquireRegistryLock(file, options = {}) {
         throw inspectError;
       }
       if (Date.now() >= deadline) {
-        const busy = new Error(`runtime registry is busy: ${file}`);
-        busy.code = 'DSH_REGISTRY_BUSY';
+        const busy = new Error(`runtime state is busy: ${file}`);
+        busy.code = 'DSH_TRANSACTION_CONFLICT';
         throw busy;
       }
       await new Promise((accept) => setTimeout(accept, 50));
@@ -252,55 +196,52 @@ async function acquireRegistryLock(file, options = {}) {
   }
 }
 
-export async function writeRuntimeRegistry(registry, file = registryPath(), options = {}) {
+export async function writeRuntimeRegistry(state, file = registryPath(), options = {}) {
   const targetFile = resolve(file);
   const release = await acquireRegistryLock(targetFile, options);
   try {
     const currentGeneration = await diskGeneration(targetFile);
-    const expectedGeneration = Number(registry.generation);
+    const expectedGeneration = Number(state.generation);
     if (!options.force && Number.isFinite(expectedGeneration) && expectedGeneration !== currentGeneration) {
-      const conflict = new Error(`runtime registry generation conflict: expected ${expectedGeneration}, current ${currentGeneration}`);
-      conflict.code = 'DSH_REGISTRY_CONFLICT';
+      const conflict = new Error(`runtime state generation conflict: expected ${expectedGeneration}, current ${currentGeneration}`);
+      conflict.code = 'DSH_TRANSACTION_CONFLICT';
       conflict.expected_generation = expectedGeneration;
       conflict.current_generation = currentGeneration;
       throw conflict;
     }
-
-    const source = Array.isArray(registry.packages) ? registry.packages : registry.plugins || [];
+    if ('plugins' in state) throw new Error('legacy plugins mirror is not accepted by Runtime State V4');
     const seen = new Set();
     const packages = [];
-    for (const item of source) {
+    for (const item of state.packages || []) {
       const normalized = normalizeRecord(await hydrateRecordFromInstallLock(item));
       const key = packageKey(normalized.type, normalized.id);
       if (seen.has(key)) throw new Error(`duplicate runtime package: ${key}`);
       seen.add(key);
       packages.push(normalized);
     }
-
     const next = {
-      schema_version: RUNTIME_REGISTRY_SCHEMA_VERSION,
+      schema_version: RUNTIME_STATE_SCHEMA_VERSION,
       generation: currentGeneration + 1,
       updated_at: new Date().toISOString(),
       packages,
-      plugins: packages.filter((item) => item.type === 'plugin'),
     };
     await mkdir(dirname(targetFile), { recursive: true });
     const temp = `${targetFile}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
     try {
-      await writeFile(temp, JSON.stringify(next, null, 2) + '\n', 'utf8');
+      await writeFile(temp, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
       await rename(temp, targetFile);
     } catch (error) {
       await rm(temp, { force: true }).catch(() => {});
       throw error;
     }
-    return withCompatibility(next);
+    return next;
   } finally {
     await release();
   }
 }
 
 export async function updateRuntimeRegistry(mutator, file = registryPath(), options = {}) {
-  if (typeof mutator !== 'function') throw new TypeError('runtime registry mutator must be a function');
+  if (typeof mutator !== 'function') throw new TypeError('runtime state mutator must be a function');
   const attempts = Number.isInteger(options.retries) && options.retries > 0 ? options.retries : 5;
   let lastConflict;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -309,70 +250,52 @@ export async function updateRuntimeRegistry(mutator, file = registryPath(), opti
     try {
       return await writeRuntimeRegistry(next, file, options);
     } catch (error) {
-      if (error?.code !== 'DSH_REGISTRY_CONFLICT' || attempt === attempts - 1) throw error;
+      if (error?.code !== 'DSH_TRANSACTION_CONFLICT' || attempt === attempts - 1) throw error;
       lastConflict = error;
       await new Promise((accept) => setTimeout(accept, 20 * (attempt + 1)));
     }
   }
-  throw lastConflict || new Error('runtime registry update did not converge');
+  throw lastConflict || new Error('runtime state update did not converge');
 }
 
-export function getRuntimePackage(registry, type, id, options = {}) {
+export function getRuntimePackage(state, type, id, options = {}) {
   const key = packageKey(type, id);
-  const item = (registry.packages || registry.plugins || []).find((entry) => packageKey(entry.type || 'plugin', entry.id) === key);
+  const item = state.packages.find((entry) => packageKey(entry.type, entry.id) === key);
   if (!item || (!options.includeRemoved && item.state === 'removed')) return null;
   return normalizeRecord(item);
 }
 
-export function findRuntimePackage(registry, id, options = {}) {
-  const normalizedId = safePackageId(id).toLowerCase();
-  const matches = (registry.packages || registry.plugins || [])
-    .filter((entry) => String(entry.id || '').toLowerCase() === normalizedId)
+export function findRuntimePackage(state, id, options = {}) {
+  const normalizedId = normalizePackageId(id);
+  const matches = state.packages
+    .filter((entry) => entry.id === normalizedId)
     .filter((entry) => options.includeRemoved || entry.state !== 'removed')
     .map(normalizeRecord);
-  if (options.type) return matches.find((entry) => entry.type === assertPackageType(options.type)) || null;
+  if (options.type) return matches.find((entry) => entry.type === normalizePackageType(options.type)) || null;
   if (matches.length > 1) throw new Error(`runtime package id is ambiguous; specify type: ${id}`);
   return matches[0] || null;
 }
 
-export function upsertRuntimePackage(registry, item) {
+export function upsertRuntimePackage(state, item) {
   const next = normalizeRecord(item);
   const key = packageKey(next.type, next.id);
-  const packages = (registry.packages || registry.plugins || [])
-    .map(normalizeRecord)
-    .filter((entry) => packageKey(entry.type, entry.id) !== key);
-  return withCompatibility({ ...registry, packages: [...packages, next] });
+  const packages = state.packages.map(normalizeRecord).filter((entry) => packageKey(entry.type, entry.id) !== key);
+  return { ...state, packages: [...packages, next] };
 }
 
-export function markRuntimePackageRemoved(registry, type, id, details = {}) {
-  const current = getRuntimePackage(registry, type, id, { includeRemoved: true });
+export function markRuntimePackageRemoved(state, type, id, details = {}) {
+  const current = getRuntimePackage(state, type, id, { includeRemoved: true });
   if (!current) throw new Error(`runtime package is not installed: ${type}:${id}`);
   const removed = recordRuntimeEvent(
     { ...current, state: 'removed', enabled: false, activated: false, restart_required: true, health: null, binding: null },
     'removed',
     details,
   );
-  return upsertRuntimePackage(registry, removed);
+  return upsertRuntimePackage(state, removed);
 }
 
 export function packagePath(type, id, root = packageRoot(type)) {
-  return join(resolve(root), safePackageId(id));
-}
-
-export function getRuntimePlugin(registry, id, options = {}) {
-  return getRuntimePackage(registry, 'plugin', id, options);
-}
-
-export function upsertRuntimePlugin(registry, item) {
-  return upsertRuntimePackage(registry, { ...item, type: 'plugin' });
-}
-
-export function markRuntimePluginRemoved(registry, id, details = {}) {
-  return markRuntimePackageRemoved(registry, 'plugin', id, details);
-}
-
-export function pluginPath(id, root = pluginRoot()) {
-  return packagePath('plugin', id, root);
+  return join(resolve(root), ...normalizePackageId(id).split('/'));
 }
 
 export async function removePath(path) {
@@ -380,10 +303,5 @@ export async function removePath(path) {
 }
 
 export async function pathExists(path) {
-  try {
-    await access(path);
-    return true;
-  } catch {
-    return false;
-  }
+  try { await access(path); return true; } catch { return false; }
 }
