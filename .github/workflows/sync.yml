@@ -11,6 +11,7 @@ on:
       - "scripts/github-discovery.mjs"
       - "scripts/checksum.mjs"
       - "scripts/validate-registry-v4.mjs"
+      - "scripts/audit-catalog-identity.mjs"
       - "packages/protocol-core/**"
       - "packages/registry-core/**"
       - "packages/resolver/**"
@@ -84,7 +85,7 @@ jobs:
           npm run contract:check
           npm run architecture:check
           npm run validate
-          npm run audit:identity
+          node scripts/audit-catalog-identity.mjs --strict --report catalog/audit-report.json
           npm run registry:verify
           npm run typecheck
           node -e "const r=require('./catalog/registry-v4.json');const c=require('./catalog/registry-candidates-v1.json');if(r.schema_version!==4||c.version!==1||c.authority!==false||c.registry_revision!==r.revision)process.exit(1)"
@@ -148,6 +149,7 @@ jobs:
           if [ -f catalog/registry-v4.json ]; then
             node -e "const r=require('./catalog/registry-v4.json'); const c=require('./catalog/registry-candidates-v1.json'); console.log('- registry revision: '+r.revision+'\n- installable packages: '+r.packages.length+'\n- candidates: '+c.candidates.length+'\n- quarantined: '+c.counts.quarantined+'\n- rejected: '+c.counts.rejected)" >> "$GITHUB_STEP_SUMMARY"
           fi
+          if [ -f catalog/audit-report.json ]; then node -e "const a=require('./catalog/audit-report.json'); console.log('- identity audit errors: '+a.error_count+'\n- identity audit warnings: '+a.warning_count)" >> "$GITHUB_STEP_SUMMARY"; fi
           echo "- generated commit pushed: ${{ steps.publish.outputs.pushed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- deploy-worthy data changed: ${{ steps.diff.outputs.data_changed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- release workflows dispatched: ${{ steps.dispatch.outputs.dispatched || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
