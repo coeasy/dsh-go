@@ -31,15 +31,18 @@ describe('Marketplace policy single source of truth', () => {
     expect(HOME_TOP_LIMIT).toBe(policy.discovery.home_top_limit);
   });
 
-  it('keeps generated installer assets aligned with detail-page eligibility', () => {
-    expect(policy.generated_install_scripts.min_stars).toBe(policy.detail.min_stars);
+  it('keeps detail eligibility independent from removed remote installer assets', () => {
+    expect(policy).not.toHaveProperty('generated_install_scripts');
 
     const generator = readFileSync(
       new URL('../scripts/copy-assets-core.mjs', import.meta.url),
       'utf8',
     );
-    expect(generator).toContain("site', 'src', 'config', 'marketplace-policy.json");
-    expect(generator).toContain('INSTALL_SCRIPT_THRESHOLD');
-    expect(generator).not.toContain('const DETAIL_THRESHOLD = 100');
+    expect(generator).toContain("resolve(ROOT, 'site/public/install')");
+    expect(generator).toContain('Registry V4');
+    expect(generator).toContain('Search Index V3');
+    expect(generator).toContain('Distribution V2');
+    expect(generator).not.toContain('INSTALL_SCRIPT_THRESHOLD');
+    expect(generator).not.toContain('generated_install_scripts');
   });
 });
