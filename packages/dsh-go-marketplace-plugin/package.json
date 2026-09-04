@@ -1,11 +1,11 @@
 {
   "name": "dsh-go-marketplace-plugin",
-  "version": "0.1.0",
-  "description": "DSH desktop Marketplace UI and authenticated local Package Manager IPC client",
+  "version": "0.1.2",
+  "description": "DSH desktop Marketplace UI and Runtime Supervisor client using Package Protocol V2",
   "type": "module",
   "private": false,
   "exports": "./index.mjs",
   "files": ["dsh-package.json", "index.mjs", "ui/", "README.md"],
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "license": "MIT"
 }
