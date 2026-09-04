@@ -27,7 +27,8 @@ export function validateCliVersion(value) {
   const version = match.slice(1, 4).map(Number);
   for (let index = 0; index < 3; index += 1) {
     if (version[index] > MIN_CLI_VERSION[index]) return value;
-    if (version[index] < MIN_CLI_VERSION[index]) throw new Error('EdgeOne CLI >= 1.6.0 is required');
+    if (version[index] < MIN_CLI_VERSION[index])
+      throw new Error('EdgeOne CLI >= 1.6.0 is required');
   }
   return value;
 }
@@ -56,7 +57,11 @@ export function cliTransferDiagnostics(value, token = '') {
     .map((line) => line.trim())
     .filter(Boolean);
   const relevant = lines
-    .filter((line) => /uploadToEdgeOneCOS|uploadFiles|upload successful|file uploaded|targetPath|CreatePagesDeployment|DistType|scanning directory|found \d+ files|deployment/i.test(line))
+    .filter((line) =>
+      /uploadToEdgeOneCOS|uploadFiles|upload successful|file uploaded|targetPath|CreatePagesDeployment|DistType|scanning directory|found \d+ files|deployment/i.test(
+        line,
+      ),
+    )
     .slice(-24);
   return relevant.map((line) => sanitizeLog(line, token)).join('\n');
 }
@@ -64,20 +69,40 @@ export function cliTransferDiagnostics(value, token = '') {
 export function classifyFailure(text, status = 1, timedOut = false) {
   const value = String(text ?? '');
   if (timedOut || status === 124 || status === 137) return 'transport';
-  if (/has finished versions|uploads? are only allowed for the latest version|only latest version can upload/i.test(value)) {
+  if (
+    /has finished versions|uploads? are only allowed for the latest version|only latest version can upload/i.test(
+      value,
+    )
+  ) {
     return 'version_state';
   }
-  if (/(^|[^0-9])(401|403)([^0-9]|$)|unauthori[sz]ed|forbidden|invalid[ _-]*token|token.*(expired|invalid)|authentication failed|permission denied|not logged in|login required/i.test(value)) {
+  if (
+    /(^|[^0-9])(401|403)([^0-9]|$)|unauthori[sz]ed|forbidden|invalid[ _-]*token|token.*(expired|invalid)|authentication failed|permission denied|not logged in|login required/i.test(
+      value,
+    )
+  ) {
     return 'authentication';
   }
-  if (/(^|[^0-9])429([^0-9]|$)|rate[ _-]*limit|quota|exceed(?:ed|s)? .*limit|project exceeds [0-9]+ limit/i.test(value)) {
+  if (
+    /(^|[^0-9])429([^0-9]|$)|rate[ _-]*limit|quota|exceed(?:ed|s)? .*limit|project exceeds [0-9]+ limit/i.test(
+      value,
+    )
+  ) {
     return 'quota';
   }
-  if (/(^|[^0-9])409([^0-9]|$)|(?:project|name).*(?:conflict|duplicate)|duplicate project|cannot create .*project|project .*already exists(?![. ]+using existing project)/i.test(value)) {
+  if (
+    /(^|[^0-9])409([^0-9]|$)|(?:project|name).*(?:conflict|duplicate)|duplicate project|cannot create .*project|project .*already exists(?![. ]+using existing project)/i.test(
+      value,
+    )
+  ) {
     return 'project_conflict';
   }
   if (status === 0) return 'protocol';
-  if (/fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up|network|TLS|certificate|connection reset|connection refused/i.test(value)) {
+  if (
+    /fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up|network|TLS|certificate|connection reset|connection refused/i.test(
+      value,
+    )
+  ) {
     return 'transport';
   }
   return 'api';
@@ -137,16 +162,16 @@ export function parseLastJson(text) {
 
 export function validateDeployResult(result) {
   if (
-    !result
-    || result.status !== 'success'
-    || typeof result.url !== 'string'
-    || result.url.length === 0
-    || result.projectId === undefined
-    || result.projectId === null
-    || String(result.projectId).length === 0
-    || result.deploymentId === undefined
-    || result.deploymentId === null
-    || String(result.deploymentId).length === 0
+    !result ||
+    result.status !== 'success' ||
+    typeof result.url !== 'string' ||
+    result.url.length === 0 ||
+    result.projectId === undefined ||
+    result.projectId === null ||
+    String(result.projectId).length === 0 ||
+    result.deploymentId === undefined ||
+    result.deploymentId === null ||
+    String(result.deploymentId).length === 0
   ) {
     throw new Error('EdgeOne CLI returned an invalid success payload');
   }
@@ -154,19 +179,16 @@ export function validateDeployResult(result) {
 }
 
 export function buildDeployArgs({ project, token, cliVersion, directory = './' }) {
-  const args = [
-    '--yes',
-    `edgeone@${cliVersion}`,
-    'makers',
-    'deploy',
-  ];
+  const args = ['--yes', `edgeone@${cliVersion}`, 'makers', 'deploy'];
   if (directory) args.push(directory);
   args.push('-n', project, '-t', token, '-e', 'production', '--json');
   return args;
 }
 
 export function resolveUploadSpec(env = process.env) {
-  const mode = String(env.EDGEONE_UPLOAD_MODE || 'directory').trim().toLowerCase();
+  const mode = String(env.EDGEONE_UPLOAD_MODE || 'directory')
+    .trim()
+    .toLowerCase();
   if (mode === 'auto') {
     const cwd = String(env.EDGEONE_UPLOAD_CWD || './site').trim();
     if (!cwd) throw new Error('EDGEONE_UPLOAD_CWD must be a non-empty path');
@@ -177,9 +199,7 @@ export function resolveUploadSpec(env = process.env) {
   const directory = String(env.EDGEONE_UPLOAD_PATH || './').trim();
   if (!directory) throw new Error('EDGEONE_UPLOAD_PATH must be a non-empty path');
 
-  const cwd = String(
-    env.EDGEONE_UPLOAD_CWD || (directory === './' ? './site/dist' : '.'),
-  ).trim();
+  const cwd = String(env.EDGEONE_UPLOAD_CWD || (directory === './' ? './site/dist' : '.')).trim();
   if (!cwd) throw new Error('EDGEONE_UPLOAD_CWD must be a non-empty path');
 
   return { directory, cwd };
@@ -218,10 +238,18 @@ export function runProcess(command, args, { timeoutMs, env = process.env, cwd } 
     const timeout = timeoutMs
       ? setTimeout(() => {
           timedOut = true;
-          try { child.kill('SIGTERM'); } catch { /* process exited between checks */ }
+          try {
+            child.kill('SIGTERM');
+          } catch {
+            /* process exited between checks */
+          }
           killTimer = setTimeout(() => {
             if (settled) return;
-            try { child.kill('SIGKILL'); } catch { /* process exited between checks */ }
+            try {
+              child.kill('SIGKILL');
+            } catch {
+              /* process exited between checks */
+            }
             cleanupTimer = setTimeout(() => {
               if (settled) return;
               settled = true;
@@ -242,7 +270,13 @@ export function runProcess(command, args, { timeoutMs, env = process.env, cwd } 
       if (timeout) clearTimeout(timeout);
       if (killTimer) clearTimeout(killTimer);
       if (cleanupTimer) clearTimeout(cleanupTimer);
-      resolve({ code: timedOut ? 124 : (code ?? 1), stdout, stderr, timedOut, process_cleanup_failed: false });
+      resolve({
+        code: timedOut ? 124 : (code ?? 1),
+        stdout,
+        stderr,
+        timedOut,
+        process_cleanup_failed: false,
+      });
     };
 
     child.on('error', (error) => {
@@ -276,7 +310,11 @@ export function writeDiagnostic(env, payload, token = '') {
 }
 
 function annotationValue(value) {
-  return String(value).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A').slice(0, 900);
+  return String(value)
+    .replaceAll('%', '%25')
+    .replaceAll('\r', '%0D')
+    .replaceAll('\n', '%0A')
+    .slice(0, 900);
 }
 
 function tailLines(value, count = 20) {
@@ -293,7 +331,9 @@ function hasSignedAccessQuery(value) {
 }
 
 function apiEndpoints(env) {
-  const region = String(env.EDGEONE_PAGES_API_REGION || '').trim().toLowerCase();
+  const region = String(env.EDGEONE_PAGES_API_REGION || '')
+    .trim()
+    .toLowerCase();
   if (region === 'china') return [EDGEONE_API_ENDPOINTS.china];
   if (region === 'global') return [EDGEONE_API_ENDPOINTS.global];
   // EdgeOne's Makers preset domains (including *.edgeone.cool) are served by
@@ -305,7 +345,12 @@ function apiEndpoints(env) {
 /**
  * @param {{ deployment?: { type?: string, isTld?: number, url?: string }, token?: string, env?: Record<string, string | undefined>, fetchImpl?: typeof fetch }} options
  */
-export async function resolveDeploymentUrl({ deployment, token, env = process.env, fetchImpl = fetch } = {}) {
+export async function resolveDeploymentUrl({
+  deployment,
+  token,
+  env = process.env,
+  fetchImpl = fetch,
+} = {}) {
   const rawUrl = String(deployment?.url || '');
   // The CLI marks TLD preset domains as public and deliberately omits the
   // enciphered query. Preserve that contract; signing them can turn a valid
@@ -344,27 +389,61 @@ export async function resolveDeploymentUrl({ deployment, token, env = process.en
       lastError = error instanceof Error ? error.message : String(error);
     }
   }
-  throw new Error(`EdgeOne preset deployment URL is unsigned and could not be signed: ${lastError}`);
+  throw new Error(
+    `EdgeOne preset deployment URL is unsigned and could not be signed: ${lastError}`,
+  );
 }
 
 function exactCommitSha(value) {
-  const sha = String(value || '').trim().toLowerCase();
+  const sha = String(value || '')
+    .trim()
+    .toLowerCase();
   return /^[0-9a-f]{40}$/.test(sha) ? sha : '';
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function deployEdgeOne({ env = process.env, execute = runProcess, wait = sleep, verifyDeployment = checkProductionSha, fetchImpl = fetch } = {}) {
+export async function deployEdgeOne({
+  env = process.env,
+  execute = runProcess,
+  wait = sleep,
+  verifyDeployment = checkProductionSha,
+  fetchImpl = fetch,
+} = {}) {
   const token = env.EDGEONE_API_TOKEN || '';
   if (!token) throw new Error('EDGEONE_API_TOKEN is required');
 
   const project = resolveProject(env);
   const healthUrl = String(env.EDGEONE_SITE_URL || '').trim();
   const cliVersion = validateCliVersion(env.EDGEONE_CLI_VERSION || DEFAULT_CLI_VERSION);
-  const retries = parseBoundedInt(env.EDGEONE_DEPLOY_RETRIES, 'EDGEONE_DEPLOY_RETRIES', DEFAULT_RETRIES, 1, 5);
-  const timeoutSeconds = parseBoundedInt(env.EDGEONE_ATTEMPT_TIMEOUT_SECONDS, 'EDGEONE_ATTEMPT_TIMEOUT_SECONDS', DEFAULT_TIMEOUT_SECONDS, 30, 300);
-  const verifyAttempts = parseBoundedInt(env.EDGEONE_DEPLOY_VERIFY_ATTEMPTS, 'EDGEONE_DEPLOY_VERIFY_ATTEMPTS', DEFAULT_VERIFY_ATTEMPTS, 1, 12);
-  const verifyDelayMs = parseBoundedInt(env.EDGEONE_DEPLOY_VERIFY_DELAY_MS, 'EDGEONE_DEPLOY_VERIFY_DELAY_MS', DEFAULT_VERIFY_DELAY_MS, 0, 30_000);
+  const retries = parseBoundedInt(
+    env.EDGEONE_DEPLOY_RETRIES,
+    'EDGEONE_DEPLOY_RETRIES',
+    DEFAULT_RETRIES,
+    1,
+    5,
+  );
+  const timeoutSeconds = parseBoundedInt(
+    env.EDGEONE_ATTEMPT_TIMEOUT_SECONDS,
+    'EDGEONE_ATTEMPT_TIMEOUT_SECONDS',
+    DEFAULT_TIMEOUT_SECONDS,
+    30,
+    300,
+  );
+  const verifyAttempts = parseBoundedInt(
+    env.EDGEONE_DEPLOY_VERIFY_ATTEMPTS,
+    'EDGEONE_DEPLOY_VERIFY_ATTEMPTS',
+    DEFAULT_VERIFY_ATTEMPTS,
+    1,
+    12,
+  );
+  const verifyDelayMs = parseBoundedInt(
+    env.EDGEONE_DEPLOY_VERIFY_DELAY_MS,
+    'EDGEONE_DEPLOY_VERIFY_DELAY_MS',
+    DEFAULT_VERIFY_DELAY_MS,
+    0,
+    30_000,
+  );
   const expectedSha = exactCommitSha(env.DEPLOYMENT_SHA);
   const uploadSpec = resolveUploadSpec(env);
 
@@ -379,7 +458,9 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
 
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     attemptsMade = attempt;
-    console.log(`EdgeOne deployment attempt ${attempt}/${retries} using direct named-project token auth`);
+    console.log(
+      `EdgeOne deployment attempt ${attempt}/${retries} using direct named-project token auth`,
+    );
     const args = buildDeployArgs({
       project,
       token,
@@ -437,7 +518,9 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
         writeOutput('health_url', verificationUrl);
 
         if (expectedSha) {
-          console.log(`EdgeOne CLI accepted deployment=${deploymentId}; verifying deployment URL before declaring success`);
+          console.log(
+            `EdgeOne CLI accepted deployment=${deploymentId}; verifying deployment URL before declaring success`,
+          );
           try {
             await verifyDeployment({
               baseUrl: deployUrl,
@@ -473,7 +556,10 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
         return { deployment: resolvedDeployment, healthUrl: verificationUrl };
       } catch (error) {
         if (failureClass !== 'deployment_unavailable') {
-          lastError = sanitizeLog(`${error instanceof Error ? error.message : String(error)}\n${tailLines(combined)}`, token);
+          lastError = sanitizeLog(
+            `${error instanceof Error ? error.message : String(error)}\n${tailLines(combined)}`,
+            token,
+          );
           failureClass = 'protocol';
         }
       }
@@ -481,20 +567,33 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
       lastError = `EdgeOne CLI attempt exceeded ${timeoutSeconds}s timeout`;
       failureClass = 'transport';
     } else if (result.code === 0) {
-      lastError = sanitizeLog(`EdgeOne CLI exited successfully but returned no valid JSON result\n${tailLines(combined)}`, token);
+      lastError = sanitizeLog(
+        `EdgeOne CLI exited successfully but returned no valid JSON result\n${tailLines(combined)}`,
+        token,
+      );
       failureClass = 'protocol';
     } else {
-      lastError = sanitizeLog(tailLines(combined) || `EdgeOne CLI exited with status ${result.code} and no output`, token);
+      lastError = sanitizeLog(
+        tailLines(combined) || `EdgeOne CLI exited with status ${result.code} and no output`,
+        token,
+      );
       failureClass = classifyFailure(lastError, result.code, result.timedOut);
     }
 
     console.log(`Sanitized EdgeOne error output (class=${failureClass}):`);
     console.log(lastError);
-    console.log(`::warning title=EdgeOne attempt ${attempt} [${failureClass}]::${annotationValue(lastError)}`);
+    console.log(
+      `::warning title=EdgeOne attempt ${attempt} [${failureClass}]::${annotationValue(lastError)}`,
+    );
 
-    if (attempt < retries && (failureClass === 'transport' || failureClass === 'deployment_unavailable')) {
+    if (
+      attempt < retries &&
+      (failureClass === 'transport' || failureClass === 'deployment_unavailable')
+    ) {
       const waitMs = attempt * 10_000;
-      console.log(`Retryable EdgeOne ${failureClass} failure; retrying full deployment in ${waitMs / 1_000}s`);
+      console.log(
+        `Retryable EdgeOne ${failureClass} failure; retrying full deployment in ${waitMs / 1_000}s`,
+      );
       await wait(waitMs);
       continue;
     }
@@ -515,19 +614,25 @@ export async function deployEdgeOne({ env = process.env, execute = runProcess, w
     `- failure class: ${failureClass}`,
     `- attempts: ${attemptsMade}/${retries}`,
   ]);
-  writeDiagnostic(env, {
-    status: 'failure',
-    project,
-    project_id: lastProjectId || undefined,
-    deployment_id: lastDeploymentId || undefined,
-    console_url: lastConsoleUrl || undefined,
-    cli_version: cliVersion,
-    failure_class: failureClass,
-    attempts: attemptsMade,
-    error: lastError,
-    transfer_diagnostics: lastTransferDiagnostics || undefined,
-  }, token);
-  console.error(`::error title=EdgeOne deployment failure [${failureClass}]::${annotationValue(lastError)}`);
+  writeDiagnostic(
+    env,
+    {
+      status: 'failure',
+      project,
+      project_id: lastProjectId || undefined,
+      deployment_id: lastDeploymentId || undefined,
+      console_url: lastConsoleUrl || undefined,
+      cli_version: cliVersion,
+      failure_class: failureClass,
+      attempts: attemptsMade,
+      error: lastError,
+      transfer_diagnostics: lastTransferDiagnostics || undefined,
+    },
+    token,
+  );
+  console.error(
+    `::error title=EdgeOne deployment failure [${failureClass}]::${annotationValue(lastError)}`,
+  );
   throw new Error(`EdgeOne deployment failed after retry policy [${failureClass}]: ${lastError}`);
 }
 
@@ -541,17 +646,37 @@ export async function checkCliContract({
   // The probe does not upload files.  Running npx from site/dist still lets
   // npm walk up into the repository root package graph, which has triggered
   // npm's Arborist `edgesOut` crash before the EdgeOne CLI starts.  Use an
-  // isolated workspace for the probe while keeping the real deployment cwd
-  // unchanged in deployEdgeOne().
+  // isolated workspace and cache for the probe while keeping the real
+  // deployment cwd unchanged in deployEdgeOne().  A shared npx cache can
+  // retain a partially-built Arborist tree after a failed install, so cwd
+  // isolation alone is not sufficient.
   const probeCwd = await createTempDir();
+  const probeCache = join(probeCwd, 'npm-cache');
   try {
-    const result = await execute('npx', ['--yes', `edgeone@${cliVersion}`, 'makers', 'deploy', '--help'], {
-      timeoutMs: 120_000,
-      env: edgeOneProcessEnv(env),
-      cwd: probeCwd,
-    });
+    const result = await execute(
+      'npx',
+      ['--yes', `edgeone@${cliVersion}`, 'makers', 'deploy', '--help'],
+      {
+        timeoutMs: 120_000,
+        env: {
+          ...edgeOneProcessEnv(env),
+          npm_config_cache: probeCache,
+          NPM_CONFIG_CACHE: probeCache,
+          npm_config_userconfig: join(probeCwd, '.npmrc'),
+          NPM_CONFIG_USERCONFIG: join(probeCwd, '.npmrc'),
+          npm_config_package_lock: 'false',
+          npm_config_workspaces: 'false',
+          npm_config_audit: 'false',
+          npm_config_fund: 'false',
+          npm_config_update_notifier: 'false',
+        },
+        cwd: probeCwd,
+      },
+    );
     if (result.code !== 0) {
-      throw new Error(`EdgeOne CLI deploy contract check failed: ${sanitizeLog(tailLines(`${result.stdout}\n${result.stderr}`), env.EDGEONE_API_TOKEN || '')}`);
+      throw new Error(
+        `EdgeOne CLI deploy contract check failed: ${sanitizeLog(tailLines(`${result.stdout}\n${result.stderr}`), env.EDGEONE_API_TOKEN || '')}`,
+      );
     }
     console.log(`EdgeOne CLI contract verified: edgeone@${cliVersion} makers deploy`);
   } finally {
