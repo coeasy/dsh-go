@@ -121,7 +121,17 @@ export async function snapshotDirectory(directory, options = {}) {
   await rm(temp, { recursive: true, force: true });
   await mkdir(dirname(temp), { recursive: true });
   try {
-    await cp(source, temp, { recursive: true, force: true, dereference: false, preserveTimestamps: false });
+    await cp(source, temp, {
+      recursive: true,
+      force: true,
+      dereference: false,
+      preserveTimestamps: false,
+      filter: async (sourcePath) => {
+        const absolute = resolve(sourcePath);
+        if (absolute === source) return true;
+        return !ignoreEntry(portablePath(source, absolute), options);
+      },
+    });
     const copied = await hashDirectory(temp, options);
     if (copied.digest !== hashed.digest) {
       throw new Error(`CAS snapshot digest changed during copy: expected ${hashed.digest}, got ${copied.digest}`);
