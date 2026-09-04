@@ -1,47 +1,22 @@
 ---
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import Layout from '../layouts/Layout.astro';
-import UnifiedMarketplace from '../components/UnifiedMarketplace.astro';
-import MarketplacePresentation from '../components/MarketplacePresentation.astro';
+import MarketplaceV2 from '../components/MarketplaceV2.astro';
 import { LANGUAGE_LABELS, SUPPORTED_LANGS } from '../i18n/config';
 import { u } from '../lib/urls';
-
-let lastSyncAt = '';
-try {
-  const meta = JSON.parse(readFileSync(resolve('..', 'catalog', 'meta.json'), 'utf8'));
-  lastSyncAt = String(meta.last_sync?.at || meta.pipeline?.run_at || '');
-} catch { /* sync metadata is optional during isolated site checks */ }
-
-const lastSyncTimestamp = Date.parse(lastSyncAt);
-const validLastSync = Number.isFinite(lastSyncTimestamp);
-const lastSyncDate = validLastSync ? new Date(lastSyncTimestamp) : new Date(0);
-const lastSyncTimeLabel = validLastSync
-  ? new Intl.DateTimeFormat('zh-CN', {
-      timeZone: 'Asia/Shanghai',
-      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-    }).format(lastSyncDate)
-  : '';
 ---
 
-<Layout title="DSH Plugin Marketplace" description="Registry V3 与原始 dsh-plugin Catalog 对齐的统一 Plugin、MCP、Skill、Agent Marketplace。">
-  <div class="v4-links" aria-label="Marketplace V4 entry points">
-    <a href={u('/trust')}><strong>Trust Center</strong><span>Publisher identity · provenance · advisory</span></a>
-    <a href={u('/publishers/')}><strong>Publishers</strong><span>Registry-backed publisher portfolios</span></a>
-    <div class="locale-links">
-      <strong>Localized Marketplace</strong>
-      <span>{SUPPORTED_LANGS.map((lang) => <a href={u(`/${lang}/`)} hreflang={lang}>{LANGUAGE_LABELS[lang]}</a>)}</span>
+<Layout title="DSH Marketplace · Registry V4" description="DSH Registry V4 Marketplace for Plugin, MCP, Skill and Agent packages.">
+  <div class="platform-links" aria-label="DSH Marketplace platform navigation">
+    <a href={u('/')}><strong>DSH Marketplace</strong><span>Registry V4</span></a>
+    <a href={u('/trust')}><strong>Trust Center</strong><span>Security & publisher identity</span></a>
+    <a href={u('/publishers/')}><strong>Publishers</strong><span>Verified package ownership</span></a>
+    <div class="languages">
+      {SUPPORTED_LANGS.map((lang) => <a href={u(`/${lang}/`)} hreflang={lang}>{LANGUAGE_LABELS[lang]}</a>)}
     </div>
   </div>
-  <UnifiedMarketplace />
-  {validLastSync && (
-    <p class="market-sync-status" data-market-sync-status>
-      最近成功同步：<time datetime={lastSyncAt}>{lastSyncTimeLabel}</time>（北京时间）
-    </p>
-  )}
-  <MarketplacePresentation />
+  <MarketplaceV2 />
 </Layout>
 
 <style>
-  .v4-links{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0 0 4px;padding:10px 14px;border:1px solid var(--border);border-radius:14px;background:var(--card);font-size:12px}.v4-links>a,.locale-links{display:flex;align-items:center;gap:10px}.v4-links strong{color:var(--fg)}.v4-links span{color:var(--muted)}.locale-links>span{display:flex;gap:7px;flex-wrap:wrap}.locale-links a{font-weight:700}.market-sync-status{margin:-1rem auto 2rem;text-align:center;font-size:.85rem;opacity:.72}@media(max-width:760px){.v4-links,.v4-links>a,.locale-links{align-items:flex-start;flex-direction:column}.locale-links>span{margin-top:3px}}
+  .platform-links{display:flex;align-items:center;gap:12px;margin:14px 0 0;padding:10px 14px;border:1px solid var(--border);border-radius:14px;background:var(--card);font-size:12px}.platform-links>a{display:flex;gap:7px;align-items:center;color:var(--fg);text-decoration:none}.platform-links span{color:var(--muted)}.languages{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}.languages a{padding:4px 7px;border-radius:999px;color:var(--muted);text-decoration:none;font-size:11px}@media(max-width:760px){.platform-links{align-items:flex-start;flex-direction:column}.languages{margin-left:0}}
 </style>
