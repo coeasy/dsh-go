@@ -28,7 +28,11 @@ const TARGET_DIR = resolve(ROOT, 'site/public/catalog');
 const SCRIPTS_SRC = resolve(ROOT, 'site/src/scripts');
 const SCRIPTS_DST = resolve(ROOT, 'site/public/scripts');
 const INSTALL_DIR = resolve(ROOT, 'site/public/install');
-const DETAIL_THRESHOLD = 100;
+const MARKETPLACE_POLICY = JSON.parse(await readFile(resolve(ROOT, 'config', 'marketplace-policy.json'), 'utf8'));
+const INSTALL_SCRIPT_THRESHOLD = Number(MARKETPLACE_POLICY.generated_install_scripts?.min_stars);
+if (!Number.isFinite(INSTALL_SCRIPT_THRESHOLD) || INSTALL_SCRIPT_THRESHOLD < 0) {
+  throw new Error('config/marketplace-policy.json has an invalid generated_install_scripts.min_stars');
+}
 async function exists(path) { try { await access(path); return true; } catch { return false; } }
 
 function shTemplate(installCmd) {
@@ -62,7 +66,7 @@ async function genInstallScripts() {
   const data = JSON.parse(await readFile(src, 'utf8'));
   await mkdir(INSTALL_DIR, { recursive: true });
   const wanted = new Set((data.plugins || [])
-    .filter((plugin) => !plugin.deprecated && !plugin.disabled && (plugin.stars || 0) >= DETAIL_THRESHOLD)
+    .filter((plugin) => !plugin.deprecated && !plugin.disabled && (plugin.stars || 0) >= INSTALL_SCRIPT_THRESHOLD)
     .map((plugin) => safeSlug(plugin.slug))
     .filter(Boolean)
     .flatMap((slug) => [`${slug}.sh`, `${slug}.ps1`]));
@@ -74,7 +78,7 @@ async function genInstallScripts() {
 
   let generated = 0;
   for (const plugin of data.plugins || []) {
-    if (plugin.deprecated || plugin.disabled || (plugin.stars || 0) < DETAIL_THRESHOLD) continue;
+    if (plugin.deprecated || plugin.disabled || (plugin.stars || 0) < INSTALL_SCRIPT_THRESHOLD) continue;
     const full = safeRepository(plugin.full_name);
     const slug = safeSlug(plugin.slug);
     if (!full || !slug) continue;
@@ -88,7 +92,7 @@ async function genInstallScripts() {
     await writeFile(resolve(INSTALL_DIR, `${slug}.ps1`), psTemplate(powershellInstallCmd), 'utf8');
     generated++;
   }
-  console.log(`Generated ${generated * 2} install scripts`);
+  console.log(`Generated ${generated * 2} install scripts (min stars=${INSTALL_SCRIPT_THRESHOLD})`);
 }
 
 async function genSearchIndex() {
