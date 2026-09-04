@@ -3,30 +3,35 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { spawn } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
-import { buildInstallDeepLink, deepLinkInstallPlan } from './client-bridge.mjs';
-import { assertPackageType } from './package-model.mjs';
-import { getRuntimePackage, readRuntimeRegistry } from './registry.mjs';
-import { withPackageActivationState } from './package-status.mjs';
+import {
+  normalizePackageType,
+  packageKey,
+  parsePackageCoordinate,
+} from '../packages/protocol-core/index.mjs';
+import { parseDshUri } from './host-bridge.mjs';
+import {
+  installPackageRequest,
+  listPackages,
+  packageInfo,
+  planPackage,
+  removePackageRequest,
+  rollbackPackageRequest,
+  runtimeStatus,
+  setPackageEnabled,
+  updatePackageRequest,
+  verifyPackageRequest,
+} from './package-service.mjs';
+import { activatePendingPackages } from './startup.mjs';
 import { readPackageConfig, redactConfig, setPackageConfig, unsetPackageConfig } from './config-store.mjs';
 import { deleteSecret, listSecrets, setSecret } from './secret-store.mjs';
-import { buildDesktopCenter, desktopIpcContract } from './desktop-center.mjs';
-import { inspectEnterprisePolicy } from './enterprise-policy.mjs';
-import { addRegistry, readRegistries, removeRegistry } from './registry-manager.mjs';
+import { loadRuntimeRegistryV4 } from './registry-client.mjs';
 import { withFileLock } from './file-lock.mjs';
 
-const CLI = fileURLToPath(new URL('../bin/dsh.mjs', import.meta.url));
 const MAX_BODY_BYTES = 64 * 1024;
-const DEFAULT_CLI_TIMEOUT_MS = 120_000;
-const CLI_KILL_GRACE_MS = 1_000;
-const DEFAULT_ALLOWED_ORIGINS = new Set([
-  'https://coeasy.github.io',
-  'https://dsh-go.pages.dev',
-]);
+const DEFAULT_ALLOWED_ORIGINS = new Set(['https://coeasy.github.io', 'https://dsh-go.pages.dev']);
 
 export function bridgeTokenFile() {
-  return process.env.DSH_BRIDGE_TOKEN_FILE || join(homedir(), '.dsh', 'bridge-token');
+  return process.env.DSH_BRIDGE_TOKEN_FILE || join(homedir(), '.dsh', 'bridge-token-v2');
 }
 
 export async function ensureBridgeToken(file = bridgeTokenFile()) {
@@ -34,7 +39,7 @@ export async function ensureBridgeToken(file = bridgeTokenFile()) {
   return withFileLock(`${target}.lock`, async () => {
     try {
       const value = (await readFile(target, 'utf8')).trim();
-      if (value.length >= 32) return value;
+      if (value.length >= 64) return value;
     } catch { /* create below */ }
     await mkdir(dirname(target), { recursive: true });
     const value = randomBytes(32).toString('hex');
@@ -59,8 +64,7 @@ function authenticated(req, token) {
 
 function allowedOrigin(origin) {
   if (!origin) return null;
-  const configured = String(process.env.DSH_BRIDGE_ALLOWED_ORIGINS || '')
-    .split(',').map((value) => value.trim()).filter(Boolean);
+  const configured = String(process.env.DSH_BRIDGE_ALLOWED_ORIGINS || '').split(',').map((value) => value.trim()).filter(Boolean);
   const allowed = configured.length ? new Set(configured) : DEFAULT_ALLOWED_ORIGINS;
   if (allowed.has(origin)) return origin;
   if (/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin)) return origin;
@@ -81,7 +85,11 @@ async function body(req) {
   }
   const text = Buffer.concat(chunks).toString('utf8');
   if (!text) return {};
-  return JSON.parse(text);
+  try { return JSON.parse(text); } catch {
+    const error = new Error('request body must be valid JSON');
+    error.code = 'DSH_INVALID_REQUEST';
+    throw error;
+  }
 }
 
 function responseHeaders(req, extra = {}) {
@@ -89,312 +97,200 @@ function responseHeaders(req, extra = {}) {
   return {
     'content-type': 'application/json; charset=utf-8',
     'cache-control': 'no-store',
-    'x-dsh-api-version': 'v1',
+    'x-dsh-api-version': 'v2',
     'x-content-type-options': 'nosniff',
-    ...(origin ? {
-      'access-control-allow-origin': origin,
-      vary: 'Origin',
-    } : {}),
+    ...(origin ? { 'access-control-allow-origin': origin, vary: 'Origin' } : {}),
     ...extra,
   };
 }
 
 function json(req, res, status, payload) {
-  const text = `${JSON.stringify(payload, null, 2)}\n`;
+  const text = `${JSON.stringify(payload)}\n`;
   res.writeHead(status, { ...responseHeaders(req), 'content-length': Buffer.byteLength(text) });
   res.end(text);
 }
 
-function parseCliJson(stdout) {
-  const text = String(stdout || '').trim();
-  if (!text) return null;
-  try { return JSON.parse(text); } catch { return text; }
-}
-
-export function executeCli(argv, options = {}) {
-  const configuredTimeout = Number(options.timeoutMs ?? process.env.DSH_CLIENT_CLI_TIMEOUT_MS);
-  const timeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout > 0
-    ? configuredTimeout
-    : DEFAULT_CLI_TIMEOUT_MS;
-  return new Promise((accept, reject) => {
-    const child = spawn(process.execPath, [CLI, ...argv], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
-    let stdout = '';
-    let stderr = '';
-    let timedOut = false;
-    let settled = false;
-    let killTimer;
-    let cleanupTimer;
-    const timeoutError = new Error(`dsh command timed out after ${timeoutMs}ms: ${argv.join(' ')}`);
-    timeoutError.code = 'DSH_CLIENT_CLI_TIMEOUT';
-    timeoutError.timeout_ms = timeoutMs;
-    timeoutError.argv = argv;
-    const finish = (callback) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      if (killTimer) clearTimeout(killTimer);
-      if (cleanupTimer) clearTimeout(cleanupTimer);
-      callback();
-    };
-    const timer = setTimeout(() => {
-      timedOut = true;
-      try { child.kill('SIGTERM'); } catch { /* process exited between checks */ }
-      killTimer = setTimeout(() => {
-        if (settled) return;
-        try { child.kill('SIGKILL'); } catch { /* process exited between checks */ }
-        cleanupTimer = setTimeout(() => {
-          if (settled) return;
-          timeoutError.process_cleanup_error = `dsh child process did not emit close after SIGKILL: ${child.pid}`;
-          timeoutError.recovery_required = true;
-          finish(() => reject(timeoutError));
-        }, CLI_KILL_GRACE_MS);
-        cleanupTimer.unref?.();
-      }, CLI_KILL_GRACE_MS);
-      killTimer.unref?.();
-    }, timeoutMs);
-    timer.unref?.();
-    child.stdout.on('data', (chunk) => { stdout += chunk; });
-    child.stderr.on('data', (chunk) => { stderr += chunk; });
-    child.once('error', (cause) => finish(() => {
-      if (timedOut) return reject(timeoutError);
-      reject(cause);
-    }));
-    // `close` fires after stdout/stderr have drained; using `exit` can return
-    // a truncated JSON result to the HTTP caller.
-    child.once('close', (code, signal) => finish(() => {
-      if (timedOut) return reject(timeoutError);
-      if (code === 0) {
-        accept({ success: true, result: parseCliJson(stdout), stdout, stderr });
-        return;
-      }
-      const error = new Error(stderr || stdout || `dsh exited ${code ?? signal ?? 'unknown'}`);
-      error.code = 'DSH_CLIENT_CLI_FAILED';
-      error.exit_code = code;
-      error.signal = signal;
-      reject(error);
-    }));
-  });
-}
-
-function executeDeepLink(url, options = {}) {
-  const argv = ['host', 'handle', url, '--yes'];
-  if (options.runtimeRegistry && !argv.includes('--runtime-registry')) argv.push('--runtime-registry', options.runtimeRegistry);
-  return executeCli(argv, options);
-}
-
-function packageRoute(pathname) {
-  const match = pathname.match(/^\/v1\/packages\/(plugin|mcp|skill|agent)\/([^/]+)(?:\/([^/]+))?$/i);
-  if (!match) return null;
-  return { type: assertPackageType(match[1].toLowerCase()), id: decodeURIComponent(match[2]), action: match[3]?.toLowerCase() || null };
-}
-
-function secretRoute(pathname) {
-  const match = pathname.match(/^\/v1\/secrets(?:\/([^/]+))?$/);
-  if (!match) return null;
-  return { name: match[1] ? decodeURIComponent(match[1]) : null };
-}
-
-function registryRoute(pathname) {
-  const match = pathname.match(/^\/v1\/registries(?:\/([^/]+))?$/);
-  if (!match) return null;
-  return { name: match[1] ? decodeURIComponent(match[1]) : null };
-}
-
 function requireApproval(request) {
-  if (request.approved !== true) {
-    const error = new Error('explicit approval required');
+  if (request?.approved !== true) {
+    const error = new Error('explicit local approval required');
     error.code = 'DSH_APPROVAL_REQUIRED';
     throw error;
   }
+}
+
+function localOptions(options, request = {}) {
+  return {
+    registry: request.registry || options.registry,
+    registryFile: options.runtimeRegistry || options.registryFile,
+    channel: request.channel || 'stable',
+    approved: request.approved === true,
+    dryRun: request.dry_run === true,
+    force: request.force === true,
+    environment: request.environment || options.environment || {},
+  };
+}
+
+function coordinateFromRoute(type, encodedId, request = {}) {
+  const normalizedType = normalizePackageType(type);
+  const id = decodeURIComponent(encodedId);
+  const range = String(request.range || request.version || '*').trim() || '*';
+  return `${normalizedType}:${id}@${range}`;
+}
+
+function packageRoute(pathname) {
+  const match = pathname.match(/^\/v2\/packages\/(plugin|mcp|skill|agent)\/([^/]+)(?:\/(config|verify))?$/i);
+  if (!match) return null;
+  return { type: normalizePackageType(match[1]), id: match[2], action: match[3] || null };
+}
+
+function secretRoute(pathname) {
+  const match = pathname.match(/^\/v2\/secrets(?:\/([^/]+))?$/);
+  return match ? { name: match[1] ? decodeURIComponent(match[1]) : null } : null;
+}
+
+function errorStatus(error) {
+  if (error.code === 'DSH_APPROVAL_REQUIRED' || error.code === 'DSH_PERMISSION_DENIED') return 409;
+  if (error.code === 'DSH_REQUEST_TOO_LARGE') return 413;
+  if (error.code === 'DSH_PACKAGE_NOT_FOUND') return 404;
+  if (error.code === 'DSH_PACKAGE_REVOKED' || error.code === 'DSH_PACKAGE_YANKED' || error.code === 'DSH_SECURITY_ADVISORY_BLOCKED' || error.code === 'DSH_DEPENDENCY_CONFLICT') return 409;
+  return 400;
+}
+
+export function localHostContract() {
+  return {
+    api: '/v2',
+    protocol_version: 2,
+    runtime_state_schema: 4,
+    registry_schema: 4,
+    authentication: 'Bearer token',
+    remote_registry_override_in_deep_link: false,
+    auto_restart: false,
+    endpoints: {
+      runtime_status: 'GET /v2/runtime/status',
+      runtime_activate: 'POST /v2/runtime/activate',
+      packages: 'GET /v2/packages',
+      package: 'GET /v2/packages/:type/:encodedId',
+      package_config: 'GET|PATCH /v2/packages/:type/:encodedId/config',
+      install_plan: 'POST /v2/install/plan',
+      install_execute: 'POST /v2/install/execute',
+      package_action: 'POST /v2/packages/action',
+      registry_status: 'GET /v2/registry/status',
+      secrets: 'GET|PUT|DELETE /v2/secrets/:name',
+    },
+  };
 }
 
 export async function createClientHost(options = {}) {
   const token = options.token || await ensureBridgeToken(options.tokenFile);
   const host = options.host || '127.0.0.1';
   const port = Number(options.port ?? process.env.DSH_BRIDGE_PORT ?? 43731);
-  const runtimeRegistryFile = options.runtimeRegistry || options.registryFile;
-  const cliArgs = (argv) => runtimeRegistryFile && !argv.includes('--runtime-registry')
-    ? [...argv, '--runtime-registry', runtimeRegistryFile]
-    : argv;
-  const runCli = (argv) => executeCli(cliArgs(argv), { timeoutMs: options.cliTimeoutMs });
-  const runDeepLink = (url) => executeDeepLink(url, { timeoutMs: options.cliTimeoutMs, runtimeRegistry: runtimeRegistryFile });
   const server = createServer(async (req, res) => {
     try {
       const requestUrl = new URL(req.url || '/', `http://${host}:${port || 80}`);
       if (req.method === 'OPTIONS') {
         const origin = allowedOrigin(String(req.headers.origin || ''));
-        if (!origin) return json(req, res, 403, { error: 'origin not allowed' });
+        if (!origin) return json(req, res, 403, { error: { code: 'DSH_ORIGIN_DENIED', message: 'origin not allowed' } });
         res.writeHead(204, responseHeaders(req, {
-          'access-control-allow-origin': origin,
           'access-control-allow-methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
           'access-control-allow-headers': 'Authorization, Content-Type',
           'access-control-max-age': '600',
         }));
         return res.end();
       }
+
       if (requestUrl.pathname === '/health' && req.method === 'GET') {
-        return json(req, res, 200, { ok: true, service: 'dsh-client-host', protocol: 1, version: '0.1.0', api: '/v1', desktop: '/v1/desktop/contract' });
+        return json(req, res, 200, { data: { ok: true, service: 'dsh-client-host', api: '/v2', protocol_version: 2, runtime_state_schema: 4 }, meta: {} });
       }
-      if (!authenticated(req, token)) return json(req, res, 401, { error: 'unauthorized' });
+      if (!authenticated(req, token)) return json(req, res, 401, { error: { code: 'DSH_UNAUTHORIZED', message: 'unauthorized' }, meta: {} });
 
-      if (requestUrl.pathname === '/v1/desktop/contract' && req.method === 'GET') {
-        return json(req, res, 200, desktopIpcContract());
+      if (requestUrl.pathname === '/v2/contract' && req.method === 'GET') return json(req, res, 200, { data: localHostContract(), meta: {} });
+      if (requestUrl.pathname === '/v2/runtime/status' && req.method === 'GET') {
+        return json(req, res, 200, { data: await runtimeStatus(localOptions(options)), meta: {} });
       }
-      if (requestUrl.pathname === '/v1/desktop/center' && req.method === 'GET') {
-        return json(req, res, 200, await buildDesktopCenter({
-          runtimeRegistry: runtimeRegistryFile,
-          catalog: options.catalog,
-          enterprisePolicyFile: options.enterprisePolicyFile,
-          registriesFile: options.registriesFile,
-        }));
+      if (requestUrl.pathname === '/v2/runtime/activate' && req.method === 'POST') {
+        const request = await body(req); requireApproval(request);
+        return json(req, res, 200, { data: await activatePendingPackages({ registryFile: options.runtimeRegistry || options.registryFile }), meta: {} });
       }
-      if (requestUrl.pathname === '/v1/enterprise/policy' && req.method === 'GET') {
-        return json(req, res, 200, await inspectEnterprisePolicy());
+      if (requestUrl.pathname === '/v2/registry/status' && req.method === 'GET') {
+        const registry = await loadRuntimeRegistryV4({ registry: options.registry });
+        return json(req, res, 200, { data: { schema_version: 4, revision: registry.revision, generated_at: registry.generated_at, package_count: registry.packages.length }, meta: { registry_revision: registry.revision } });
       }
-      if (requestUrl.pathname === '/v1/install/plan' && req.method === 'POST') {
+      if (requestUrl.pathname === '/v2/install/plan' && req.method === 'POST') {
         const request = await body(req);
-        const url = request.url || buildInstallDeepLink(request);
-        return json(req, res, 200, deepLinkInstallPlan(url));
+        const target = request.url ? parseDshUri(request.url).request : parsePackageCoordinate(request.spec, { channel: request.channel || 'stable' });
+        const plan = await planPackage(target, localOptions(options, request));
+        return json(req, res, 200, { data: plan, meta: { registry_revision: plan.registry_revision } });
       }
-      if (requestUrl.pathname === '/v1/install/execute' && req.method === 'POST') {
-        const request = await body(req);
-        requireApproval(request);
-        const url = request.url || buildInstallDeepLink(request);
-        const result = await runDeepLink(url);
-        return json(req, res, 200, { ...result, activation_state: 'pending-restart', restart_required: true, auto_restart: false });
+      if (requestUrl.pathname === '/v2/install/execute' && req.method === 'POST') {
+        const request = await body(req); requireApproval(request);
+        const target = request.url ? parseDshUri(request.url).request : parsePackageCoordinate(request.spec, { channel: request.channel || 'stable' });
+        const result = await installPackageRequest(target, localOptions(options, request));
+        return json(req, res, 200, { data: { ...result, auto_restart: false }, meta: { registry_revision: result.plan?.registry_revision } });
       }
-      if (requestUrl.pathname === '/v1/packages' && req.method === 'GET') {
-        const registry = await readRuntimeRegistry(runtimeRegistryFile);
-        const includeRemoved = requestUrl.searchParams.get('all') === 'true';
-        const rawType = requestUrl.searchParams.get('type')?.trim().toLowerCase() || '';
-        let type;
-        if (rawType) {
-          try { type = assertPackageType(rawType); } catch { return json(req, res, 400, { error: 'unsupported package type', code: 'DSH_INVALID_PACKAGE_TYPE' }); }
-        }
-        const packages = registry.packages
-          .filter((record) => includeRemoved || record.state !== 'removed')
-          .filter((record) => !type || record.type === type)
-          .map(withPackageActivationState);
-        return json(req, res, 200, { packages, generation: registry.generation });
+      if (requestUrl.pathname === '/v2/packages' && req.method === 'GET') {
+        const type = requestUrl.searchParams.get('type');
+        const packages = (await listPackages({ ...localOptions(options), all: requestUrl.searchParams.get('all') === 'true' }))
+          .filter((item) => !type || item.type === normalizePackageType(type));
+        return json(req, res, 200, { data: { packages }, meta: {} });
       }
-
-      const registries = registryRoute(requestUrl.pathname);
-      if (registries && req.method === 'GET' && !registries.name) {
-        return json(req, res, 200, await readRegistries());
-      }
-      if (registries && req.method === 'POST' && !registries.name) {
-        const request = await body(req);
-        requireApproval(request);
-        if (!request.name || !request.url) return json(req, res, 400, { error: 'registry name and url are required' });
-        return json(req, res, 200, await addRegistry(request.name, request.url, {
-          priority: request.priority,
-          trusted: request.trusted === true,
-          organization: request.organization,
-          scope: request.scope,
-          authEnv: request.auth_env,
-        }));
-      }
-      if (registries?.name && req.method === 'DELETE') {
-        const request = await body(req);
-        requireApproval(request);
-        return json(req, res, 200, await removeRegistry(registries.name));
-      }
-
-      const secrets = secretRoute(requestUrl.pathname);
-      if (secrets && req.method === 'GET' && !secrets.name) {
-        return json(req, res, 200, { secrets: await listSecrets() });
-      }
-      if (secrets?.name && (req.method === 'PUT' || req.method === 'POST')) {
-        const request = await body(req);
-        requireApproval(request);
-        if (request.value === undefined || request.value === null || request.value === '') return json(req, res, 400, { error: 'secret value is required' });
-        const result = await setSecret(secrets.name, request.value);
-        return json(req, res, 200, { ...result, value: '<secret>' });
-      }
-      if (secrets?.name && req.method === 'DELETE') {
-        const request = await body(req);
-        requireApproval(request);
-        return json(req, res, 200, await deleteSecret(secrets.name));
-      }
-      if (secrets?.name && req.method === 'GET') {
-        return json(req, res, 405, { error: 'secret values are never returned by the local HTTP API; use the local CLI with an explicit --show if required' });
+      if (requestUrl.pathname === '/v2/packages/action' && req.method === 'POST') {
+        const request = await body(req); requireApproval(request);
+        const action = String(request.action || '');
+        if (!request.spec) throw new Error('package action requires spec');
+        const local = localOptions(options, request);
+        let result;
+        if (action === 'update') result = await updatePackageRequest(request.spec, local);
+        else if (action === 'remove') result = await removePackageRequest(request.spec, local);
+        else if (action === 'rollback') result = await rollbackPackageRequest(request.spec, local);
+        else if (action === 'enable') result = await setPackageEnabled(request.spec, true, local);
+        else if (action === 'disable') result = await setPackageEnabled(request.spec, false, local);
+        else if (action === 'verify') result = await verifyPackageRequest(request.spec, local);
+        else throw new Error(`unsupported package action: ${action}`);
+        return json(req, res, 200, { data: { ...result, auto_restart: false }, meta: {} });
       }
 
       const route = packageRoute(requestUrl.pathname);
-      if (route && req.method === 'GET' && !route.action) {
-        const registry = await readRuntimeRegistry(runtimeRegistryFile);
-        const record = getRuntimePackage(registry, route.type, route.id, { includeRemoved: requestUrl.searchParams.get('all') === 'true' });
-        if (!record) return json(req, res, 404, { error: 'package not found', type: route.type, id: route.id });
-        return json(req, res, 200, { package: withPackageActivationState(record) });
+      if (route && !route.action && req.method === 'GET') {
+        const coordinate = coordinateFromRoute(route.type, route.id);
+        return json(req, res, 200, { data: { package: await packageInfo(coordinate, localOptions(options)) }, meta: {} });
       }
-      if (route && req.method === 'GET' && route.action === 'config') {
-        return json(req, res, 200, { type: route.type, id: route.id, config: redactConfig(await readPackageConfig(route.type, route.id)) });
+      if (route?.action === 'verify' && req.method === 'POST') {
+        const request = await body(req); requireApproval(request);
+        return json(req, res, 200, { data: await verifyPackageRequest(coordinateFromRoute(route.type, route.id), localOptions(options, request)), meta: {} });
       }
-      if (route && req.method === 'PATCH' && route.action === 'config') {
-        const request = await body(req);
-        requireApproval(request);
-        if (!request.key) return json(req, res, 400, { error: 'config key is required' });
+      if (route?.action === 'config' && req.method === 'GET') {
+        const id = decodeURIComponent(route.id);
+        return json(req, res, 200, { data: { type: route.type, id, config: redactConfig(await readPackageConfig(route.type, id)) }, meta: {} });
+      }
+      if (route?.action === 'config' && req.method === 'PATCH') {
+        const request = await body(req); requireApproval(request);
+        if (!request.key) throw new Error('config key is required');
+        const id = decodeURIComponent(route.id);
         const result = request.unset === true
-          ? await unsetPackageConfig(route.type, route.id, request.key)
-          : request.value === undefined
-            ? null
-            : await setPackageConfig(route.type, route.id, request.key, typeof request.value === 'string' ? request.value : JSON.stringify(request.value));
-        if (!result) return json(req, res, 400, { error: 'config value is required unless unset=true' });
-        return json(req, res, 200, { ...result, config: redactConfig(result.config) });
-      }
-      if (route && req.method === 'GET' && route.action === 'logs' && route.type === 'mcp') {
-        const result = await runCli(['mcp', 'logs', route.id]);
-        return json(req, res, 200, result);
-      }
-      if (route && req.method === 'POST' && route.action === 'doctor') {
-        const request = await body(req);
-        requireApproval(request);
-        const result = await runCli([route.type, 'doctor', route.id]);
-        return json(req, res, 200, { ...result, restart_required: false, auto_restart: false });
-      }
-      if (route && req.method === 'DELETE' && !route.action) {
-        const request = await body(req);
-        requireApproval(request);
-        const argv = [route.type, 'remove', route.id, '--yes'];
-        if (request.cascade === true) argv.push('--cascade');
-        const result = await runCli(argv);
-        return json(req, res, 200, { ...result, activation_state: 'removed', restart_required: true, auto_restart: false });
-      }
-      if (route && req.method === 'PATCH' && !route.action) {
-        const request = await body(req);
-        const action = String(request.action || '');
-        const allowed = new Set(['update', 'repair', 'rollback', 'enable', 'disable']);
-        if (!allowed.has(action)) return json(req, res, 400, { error: `unsupported package action: ${action}` });
-        requireApproval(request);
-        const argv = [route.type, action, route.id];
-        if (request.version) argv.push(String(request.version));
-        argv.push('--yes');
-        const result = await runCli(argv);
-        return json(req, res, 200, { ...result, restart_required: true, auto_restart: false });
-      }
-      if (route && req.method === 'POST' && route.action) {
-        const request = await body(req);
-        const allowed = route.type === 'mcp'
-          ? new Set(['start', 'stop', 'restart', 'probe', 'invoke'])
-          : route.type === 'skill'
-            ? new Set(['load', 'unload', 'invoke'])
-            : new Set();
-        if (!allowed.has(route.action)) return json(req, res, 400, { error: `unsupported runtime action: ${route.action}` });
-        requireApproval(request);
-        const argv = [route.type, route.action, route.id];
-        if (route.action === 'invoke' && route.type === 'mcp') {
-          if (!request.tool) return json(req, res, 400, { error: 'tool is required' });
-          argv.push(String(request.tool));
-        }
-        if (request.input !== undefined) argv.push('--input', JSON.stringify(request.input));
-        const result = await runCli(argv);
-        return json(req, res, 200, result);
+          ? await unsetPackageConfig(route.type, id, request.key)
+          : request.value === undefined ? null : await setPackageConfig(route.type, id, request.key, typeof request.value === 'string' ? request.value : JSON.stringify(request.value));
+        if (!result) throw new Error('config value is required unless unset=true');
+        return json(req, res, 200, { data: { ...result, config: redactConfig(result.config) }, meta: {} });
       }
 
-      return json(req, res, 404, { error: 'not found' });
+      const secret = secretRoute(requestUrl.pathname);
+      if (secret && !secret.name && req.method === 'GET') return json(req, res, 200, { data: { secrets: await listSecrets() }, meta: {} });
+      if (secret?.name && (req.method === 'PUT' || req.method === 'POST')) {
+        const request = await body(req); requireApproval(request);
+        if (request.value === undefined || request.value === null || request.value === '') throw new Error('secret value is required');
+        const result = await setSecret(secret.name, request.value);
+        return json(req, res, 200, { data: { ...result, value: '<secret>' }, meta: {} });
+      }
+      if (secret?.name && req.method === 'DELETE') {
+        const request = await body(req); requireApproval(request);
+        return json(req, res, 200, { data: await deleteSecret(secret.name), meta: {} });
+      }
+      if (secret?.name && req.method === 'GET') return json(req, res, 405, { error: { code: 'DSH_SECRET_READ_FORBIDDEN', message: 'secret values are never returned by the local HTTP API' }, meta: {} });
+
+      return json(req, res, 404, { error: { code: 'DSH_NOT_FOUND', message: 'not found' }, meta: {} });
     } catch (error) {
-      const status = error.code === 'DSH_APPROVAL_REQUIRED' ? 409 : error.code === 'DSH_CLIENT_CLI_TIMEOUT' ? 504 : error.code === 'DSH_REQUEST_TOO_LARGE' ? 413 : 400;
-      return json(req, res, status, { error: error.message, code: error.code || 'DSH_CLIENT_HOST_ERROR', confirmation_required: status === 409 });
+      const status = errorStatus(error);
+      return json(req, res, status, { error: { code: error.code || 'DSH_CLIENT_HOST_ERROR', message: error.message }, meta: { confirmation_required: status === 409 && (error.code === 'DSH_APPROVAL_REQUIRED' || error.code === 'DSH_PERMISSION_DENIED') } });
     }
   });
   return { server, token, host, port };
