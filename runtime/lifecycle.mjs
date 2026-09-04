@@ -1,4 +1,4 @@
-import { assertPackageType } from './package-model.mjs';
+import { normalizePackageId, normalizePackageType } from '../packages/protocol-core/index.mjs';
 
 export const LIFECYCLE_STATES = Object.freeze({
   AVAILABLE: 'available',
@@ -63,12 +63,16 @@ export function transitionPackage(pkg, nextState, options = {}) {
   });
 }
 
-export function createRuntimePackageRecord(type, id, version = '0.1.0', overrides = {}) {
+export function createRuntimePackageRecord(type, id, version, overrides = {}) {
+  const normalizedType = normalizePackageType(type);
+  const normalizedId = normalizePackageId(id);
+  const normalizedVersion = String(version || '').trim();
+  if (!normalizedVersion) throw new Error(`runtime package version is required: ${normalizedType}:${normalizedId}`);
   const createdAt = timestamp();
   return {
-    id,
-    type: assertPackageType(type),
-    version,
+    id: normalizedId,
+    type: normalizedType,
+    version: normalizedVersion,
     state: LIFECYCLE_STATES.AVAILABLE,
     channel: 'stable',
     enabled: true,
@@ -76,19 +80,17 @@ export function createRuntimePackageRecord(type, id, version = '0.1.0', override
     restart_required: false,
     health: null,
     rollback: null,
+    capabilities: [],
     dependencies: [],
+    permissions: [],
+    compatibility: {},
+    publisher: null,
+    security: null,
+    artifact: null,
     binding: null,
     history: [historyEntry('created', LIFECYCLE_STATES.AVAILABLE)],
     created_at: createdAt,
     updated_at: createdAt,
     ...overrides,
   };
-}
-
-export function transitionPlugin(plugin, nextState, options = {}) {
-  return transitionPackage(plugin, nextState, options);
-}
-
-export function createRuntimeRecord(id, version = '0.1.0', overrides = {}) {
-  return createRuntimePackageRecord('plugin', id, version, overrides);
 }
