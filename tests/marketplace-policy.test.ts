@@ -9,7 +9,7 @@ import {
 } from '../site/src/lib/marketplace';
 
 const policy = JSON.parse(
-  readFileSync(new URL('../config/marketplace-policy.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../site/src/config/marketplace-policy.json', import.meta.url), 'utf8'),
 );
 
 describe('Marketplace policy single source of truth', () => {
@@ -38,7 +38,7 @@ describe('Marketplace policy single source of truth', () => {
       new URL('../scripts/copy-assets-core.mjs', import.meta.url),
       'utf8',
     );
-    expect(generator).toContain("config', 'marketplace-policy.json");
+    expect(generator).toContain("site', 'src', 'config', 'marketplace-policy.json");
     expect(generator).toContain('INSTALL_SCRIPT_THRESHOLD');
     expect(generator).not.toContain('const DETAIL_THRESHOLD = 100');
   });
