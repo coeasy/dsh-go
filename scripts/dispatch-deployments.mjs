@@ -195,7 +195,32 @@ export async function dispatchDeployments({ env = process.env, execute = runGh, 
       break;
     }
 
-    results.push({ workflow, status, runUrl, error: lastError, attempts: attemptsUsed });
+    const result = { workflow, status, runUrl, error: lastError, attempts: attemptsUsed };
+    results.push(result);
+    return result;
+  };
+
+  const waitForResults = async (items, phase) => {
+    const waitResults = await Promise.all(items
+      .filter((result) => result.status === 'dispatched')
+      .map((result) => waitForWorkflow({
+        workflow: result.workflow,
+        runUrl: result.runUrl,
+        timeoutMs: deployWaitTimeoutMs,
+        env,
+        execute,
+      })));
+    for (const waitResult of waitResults) {
+      const result = items.find((item) => item.workflow === waitResult.workflow);
+      if (!result) continue;
+      result.status = waitResult.status;
+      result.error = waitResult.error;
+      if (waitResult.status === 'completed') {
+        console.log(`${waitResult.workflow}: ${phase} run ${waitResult.runId} completed successfully`);
+      } else {
+        console.error(`${waitResult.workflow}: ${waitResult.error}`);
+      }
+    }
   };
 
   const providerWorkflows = workflows.filter((workflow) => !isMonitorWorkflow(workflow));
@@ -205,24 +230,7 @@ export async function dispatchDeployments({ env = process.env, execute = runGh, 
 
   const dispatchFailures = results.filter((result) => result.status !== 'dispatched');
   if (monitorWorkflows.length > 0 && dispatchFailures.length === 0 && providerWorkflows.length > 0) {
-    const waitResults = await Promise.all(results.map((result) => waitForWorkflow({
-      workflow: result.workflow,
-      runUrl: result.runUrl,
-      timeoutMs: deployWaitTimeoutMs,
-      env,
-      execute,
-    })));
-    for (const waitResult of waitResults) {
-      const result = results.find((item) => item.workflow === waitResult.workflow);
-      if (!result) continue;
-      result.status = waitResult.status;
-      result.error = waitResult.error;
-      if (waitResult.status === 'completed') {
-        console.log(`${waitResult.workflow}: deployment run ${waitResult.runId} completed successfully`);
-      } else {
-        console.error(`${waitResult.workflow}: ${waitResult.error}`);
-      }
-    }
+    await waitForResults(results, 'deployment');
   }
 
   const deploymentFailures = results.filter((result) => result.status !== 'completed' && result.status !== 'dispatched');
@@ -237,7 +245,9 @@ export async function dispatchDeployments({ env = process.env, execute = runGh, 
       });
     }
   } else {
-    for (const workflow of monitorWorkflows) await dispatchWorkflow(workflow);
+    const monitorResults = [];
+    for (const workflow of monitorWorkflows) monitorResults.push(await dispatchWorkflow(workflow));
+    await waitForResults(monitorResults, 'final production smoke');
   }
 
   const failures = results.filter((result) => !['completed', 'dispatched'].includes(result.status));
