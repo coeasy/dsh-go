@@ -183,6 +183,7 @@ export function normalizeStoredPlugin(raw) {
   plugin.category = normalizePluginCategory(plugin.category);
   plugin.tags = Array.isArray(plugin.tags) ? plugin.tags : [];
   plugin.topics = Array.isArray(plugin.topics) ? plugin.topics : [];
+  plugin.homepage = normalizeHttpUrl(plugin.homepage);
   const manifest = authoritativeManifestFields(plugin);
   Object.assign(plugin, manifest);
   delete plugin.authoritative;
@@ -190,6 +191,7 @@ export function normalizeStoredPlugin(raw) {
   plugin.metadata_source = Array.isArray(plugin.override_fields) && plugin.override_fields.length
     ? 'override'
     : manifest.authoritative ? 'dsh-package' : 'github';
+  if (plugin.metadata_source === 'github') plugin.name = plugin.repo_name || plugin.name || '';
   plugin.install_cmd = makeCatalogInstallCmd(plugin);
   return plugin;
 }
@@ -224,7 +226,9 @@ function mergeDiscoveredRepository(current, live) {
   const manifestAuthoritative = isAuthoritativeDshManifest(live.manifest_file);
   const manifestSource = manifestAuthoritative ? live : {};
   const category = normalizePluginCategory(overrideSet.has('category') ? base.category : live.category);
-  const name = overrideSet.has('name') ? base.name : (manifestSource.name || live.name || live.repo_name);
+  const name = overrideSet.has('name')
+    ? base.name
+    : manifestAuthoritative ? (manifestSource.name || live.repo_name) : live.repo_name;
   const description = overrideSet.has('description') ? base.description : (manifestSource.description || live.description || '');
   const tags = overrideSet.has('tags')
     ? (Array.isArray(base.tags) ? base.tags : [])
