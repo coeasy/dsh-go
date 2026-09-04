@@ -5,6 +5,7 @@ import { homedir } from 'node:os';
 import { copyCasSnapshot, hashDirectory, snapshotDirectory, verifyCasSnapshot } from './cas-store.mjs';
 import { recordRuntimeEvent } from './lifecycle.mjs';
 import { packageKey } from '../packages/protocol-core/index.mjs';
+import { assertPolicyAllowed, compactPolicySnapshot } from '../packages/policy-core/index.mjs';
 import {
   getRuntimePackage,
   packagePath,
@@ -17,6 +18,7 @@ import {
 } from './registry.mjs';
 import { readInstallLock } from './verifier.mjs';
 import { withPackageOperationLocks } from './package-operation-lock.mjs';
+import { readTrustRoot } from './trust-store.mjs';
 
 export const ENVIRONMENT_LOCK_SCHEMA_VERSION = 2;
 
@@ -54,7 +56,7 @@ async function writeAtomic(file, value) {
   await mkdir(dirname(target), { recursive: true });
   const temp = `${target}.tmp-${process.pid}-${Date.now()}-${randomUUID()}`;
   try {
-    await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+    await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
     await rename(temp, target);
   } catch (error) {
     await rm(temp, { force: true }).catch(() => {});
@@ -73,6 +75,7 @@ function lockedPackage(record, installLock, snapshot) {
     registry_revision: installLock.registry_revision || record.registry_revision || null,
     resolution_hash: installLock.resolution_hash || record.resolution_hash || null,
     artifact: installLock.artifact || null,
+    installation: installLock.installation || null,
     runtime: installLock.runtime || {},
     entrypoints: installLock.entrypoints || {},
     capabilities: installLock.capabilities || [],
@@ -81,8 +84,46 @@ function lockedPackage(record, installLock, snapshot) {
     compatibility: installLock.compatibility || {},
     publisher: installLock.publisher || null,
     security: installLock.security || null,
+    supply_chain_verification: installLock.supply_chain_verification || record.supply_chain_verification || null,
+    trust_snapshot: installLock.trust_snapshot || record.trust_snapshot || null,
+    policy_snapshot: installLock.policy_snapshot || record.policy_snapshot || null,
+    adapter: installLock.adapter || record.adapter || null,
     enabled: record.enabled !== false,
     content: { algorithm: 'sha256', digest: snapshot.digest, entries: snapshot.entries },
+    content_digest: snapshot.digest,
+  };
+}
+
+function installLockFromEnvironment(item) {
+  return {
+    schema_version: 4,
+    runtime_state_version: 4,
+    protocol_version: 2,
+    id: item.id,
+    type: item.type,
+    version: item.version,
+    channel: item.channel || 'stable',
+    source: item.source,
+    registry_revision: item.registry_revision || null,
+    resolution_hash: item.resolution_hash || null,
+    artifact: item.artifact || {},
+    installation: item.installation || { source: 'environment-cas', verified_at: new Date().toISOString() },
+    content: item.content,
+    content_digest: item.content.digest,
+    runtime: item.runtime || {},
+    entrypoints: item.entrypoints || {},
+    capabilities: item.capabilities || [],
+    dependencies: item.dependencies || [],
+    permissions: item.permissions || [],
+    compatibility: item.compatibility || {},
+    publisher: item.publisher || null,
+    security: item.security || null,
+    supply_chain_verification: item.supply_chain_verification || null,
+    trust_snapshot: item.trust_snapshot || null,
+    policy_snapshot: item.policy_snapshot || null,
+    adapter: item.adapter || null,
+    installed_at: new Date().toISOString(),
+    restart_required: true,
   };
 }
 
@@ -146,7 +187,11 @@ export async function readEnvironmentLock(file = environmentLockPath()) {
 }
 
 function sameInstallIdentity(item, installLock) {
-  return installLock.type === item.type && installLock.id === item.id && installLock.version === item.version && String(installLock.source?.commit || '').toLowerCase() === String(item.commit || '').toLowerCase();
+  return installLock.type === item.type
+    && installLock.id === item.id
+    && installLock.version === item.version
+    && String(installLock.source?.commit || '').toLowerCase() === String(item.commit || '').toLowerCase()
+    && (installLock.content_digest || installLock.content?.digest) === item.content.digest;
 }
 
 export async function verifyEnvironmentLock(options = {}) {
@@ -172,7 +217,7 @@ export async function verifyEnvironmentLock(options = {}) {
   return { file, content_hash: lock.content_hash, packages: results, extras, ok: results.every((item) => item.ok) && extras.length === 0 };
 }
 
-function restoredRecord(item, target, previous, transactionId) {
+function restoredRecord(item, target, previous, transactionId, policySnapshot) {
   return recordRuntimeEvent({
     ...(previous || {}),
     id: item.id,
@@ -192,6 +237,12 @@ function restoredRecord(item, target, previous, transactionId) {
     publisher: item.publisher || null,
     security: item.security || null,
     artifact: item.artifact || null,
+    supply_chain_verification: item.supply_chain_verification || null,
+    trust_snapshot: item.trust_snapshot || null,
+    policy_snapshot: policySnapshot || item.policy_snapshot || null,
+    adapter: item.adapter || null,
+    content: item.content,
+    content_digest: item.content.digest,
     registry_revision: item.registry_revision || null,
     resolution_hash: item.resolution_hash || null,
     enabled: item.enabled !== false,
@@ -199,6 +250,7 @@ function restoredRecord(item, target, previous, transactionId) {
     binding: null,
     restart_required: true,
     health: null,
+    activation: { attempts: 0, failed_attempts: 0, failure_fingerprint: null, restored_transaction_id: transactionId },
   }, 'environment-restored', { transaction_id: transactionId, content_digest: item.content.digest });
 }
 
@@ -217,14 +269,54 @@ function environmentTransactionRecorded(state, journal) {
   });
 }
 
+function signerRevoked(item, trustRoot) {
+  const signer = item.trust_snapshot?.signer_identity;
+  return Boolean(signer && trustRoot.revoked_signers?.includes(signer));
+}
+
+function policyForRestore(item, trustRoot, options) {
+  return assertPolicyAllowed({
+    operation: 'restore',
+    package: item,
+    publisher: item.publisher,
+    permissions: item.permissions,
+    security: item.security,
+    verification: item.supply_chain_verification || {},
+    publisher_verified: item.trust_snapshot?.publisher_verified === true,
+    signer_identity: item.trust_snapshot?.signer_identity,
+    signer_revoked: signerRevoked(item, trustRoot),
+    compatibility: { compatible: true },
+    environment: options.environment || {},
+    registry: {
+      name: item.source?.registry || 'official',
+      url: item.source?.registry_url || null,
+      trusted: item.source?.registry_trusted !== false,
+      organization: item.source?.registry_organization || null,
+    },
+    approved: true,
+  });
+}
+
 export async function restoreEnvironmentLock(options = {}) {
-  if (options.approved !== true) {
+  if (options.approved !== true && options.dryRun !== true) {
     const error = new Error('environment restore requires explicit approval');
     error.code = 'DSH_PERMISSION_DENIED';
     throw error;
   }
   const { file, lock } = await readEnvironmentLock(options.lockFile || environmentLockPath());
   const initial = await readRuntimeRegistry(options.registryFile);
+  const trustRoot = options.trustRoot || await readTrustRoot(options.trustRootFile);
+  const checks = [];
+  for (const item of lock.packages) {
+    const cas = await verifyCasSnapshot(item.content.digest, { root: options.storeRoot });
+    if (!cas.ok) throw new Error(`CAS snapshot is invalid for ${packageKey(item.type, item.id)}`);
+    const policy = policyForRestore(item, trustRoot, options);
+    checks.push({ key: packageKey(item.type, item.id), content_digest: item.content.digest, policy: compactPolicySnapshot(policy) });
+  }
+  if (options.dryRun === true) {
+    return { file, content_hash: lock.content_hash, packages: lock.packages.length, checks, changed: false, dry_run: true, restart_required: true, auto_restart: false };
+  }
+
   const operation = [...lock.packages];
   return withPackageOperationLocks(operation, async () => {
     const current = await readRuntimeRegistry(options.registryFile);
@@ -241,23 +333,24 @@ export async function restoreEnvironmentLock(options = {}) {
     let next = current;
     try {
       for (const item of lock.packages) {
-        const cas = await verifyCasSnapshot(item.content.digest, { root: options.storeRoot });
-        if (!cas.ok) throw new Error(`CAS snapshot is invalid for ${packageKey(item.type, item.id)}`);
         const existing = getRuntimePackage(current, item.type, item.id, { includeRemoved: true });
         const target = existing?.path || packagePath(item.type, item.id);
         const temp = `${target}.env-${transactionId}`;
         const backup = `${target}.env-backup-${transactionId}`;
         await rm(temp, { recursive: true, force: true });
         await copyCasSnapshot(item.content.digest, temp, { root: options.storeRoot });
-        const installLock = await readInstallLock(temp);
-        if (!sameInstallIdentity(item, installLock)) throw new Error(`environment snapshot identity mismatch: ${packageKey(item.type, item.id)}`);
+        const installLock = installLockFromEnvironment(item);
+        await writeFile(join(temp, '.dsh-install.json'), `${JSON.stringify(installLock, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+        const verifiedLock = await readInstallLock(temp);
+        if (!sameInstallIdentity(item, verifiedLock)) throw new Error(`environment snapshot identity mismatch: ${packageKey(item.type, item.id)}`);
         let hadPrevious = false;
         if (await pathExists(target)) { await rename(target, backup); hadPrevious = true; }
         await mkdir(dirname(target), { recursive: true });
         await rename(temp, target);
         moves.push({ key: packageKey(item.type, item.id), target, backup: hadPrevious ? backup : null });
         journal.state = 'restoring'; journal.moves = moves; await writeAtomic(join(transaction, 'journal.json'), journal);
-        next = upsertRuntimePackage(next, restoredRecord(item, target, existing, transactionId));
+        const check = checks.find((entry) => entry.key === packageKey(item.type, item.id));
+        next = upsertRuntimePackage(next, restoredRecord(item, target, existing, transactionId, check?.policy));
       }
       if (options.prune === true) {
         const expected = new Set(lock.packages.map((item) => packageKey(item.type, item.id)));
@@ -269,10 +362,10 @@ export async function restoreEnvironmentLock(options = {}) {
         }
       }
       journal.state = 'committing'; journal.moves = moves; await writeAtomic(join(transaction, 'journal.json'), journal);
-      const committed = await writeRuntimeRegistry(next, options.registryFile);
+      const committed = await writeRuntimeRegistry({ ...next, activation: { ...(next.activation || {}), candidate_generation: current.generation } }, options.registryFile);
       for (const move of moves) if (move.backup) await rm(move.backup, { recursive: true, force: true }).catch(() => {});
       await rm(transaction, { recursive: true, force: true });
-      return { file, content_hash: lock.content_hash, packages: lock.packages.length, generation: committed.generation, transaction_id: transactionId, restart_required: true, auto_restart: false };
+      return { file, content_hash: lock.content_hash, packages: lock.packages.length, generation: committed.generation, transaction_id: transactionId, checks, changed: true, restart_required: true, auto_restart: false };
     } catch (error) {
       await rollbackMoves(moves).catch((rollbackError) => { error.rollback_error = rollbackError.message; error.recovery_required = true; });
       if (!error.recovery_required) await rm(transaction, { recursive: true, force: true }).catch(() => {});
