@@ -7,8 +7,11 @@ async function exists(path: string) {
 }
 
 describe('no legacy compatibility surfaces', () => {
-  it('does not retain obsolete Runtime, Registry, Sync, Search, API, marketplace or ecosystem runtimes', async () => {
+  it('does not retain obsolete Runtime, Registry, Sync, Search, API, marketplace, deployment or ecosystem runtimes', async () => {
     const forbidden = [
+      'DEPLOYMENT_V2.md',
+      'DEPLOY_GUIDE.md',
+      'FIRST_DEPLOY_CHECKLIST.md',
       'bin/dsh-core.mjs',
       'marketplace',
       'mcp/v1',
@@ -79,7 +82,7 @@ describe('no legacy compatibility surfaces', () => {
   });
 
   it('keeps public docs and machine discovery free of old API and install syntax', async () => {
-    for (const path of ['README.md', 'site/public/openapi.json', 'site/public/.well-known/dsh-marketplace.json']) {
+    for (const path of ['README.md', 'DEPLOYMENT.md', 'site/public/openapi.json', 'site/public/.well-known/dsh-marketplace.json']) {
       const text = await readFile(resolve(path), 'utf8');
       expect(text, path).not.toContain('/api/v1');
       expect(text, path).not.toMatch(/\bdsh\s+(plugin|mcp|skill|agent)\s+install\b/);
