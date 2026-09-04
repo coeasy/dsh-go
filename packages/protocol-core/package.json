@@ -8,6 +8,9 @@
       "types": "./index.d.mts",
       "import": "./index.mjs"
     },
-    "./manifest": "./manifest.mjs"
+    "./manifest": {
+      "types": "./manifest.d.mts",
+      "import": "./manifest.mjs"
+    }
   }
 }
