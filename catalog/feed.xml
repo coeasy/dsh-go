@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 04 Sep 2026 20:51:02 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 04 Sep 2026 23:47:02 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T16:29:07Z</guid>
-      <pubDate>Fri, 04 Sep 2026 16:29:07 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T23:45:33Z</guid>
+      <pubDate>Fri, 04 Sep 2026 23:45:33 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -28,10 +28,10 @@
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
-      <title>🔄 ruflo</title>
+      <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-03T06:26:27Z</guid>
-      <pubDate>Thu, 03 Sep 2026 06:26:27 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-04T21:30:25Z</guid>
+      <pubDate>Fri, 04 Sep 2026 21:30:25 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo An agent meta harness for Claude C</description>
     </item>
     <item>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-04T19:57:59Z</guid>
-      <pubDate>Fri, 04 Sep 2026 19:57:59 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-04T21:29:23Z</guid>
+      <pubDate>Fri, 04 Sep 2026 21:29:23 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-04T19:18:45Z</guid>
-      <pubDate>Fri, 04 Sep 2026 19:18:45 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-04T22:29:07Z</guid>
+      <pubDate>Fri, 04 Sep 2026 22:29:07 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -156,8 +156,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-04T19:58:57Z</guid>
-      <pubDate>Fri, 04 Sep 2026 19:58:57 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-04T21:28:24Z</guid>
+      <pubDate>Fri, 04 Sep 2026 21:28:24 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
@@ -191,8 +191,8 @@
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-04T20:36:45Z</guid>
-      <pubDate>Fri, 04 Sep 2026 20:36:45 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-04T23:26:26Z</guid>
+      <pubDate>Fri, 04 Sep 2026 23:26:26 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
     <item>
