@@ -3,178 +3,74 @@ import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { homedir, platform as currentPlatform } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { assertPackageType, parsePackageSpec } from './package-model.mjs';
+import {
+  formatPackageCoordinate,
+  normalizeReleaseChannel,
+  parsePackageCoordinate,
+} from '../packages/protocol-core/index.mjs';
 
 const exec = promisify(execFile);
 const DEFAULT_COMMAND_TIMEOUT_MS = 30_000;
-const SPEC_PATTERN = /^(?:github:)?[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)?(?:@[A-Za-z0-9*.^~+_-]+)?$/;
-const CHANNEL_PATTERN = /^[A-Za-z0-9._-]+$/;
 
 function commandTimeout(value) {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? number : DEFAULT_COMMAND_TIMEOUT_MS;
 }
 
-function safeBridgeSpec(value, fallbackType = 'plugin') {
-  let spec = String(value || '').trim();
-  const fallback = assertPackageType(fallbackType);
-  if (!spec || spec.length > 512) {
-    const label = fallback === 'plugin' ? 'plugin' : 'runtime package';
-    throw new Error(`invalid ${label} spec in dsh URI: ${spec || '<empty>'}`);
-  }
-  let type = fallback;
-  const colon = spec.indexOf(':');
-  if (colon > 0) {
-    const prefix = spec.slice(0, colon).toLowerCase();
-    if (['plugin', 'mcp', 'skill', 'agent'].includes(prefix)) {
-      type = assertPackageType(prefix);
-      spec = spec.slice(colon + 1);
-    }
-  }
-  if (!SPEC_PATTERN.test(spec)) {
-    const label = type === 'plugin' ? 'plugin' : 'runtime package';
-    throw new Error(`invalid ${label} spec in dsh URI: ${spec}`);
-  }
-  parsePackageSpec(`${type}:${spec}`, '*', type);
-  return { type, spec };
-}
-
-function safeChannel(value) {
-  if (!value) return null;
-  const channel = String(value).trim();
-  if (!channel || channel.length > 64 || !CHANNEL_PATTERN.test(channel)) {
-    throw new Error(`invalid release channel in dsh URI: ${channel || '<empty>'}`);
-  }
-  return channel;
-}
-
-function safeRegistry(value) {
-  if (!value) return null;
-  const raw = String(value).trim();
-  if (!raw || raw.length > 2048) throw new Error('invalid registry URL in dsh URI');
-  let url;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new Error('invalid registry URL in dsh URI');
-  }
-  const localHttp = url.protocol === 'http:' && ['localhost', '127.0.0.1', '::1'].includes(url.hostname.toLowerCase());
-  if ((url.protocol !== 'https:' && !localHttp) || url.username || url.password || url.hash) {
-    throw new Error('registry URL in dsh URI must use HTTPS (or localhost HTTP) without credentials or fragments');
-  }
-  return url.toString();
-}
-
-export function buildInstallUri(spec, options = {}) {
-  const parsed = safeBridgeSpec(spec, options.type || 'plugin');
-  const type = options.type ? assertPackageType(options.type) : parsed.type;
-  if (type !== parsed.type) throw new Error(`runtime package type mismatch in dsh URI: ${type} != ${parsed.type}`);
-  const encoded = encodeURIComponent(parsed.spec);
-  const url = type === 'plugin'
-    ? new URL(`dsh://plugin/install/${encoded}`)
-    : new URL(`dsh://package/install/${type}/${encoded}`);
-  const channel = safeChannel(options.channel);
-  if (channel) url.searchParams.set('channel', channel);
-  const registry = safeRegistry(options.registry);
-  if (registry) url.searchParams.set('registry', registry);
+/**
+ * Canonical deep link. Registry selection is intentionally not accepted from
+ * remote links: the local runtime owns the configured Registry V4 authority.
+ */
+export function buildInstallUri(coordinate, options = {}) {
+  const request = parsePackageCoordinate(coordinate, { channel: options.channel || 'stable' });
+  const url = new URL('dsh://package/install');
+  url.searchParams.set('spec', formatPackageCoordinate(request));
+  url.searchParams.set('channel', request.channel);
   return url.toString();
 }
 
 export function parseDshUri(raw) {
   if (typeof raw !== 'string' || !raw.trim()) throw new Error('dsh URI is required');
   let url;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new Error('invalid dsh URI');
-  }
+  try { url = new URL(raw); } catch { throw new Error('invalid dsh URI'); }
   if (url.protocol !== 'dsh:') throw new Error(`unsupported protocol: ${url.protocol}`);
-
-  const channel = safeChannel(url.searchParams.get('channel'));
-  const registry = safeRegistry(url.searchParams.get('registry'));
-  const registryField = registry ? { registry } : {};
-  if (url.hostname === 'install') {
-    const marketplaceId = url.searchParams.get('id');
-    if (marketplaceId) {
-      const type = assertPackageType(url.searchParams.get('type') || 'plugin');
-      const version = url.searchParams.get('version') || '*';
-      const parsed = safeBridgeSpec(`${marketplaceId}@${version}`, type);
-      if (parsed.type !== type) throw new Error(`runtime package type mismatch in dsh URI: ${type} != ${parsed.type}`);
-      return {
-        protocol: 'dsh',
-        kind: type,
-        type,
-        action: 'install',
-        spec: parsed.spec,
-        channel,
-        ...registryField,
-        legacy: false,
-        marketplace_v2: true,
-      };
-    }
-    const parsed = safeBridgeSpec(url.searchParams.get('plugin') || url.searchParams.get('spec'), 'plugin');
-    if (parsed.type !== 'plugin') throw new Error('legacy dsh install URI only supports plugins');
-    return { protocol: 'dsh', kind: 'plugin', action: 'install', spec: parsed.spec, channel, ...registryField, legacy: true };
+  if (url.hostname !== 'package' || url.pathname !== '/install') {
+    throw new Error('unsupported dsh URI; only dsh://package/install is accepted');
   }
-
-  if (url.hostname === 'plugin') {
-    const segments = url.pathname.split('/').filter(Boolean);
-    if (segments.length !== 2 || segments[0] !== 'install') {
-      throw new Error(`unsupported dsh plugin action: ${url.pathname || '/'}`);
-    }
-    const parsed = safeBridgeSpec(decodeURIComponent(segments[1]), 'plugin');
-    if (parsed.type !== 'plugin') throw new Error('plugin URI cannot install another package type');
-    return { protocol: 'dsh', kind: 'plugin', action: 'install', spec: parsed.spec, channel, ...registryField, legacy: false };
+  if (url.username || url.password || url.hash) throw new Error('dsh URI must not contain credentials or fragments');
+  if (url.searchParams.has('registry') || url.searchParams.has('plugin') || url.searchParams.has('id') || url.searchParams.has('type') || url.searchParams.has('version')) {
+    throw new Error('legacy or remote Registry selectors are not accepted in dsh URI');
   }
-
-  if (url.hostname === 'package') {
-    const segments = url.pathname.split('/').filter(Boolean);
-    if (segments.length !== 3 || segments[0] !== 'install') {
-      throw new Error(`unsupported dsh package action: ${url.pathname || '/'}`);
-    }
-    const type = assertPackageType(segments[1]);
-    const parsed = safeBridgeSpec(decodeURIComponent(segments[2]), type);
-    if (parsed.type !== type) throw new Error(`package URI type mismatch: ${type} != ${parsed.type}`);
-    return { protocol: 'dsh', kind: type, type, action: 'install', spec: parsed.spec, channel, ...registryField, legacy: false };
-  }
-
-  if (['mcp', 'skill', 'agent'].includes(url.hostname)) {
-    const type = assertPackageType(url.hostname);
-    const segments = url.pathname.split('/').filter(Boolean);
-    if (segments.length !== 2 || segments[0] !== 'install') {
-      throw new Error(`unsupported dsh ${type} action: ${url.pathname || '/'}`);
-    }
-    const parsed = safeBridgeSpec(decodeURIComponent(segments[1]), type);
-    return { protocol: 'dsh', kind: type, type, action: 'install', spec: parsed.spec, channel, ...registryField, legacy: false };
-  }
-
-  throw new Error(`unsupported dsh URI host: ${url.hostname || '<empty>'}`);
+  const allowedParams = new Set(['spec', 'channel']);
+  for (const key of url.searchParams.keys()) if (!allowedParams.has(key)) throw new Error(`unsupported dsh URI parameter: ${key}`);
+  const spec = url.searchParams.get('spec');
+  if (!spec) throw new Error('dsh package URI requires spec');
+  const channel = normalizeReleaseChannel(url.searchParams.get('channel') || 'stable');
+  const request = parsePackageCoordinate(spec, { channel });
+  return {
+    protocol: 'dsh',
+    version: 2,
+    action: 'install',
+    request,
+    coordinate: formatPackageCoordinate(request),
+  };
 }
 
-export function runtimeArgsForRequest(request) {
-  if (!request || !['plugin', 'mcp', 'skill', 'agent'].includes(request.kind) || request.action !== 'install') {
-    throw new Error('unsupported host bridge request');
-  }
-  const parsed = safeBridgeSpec(request.spec, request.kind);
-  if (parsed.type !== request.kind) throw new Error('host bridge package type mismatch');
-  const args = request.kind === 'plugin'
-    ? ['install', parsed.spec]
-    : [request.kind, 'install', parsed.spec];
-  const channel = safeChannel(request.channel);
-  if (channel) args.push('--channel', channel);
-  const registry = safeRegistry(request.registry);
-  if (registry) args.push('--registry', registry);
+export function runtimeArgsForRequest(request, options = {}) {
+  if (!request || request.protocol !== 'dsh' || request.version !== 2 || request.action !== 'install') throw new Error('unsupported host bridge request');
+  const parsed = parsePackageCoordinate(request.coordinate || formatPackageCoordinate(request.request), { channel: request.request?.channel || 'stable' });
+  const args = ['package', 'install', formatPackageCoordinate(parsed), '--channel', parsed.channel];
+  if (options.approved === true) args.push('--yes');
+  if (options.dryRun === true) args.push('--dry-run');
   return args;
 }
 
 function shellQuote(value) {
   return `"${String(value).replaceAll('"', '\\"')}"`;
 }
-
 function shellSingleQuote(value) {
   return `'${String(value).replaceAll("'", `'"'"'`)}'`;
 }
-
 function psQuote(value) {
   return String(value).replaceAll("'", "''");
 }
@@ -183,7 +79,7 @@ export function protocolRegistration(options = {}) {
   const platform = options.platform || currentPlatform();
   const executable = resolve(options.executable || process.execPath);
   const scriptPath = resolve(options.scriptPath || process.argv[1] || 'bin/dsh.mjs');
-  const handler = `${shellQuote(executable)} ${shellQuote(scriptPath)} host handle`;
+  const handler = `${shellQuote(executable)} ${shellQuote(scriptPath)} package install-link`;
 
   if (platform === 'win32') {
     const root = 'HKCU\\Software\\Classes\\dsh';
@@ -191,9 +87,9 @@ export function protocolRegistration(options = {}) {
     const wrapperContent = [
       'param([Parameter(Mandatory=$true)][string]$Url)',
       'Add-Type -AssemblyName PresentationFramework',
-      '$result = [System.Windows.MessageBox]::Show("DSH Marketplace requests a local package change.\\n\\n$Url", "DSH Install Request", "YesNo", "Warning")',
+      '$result = [System.Windows.MessageBox]::Show("DSH Marketplace requests a local package installation.\\n\\n$Url", "DSH Package Install", "YesNo", "Warning")',
       'if ($result -ne "Yes") { exit 2 }',
-      `& '${psQuote(executable)}' '${psQuote(scriptPath)}' host handle $Url --yes`,
+      `& '${psQuote(executable)}' '${psQuote(scriptPath)}' package install-link $Url --yes`,
       'exit $LASTEXITCODE',
       '',
     ].join('\n');
@@ -205,7 +101,7 @@ export function protocolRegistration(options = {}) {
       wrapper_file: wrapperFile,
       wrapper_content: wrapperContent,
       commands: [
-        ['reg.exe', ['ADD', root, '/ve', '/d', 'URL:DSH Go Protocol', '/f']],
+        ['reg.exe', ['ADD', root, '/ve', '/d', 'URL:DSH Package Protocol', '/f']],
         ['reg.exe', ['ADD', root, '/v', 'URL Protocol', '/d', '', '/f']],
         ['reg.exe', ['ADD', `${root}\\shell\\open\\command`, '/ve', '/d', command, '/f']],
       ],
@@ -217,10 +113,10 @@ export function protocolRegistration(options = {}) {
     const wrapperFile = resolve(options.wrapperFile || join(homedir(), '.local', 'share', 'dsh-go', 'url-handler.sh'));
     const wrapperContent = [
       '#!/bin/sh',
-      'printf "DSH Marketplace requests a local package change. Continue? [y/N] "',
+      'printf "DSH Marketplace requests a local package installation. Continue? [y/N] "',
       'IFS= read -r answer',
       'case "$answer" in',
-      `  y|Y|yes|YES) exec ${shellSingleQuote(executable)} ${shellSingleQuote(scriptPath)} host handle "$1" --yes ;;`,
+      `  y|Y|yes|YES) exec ${shellSingleQuote(executable)} ${shellSingleQuote(scriptPath)} package install-link "$1" --yes ;;`,
       '  *) exit 2 ;;',
       'esac',
       '',
@@ -228,7 +124,7 @@ export function protocolRegistration(options = {}) {
     const content = [
       '[Desktop Entry]',
       'Type=Application',
-      'Name=DSH Go Host Bridge',
+      'Name=DSH Package Protocol',
       `Exec=${shellQuote(wrapperFile)} %u`,
       `X-DSH-Command=${handler} %u`,
       'Terminal=true',
@@ -255,61 +151,35 @@ export function protocolRegistration(options = {}) {
       requires_client_bundle: true,
       handler,
       info_plist: {
-        CFBundleURLTypes: [{
-          CFBundleURLName: 'DSH Go Protocol',
-          CFBundleURLSchemes: ['dsh'],
-        }],
+        CFBundleURLTypes: [{ CFBundleURLName: 'DSH Package Protocol', CFBundleURLSchemes: ['dsh'] }],
       },
-      message: 'macOS requires the desktop client bundle to declare the dsh URL scheme in Info.plist, obtain local approval, and forward the URL to `dsh host handle <url> --yes`.',
+      message: 'macOS requires the desktop bundle to declare the dsh URL scheme, obtain local approval, and invoke `dsh package install-link <url> --yes`.',
     };
   }
 
-  return {
-    platform,
-    supported: false,
-    handler,
-    message: `automatic dsh protocol registration is not supported on ${platform}`,
-  };
+  return { platform, supported: false, handler, message: `automatic dsh protocol registration is not supported on ${platform}` };
 }
 
 export async function registerProtocolHandler(options = {}) {
   const registration = protocolRegistration(options);
   if (!registration.supported) return { ...registration, registered: false };
-
   if (registration.wrapper_file) {
     await mkdir(dirname(registration.wrapper_file), { recursive: true });
     await writeFile(registration.wrapper_file, registration.wrapper_content, 'utf8');
     if (registration.platform === 'linux') await chmod(registration.wrapper_file, 0o755);
   }
-
-  if (registration.platform === 'win32') {
-    for (const [command, args] of registration.commands) {
-      await exec(command, args, {
-        windowsHide: true,
-        timeout: commandTimeout(options.commandTimeoutMs),
-        killSignal: 'SIGTERM',
-      });
-    }
-    return { ...registration, registered: true };
-  }
-
   if (registration.platform === 'linux') {
     await mkdir(dirname(registration.desktop_file), { recursive: true });
     await writeFile(registration.desktop_file, registration.desktop_content, 'utf8');
-    const warnings = [];
-    for (const [command, args] of registration.commands) {
-      try {
-        await exec(command, args, {
-          windowsHide: true,
-          timeout: commandTimeout(options.commandTimeoutMs),
-          killSignal: 'SIGTERM',
-        });
-      } catch (error) {
-        warnings.push(`${command}: ${error.message}`);
-      }
-    }
-    return { ...registration, registered: true, warnings };
   }
-
-  return { ...registration, registered: false };
+  const warnings = [];
+  for (const [command, args] of registration.commands || []) {
+    try {
+      await exec(command, args, { windowsHide: true, timeout: commandTimeout(options.commandTimeoutMs), killSignal: 'SIGTERM' });
+    } catch (error) {
+      if (registration.platform === 'win32') throw error;
+      warnings.push(`${command}: ${error.message}`);
+    }
+  }
+  return { ...registration, registered: true, ...(warnings.length ? { warnings } : {}) };
 }
