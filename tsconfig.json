@@ -29,11 +29,8 @@
     "tests/npm-audit-retry.test.ts",
     "tests/marketplace-policy.test.ts",
     "tests/package-protocol-conformance.test.ts",
-    "site/src/i18n/**/*.ts",
-    "marketplace/**/*.ts",
-    "mcp/**/*.ts",
-    "skills/**/*.ts",
-    "agents/**/*.ts",
-    "profiles/**/*.ts"
+    "tests/platform-discovery.test.ts",
+    "tests/provider-adapter-release.test.ts",
+    "site/src/i18n/**/*.ts"
   ]
 }

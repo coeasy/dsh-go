@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://coeasy.github.io/dsh-go/schemas/dsh-marketplace-discovery-v2.schema.json",
+  "title": "DSH Marketplace Discovery V2",
+  "type": "object",
+  "required": ["schema", "service", "protocol", "api", "registry", "installation"],
+  "properties": {
+    "schema": { "const": "dsh-marketplace-discovery.v2" },
+    "service": {
+      "type": "object",
+      "required": ["id", "version", "mode"],
+      "properties": {
+        "id": { "const": "dsh-go" },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "mode": { "const": "read-only-discovery" }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "required": ["version", "package_types", "release_channels"],
+      "properties": {
+        "version": { "const": 2 },
+        "package_coordinate": { "type": "string" },
+        "package_types": { "const": ["plugin", "mcp", "skill", "agent"] },
+        "release_channels": { "const": ["stable", "beta", "nightly", "dev"] }
+      }
+    },
+    "api": {
+      "type": "object",
+      "required": ["version", "index", "health", "packages", "search", "resolve", "install_plan", "mcp"],
+      "properties": {
+        "version": { "const": "v2" },
+        "base_url": { "type": "string", "format": "uri" },
+        "openapi_url": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "registry": {
+      "type": "object",
+      "required": ["version", "authority_path", "distribution", "search_index"],
+      "properties": {
+        "version": { "const": 4 },
+        "authority_path": { "const": "/catalog/registry-v4.json" },
+        "distribution": { "type": "object", "required": ["version", "index_path"], "properties": { "version": { "const": 2 }, "index_path": { "const": "/catalog/registry-v4/index.json" } } },
+        "search_index": { "type": "object", "required": ["version", "path"], "properties": { "version": { "const": 3 }, "path": { "const": "/catalog/search-index-v3.json" } } }
+      }
+    },
+    "marketplace": { "type": "object" },
+    "installation": {
+      "type": "object",
+      "required": ["remote_mode", "remote_mutation", "local_runtime_is_write_authority", "explicit_confirmation_required", "auto_restart"],
+      "properties": {
+        "remote_mode": { "const": "plan-only" },
+        "remote_mutation": { "const": false },
+        "local_runtime_is_write_authority": { "const": true },
+        "deep_link_registry_override": { "const": false },
+        "explicit_confirmation_required": { "const": true },
+        "auto_restart": { "const": false }
+      }
+    },
+    "deployments": { "type": "array" }
+  }
+}
