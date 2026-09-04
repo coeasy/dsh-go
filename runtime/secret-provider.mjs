@@ -5,11 +5,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { withFileLock } from './file-lock.mjs';
 
-export const SECRET_KEY_BACKENDS = Object.freeze(['auto', 'file', 'dpapi', 'secret-service']);
+export const SECRET_KEY_BACKENDS = Object.freeze(['auto', 'file', 'dpapi', 'keychain', 'secret-service']);
 const BACKENDS = new Set(SECRET_KEY_BACKENDS);
 const COMMAND_TIMEOUT_MS = 15_000;
 const COMMAND_KILL_GRACE_MS = 1_000;
 const DPAPI_LOCK_TIMEOUT_MS = 30_000;
+const KEYCHAIN_SERVICE = 'dsh-go.secret-master-key';
 const nativeMasterKeyCache = new Map();
 
 function commandEnv(platform = process.platform) {
@@ -125,8 +126,9 @@ export function configuredSecretKeyBackend(env = process.env) {
 
 export function preferredSecretKeyBackend(platform = process.platform) {
   if (platform === 'win32') return 'dpapi';
+  if (platform === 'darwin') return 'keychain';
   if (platform === 'linux') return 'secret-service';
-  return 'file';
+  return null;
 }
 
 function decodeKey(raw) {
@@ -138,7 +140,7 @@ function decodeKey(raw) {
 export async function readSecretBackendMarker(paths) {
   try {
     const marker = JSON.parse(await readFile(paths.backend, 'utf8'));
-    if (!marker || marker.version !== 1 || !['dpapi', 'secret-service'].includes(marker.backend)) {
+    if (!marker || marker.version !== 1 || !['dpapi', 'keychain', 'secret-service'].includes(marker.backend)) {
       throw new Error('invalid DSH secret backend metadata');
     }
     return marker;
@@ -157,7 +159,7 @@ function nativeCacheKey(paths, backend) {
 }
 
 function cacheNativeKey(paths, backend, key) {
-  if (backend === 'dpapi' || backend === 'secret-service') {
+  if (backend === 'dpapi' || backend === 'keychain' || backend === 'secret-service') {
     nativeMasterKeyCache.set(nativeCacheKey(paths, backend), key);
   }
   return key;
@@ -266,6 +268,40 @@ async function readDpapiKey(paths, options = {}) {
   return decodeKey(plain);
 }
 
+function keychainAccount(paths) {
+  return createHash('sha256').update(String(paths.base || '')).digest('hex').slice(0, 32);
+}
+
+async function storeKeychainKey(paths, key, options = {}) {
+  const platform = options.platform || process.platform;
+  if (platform !== 'darwin') throw new Error('Keychain secret backend is only available on macOS');
+  const run = options.runCommand || runSecretBackendCommand;
+  const account = keychainAccount(paths);
+  await run(
+    '/usr/bin/security',
+    ['add-generic-password', '-U', '-a', account, '-s', KEYCHAIN_SERVICE, '-w', key.toString('base64')],
+    '',
+    { ...options, platform },
+  );
+  await writeBackendMarker(paths, { backend: 'keychain', account, service: KEYCHAIN_SERVICE });
+  return cacheNativeKey(paths, 'keychain', key);
+}
+
+async function readKeychainKey(paths, marker, options = {}) {
+  const platform = options.platform || process.platform;
+  if (platform !== 'darwin') throw new Error('Keychain secret backend is only available on macOS');
+  const run = options.runCommand || runSecretBackendCommand;
+  const account = marker.account || keychainAccount(paths);
+  const service = marker.service || KEYCHAIN_SERVICE;
+  const raw = await run(
+    '/usr/bin/security',
+    ['find-generic-password', '-a', account, '-s', service, '-w'],
+    '',
+    { ...options, platform },
+  );
+  return decodeKey(raw);
+}
+
 function secretServiceKeyId(paths) {
   return createHash('sha256').update(paths.base).digest('hex').slice(0, 32);
 }
@@ -299,9 +335,10 @@ export async function readExistingSecretMasterKey(paths, options = {}) {
   if (marker) {
     const cached = cachedNativeKey(paths, marker.backend);
     if (cached) return { key: cached, backend: marker.backend, marker };
-    const key = marker.backend === 'dpapi'
-      ? await readDpapiKey(paths, options)
-      : await readSecretServiceKey(paths, marker, options);
+    let key;
+    if (marker.backend === 'dpapi') key = await readDpapiKey(paths, options);
+    else if (marker.backend === 'keychain') key = await readKeychainKey(paths, marker, options);
+    else key = await readSecretServiceKey(paths, marker, options);
     return { key: cacheNativeKey(paths, marker.backend, key), backend: marker.backend, marker };
   }
 
@@ -322,6 +359,7 @@ async function storeFileKey(paths, key) {
 async function createWithBackend(paths, backend, key, options = {}) {
   if (backend === 'file') return { key: await storeFileKey(paths, key), backend: 'file', fallback_from: null };
   if (backend === 'dpapi') return { key: await storeDpapiKey(paths, key, options), backend: 'dpapi', fallback_from: null };
+  if (backend === 'keychain') return { key: await storeKeychainKey(paths, key, options), backend: 'keychain', fallback_from: null };
   if (backend === 'secret-service') return { key: await storeSecretServiceKey(paths, key, options), backend: 'secret-service', fallback_from: null };
   throw new Error(`unsupported DSH secret key backend: ${backend}`);
 }
@@ -332,15 +370,23 @@ export async function createSecretMasterKey(paths, configured = configuredSecret
 
   const platform = options.platform || process.platform;
   const preferred = preferredSecretKeyBackend(platform);
-  if (preferred === 'file') return createWithBackend(paths, 'file', key, options);
+  if (!preferred) {
+    const error = new Error(`no native DSH secret key backend is defined for platform: ${platform}`);
+    error.code = 'DSH_SECRET_BACKEND_UNSUPPORTED_PLATFORM';
+    error.explicit_file_fallback_required = true;
+    throw error;
+  }
 
   try {
     return await createWithBackend(paths, preferred, key, options);
-  } catch (error) {
-    if (platform !== 'linux' || preferred !== 'secret-service') throw error;
-    if (!['DSH_SECRET_BACKEND_UNAVAILABLE', 'DSH_SECRET_BACKEND_TIMEOUT'].includes(error?.code)) throw error;
-    const fallback = await createWithBackend(paths, 'file', key, options);
-    return { ...fallback, fallback_from: 'secret-service' };
+  } catch (cause) {
+    const error = new Error(`native DSH secret backend ${preferred} is required; set DSH_SECRET_KEY_BACKEND=file explicitly to opt in to local file protection`);
+    error.code = 'DSH_SECRET_NATIVE_BACKEND_REQUIRED';
+    error.backend = preferred;
+    error.platform = platform;
+    error.explicit_file_fallback_required = true;
+    error.cause = cause;
+    throw error;
   }
 }
 
@@ -354,11 +400,12 @@ export async function secretProviderStatus(paths, configured = configuredSecretK
     configured_backend: configured,
     active_backend: active || 'uninitialized',
     preferred_new_backend: configured === 'auto' ? preferred : configured,
-    native_backend: active === 'dpapi' || active === 'secret-service',
-    native_backend_available: preferred === 'file' ? null : preferred,
+    native_backend: active === 'dpapi' || active === 'keychain' || active === 'secret-service',
+    native_backend_available: preferred,
     existing_key_preserved: active !== null,
     automatic_migration: false,
-    migration_recommended: active === 'file' && preferred !== 'file',
+    migration_recommended: active === 'file' && preferred !== null,
     legacy_file_key: active === 'file',
+    explicit_file_fallback_required: configured === 'auto' && active === null,
   };
 }
