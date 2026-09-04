@@ -196,15 +196,13 @@ jobs:
 
       - name: Refresh Marketplace Registry V4
         env:
-          GH_TOKEN: ${{ secrets.marketplace_token }}
+          GH_TOKEN: ${{ secrets.marketplace_token || github.token }}
           MARKETPLACE_REPOSITORY: ${{ inputs.marketplace_repository }}
           TAG: ${{ steps.pack.outputs.tag }}
+          PACKAGE_PATH: ${{ inputs.package_path }}
         shell: bash
         run: |
           set -euo pipefail
-          if [ -z "${GH_TOKEN:-}" ]; then
-            echo "marketplace_token not configured; immutable package release is complete, Registry V4 refresh was not dispatched"
-            exit 0
-          fi
-          payload="$(jq -nc --arg repository "$GITHUB_REPOSITORY" --arg tag "$TAG" '{event_type:"sync-plugins",client_payload:{mode:"incremental",repository:$repository,tag:$tag,protocol_version:2,registry_version:4}}')"
+          [ -n "${GH_TOKEN:-}" ] || { echo "Registry V4 dispatch token is unavailable" >&2; exit 1; }
+          payload="$(jq -nc --arg repository "$GITHUB_REPOSITORY" --arg tag "$TAG" --arg package_path "$PACKAGE_PATH" '{event_type:"sync-plugins",client_payload:{mode:"incremental",repository:$repository,tag:$tag,package_path:$package_path,protocol_version:2,registry_version:4,release_version:2}}')"
           printf '%s' "$payload" | gh api --method POST "repos/$MARKETPLACE_REPOSITORY/dispatches" --input -
