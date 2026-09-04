@@ -96,7 +96,29 @@ if (runtimePermissions && !runtimePermissions.text.includes('packages/policy-cor
 
 const candidateSource = sourceFiles.find((entry) => entry.path === 'scripts/registry-v4-source.mjs');
 if (!candidateSource) fail('scripts/registry-v4-source.mjs', 'Registry V4 discovery ingress is missing');
-else for (const required of ["'accepted'", "'quarantined'", "'rejected'", 'candidateReport']) if (!candidateSource.text.includes(required)) fail(candidateSource.path, 'candidate/quarantine pipeline contract missing', required);
+else {
+  for (const required of ["'accepted'", "'quarantined'", "'rejected'", 'candidateReport', 'release-descriptor-v2-required', 'validatePackageReleaseDescriptor']) {
+    if (!candidateSource.text.includes(required)) fail(candidateSource.path, 'candidate/release authority contract missing', required);
+  }
+  if (/kind:\s*['"]git-source['"]/.test(candidateSource.text)) fail(candidateSource.path, 'Registry V4 installable releases must not be synthesized from mutable git-source');
+}
+
+const releaseDiscovery = sourceFiles.find((entry) => entry.path === 'runtime/release-discovery.mjs');
+if (!releaseDiscovery) fail('runtime/release-discovery.mjs', 'Release Descriptor V2 runtime consumer is missing');
+else {
+  if (!releaseDiscovery.text.includes('validatePackageReleaseDescriptor')) fail(releaseDiscovery.path, 'runtime release discovery must delegate to Protocol Core Descriptor V2 validator');
+  if (releaseDiscovery.text.includes('validateReleaseArtifact')) fail(releaseDiscovery.path, 'runtime release discovery must not duplicate Descriptor V2 artifact validation');
+}
+
+const releasePack = sourceFiles.find((entry) => entry.path === 'scripts/package-release-pack.mjs');
+if (!releasePack) fail('scripts/package-release-pack.mjs', 'Release Descriptor V2 producer is missing');
+else {
+  for (const required of ['validatePackageReleaseDescriptor', 'published_at', 'artifact_digest']) if (!releasePack.text.includes(required)) fail(releasePack.path, 'release producer contract missing', required);
+}
+
+const registryConfig = sourceFiles.find((entry) => entry.path === 'scripts/registry-v4-config.mjs');
+if (!registryConfig) fail('scripts/registry-v4-config.mjs', 'Registry V4 source/readiness policy is missing');
+else for (const required of ['required_packages', 'requiredRegistryPackageFailures']) if (!registryConfig.text.includes(required)) fail(registryConfig.path, 'Registry source policy contract missing', required);
 
 const identitySource = sourceFiles.find((entry) => entry.path === 'scripts/repository-identity.mjs');
 if (!identitySource) fail('scripts/repository-identity.mjs', 'canonical discovery identity model is missing');
@@ -108,7 +130,10 @@ else {
 
 const syncV4 = sourceFiles.find((entry) => entry.path === 'scripts/sync-v4.mjs');
 if (!syncV4) fail('scripts/sync-v4.mjs', 'canonical Sync V4 entrypoint is missing');
-else if (!syncV4.text.includes('discovery-sync.mjs')) fail(syncV4.path, 'Sync V4 must invoke the discovery collector by its non-authoritative name');
+else {
+  if (!syncV4.text.includes('discovery-sync.mjs')) fail(syncV4.path, 'Sync V4 must invoke the discovery collector by its non-authoritative name');
+  if (!syncV4.text.includes('requiredRegistryPackageFailures')) fail(syncV4.path, 'Sync V4 must fail closed on required official Descriptor V2 releases');
+}
 
 for (const path of ['README.md', 'site/public/openapi.json', 'site/public/.well-known/dsh-marketplace.json']) {
   const file = resolve(ROOT, path);
@@ -151,9 +176,9 @@ function visit(node, stack = []) {
 for (const node of graph.keys()) visit(node);
 
 const expectedAuthorities = [
-  'packages/protocol-core/index.mjs', 'packages/registry-core/index.mjs', 'packages/resolver/index.mjs', 'packages/policy-core/index.mjs', 'packages/policy-core/permissions.mjs',
-  'runtime/supervisor.mjs', 'runtime/transaction.mjs', 'runtime/activation-manager.mjs', 'runtime/cas-store.mjs', 'runtime/trust-store.mjs', 'runtime/secret-store.mjs', 'runtime/secret-provider.mjs', 'runtime/audit-log.mjs', 'runtime/adapters/index.mjs',
-  'scripts/discovery-sync.mjs', 'scripts/registry-v4-source.mjs', 'scripts/sync-v4.mjs',
+  'packages/protocol-core/index.mjs', 'packages/protocol-core/manifest.mjs', 'packages/registry-core/index.mjs', 'packages/resolver/index.mjs', 'packages/policy-core/index.mjs', 'packages/policy-core/permissions.mjs',
+  'runtime/supervisor.mjs', 'runtime/transaction.mjs', 'runtime/activation-manager.mjs', 'runtime/cas-store.mjs', 'runtime/trust-store.mjs', 'runtime/secret-store.mjs', 'runtime/secret-provider.mjs', 'runtime/audit-log.mjs', 'runtime/adapters/index.mjs', 'runtime/release-discovery.mjs',
+  'scripts/discovery-sync.mjs', 'scripts/registry-v4-source.mjs', 'scripts/registry-v4-config.mjs', 'scripts/sync-v4.mjs', 'scripts/package-release-pack.mjs',
 ];
 for (const path of expectedAuthorities) if (!await exists(resolve(ROOT, path))) fail(path, 'required canonical authority is missing');
 

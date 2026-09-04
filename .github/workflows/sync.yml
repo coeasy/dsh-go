@@ -16,10 +16,12 @@ on:
       - "packages/registry-core/**"
       - "packages/resolver/**"
       - "packages/policy-core/**"
+      - "config/registry-v4-sources.json"
       - "catalog/overrides.json"
       - ".github/workflows/sync.yml"
       - "dsh-package.json"
       - "packages/dsh-go-marketplace/**"
+      - "packages/dsh-go-marketplace-plugin/**"
   schedule:
     - cron: "18 0 * * *"
     - cron: "18 6 * * *"
@@ -53,16 +55,39 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Detect immutable release handoff
+        id: handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          defer=false
+          if [ "${{ github.event_name }}" = "push" ]; then
+            before="${{ github.event.before }}"
+            if [ -n "$before" ] && [ "$before" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$before^{commit}" 2>/dev/null; then
+              changed="$(git diff --name-only "$before" "$GITHUB_SHA")"
+            else
+              changed="$(git show --pretty='' --name-only "$GITHUB_SHA")"
+            fi
+            if printf '%s\n' "$changed" | grep -Eq '^packages/(dsh-go-marketplace|dsh-go-marketplace-plugin)/(dsh-package\.json|package\.json)$'; then
+              defer=true
+              echo "Package version metadata changed; Registry V4 publication is deferred until Release Descriptor V2 assets are immutable."
+            fi
+          fi
+          echo "defer=$defer" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node.js
+        if: ${{ steps.handoff.outputs.defer != 'true' }}
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
+        if: ${{ steps.handoff.outputs.defer != 'true' }}
         run: npm ci
 
       - name: Resolve sync mode
+        if: ${{ steps.handoff.outputs.defer != 'true' }}
         id: mode
         shell: bash
         run: |
@@ -73,14 +98,32 @@ jobs:
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
 
       - name: Run Sync V4 candidate pipeline
+        if: ${{ steps.handoff.outputs.defer != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SYNC_MODE: ${{ steps.mode.outputs.mode }}
           SYNC_CONCURRENCY: "16"
           REGISTRY_COMMIT_CONCURRENCY: "24"
+          DSH_DEFER_INCOMPLETE_REQUIRED_PACKAGES: "1"
         run: npm run sync:${{ steps.mode.outputs.mode }}
 
+      - name: Check Registry publication readiness
+        if: ${{ steps.handoff.outputs.defer != 'true' }}
+        id: readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s .dsh-registry-publication.json
+          ready="$(node -p "require('./.dsh-registry-publication.json').ready === true ? 'true' : 'false'")"
+          reason="$(node -p "require('./.dsh-registry-publication.json').reason || ''")"
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          if [ "$ready" != "true" ]; then
+            echo "Registry publication is deferred: ${reason:-required Release Descriptor V2 assets are not ready}"
+          fi
+
       - name: Run canonical integrity gates
+        if: ${{ steps.handoff.outputs.defer != 'true' && steps.readiness.outputs.ready == 'true' }}
         run: |
           npm run contract:check
           npm run architecture:check
@@ -91,9 +134,11 @@ jobs:
           node -e "const r=require('./catalog/registry-v4.json');const c=require('./catalog/registry-candidates-v1.json');if(r.schema_version!==4||c.version!==1||c.authority!==false||c.registry_revision!==r.revision)process.exit(1)"
 
       - name: Update README recommendations
+        if: ${{ steps.handoff.outputs.defer != 'true' && steps.readiness.outputs.ready == 'true' }}
         run: npm run readme:update
 
       - name: Detect deploy-worthy Registry V4 changes
+        if: ${{ steps.handoff.outputs.defer != 'true' && steps.readiness.outputs.ready == 'true' }}
         id: diff
         shell: bash
         run: |
@@ -104,6 +149,7 @@ jobs:
           fi
 
       - name: Commit and push generated data
+        if: ${{ steps.handoff.outputs.defer != 'true' && steps.readiness.outputs.ready == 'true' }}
         id: publish
         shell: bash
         run: |
@@ -131,7 +177,7 @@ jobs:
 
       - name: Dispatch three production platforms and final smoke
         id: dispatch
-        if: github.event_name == 'push' || (steps.publish.outputs.pushed == 'true' && steps.diff.outputs.data_changed == 'true')
+        if: ${{ steps.handoff.outputs.defer != 'true' && steps.readiness.outputs.ready == 'true' && (github.event_name == 'push' || (steps.publish.outputs.pushed == 'true' && steps.diff.outputs.data_changed == 'true')) }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEPLOY_REVISION: ${{ steps.publish.outputs.commit_sha }}
@@ -146,6 +192,13 @@ jobs:
         if: always()
         run: |
           echo "### Registry V4 sync (${{ steps.mode.outputs.mode || 'n/a' }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "- release handoff deferred: ${{ steps.handoff.outputs.defer || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- required package set ready: ${{ steps.readiness.outputs.ready || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.handoff.outputs.defer }}" = "true" ]; then
+            echo "- authority: waiting for Package Release Descriptor V2 publication" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.readiness.outputs.ready }}" = "false" ]; then
+            echo "- authority: ${{ steps.readiness.outputs.reason || 'required Release Descriptor V2 assets are not ready' }}" >> "$GITHUB_STEP_SUMMARY"
+          fi
           if [ -f catalog/registry-v4.json ]; then
             node -e "const r=require('./catalog/registry-v4.json'); const c=require('./catalog/registry-candidates-v1.json'); console.log('- registry revision: '+r.revision+'\n- installable packages: '+r.packages.length+'\n- candidates: '+c.candidates.length+'\n- quarantined: '+c.counts.quarantined+'\n- rejected: '+c.counts.rejected)" >> "$GITHUB_STEP_SUMMARY"
           fi

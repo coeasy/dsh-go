@@ -99,6 +99,26 @@ describe('architecture hardening contracts', () => {
 
   it('re-reads Manifest V2 at the immutable commit and quarantines discovery-only records', async () => {
     const commit = 'a'.repeat(40);
+    const releaseCommit = 'b'.repeat(40);
+    const releaseManifest = {
+      manifest_version: 2,
+      type: 'plugin',
+      id: 'owner/installable',
+      version: '1.2.3',
+      channel: 'stable',
+      name: 'Installable',
+      description: 'immutable canonical package',
+      runtime: { type: 'plugin' },
+      entrypoints: { main: 'index.mjs' },
+      capabilities: [],
+      permissions: [],
+      dependencies: [],
+      compatibility: {},
+      publisher: { id: 'owner' },
+      security: {},
+      metadata: { category: 'tool' },
+      source: { provider: 'github', repo: 'owner/installable' },
+    };
     const discovery = {
       plugins: [
         {
@@ -115,28 +135,34 @@ describe('architecture hardening contracts', () => {
     const built = await buildRegistryV4FromDiscovery(discovery, {
       generated_at: '2026-09-04T00:00:00.000Z',
       concurrency: 1,
-      loadManifest: async (repo: string, immutableCommit: string) => repo === 'owner/installable' && immutableCommit === commit ? ({
+      loadManifest: async (repo: string, immutableCommit: string) => repo === 'owner/installable' && immutableCommit === commit ? releaseManifest : null,
+      loadReleaseDescriptor: async (repo: string, currentManifest: any) => repo === 'owner/installable' && currentManifest.id === 'owner/installable' ? ({
+        release_version: 2,
+        protocol_version: 2,
         manifest_version: 2,
-        type: 'plugin',
         id: 'owner/installable',
+        type: 'plugin',
         version: '1.2.3',
         channel: 'stable',
-        name: 'Installable',
-        description: 'immutable canonical package',
-        runtime: { type: 'plugin' },
-        entrypoints: { main: 'index.mjs' },
-        capabilities: [],
-        permissions: [],
-        dependencies: [],
-        compatibility: {},
-        publisher: { id: 'owner' },
-        security: {},
-        metadata: { category: 'tool' },
-        source: { provider: 'github', repo: 'owner/installable' },
+        repository: 'owner/installable',
+        commit: releaseCommit,
+        tag: 'v1.2.3',
+        published_at: '2026-09-04T00:00:00.000Z',
+        manifest_file: 'dsh-package.json',
+        package_path: null,
+        manifest: releaseManifest,
+        artifact: {
+          kind: 'release-archive',
+          url: 'https://github.com/owner/installable/releases/download/v1.2.3/owner-installable-1.2.3.tgz',
+          digest: `sha256-${'c'.repeat(64)}`,
+          format: 'tgz',
+          strip_components: 1,
+        },
       }) : null,
     });
     expect(built.registry.packages.map((item: any) => item.id)).toEqual(['owner/installable']);
     expect(built.registry.packages[0].releases[0].version).toBe('1.2.3');
+    expect(built.registry.packages[0].releases[0].commit).toBe(releaseCommit);
     expect(built.candidates.counts.accepted).toBe(1);
     expect(built.candidates.counts.quarantined).toBe(1);
     const index = buildSearchIndexV3(built.registry, built.candidates as any);

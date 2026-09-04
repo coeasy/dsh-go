@@ -9,6 +9,7 @@ import {
   PACKAGE_RELEASE_DESCRIPTOR_VERSION,
   packageReleaseTag,
   safePackageReleaseName,
+  validatePackageReleaseDescriptor,
 } from '../packages/protocol-core/manifest.mjs';
 import { readDshManifest } from '../runtime/package-manifest.mjs';
 import { generateSbom } from './generate-sbom.mjs';
@@ -103,7 +104,9 @@ async function main() {
   });
   const digest = await sha256File(archiveFile);
   const artifactUrl = `https://github.com/${repository}/releases/download/${encodeURIComponent(tag)}/${archiveName}`;
-  const descriptor = {
+  const commitTime = await git(root, ['show', '-s', '--format=%cI', commit], commandOptions);
+  const publishedAt = new Date(commitTime).toISOString();
+  const descriptor = validatePackageReleaseDescriptor({
     release_version: PACKAGE_RELEASE_DESCRIPTOR_VERSION,
     protocol_version: 2,
     manifest_version: PACKAGE_MANIFEST_VERSION,
@@ -114,6 +117,7 @@ async function main() {
     repository,
     commit,
     tag,
+    published_at: publishedAt,
     manifest_file: relative(root, found.file).split(sep).join('/'),
     package_path: scope.path || null,
     manifest,
@@ -124,7 +128,16 @@ async function main() {
       format: 'tgz',
       strip_components: scope.stripComponents,
     },
-  };
+  }, {
+    type: manifest.type,
+    id: manifest.id,
+    version: manifest.version,
+    channel,
+    repository,
+    commit,
+    tag,
+    package_path: scope.path || null,
+  });
   await writeFile(descriptorFile, `${JSON.stringify(descriptor, null, 2)}\n`, 'utf8');
 
   let sbom;
@@ -146,6 +159,7 @@ async function main() {
     tag,
     canonical_tag: canonicalTag,
     commit,
+    published_at: publishedAt,
     package_path: scope.path || null,
     archive_name: archiveName,
     archive_file: archiveFile,

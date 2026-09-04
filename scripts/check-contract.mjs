@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 import { access, readFile, readdir } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
-import { validatePackageManifest, PACKAGE_MANIFEST_VERSION } from '../packages/protocol-core/manifest.mjs';
+import {
+  validatePackageManifest,
+  PACKAGE_MANIFEST_VERSION,
+  PACKAGE_RELEASE_DESCRIPTOR_VERSION,
+} from '../packages/protocol-core/manifest.mjs';
 import {
   DSH_API_VERSION,
   DSH_DISTRIBUTION_VERSION,
@@ -43,6 +47,7 @@ expect('Distribution version', DSH_DISTRIBUTION_VERSION, 2);
 expect('Search Index version', DSH_SEARCH_INDEX_VERSION, 3);
 expect('Runtime State version', DSH_RUNTIME_STATE_VERSION, 4);
 expect('Package Manifest version', DSH_PACKAGE_MANIFEST_VERSION, PACKAGE_MANIFEST_VERSION);
+expect('Package Release Descriptor version', PACKAGE_RELEASE_DESCRIPTOR_VERSION, 2);
 
 for (const path of [
   'packages/protocol-core/index.mjs',
@@ -50,6 +55,8 @@ for (const path of [
   'packages/registry-core/index.mjs',
   'packages/resolver/index.mjs',
   'schemas/dsh-package-v2.schema.json',
+  'schemas/dsh-package-release-v2.schema.json',
+  'config/registry-v4-sources.json',
   'scripts/sync-v4.mjs',
   'scripts/validate-registry-v4.mjs',
   'scripts/registry-distribution-v2.mjs',
@@ -77,6 +84,22 @@ const manifestSchema = await json('schemas/dsh-package-v2.schema.json');
 expect('Manifest V2 JSON Schema version marker', manifestSchema.properties?.manifest_version?.const, PACKAGE_MANIFEST_VERSION);
 if (manifestSchema.properties?.schema_version) errors.push('Manifest V2 JSON Schema must not expose legacy schema_version');
 
+const releaseSchema = await json('schemas/dsh-package-release-v2.schema.json');
+expect('Release Descriptor V2 schema marker', releaseSchema.properties?.release_version?.const, PACKAGE_RELEASE_DESCRIPTOR_VERSION);
+expect('Release Descriptor protocol marker', releaseSchema.properties?.protocol_version?.const, 2);
+expect('Release Descriptor Manifest marker', releaseSchema.properties?.manifest_version?.const, PACKAGE_MANIFEST_VERSION);
+if (!releaseSchema.required?.includes('commit') || !releaseSchema.required?.includes('artifact') || !releaseSchema.required?.includes('published_at')) {
+  errors.push('Release Descriptor V2 schema must bind commit, artifact and published_at');
+}
+
+const sourceConfig = await json('config/registry-v4-sources.json');
+expect('Registry V4 source config schema', sourceConfig.schema_version, 1);
+if (!Array.isArray(sourceConfig.sources)) errors.push('Registry V4 source config must contain sources[]');
+for (const [index, source] of (sourceConfig.sources || []).entries()) {
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(String(source?.repository || ''))) errors.push(`Registry source ${index} has invalid repository`);
+  if (!source?.package_path || String(source.package_path).includes('..') || String(source.package_path).startsWith('/')) errors.push(`Registry source ${index} must declare a safe package_path`);
+}
+
 async function collectPackageManifests(root, depth = 0) {
   if (depth > 5) return [];
   let entries;
@@ -103,6 +126,16 @@ for (const file of packageManifests) {
     errors.push(`${file}: invalid Manifest V2 (${error.message})`);
   }
 }
+
+const rootManifest = await json('dsh-package.json');
+const marketplaceManifest = await json('packages/dsh-go-marketplace/dsh-package.json');
+for (const key of ['id', 'type', 'version', 'channel']) {
+  expect(`root/nested Marketplace ${key}`, rootManifest[key], marketplaceManifest[key]);
+}
+expect('root Marketplace release package path', rootManifest.release?.package_path, 'packages/dsh-go-marketplace');
+expect('nested Marketplace release package path', marketplaceManifest.release?.package_path, 'packages/dsh-go-marketplace');
+const desktopManifest = await json('packages/dsh-go-marketplace-plugin/dsh-package.json');
+expect('desktop Marketplace release package path', desktopManifest.release?.package_path, 'packages/dsh-go-marketplace-plugin');
 
 const discovery = await json('site/public/.well-known/dsh-marketplace.json');
 expect('discovery schema', discovery.schema, 'dsh-marketplace-discovery.v2');
@@ -170,4 +203,4 @@ if (errors.length) {
   for (const error of errors) console.error(`- ${error}`);
   process.exit(1);
 }
-console.log(`DSH canonical contract passed: Protocol V2 / Manifest V2 (${packageManifests.length}) / Registry V4 / Distribution V2 / Search V3 / Runtime State V4 / API V2.`);
+console.log(`DSH canonical contract passed: Protocol V2 / Manifest V2 (${packageManifests.length}) / Release Descriptor V2 / Registry V4 / Distribution V2 / Search V3 / Runtime State V4 / API V2.`);
