@@ -312,8 +312,9 @@ describe('EdgeOne CI deployment helpers', () => {
     expect(calls[0]).toMatchObject({
       command: 'npx',
       args: ['--yes', 'edgeone@1.6.28', 'makers', 'deploy', '--help'],
-      options: { cwd: './site/dist' },
     });
+    expect(calls[0].options.cwd).toContain('dsh-edgeone-cli-');
+    expect(calls[0].options.cwd).not.toBe('./site/dist');
     expect(calls.flatMap((call) => call.args)).not.toContain('link');
   });
 
