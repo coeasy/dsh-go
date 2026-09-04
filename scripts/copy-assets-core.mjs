@@ -1,22 +1,23 @@
 #!/usr/bin/env node
-/** Build-time asset copier + compact catalog/install/search/registry distribution generator. */
-import { mkdir, cp, readFile, access, writeFile, readdir, unlink } from 'node:fs/promises';
-import { resolve, dirname, join } from 'node:path';
+/** Canonical build-time asset pipeline for Registry V4 / Distribution V2 / Search Index V3. */
+import { access, cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
-import { buildSearchIndex } from './build-search-index-v2.mjs';
-import { writeRegistryDistribution } from './registry-distribution.mjs';
-import { buildLegacyPublicCatalog, writeCatalogDistribution } from './catalog-distribution.mjs';
+import { validateRegistryV4 } from '../packages/registry-core/index.mjs';
+import { buildRegistryV4FromDiscovery } from './registry-v4-source.mjs';
+import { buildSearchIndexV3 } from './build-search-index-v3.mjs';
+import { writeRegistryDistributionV2 } from './registry-distribution-v2.mjs';
 
 function findRoot() {
   const bases = [process.cwd(), dirname(fileURLToPath(import.meta.url))];
   for (const base of bases) {
-    let cur = base;
-    for (let i = 0; i < 6; i++) {
-      if (existsSync(join(cur, 'package.json')) && existsSync(join(cur, 'scripts', 'copy-assets.mjs'))) return cur;
-      const parent = dirname(cur);
-      if (parent === cur) break;
-      cur = parent;
+    let current = base;
+    for (let depth = 0; depth < 6; depth += 1) {
+      if (existsSync(join(current, 'package.json')) && existsSync(join(current, 'scripts', 'copy-assets.mjs'))) return current;
+      const parent = dirname(current);
+      if (parent === current) break;
+      current = parent;
     }
   }
   return process.cwd();
@@ -27,134 +28,94 @@ const CATALOG_DIR = resolve(ROOT, 'catalog');
 const TARGET_DIR = resolve(ROOT, 'site/public/catalog');
 const SCRIPTS_SRC = resolve(ROOT, 'site/src/scripts');
 const SCRIPTS_DST = resolve(ROOT, 'site/public/scripts');
-const INSTALL_DIR = resolve(ROOT, 'site/public/install');
-const DETAIL_THRESHOLD = 100;
-async function exists(path) { try { await access(path); return true; } catch { return false; } }
+const DISCOVERY_FILE = resolve(CATALOG_DIR, 'plugins.json');
+const REGISTRY_V4_FILE = resolve(CATALOG_DIR, 'registry-v4.json');
+const CANDIDATE_FILE = resolve(CATALOG_DIR, 'registry-candidates-v1.json');
 
-function shTemplate(installCmd) {
-  return `#!/usr/bin/env bash\n# DSH Plugin one-click installer (generated)\nset -euo pipefail\necho "Installing package through DSH CLI ..."\nif command -v dsh >/dev/null 2>&1; then\n  ${installCmd}\nelse\n  echo "dsh CLI not found. See https://get.dsh.dev"\n  exit 1\nfi\n`;
-}
-function psTemplate(installCmd) {
-  return `# DSH Plugin one-click installer (generated)\nWrite-Host "Installing package through DSH CLI ..."\nif (Get-Command dsh -ErrorAction SilentlyContinue) {\n  ${installCmd}\n} else {\n  Write-Host "dsh CLI not found. See https://get.dsh.dev"\n  exit 1\n}\n`;
+async function exists(path) {
+  try { await access(path); return true; } catch { return false; }
 }
 
-function safeRepository(value) {
-  const repository = String(value || '').trim();
-  return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository) ? repository : null;
+async function readOptionalJson(file) {
+  if (!(await exists(file))) return null;
+  return JSON.parse(await readFile(file, 'utf8'));
 }
 
-function safeSlug(value) {
-  const slug = String(value || '').trim();
-  return /^[A-Za-z0-9_.-]+$/.test(slug) ? slug : null;
-}
-
-function shellArg(value) {
-  return `'${String(value).replaceAll("'", "'\\\"'\\\"'")}'`;
-}
-
-function powershellArg(value) {
-  return `'${String(value).replaceAll("'", "''")}'`;
-}
-
-async function genInstallScripts() {
-  const src = resolve(CATALOG_DIR, 'plugins.json');
-  if (!(await exists(src))) { console.warn('Missing plugins.json; skipping install scripts'); return; }
-  const data = JSON.parse(await readFile(src, 'utf8'));
-  await mkdir(INSTALL_DIR, { recursive: true });
-  const wanted = new Set((data.plugins || [])
-    .filter((plugin) => !plugin.deprecated && !plugin.disabled && (plugin.stars || 0) >= DETAIL_THRESHOLD)
-    .map((plugin) => safeSlug(plugin.slug))
-    .filter(Boolean)
-    .flatMap((slug) => [`${slug}.sh`, `${slug}.ps1`]));
-  try {
-    for (const file of await readdir(INSTALL_DIR)) {
-      if ((file.endsWith('.sh') || file.endsWith('.ps1')) && !wanted.has(file)) await unlink(resolve(INSTALL_DIR, file));
-    }
-  } catch { /* directory may be new */ }
-
-  let generated = 0;
-  for (const plugin of data.plugins || []) {
-    if (plugin.deprecated || plugin.disabled || (plugin.stars || 0) < DETAIL_THRESHOLD) continue;
-    const full = safeRepository(plugin.full_name);
-    const slug = safeSlug(plugin.slug);
-    if (!full || !slug) continue;
-    // The catalog is assembled from third-party repositories. Never embed a
-    // catalog-provided command verbatim in a downloadable shell/PowerShell
-    // script; derive the command from the validated immutable repository id.
-    const installSpec = `github:${full}`;
-    const installCmd = `dsh plugin install ${shellArg(installSpec)}`;
-    const powershellInstallCmd = `dsh plugin install ${powershellArg(installSpec)}`;
-    await writeFile(resolve(INSTALL_DIR, `${slug}.sh`), shTemplate(installCmd), 'utf8');
-    await writeFile(resolve(INSTALL_DIR, `${slug}.ps1`), psTemplate(powershellInstallCmd), 'utf8');
-    generated++;
+async function buildCanonicalRegistry() {
+  let registry = await readOptionalJson(REGISTRY_V4_FILE);
+  let candidates = await readOptionalJson(CANDIDATE_FILE);
+  if (registry) {
+    registry = validateRegistryV4(registry);
+  } else {
+    const discovery = await readOptionalJson(DISCOVERY_FILE);
+    if (!discovery?.plugins?.length) throw new Error('Registry V4 is missing and discovery candidate input is empty; run npm run sync:registry');
+    const built = await buildRegistryV4FromDiscovery(discovery, {
+      token: process.env.GITHUB_TOKEN || '',
+      generated_at: process.env.DSH_GENERATED_AT || new Date().toISOString(),
+    });
+    registry = validateRegistryV4(built.registry);
+    candidates = built.candidates;
+    await writeFile(REGISTRY_V4_FILE, `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
+    await writeFile(CANDIDATE_FILE, `${JSON.stringify(candidates, null, 2)}\n`, 'utf8');
   }
-  console.log(`Generated ${generated * 2} install scripts`);
+  await writeFile(resolve(TARGET_DIR, 'registry-v4.json'), `${JSON.stringify(registry)}\n`, 'utf8');
+  return { registry, candidates };
 }
 
-async function genSearchIndex() {
-  const src = resolve(CATALOG_DIR, 'registry-v3.json');
-  if (!(await exists(src))) { console.warn('Missing registry-v3.json; skipping Search Index V2'); return; }
-  const registry = JSON.parse(await readFile(src, 'utf8'));
-  const index = buildSearchIndex(registry);
-  await writeFile(resolve(TARGET_DIR, 'search-index-v2.json'), `${JSON.stringify(index)}\n`, 'utf8');
-  console.log(`Generated Search Index V2 (${index.count} packages)`);
-}
-
-async function genRegistryDistribution() {
-  const registryFile = resolve(CATALOG_DIR, 'registry-v3.json');
-  if (!(await exists(registryFile))) { console.warn('Missing registry-v3.json; skipping Registry Distribution'); return; }
-  const registry = JSON.parse(await readFile(registryFile, 'utf8'));
-  const deltaFile = resolve(CATALOG_DIR, 'distribution-delta.json');
-  const delta = await exists(deltaFile) ? JSON.parse(await readFile(deltaFile, 'utf8')) : null;
-  const result = await writeRegistryDistribution(
-    registry,
-    resolve(TARGET_DIR, 'distribution-v1'),
-    { delta, concurrency: Number(process.env.REGISTRY_DISTRIBUTION_WRITE_CONCURRENCY || 32) },
-  );
-  console.log(`Generated Registry Distribution V1 (${result.records} records, ${result.packages} packages, ${result.shards} shards, hash=${result.content_hash})`);
-}
-
-async function genCatalogDistribution() {
-  const catalogFile = resolve(CATALOG_DIR, 'plugins.json');
-  if (!(await exists(catalogFile))) { console.warn('Missing plugins.json; skipping Catalog Distribution'); return; }
-  const catalog = JSON.parse(await readFile(catalogFile, 'utf8'));
-  const distribution = await writeCatalogDistribution(catalog, resolve(TARGET_DIR, 'catalog-v3'), {
-    maxShardBytes: Number(process.env.CATALOG_SHARD_MAX_BYTES || 2 * 1024 * 1024),
-  });
-  const legacy = buildLegacyPublicCatalog(catalog);
-  await writeFile(resolve(TARGET_DIR, 'plugins.json'), legacy.text, 'utf8');
-  console.log(`Generated Catalog Distribution V1 (${distribution.count} records, ${distribution.shards} shards, max=${distribution.max_shard_bytes} bytes)`);
-  console.log(`Generated compact legacy plugins.json (${legacy.bytes} bytes, readme_excerpt<=${legacy.excerptLimit}, description<=${legacy.descriptionLimit})`);
-}
-
-async function copyJsonMinified(file) {
-  const src = resolve(CATALOG_DIR, file);
-  if (!(await exists(src))) return false;
-  const data = JSON.parse(await readFile(src, 'utf8'));
-  await writeFile(resolve(TARGET_DIR, file), `${JSON.stringify(data)}\n`, 'utf8');
-  console.log(`Minified ${file} -> site/public/catalog/`);
+async function copyOptionalJson(file) {
+  const source = resolve(CATALOG_DIR, file);
+  if (!(await exists(source))) return false;
+  const payload = JSON.parse(await readFile(source, 'utf8'));
+  await writeFile(resolve(TARGET_DIR, file), `${JSON.stringify(payload)}\n`, 'utf8');
   return true;
 }
 
-async function main() {
-  await mkdir(TARGET_DIR, { recursive: true });
-  await genCatalogDistribution();
-  for (const file of ['meta.json', 'registry-v3.json', 'schema-v3.json', 'provider-adapters.json']) {
-    const copied = await copyJsonMinified(file);
-    if (!copied && file === 'registry-v3.json') console.warn('Missing registry-v3.json; run npm run registry:migrate or npm run sync first');
-  }
-  await genRegistryDistribution();
-  await genSearchIndex();
-  if (await exists(resolve(CATALOG_DIR, 'feed.xml'))) await cp(resolve(CATALOG_DIR, 'feed.xml'), resolve(ROOT, 'site/public/feed.xml'));
-  for (const file of ['_headers', '_redirects']) {
-    const src = resolve(ROOT, file);
-    if (await exists(src)) await cp(src, resolve(ROOT, 'site/public', file));
-  }
+async function removeLegacyPublicSurfaces() {
+  for (const path of [
+    resolve(TARGET_DIR, 'registry-v3.json'),
+    resolve(TARGET_DIR, 'schema-v3.json'),
+    resolve(TARGET_DIR, 'search-index-v2.json'),
+    resolve(TARGET_DIR, 'distribution-v1'),
+    resolve(TARGET_DIR, 'plugins.json'),
+    resolve(TARGET_DIR, 'registry-candidates-v1.json'),
+    resolve(TARGET_DIR, 'catalog-v3'),
+    resolve(ROOT, 'site/public/install'),
+  ]) await rm(path, { recursive: true, force: true });
+}
+
+async function syncBrowserScripts() {
   try {
     const files = (await readdir(SCRIPTS_SRC)).filter((file) => file.endsWith('.js'));
     await mkdir(SCRIPTS_DST, { recursive: true });
     for (const file of files) await cp(resolve(SCRIPTS_SRC, file), resolve(SCRIPTS_DST, file));
-  } catch (error) { console.warn('Script asset sync failed:', error.message); }
-  await genInstallScripts();
+  } catch (error) {
+    console.warn('Browser script asset sync failed:', error instanceof Error ? error.message : String(error));
+  }
 }
-main().catch((error) => { console.error(error); process.exit(1); });
+
+async function main() {
+  await mkdir(TARGET_DIR, { recursive: true });
+  await removeLegacyPublicSurfaces();
+  const { registry, candidates } = await buildCanonicalRegistry();
+
+  const searchIndex = buildSearchIndexV3(registry, candidates);
+  await writeFile(resolve(TARGET_DIR, 'search-index-v3.json'), `${JSON.stringify(searchIndex)}\n`, 'utf8');
+
+  const distribution = await writeRegistryDistributionV2(registry, resolve(TARGET_DIR, 'registry-v4'));
+  await copyOptionalJson('meta.json');
+  await copyOptionalJson('provider-adapters.json');
+
+  if (await exists(resolve(CATALOG_DIR, 'feed.xml'))) await cp(resolve(CATALOG_DIR, 'feed.xml'), resolve(ROOT, 'site/public/feed.xml'));
+  for (const file of ['_headers', '_redirects']) {
+    const source = resolve(ROOT, file);
+    if (await exists(source)) await cp(source, resolve(ROOT, 'site/public', file));
+  }
+  await syncBrowserScripts();
+
+  console.log(`Canonical assets ready: Registry V4 ${registry.metadata.package_count} installable packages, Search Index V3 ${searchIndex.count} discovery items (${searchIndex.discovery_only_count} discovery-only), Distribution V2 ${distribution.package_count} shards`);
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.stack || error.message : error);
+  process.exit(1);
+});

@@ -1,0 +1,211 @@
+---
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { MESSAGES } from '../i18n/messages';
+import { DETAIL_THRESHOLD } from '../lib/threshold';
+import { u } from '../lib/urls';
+
+type Item = {
+  key: string;
+  id: string;
+  type: 'plugin' | 'mcp' | 'skill' | 'agent';
+  version: string | null;
+  channel: string;
+  publisher: string | null;
+  repo: string;
+  commit: string | null;
+  name: string;
+  description: string;
+  category: string;
+  capabilities: string[];
+  permissions: string[];
+  stars: number;
+  rank: number;
+  verified: boolean;
+  updated_at: string;
+  has_safe_release: boolean;
+};
+
+let initialItems: Item[] = [];
+let revision = '';
+try {
+  const index = JSON.parse(readFileSync(resolve('public', 'catalog', 'search-index-v3.json'), 'utf8'));
+  initialItems = (Array.isArray(index.items) ? index.items : []).slice(0, 60);
+  revision = String(index.registry_revision || '');
+} catch {
+  // `astro check` can run without generated public assets. Runtime loading remains canonical.
+}
+
+const indexUrl = u('/catalog/search-index-v3.json');
+const packageBase = u('/package/');
+---
+
+<section class="market-v2" data-market-v2 data-index-url={indexUrl} data-package-base={packageBase} data-detail-threshold={DETAIL_THRESHOLD} data-revision={revision}>
+  <header class="market-hero">
+    <span class="eyebrow">Registry V4 · Protocol V2</span>
+    <h1 data-msg="hero_title">DeepSeek Harness Ecosystem</h1>
+    <p data-msg="hero_sub">Discover Plugin, MCP, Skill and Agent packages from Registry V4.</p>
+  </header>
+
+  <div class="market-controls">
+    <input data-search type="search" autocomplete="off" data-msg-placeholder="search_placeholder" placeholder="Search packages, repositories, publishers…" />
+    <div class="type-tabs" role="tablist" aria-label="Package type">
+      <button class="active" type="button" data-type="all" data-msg="filter_all">All</button>
+      <button type="button" data-type="plugin" data-msg="filter_plugin">Plugins</button>
+      <button type="button" data-type="mcp" data-msg="filter_mcp">MCP</button>
+      <button type="button" data-type="skill" data-msg="filter_skill">Skills</button>
+      <button type="button" data-type="agent" data-msg="filter_agent">Agents</button>
+    </div>
+    <select data-sort aria-label="Sort">
+      <option value="stars" data-msg="sort_stars">Most Stars</option>
+      <option value="updated" data-msg="sort_updated">Recently Updated</option>
+    </select>
+  </div>
+
+  <div class="market-summary">
+    <span data-results>{initialItems.length} packages</span>
+    <span data-registry-revision>{revision ? `Registry ${revision.slice(0, 12)}` : ''}</span>
+  </div>
+
+  <div class="package-grid" data-grid>
+    {initialItems.map((item) => {
+      const coordinate = `${item.type}:${item.id}@${item.version || '*'}`;
+      const detail = item.stars >= DETAIL_THRESHOLD && item.has_safe_release ? u(`/package/${item.type}/${item.id}`) : '';
+      const source = item.repo ? `https://github.com/${item.repo}` : '';
+      const deep = `dsh://package/install?${new URLSearchParams({ spec: coordinate, channel: item.channel || 'stable' }).toString()}`;
+      return (
+        <article class="package-card" data-card data-type={item.type} data-stars={item.stars} data-updated={item.updated_at}>
+          <div class="card-body">
+            <div class="card-top"><span class={`kind kind-${item.type}`}>{item.type.toUpperCase()}</span><span class="stars">★ {item.stars.toLocaleString()}</span></div>
+            <h2>{item.name}</h2>
+            <code>{item.type}:{item.id}</code>
+            <p class="description">{item.description || item.repo}</p>
+            <div class="signals"><span>{item.verified ? '✓ Verified' : 'Community'}</span><span>{item.has_safe_release ? 'Installable' : 'Discovery only'}</span></div>
+          </div>
+          <div class="card-actions">
+            {detail ? <a class="secondary" href={detail} data-msg="detail">Details</a> : source ? <a class="secondary" href={source} target="_blank" rel="noopener noreferrer" data-msg="source">Source ↗</a> : null}
+            {item.has_safe_release && <button type="button" class="secondary" data-copy={coordinate} data-msg="install">Copy install</button>}
+            {item.has_safe_release && <a class="primary" href={deep} data-msg="open_dsh">Open in DSH</a>}
+          </div>
+        </article>
+      );
+    })}
+  </div>
+  <p class="empty" data-empty hidden data-msg="no_results">No packages match this filter.</p>
+  <button class="load-more" type="button" data-load-more data-msg="load_more">Load more</button>
+  <p class="load-status" data-status aria-live="polite"></p>
+</section>
+
+<script is:inline define:vars={{ messages: MESSAGES }}>
+  (() => {
+    const root = document.querySelector('[data-market-v2]');
+    if (!root || root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+    const grid = root.querySelector('[data-grid]');
+    const search = root.querySelector('[data-search]');
+    const sort = root.querySelector('[data-sort]');
+    const result = root.querySelector('[data-results]');
+    const empty = root.querySelector('[data-empty]');
+    const loadMore = root.querySelector('[data-load-more]');
+    const status = root.querySelector('[data-status]');
+    const revisionNode = root.querySelector('[data-registry-revision]');
+    const threshold = Number(root.dataset.detailThreshold || 200);
+    const pageSize = 60;
+    let allItems = [];
+    let visibleCount = pageSize;
+    let activeType = 'all';
+    let loaded = false;
+
+    const currentLang = () => messages[document.documentElement.lang] ? document.documentElement.lang : 'en';
+    const t = (key, vars = {}) => {
+      let value = messages[currentLang()][key] || messages.en[key] || key;
+      Object.entries(vars).forEach(([name, replacement]) => { value = value.replaceAll(`{${name}}`, String(replacement)); });
+      return value;
+    };
+    const escape = (value) => String(value == null ? '' : value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const packageHref = (item) => root.dataset.packageBase + encodeURIComponent(item.type) + '/' + String(item.id).split('/').map(encodeURIComponent).join('/');
+    const sourceHref = (item) => /^[\w.-]+\/[\w.-]+$/.test(String(item.repo || '')) ? `https://github.com/${item.repo}` : '';
+    const coordinate = (item) => `${item.type}:${item.id}@${item.version || '*'}`;
+    const deepLink = (item) => `dsh://package/install?${new URLSearchParams({spec: coordinate(item), channel: item.channel || 'stable'}).toString()}`;
+
+    function applyMessages() {
+      root.querySelectorAll('[data-msg]').forEach((node) => { const key = node.getAttribute('data-msg'); if (key && messages.en[key]) node.textContent = t(key); });
+      root.querySelectorAll('[data-msg-placeholder]').forEach((node) => { const key = node.getAttribute('data-msg-placeholder'); if (key) node.setAttribute('placeholder', t(key)); });
+      if (loaded) render();
+    }
+
+    function filtered() {
+      const query = String(search.value || '').trim().toLocaleLowerCase();
+      const items = allItems.filter((item) => activeType === 'all' || item.type === activeType).filter((item) => {
+        if (!query) return true;
+        return [item.id,item.name,item.description,item.repo,item.publisher,item.category,...(item.capabilities || [])].some((value) => String(value || '').toLocaleLowerCase().includes(query));
+      });
+      if (sort.value === 'updated') items.sort((a,b) => Date.parse(b.updated_at || '') - Date.parse(a.updated_at || '') || Number(b.stars||0)-Number(a.stars||0));
+      else items.sort((a,b) => Number(b.stars||0)-Number(a.stars||0) || String(a.name||a.id).localeCompare(String(b.name||b.id)));
+      return items;
+    }
+
+    function card(item) {
+      const safe = item.has_safe_release === true && item.version;
+      const detail = safe && Number(item.stars || 0) >= threshold ? packageHref(item) : '';
+      const source = sourceHref(item);
+      const actions = [
+        detail ? `<a class="secondary" href="${escape(detail)}">${escape(t('detail'))}</a>` : source ? `<a class="secondary" href="${escape(source)}" target="_blank" rel="noopener noreferrer">${escape(t('source'))}</a>` : '',
+        safe ? `<button type="button" class="secondary" data-copy="${escape(coordinate(item))}">${escape(t('install'))}</button>` : '',
+        safe ? `<a class="primary" href="${escape(deepLink(item))}">${escape(t('open_dsh'))}</a>` : '',
+      ].join('');
+      return `<article class="package-card" data-card data-type="${escape(item.type)}" data-stars="${Number(item.stars||0)}" data-updated="${escape(item.updated_at||'')}"><div class="card-body"><div class="card-top"><span class="kind kind-${escape(item.type)}">${escape(String(item.type).toUpperCase())}</span><span class="stars">★ ${Number(item.stars||0).toLocaleString()}</span></div><h2>${escape(item.name||item.id)}</h2><code>${escape(item.type)}:${escape(item.id)}</code><p class="description">${escape(item.description||item.repo||'')}</p><div class="signals"><span>${escape(item.verified?t('verified'):t('community'))}</span><span>${escape(safe?t('installable'):t('discovery_only'))}</span></div></div><div class="card-actions">${actions}</div></article>`;
+    }
+
+    function render() {
+      const items = filtered();
+      const page = items.slice(0, visibleCount);
+      grid.innerHTML = page.map(card).join('');
+      result.textContent = t('results', { n: items.length.toLocaleString() });
+      empty.hidden = items.length !== 0;
+      loadMore.hidden = visibleCount >= items.length;
+    }
+
+    async function load() {
+      status.textContent = t('loading');
+      try {
+        const response = await fetch(root.dataset.indexUrl, { headers: { accept: 'application/json' } });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (Number(payload.version) !== 3 || Number(payload.registry_schema_version) !== 4 || !Array.isArray(payload.items)) throw new Error('invalid Search Index V3');
+        allItems = payload.items;
+        root.dataset.revision = payload.registry_revision || '';
+        revisionNode.textContent = payload.registry_revision ? `${t('registry_revision')} ${String(payload.registry_revision).slice(0,12)}` : '';
+        loaded = true;
+        status.textContent = '';
+        render();
+      } catch (error) {
+        status.textContent = `${t('load_failed')} ${error instanceof Error ? error.message : ''}`;
+      }
+    }
+
+    root.querySelectorAll('[data-type]').forEach((button) => button.addEventListener('click', () => {
+      root.querySelectorAll('[data-type]').forEach((node) => node.classList.toggle('active', node === button));
+      activeType = button.dataset.type || 'all'; visibleCount = pageSize; if (loaded) render();
+    }));
+    search.addEventListener('input', () => { visibleCount = pageSize; if (loaded) render(); });
+    sort.addEventListener('change', () => { visibleCount = pageSize; if (loaded) render(); });
+    loadMore.addEventListener('click', () => { visibleCount += pageSize; render(); });
+    grid.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-copy]');
+      if (!button) return;
+      const command = `dsh package install ${button.dataset.copy}`;
+      await navigator.clipboard.writeText(command);
+      const previous = button.textContent;
+      button.textContent = t('copied');
+      setTimeout(() => { button.textContent = previous || t('install'); }, 1400);
+    });
+    document.addEventListener('dsh:languagechange', applyMessages);
+    applyMessages();
+    load();
+  })();
+</script>
+
+<style is:global>
+  .market-v2{max-width:1560px;margin:0 auto;padding:24px 0 64px}.market-hero{text-align:center;padding:32px 18px}.market-hero .eyebrow{font-size:11px;font-weight:850;letter-spacing:.12em;color:var(--accent);text-transform:uppercase}.market-hero h1{margin:7px 0;font-size:clamp(38px,6vw,64px);letter-spacing:-.05em}.market-hero p{margin:0;color:var(--muted);font-size:16px}.market-controls{display:grid;grid-template-columns:minmax(240px,1fr) auto auto;gap:12px;align-items:center;margin:10px 0 14px}.market-controls input,.market-controls select{min-height:44px;border:1px solid var(--border-strong);border-radius:12px;background:var(--card);color:var(--fg);padding:0 14px;font:inherit}.type-tabs{display:flex;gap:5px;flex-wrap:wrap}.type-tabs button{min-height:38px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--muted);padding:0 12px;font-weight:750;cursor:pointer}.type-tabs button.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}.market-summary{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:12px;margin-bottom:12px}.package-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:stretch}.package-card{min-width:0;display:grid;grid-template-rows:minmax(0,1fr) auto;height:100%;border:1px solid var(--border);border-radius:18px;background:var(--card);box-shadow:var(--shadow-sm);overflow:hidden}.card-body{display:flex;min-width:0;flex-direction:column;padding:18px}.card-top,.signals,.card-actions{display:flex;align-items:center;gap:8px}.card-top{justify-content:space-between}.kind{font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--accent);background:var(--accent-soft);padding:4px 7px;border-radius:999px}.stars{font-size:12px;color:var(--muted)}.package-card h2{margin:13px 0 3px;font-size:19px;line-height:1.15;overflow-wrap:anywhere}.package-card code{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.description{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;min-height:6.2em;max-height:6.2em;margin:13px 0;color:var(--muted);line-height:1.55;font-size:13px}.signals{margin-top:auto;flex-wrap:wrap;color:var(--muted);font-size:10px}.signals span{padding:4px 7px;border-radius:999px;background:var(--bg-soft)}.card-actions{align-self:end;width:100%;box-sizing:border-box;padding:12px 14px;border-top:1px solid var(--border);background:var(--bg-soft);flex-wrap:wrap}.card-actions a,.card-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;border-radius:10px;padding:0 11px;font:inherit;font-size:11px;font-weight:800;cursor:pointer;text-decoration:none}.card-actions .secondary{border:1px solid var(--border-strong);background:var(--card);color:var(--fg)}.card-actions .primary{margin-left:auto;border:1px solid var(--accent);background:var(--accent);color:white}.load-more{display:block;margin:24px auto 0;min-height:42px;border:1px solid var(--border-strong);border-radius:12px;background:var(--card);color:var(--fg);padding:0 18px;font-weight:800;cursor:pointer}.load-status,.empty{text-align:center;color:var(--muted);font-size:12px;padding:18px}@media(max-width:900px){.market-controls{grid-template-columns:1fr}.market-controls select{width:100%}}@media(max-width:640px){.package-grid{grid-template-columns:1fr}.description{min-height:0}.card-actions .primary{margin-left:0}.market-summary{flex-direction:column}}
+</style>

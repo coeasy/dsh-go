@@ -17,11 +17,7 @@ on:
         required: true
         default: all
         type: choice
-        options:
-          - all
-          - cloudflare
-          - github-pages
-          - edgeone
+        options: [all, cloudflare, github-pages, edgeone]
 
 permissions:
   contents: read
@@ -42,6 +38,7 @@ jobs:
         with:
           ref: ${{ inputs.commit_sha || github.sha }}
           fetch-depth: 0
+
       - name: Classify changed paths
         id: changes
         shell: bash
@@ -49,7 +46,7 @@ jobs:
           set -euo pipefail
           SHA=$(git rev-parse HEAD)
           SYNC_OWNED=false
-          GENERATED_CATALOG=false
+          GENERATED_REGISTRY=false
           if [ "${{ github.event_name }}" = "push" ]; then
             BEFORE="${{ github.event.before }}"
             if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
@@ -64,61 +61,49 @@ jobs:
           cat /tmp/changed-files
           while IFS= read -r path; do
             case "$path" in
-              scripts/sync*.mjs|scripts/registry-pipeline-v3.mjs|scripts/registry-v3-builder.mjs|scripts/repository-identity.mjs|scripts/github-discovery.mjs|scripts/checksum.mjs|scripts/validate-registry-v3.mjs|catalog/schema-v3.json|catalog/overrides.json|.github/workflows/sync.yml|dsh-package.json|packages/dsh-go-marketplace/*)
+              scripts/sync*.mjs|scripts/registry-v4-*.mjs|scripts/repository-identity.mjs|scripts/github-discovery.mjs|scripts/checksum.mjs|scripts/validate-registry-v4.mjs|packages/protocol-core/*|packages/registry-core/*|packages/resolver/*|packages/policy-core/*|catalog/overrides.json|.github/workflows/sync.yml|dsh-package.json|packages/dsh-go-marketplace/*)
                 SYNC_OWNED=true
                 ;;
-              catalog/plugins.json|catalog/feed.xml|catalog/meta.json|catalog/registry-v3.json|catalog/audit-report.json)
-                GENERATED_CATALOG=true
+              catalog/plugins.json|catalog/feed.xml|catalog/meta.json|catalog/registry-v4.json|catalog/registry-candidates-v1.json|catalog/audit-report.json)
+                GENERATED_REGISTRY=true
                 ;;
             esac
           done < /tmp/changed-files
           echo "sync_owned=$SYNC_OWNED" >> "$GITHUB_OUTPUT"
-          echo "generated_catalog=$GENERATED_CATALOG" >> "$GITHUB_OUTPUT"
+          echo "generated_registry=$GENERATED_REGISTRY" >> "$GITHUB_OUTPUT"
           echo "revision=$SHA" >> "$GITHUB_OUTPUT"
-      - name: Reject manual generated catalog publication
-        if: ${{ github.event_name == 'push' && steps.changes.outputs.generated_catalog == 'true' }}
+
+      - name: Reject manual generated Registry V4 publication
+        if: ${{ github.event_name == 'push' && steps.changes.outputs.generated_registry == 'true' }}
         run: |
-          echo "Generated catalog files are owned by Sync V3 and must not be deployed from a direct push."
+          echo "Generated Registry V4/candidate files are owned by Sync V4 and must not be published by an unrelated direct push."
           exit 1
-      - name: Defer Registry-owned changes to Sync V3
-        if: ${{ github.event_name == 'push' && steps.changes.outputs.sync_owned == 'true' && steps.changes.outputs.generated_catalog != 'true' }}
+
+      - name: Defer Registry-owned changes to Sync V4
+        if: ${{ github.event_name == 'push' && steps.changes.outputs.sync_owned == 'true' && steps.changes.outputs.generated_registry != 'true' }}
         run: |
-          echo "Registry-owned files changed; Sync V3 has deployment authority for revision ${{ steps.changes.outputs.revision }}."
-          echo "### Deployment deferred to Sync V3" >> "$GITHUB_STEP_SUMMARY"
+          echo "Registry-owned files changed; Sync V4 has authority for revision ${{ steps.changes.outputs.revision }}."
+          echo "### Deployment deferred to Sync V4" >> "$GITHUB_STEP_SUMMARY"
           echo "- source revision: ${{ steps.changes.outputs.revision }}" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Resolve deployment targets
         id: targets
-        if: ${{ github.event_name != 'push' || (steps.changes.outputs.sync_owned != 'true' && steps.changes.outputs.generated_catalog != 'true') }}
+        if: ${{ github.event_name != 'push' || (steps.changes.outputs.sync_owned != 'true' && steps.changes.outputs.generated_registry != 'true') }}
         shell: bash
         run: |
           set -euo pipefail
           TARGET="${{ inputs.target || 'all' }}"
           case "$TARGET" in
-            all)
-              WORKFLOWS="deploy.yml deploy-pages.yml deploy-edgeone.yml monitor.yml"
-              LABEL="Cloudflare Pages, GitHub Pages, Tencent EdgeOne, final production smoke"
-              ;;
-            cloudflare)
-              WORKFLOWS="deploy.yml monitor.yml"
-              LABEL="Cloudflare Pages + final production smoke"
-              ;;
-            github-pages)
-              WORKFLOWS="deploy-pages.yml monitor.yml"
-              LABEL="GitHub Pages + final production smoke"
-              ;;
-            edgeone)
-              WORKFLOWS="deploy-edgeone.yml monitor.yml"
-              LABEL="Tencent EdgeOne + final production smoke"
-              ;;
-            *)
-              echo "Unknown deployment target: $TARGET"
-              exit 1
-              ;;
+            all) WORKFLOWS="deploy.yml deploy-pages.yml deploy-edgeone.yml monitor.yml"; LABEL="Cloudflare Pages, GitHub Pages, Tencent EdgeOne, final production smoke" ;;
+            cloudflare) WORKFLOWS="deploy.yml monitor.yml"; LABEL="Cloudflare Pages + final production smoke" ;;
+            github-pages) WORKFLOWS="deploy-pages.yml monitor.yml"; LABEL="GitHub Pages + final production smoke" ;;
+            edgeone) WORKFLOWS="deploy-edgeone.yml monitor.yml"; LABEL="Tencent EdgeOne + final production smoke" ;;
+            *) echo "Unknown deployment target: $TARGET"; exit 1 ;;
           esac
           echo "workflows=$WORKFLOWS" >> "$GITHUB_OUTPUT"
           echo "label=$LABEL" >> "$GITHUB_OUTPUT"
+
       - name: Dispatch deployment workflows
-        id: dispatch
         if: ${{ steps.targets.outputs.workflows != '' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

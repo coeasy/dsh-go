@@ -1,73 +1,62 @@
 {
-  "$schema": "https://coeasy.github.io/dsh-go/schemas/dsh-marketplace-discovery.schema.json",
-  "schema": "dsh-marketplace-discovery.v1",
+  "$schema": "https://coeasy.github.io/dsh-go/schemas/dsh-marketplace-discovery-v2.schema.json",
+  "schema": "dsh-marketplace-discovery.v2",
   "service": {
     "id": "dsh-go",
     "name": "DSH Go Marketplace",
     "version": "0.1.0",
-    "marketplace_version": 4,
-    "mode": "read-only"
+    "mode": "read-only-discovery"
+  },
+  "protocol": {
+    "version": 2,
+    "package_coordinate": "<type>:<id>@<semver-range>",
+    "package_types": ["plugin", "mcp", "skill", "agent"],
+    "release_channels": ["stable", "beta", "nightly", "dev"]
   },
   "api": {
-    "version": "v1",
+    "version": "v2",
     "base_url": "https://dsh-go.pages.dev",
     "openapi_url": "https://dsh-go.pages.dev/openapi.json",
-    "index": "/api/v1",
-    "health": "/api/v1/health",
-    "capabilities": "/api/v1/capabilities",
-    "meta": "/api/v1/meta",
-    "plugins": "/api/v1/plugins",
-    "plugin_detail": "/api/v1/plugins/{slug}",
-    "search": "/api/v1/search",
-    "categories": "/api/v1/categories",
-    "stats": "/api/v1/stats",
-    "ecosystem": "/api/v1/ecosystem",
-    "ecosystem_detail": "/api/v1/ecosystem/{id}",
-    "registry": "/api/v1/registry",
-    "registry_delta": "/api/v1/registry/delta",
-    "package": "/api/v1/registry/packages/{type}/{id}",
-    "package_versions": "/api/v1/registry/packages/{type}/{id}/versions",
-    "marketplace": "/api/v1/marketplace",
-    "package_detail_v2": "/api/v1/package-detail?id={id}&type={type}",
-    "install_plan": "/api/v1/install-plan?id={id}&type={type}",
-    "advisories": "/api/v1/advisories",
-    "publisher": "/api/v1/publishers/{id}",
-    "profiles": "/api/v1/profiles",
-    "bundles": "/api/v1/bundles",
-    "providers": "/api/v1/providers",
-    "provider_detail": "/api/v1/providers/{id}",
-    "mcp": "/api/v1/mcp"
+    "index": "/api/v2",
+    "health": "/api/v2/health",
+    "capabilities": "/api/v2/capabilities",
+    "packages": "/api/v2/packages",
+    "package_detail": "/api/v2/packages/{type}/{id}",
+    "package_releases": "/api/v2/packages/{type}/{id}/releases",
+    "search": "/api/v2/search",
+    "resolve": "/api/v2/resolve",
+    "install_plan": "/api/v2/install-plan",
+    "publishers": "/api/v2/publishers",
+    "advisories": "/api/v2/advisories",
+    "registry_revision": "/api/v2/registry/revision",
+    "registry_delta": "/api/v2/registry/delta",
+    "mcp": "/api/v2/mcp"
   },
   "registry": {
-    "version": 3,
-    "schema_url": "https://coeasy.github.io/dsh-go/catalog/schema-v3.json",
+    "version": 4,
+    "authority_path": "/catalog/registry-v4.json",
     "distribution": {
-      "version": 1,
-      "index_path": "/catalog/distribution-v1/index.json",
-      "delta_path": "/catalog/distribution-v1/delta.json",
-      "package_endpoint": "/api/v1/registry/packages/{type}/{id}",
-      "versions_endpoint": "/api/v1/registry/packages/{type}/{id}/versions"
+      "version": 2,
+      "index_path": "/catalog/registry-v4/index.json"
+    },
+    "search_index": {
+      "version": 3,
+      "path": "/catalog/search-index-v3.json"
     }
   },
   "marketplace": {
-    "search_index": { "version": 3, "identity_source": "Registry V3" },
+    "detail_min_stars": 200,
     "trust_is_popularity": false,
-    "localization": {
-      "schema_version": 1,
-      "manifest": "/catalog/localization-v1/manifest.json",
-      "locales": ["en", "zh-CN", "ja", "ko", "es"],
-      "identity_fields_localized": false
-    },
-    "manifest_versions": ["1.0.0", "2.0.0"]
+    "locales": ["en", "zh-CN", "ja", "ko", "es"]
   },
-  "package_types": ["plugin", "mcp", "skill", "agent"],
   "installation": {
-    "mode": "plan-only",
+    "remote_mode": "plan-only",
     "remote_mutation": false,
-    "cli_template": "dsh {type} install {id}@{version}",
-    "deep_link_scheme": "dsh",
+    "local_runtime_is_write_authority": true,
+    "cli_template": "dsh package install {type}:{id}@{range}",
+    "deep_link_template": "dsh://package/install?spec={encoded-coordinate}&channel={channel}",
+    "deep_link_registry_override": false,
     "explicit_confirmation_required": true,
-    "restart_required_after_install": true,
     "auto_restart": false
   },
   "deployments": [

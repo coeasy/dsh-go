@@ -3,72 +3,34 @@ import Layout from '../layouts/Layout.astro';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-let data: any = { meta: { count: 0, stats: {} }, plugins: [] };
-try {
-  data = JSON.parse(readFileSync(resolve('..', 'catalog', 'plugins.json'), 'utf-8'));
-} catch { /* 降级 */ }
-
-const { meta } = data;
-const stats = meta.stats || {};
-const byCategory = Object.entries(stats.by_category || {}).sort((a: any, b: any) => Number(b[1]) - Number(a[1]));
-const byLanguage = Object.entries(stats.by_language || {}).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 10);
-const byLicense = Object.entries(stats.by_license || {}).sort((a: any, b: any) => Number(b[1]) - Number(a[1])).slice(0, 8);
-const maxCat = Number(byCategory[0]?.[1]) || 1;
-const maxLang = Number(byLanguage[0]?.[1]) || 1;
-const maxLic = Number(byLicense[0]?.[1]) || 1;
-const verifiedRate = stats.total ? ((Number(stats.verified) / Number(stats.total)) * 100).toFixed(1) : '0';
+let registry: any = { packages: [], publishers: [], advisories: [], metadata: {}, generated_at: '', revision: '' };
+try { registry = JSON.parse(readFileSync(resolve('..', 'catalog', 'registry-v4.json'), 'utf8')); } catch { /* generated during canonical build */ }
+const packages = Array.isArray(registry.packages) ? registry.packages : [];
+const publishers = Array.isArray(registry.publishers) ? registry.publishers : [];
+const advisories = Array.isArray(registry.advisories) ? registry.advisories : [];
+const releaseCount = packages.reduce((sum: number, pkg: any) => sum + Number(pkg.releases?.length || 0), 0);
+const byType = ['plugin','mcp','skill','agent'].map((type) => [type, packages.filter((pkg:any)=>pkg.type===type).length] as const);
+const byCategory = Object.entries(packages.reduce((acc:Record<string,number>,pkg:any)=>{const key=String(pkg.metadata?.category||'other');acc[key]=(acc[key]||0)+1;return acc;},{})).sort((a:any,b:any)=>b[1]-a[1]).slice(0,14);
+const verifiedPublishers = publishers.filter((publisher:any)=>publisher.verified===true || publisher.repository_ownership==='verified').length;
+const revoked = packages.reduce((sum:number,pkg:any)=>sum+(pkg.releases||[]).filter((release:any)=>release.revoked===true).length,0);
+const yanked = packages.reduce((sum:number,pkg:any)=>sum+(pkg.releases||[]).filter((release:any)=>release.yanked===true).length,0);
+const maxType = Math.max(1,...byType.map(([,value])=>value));
+const maxCategory = Math.max(1,...byCategory.map(([,value]:any)=>Number(value)));
 ---
 
-<Layout title="统计 · DSH Go" description="DSH 插件市场统计数据">
-  <section class="stats-head">
-    <span>Marketplace analytics</span>
-    <h1 data-i18n="stats_title" class="grad-text page-title">统计</h1>
-    <p>从分类、语言、许可证和验证状态快速了解当前插件生态结构。</p>
-  </section>
+<Layout title="Stats · DSH Marketplace" description="Registry V4 package, release, publisher and security analytics">
+  <section class="stats-head"><span>Registry V4 analytics</span><h1 data-msg="stats">Stats</h1><p>Metrics are derived from the canonical Registry V4 package model rather than a legacy plugin catalog.</p></section>
   <div class="cards">
-    <div class="card"><div class="num grad-text">{stats.total || 0}</div><div class="label" data-i18n="stat_total">插件总数</div></div>
-    <div class="card"><div class="num grad-text">{stats.verified || 0}</div><div class="label" data-i18n="stat_verified">已验证</div></div>
-    <div class="card"><div class="num grad-text">{verifiedRate}%</div><div class="label" data-i18n="stat_rate">验证率</div></div>
-    <div class="card"><div class="num grad-text">{byLanguage.length}</div><div class="label" data-i18n="stat_langs">使用语言数</div></div>
+    <div class="card"><div class="num">{packages.length.toLocaleString()}</div><div class="label">Packages</div></div>
+    <div class="card"><div class="num">{releaseCount.toLocaleString()}</div><div class="label">Immutable releases</div></div>
+    <div class="card"><div class="num">{publishers.length.toLocaleString()}</div><div class="label">Publishers · {verifiedPublishers} verified</div></div>
+    <div class="card"><div class="num">{advisories.length.toLocaleString()}</div><div class="label">Advisories · {revoked} revoked · {yanked} yanked</div></div>
   </div>
-
-  <section class="stats-section">
-    <h2 data-i18n="stats_cat">分类分布</h2>
-    <div class="bars">
-      {byCategory.map(([k, v]) => (
-        <div class="bar-row"><span class="bar-label" data-i18n-cat={k}>{k}</span><div class="bar-track"><div class="bar-fill" style={`width:${(Number(v) / maxCat) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
-      ))}
-    </div>
-  </section>
-
-  <section class="stats-section">
-    <h2 data-i18n="stats_lang">语言分布 Top 10</h2>
-    <div class="bars">
-      {byLanguage.map(([k, v]) => (
-        <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill alt" style={`width:${(Number(v) / maxLang) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
-      ))}
-    </div>
-  </section>
-
-  <section class="stats-section">
-    <h2 data-i18n="stats_lic">许可证分布</h2>
-    <div class="bars">
-      {byLicense.map(([k, v]) => (
-        <div class="bar-row"><span class="bar-label">{k}</span><div class="bar-track"><div class="bar-fill alt2" style={`width:${(Number(v) / maxLic) * 100}%`}></div></div><span class="bar-val">{v}</span></div>
-      ))}
-    </div>
-  </section>
-
-  <p class="updated" data-i18n="stats_updated" data-time={meta.updated_at ? new Date(meta.updated_at).toLocaleString('zh-CN') : '—'}>数据更新于 {meta.updated_at ? new Date(meta.updated_at).toLocaleString('zh-CN') : '—'}</p>
+  <section class="stats-section"><h2>Package type distribution</h2><div class="bars">{byType.map(([type,value])=><div class="bar-row"><span class="bar-label">{type}</span><div class="bar-track"><div class="bar-fill" style={`width:${(value/maxType)*100}%`}></div></div><span class="bar-val">{value}</span></div>)}</div></section>
+  <section class="stats-section"><h2>Category distribution</h2><div class="bars">{byCategory.map(([category,value]:any)=><div class="bar-row"><span class="bar-label">{category}</span><div class="bar-track"><div class="bar-fill alt" style={`width:${(Number(value)/maxCategory)*100}%`}></div></div><span class="bar-val">{value}</span></div>)}</div></section>
+  <p class="updated">Registry revision <code>{String(registry.revision||'—').slice(0,16)}</code> · generated {registry.generated_at ? new Date(registry.generated_at).toISOString() : '—'}</p>
 </Layout>
 
 <style>
-  .stats-head{text-align:center;padding:32px 0 18px}.stats-head>span{color:var(--accent);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.page-title { font-size: clamp(34px,4vw,46px); font-weight: 850; letter-spacing: -.035em; margin:6px 0 4px }.stats-head p{margin:0 auto;color:var(--muted);font-size:15.5px;max-width:720px}
-  .cards { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; margin: 18px auto 28px; max-width:1320px }
-  .card { border: 1px solid var(--border); border-radius: 16px; padding: 25px 20px; text-align: center; background: var(--card); box-shadow: var(--shadow-sm); transition: transform .15s, box-shadow .15s; }
-  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }.num { font-size: 36px; font-weight: 850; }.label { color: var(--muted); font-size: 14px; margin-top: 5px; }
-  .stats-section{max-width:1320px;margin:0 auto 28px;border:1px solid var(--border);border-radius:16px;background:var(--card);padding:20px 22px;box-shadow:var(--shadow-sm)}
-  h2 { font-size: 20px; margin: 0 0 15px; }.bars { display: flex; flex-direction: column; gap: 10px; }.bar-row { display: flex; align-items: center; gap: 12px; font-size: 14px; }.bar-label { width: 150px; color: var(--muted); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.bar-track { flex: 1; background: var(--bg-soft); border-radius: 7px; height: 22px; overflow: hidden; }.bar-fill { height: 100%; background: var(--grad-accent); border-radius: 7px; transition: width .6s cubic-bezier(.2,.7,.3,1); }.bar-fill.alt { background: linear-gradient(90deg, #16a34a, #4ade80); }.bar-fill.alt2 { background: linear-gradient(90deg, #d97706, #fbbf24); }.bar-val { width: 52px; color: var(--muted); font-weight: 700; }.updated { max-width:1320px;margin:0 auto;color: var(--muted); font-size: 14px; }
-  @media(max-width:860px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.bar-label{width:110px}}
-  @media(max-width:520px){.cards{grid-template-columns:1fr 1fr;gap:10px}.card{padding:18px 10px}.num{font-size:30px}.stats-section{padding:16px}.bar-label{width:86px;font-size:12.5px}.bar-row{gap:8px}.bar-val{width:38px}}
+  .stats-head{text-align:center;padding:32px 0 18px}.stats-head>span{color:var(--accent);font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.stats-head h1{font-size:clamp(38px,5vw,54px);letter-spacing:-.045em;margin:5px 0}.stats-head p{margin:0 auto;color:var(--muted);max-width:760px}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px auto 28px;max-width:1320px}.card,.stats-section{border:1px solid var(--border);border-radius:16px;background:var(--card);box-shadow:var(--shadow-sm)}.card{padding:23px;text-align:center}.num{font-size:34px;font-weight:900}.label{color:var(--muted);font-size:12px}.stats-section{max-width:1320px;margin:0 auto 16px;padding:20px 22px}.stats-section h2{margin:0 0 14px;font-size:18px}.bars{display:grid;gap:9px}.bar-row{display:flex;align-items:center;gap:12px}.bar-label{width:150px;text-align:right;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis}.bar-track{height:20px;flex:1;border-radius:999px;background:var(--bg-soft);overflow:hidden}.bar-fill{height:100%;background:var(--accent);border-radius:999px}.bar-fill.alt{background:var(--accent-2)}.bar-val{width:55px;font-size:12px;color:var(--muted)}.updated{max-width:1320px;margin:18px auto;color:var(--muted);font-size:11px}@media(max-width:800px){.cards{grid-template-columns:1fr 1fr}}@media(max-width:520px){.cards{grid-template-columns:1fr}.bar-label{width:90px}}
 </style>

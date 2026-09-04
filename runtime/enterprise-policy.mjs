@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { packageKey } from './package-model.mjs';
+import { packageKey } from '../packages/protocol-core/index.mjs';
 
 export const ENTERPRISE_POLICY_SCHEMA_VERSION = 1;
 

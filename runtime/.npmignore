@@ -1,0 +1,13 @@
+# Legacy package model / resolver / CLI surfaces are deliberately not shipped.
+package-model.mjs
+semver.mjs
+resolver.mjs
+registry-cli-resolver.mjs
+solver-v2.mjs
+dependency-guard.mjs
+cli.mjs
+package-manager-v2-cli.mjs
+command-normalizer.mjs
+help.mjs
+global-options.mjs
+deprecation.mjs

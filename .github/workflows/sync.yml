@@ -1,17 +1,20 @@
-name: Sync Plugins
+name: Sync Registry V4
 
 on:
   push:
     branches: [main]
     paths:
-      - "scripts/sync*.mjs"
-      - "scripts/registry-pipeline-v3.mjs"
-      - "scripts/registry-v3-builder.mjs"
+      - "scripts/sync-v4.mjs"
+      - "scripts/discovery-sync.mjs"
+      - "scripts/registry-v4-*.mjs"
       - "scripts/repository-identity.mjs"
       - "scripts/github-discovery.mjs"
       - "scripts/checksum.mjs"
-      - "scripts/validate-registry-v3.mjs"
-      - "catalog/schema-v3.json"
+      - "scripts/validate-registry-v4.mjs"
+      - "packages/protocol-core/**"
+      - "packages/registry-core/**"
+      - "packages/resolver/**"
+      - "packages/policy-core/**"
       - "catalog/overrides.json"
       - ".github/workflows/sync.yml"
       - "dsh-package.json"
@@ -36,7 +39,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: sync
+  group: sync-v4
   cancel-in-progress: false
 
 jobs:
@@ -48,13 +51,16 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
+
       - name: Install dependencies
         run: npm ci
+
       - name: Resolve sync mode
         id: mode
         shell: bash
@@ -64,33 +70,38 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ] && [ "${{ github.event.schedule }}" = "18 0 * * *" ]; then MODE="full"; fi
           case "$MODE" in full|incremental) ;; *) echo "Invalid sync mode: $MODE"; exit 1 ;; esac
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
-          echo "Sync mode: $MODE"
-      - name: Run Sync V3
+
+      - name: Run Sync V4 candidate pipeline
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SYNC_MODE: ${{ steps.mode.outputs.mode }}
           SYNC_CONCURRENCY: "16"
-        run: node scripts/sync-v3.mjs --${{ steps.mode.outputs.mode }}
-      - name: Run integrity gates
+          REGISTRY_COMMIT_CONCURRENCY: "24"
+        run: npm run sync:${{ steps.mode.outputs.mode }}
+
+      - name: Run canonical integrity gates
         run: |
+          npm run contract:check
+          npm run architecture:check
           npm run validate
-          npm run audit:identity:report -- --strict
+          npm run audit:identity
           npm run registry:verify
-          npm run runtime:check
-          npm run deploy:gate
-      - name: Update README hot recommendations
+          npm run typecheck
+          node -e "const r=require('./catalog/registry-v4.json');const c=require('./catalog/registry-candidates-v1.json');if(r.schema_version!==4||c.version!==1||c.authority!==false||c.registry_revision!==r.revision)process.exit(1)"
+
+      - name: Update README recommendations
         run: npm run readme:update
-      - name: Detect deploy-worthy changes
+
+      - name: Detect deploy-worthy Registry V4 changes
         id: diff
         shell: bash
         run: |
-          # meta.json is public freshness state and participates in exact-SHA production convergence.
-          # Treat every successful sync metadata refresh as deploy-worthy so production never trails main.
-          if ! git diff --quiet -- catalog/plugins.json catalog/feed.xml catalog/registry-v3.json catalog/schema-v3.json catalog/meta.json; then
+          if ! git diff --quiet -- catalog/plugins.json catalog/feed.xml catalog/registry-v4.json catalog/registry-candidates-v1.json catalog/meta.json; then
             echo "data_changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "data_changed=false" >> "$GITHUB_OUTPUT"
           fi
+
       - name: Commit and push generated data
         id: publish
         shell: bash
@@ -106,8 +117,9 @@ jobs:
             exit 0
           fi
           if [ "${{ steps.diff.outputs.data_changed }}" = "true" ]; then
-            COUNT=$(node -p "require('./catalog/plugins.json').meta.count")
-            MSG="chore(sync): Registry V3 update (${COUNT} plugins, ${{ steps.mode.outputs.mode }})"
+            PACKAGES=$(node -p "require('./catalog/registry-v4.json').packages.length")
+            CANDIDATES=$(node -p "require('./catalog/registry-candidates-v1.json').candidates.length")
+            MSG="chore(sync): Registry V4 update (${PACKAGES} packages, ${CANDIDATES} candidates, ${{ steps.mode.outputs.mode }})"
           else
             MSG="chore(sync): heartbeat [no deploy]"
           fi
@@ -115,7 +127,8 @@ jobs:
           git push || { echo "Push raced with another commit; rebasing once"; git pull --rebase; git push; }
           echo "pushed=true" >> "$GITHUB_OUTPUT"
           echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: Dispatch deployment workflows and final smoke for authoritative revision
+
+      - name: Dispatch three production platforms and final smoke
         id: dispatch
         if: github.event_name == 'push' || (steps.publish.outputs.pushed == 'true' && steps.diff.outputs.data_changed == 'true')
         env:
@@ -127,17 +140,16 @@ jobs:
           DEPLOY_DISPATCH_RETRY_DELAY_MS: "5000"
           DEPLOY_WAIT_TIMEOUT_MS: "2100000"
         run: node scripts/dispatch-deployments.mjs
+
       - name: Summary
         if: always()
         run: |
-          echo "### Registry V3 sync (${{ steps.mode.outputs.mode || 'n/a' }})" >> "$GITHUB_STEP_SUMMARY"
-          if [ -f catalog/meta.json ]; then
-            node -e "const m=require('./catalog/meta.json'); console.log('- last sync: '+(m.last_sync?.at||'n/a')+'\n- registry hash: '+(m.registry?.content_hash||'n/a')+'\n- registry count: '+(m.registry?.count||0))" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Registry V4 sync (${{ steps.mode.outputs.mode || 'n/a' }})" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f catalog/registry-v4.json ]; then
+            node -e "const r=require('./catalog/registry-v4.json'); const c=require('./catalog/registry-candidates-v1.json'); console.log('- registry revision: '+r.revision+'\n- installable packages: '+r.packages.length+'\n- candidates: '+c.candidates.length+'\n- quarantined: '+c.counts.quarantined+'\n- rejected: '+c.counts.rejected)" >> "$GITHUB_STEP_SUMMARY"
           fi
           echo "- generated commit pushed: ${{ steps.publish.outputs.pushed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- deploy-worthy catalog/meta changed: ${{ steps.diff.outputs.data_changed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- deploy-worthy data changed: ${{ steps.diff.outputs.data_changed || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- release workflows dispatched: ${{ steps.dispatch.outputs.dispatched || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- dispatch failures: ${{ steps.dispatch.outputs.dispatch_failures || 'none' }}" >> "$GITHUB_STEP_SUMMARY"
-          if [ -n "${{ steps.publish.outputs.commit_sha }}" ]; then
-            echo "- authoritative revision: ${{ steps.publish.outputs.commit_sha }}" >> "$GITHUB_STEP_SUMMARY"
-          fi
+          if [ -n "${{ steps.publish.outputs.commit_sha }}" ]; then echo "- authoritative revision: ${{ steps.publish.outputs.commit_sha }}" >> "$GITHUB_STEP_SUMMARY"; fi

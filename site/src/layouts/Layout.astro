@@ -1,14 +1,10 @@
 ---
 import { u, apiUrl } from '../lib/urls';
 import { LANGUAGE_LABELS, SUPPORTED_LANGS } from '../i18n/config';
-import '../styles/marketplace-polish.css';
-import '../styles/marketplace-emphasis.css';
+import { message } from '../i18n/messages';
 
-interface Props {
-  title?: string;
-  description?: string;
-}
-const { title = 'DSH Plugin Marketplace', description = 'DeepSeek Harness Plugin / MCP / Skill / Agent Marketplace' } = Astro.props;
+interface Props { title?: string; description?: string }
+const { title = 'DSH Marketplace', description = 'DeepSeek Harness Plugin / MCP / Skill / Agent Marketplace' } = Astro.props;
 const SITE = import.meta.env.PUBLIC_SITE_URL || 'https://dsh-go.pages.dev';
 const CANONICAL_URL = new URL(Astro.url.pathname, SITE).toString();
 ---
@@ -24,82 +20,44 @@ const CANONICAL_URL = new URL(Astro.url.pathname, SITE).toString();
     <link rel="icon" type="image/svg+xml" href={u('/favicon.svg')} />
     <link rel="manifest" href={u('/manifest.webmanifest')} />
     <meta name="theme-color" content="#2563eb" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="DSH Marketplace" />
-    <link rel="apple-touch-icon" href={u('/favicon.svg')} />
     <link rel="canonical" href={CANONICAL_URL} />
     <meta name="robots" content="index, follow" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="DSH Plugin Marketplace" />
+    <meta property="og:site_name" content="DSH Marketplace" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={CANONICAL_URL} />
-    <meta name="twitter:card" content="summary" />
-
     <style>
-      :root {
-        --bg:#f7f9fc;--bg-soft:#eef2f7;--card:#fff;--fg:#0f172a;--muted:#64748b;
-        --border:#e2e8f0;--border-strong:#cbd5e1;--accent:#2563eb;--accent-2:#7c3aed;--accent-soft:#eff6ff;
-        --green:#16a34a;--amber:#f59e0b;--red:#ef4444;--shadow-sm:0 1px 2px rgb(15 23 42 / .05);
-        --shadow-md:0 5px 18px rgb(15 23 42 / .08);--shadow-lg:0 14px 36px rgb(15 23 42 / .12);
-        --grad-accent:linear-gradient(135deg,#2563eb,#7c3aed);--radius:14px;--content-max:1560px;--reading-max:1080px;
-      }
-      html.dark {
-        --bg:#0b1120;--bg-soft:#111a2e;--card:#10192c;--fg:#f1f5f9;--muted:#94a3b8;--border:#1e293b;
-        --border-strong:#334155;--accent:#60a5fa;--accent-2:#a78bfa;--accent-soft:#16233d;--green:#4ade80;
-        --amber:#fbbf24;--red:#f87171;--shadow-sm:0 1px 2px rgb(0 0 0 / .3);--shadow-md:0 5px 18px rgb(0 0 0 / .35);
-        --shadow-lg:0 14px 36px rgb(0 0 0 / .45);--grad-accent:linear-gradient(135deg,#3b82f6,#8b5cf6);
-      }
-      html.light { --bg:#f7f9fc;--bg-soft:#eef2f7;--card:#fff;--fg:#0f172a;--muted:#64748b;--border:#e2e8f0;--border-strong:#cbd5e1;--accent:#2563eb;--accent-2:#7c3aed;--accent-soft:#eff6ff;--green:#16a34a;--amber:#f59e0b;--red:#ef4444; }
-      @media (prefers-color-scheme:dark) {
-        html:not(.light):not(.dark) { --bg:#0b1120;--bg-soft:#111a2e;--card:#10192c;--fg:#f1f5f9;--muted:#94a3b8;--border:#1e293b;--border-strong:#334155;--accent:#60a5fa;--accent-2:#a78bfa;--accent-soft:#16233d;--green:#4ade80;--amber:#fbbf24;--red:#f87171;--grad-accent:linear-gradient(135deg,#3b82f6,#8b5cf6); }
-      }
-      *{box-sizing:border-box}html{scroll-behavior:smooth;font-size:16px}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--fg);font-size:16px;line-height:1.65;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-      body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(720px 340px at 12% -8%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 72%),radial-gradient(620px 320px at 90% -10%,color-mix(in srgb,var(--accent-2) 9%,transparent),transparent 72%)}
-      a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:5px}
-      header.nav{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(18px) saturate(1.35);-webkit-backdrop-filter:blur(18px) saturate(1.35);border-bottom:1px solid var(--border)}
-      .nav-inner{max-width:var(--content-max);margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:20px}.brand{display:flex;align-items:center;gap:10px;color:var(--fg);font-size:18px;font-weight:850;letter-spacing:-.02em}.brand:hover{text-decoration:none}.brand img{width:30px;height:30px;border-radius:8px}.brand small{color:var(--muted);font-size:11px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;margin-left:3px}
-      .nav-links{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:14px}.nav-links a{color:var(--muted);padding:8px 12px;border-radius:999px;white-space:nowrap;font-weight:600}.nav-links a:hover{color:var(--fg);background:var(--bg-soft);text-decoration:none}.nav-links a.active{color:var(--accent);background:var(--accent-soft);font-weight:800}.nav-btn,.nav-select{border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:750;cursor:pointer;min-height:36px;box-shadow:var(--shadow-sm)}.nav-btn{min-width:42px}.nav-select{max-width:118px}.nav-btn:hover,.nav-select:hover{color:var(--fg);border-color:var(--border-strong)}
-      main{max-width:var(--content-max);margin:0 auto;padding:28px 28px 84px}.grad-text{background:var(--grad-accent);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:750}.badge.green{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green)}.badge.amber{background:color-mix(in srgb,var(--amber) 15%,transparent);color:var(--amber)}.badge.gray{background:color-mix(in srgb,var(--muted) 13%,transparent);color:var(--muted)}
-      footer{border-top:1px solid var(--border);background:color-mix(in srgb,var(--bg-soft) 74%,transparent)}.footer-inner{max-width:var(--content-max);margin:0 auto;padding:28px;display:flex;justify-content:space-between;gap:24px;color:var(--muted);font-size:13px}.footer-links{display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end}
-      @media(max-width:980px){.nav-inner{align-items:flex-start;flex-wrap:wrap;padding-inline:20px}.brand small{display:none}.nav-links{width:100%;margin-left:0;overflow-x:auto;padding-bottom:3px}.nav-links a{padding:7px 10px}main{padding:24px 20px 68px}.footer-inner{padding:24px 20px;flex-direction:column}.footer-links{justify-content:flex-start}}
-      @media(max-width:520px){html{font-size:15px}body{font-size:15px}.nav-inner{padding-block:11px}.brand{font-size:17px}.brand img{width:28px;height:28px}main{padding:20px 16px 56px}.footer-inner{padding:22px 16px}}
+      :root{--bg:#f7f9fc;--bg-soft:#eef2f7;--card:#fff;--fg:#0f172a;--muted:#64748b;--border:#e2e8f0;--border-strong:#cbd5e1;--accent:#2563eb;--accent-2:#7c3aed;--accent-soft:#eff6ff;--green:#16a34a;--amber:#f59e0b;--red:#ef4444;--shadow-sm:0 1px 2px rgb(15 23 42/.05);--shadow-md:0 5px 18px rgb(15 23 42/.08);--shadow-lg:0 14px 36px rgb(15 23 42/.12);--content-max:1560px}html.dark{--bg:#0b1120;--bg-soft:#111a2e;--card:#10192c;--fg:#f1f5f9;--muted:#94a3b8;--border:#1e293b;--border-strong:#334155;--accent:#60a5fa;--accent-2:#a78bfa;--accent-soft:#16233d;--green:#4ade80;--amber:#fbbf24;--red:#f87171;--shadow-sm:0 1px 2px rgb(0 0 0/.3);--shadow-md:0 5px 18px rgb(0 0 0/.35);--shadow-lg:0 14px 36px rgb(0 0 0/.45)}@media(prefers-color-scheme:dark){html:not(.light):not(.dark){--bg:#0b1120;--bg-soft:#111a2e;--card:#10192c;--fg:#f1f5f9;--muted:#94a3b8;--border:#1e293b;--border-strong:#334155;--accent:#60a5fa;--accent-2:#a78bfa;--accent-soft:#16233d;--green:#4ade80;--amber:#fbbf24;--red:#f87171}}*{box-sizing:border-box}html{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--fg);scroll-behavior:smooth}body{margin:0;line-height:1.6;-webkit-font-smoothing:antialiased}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.nav{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(18px)}.nav-inner{max-width:var(--content-max);margin:auto;padding:12px 28px;display:flex;align-items:center;gap:16px}.brand{display:flex;align-items:center;gap:9px;color:var(--fg);font-weight:900}.brand img{width:28px;height:28px}.brand small{color:var(--muted);font-size:10px;letter-spacing:.1em}.nav-links{display:flex;align-items:center;gap:5px;margin-left:auto}.nav-links a{padding:7px 10px;border-radius:999px;color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap}.nav-links a.active,.nav-links a:hover{background:var(--accent-soft);color:var(--accent);text-decoration:none}.nav-select,.nav-btn{min-height:34px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--fg);padding:0 10px;font:inherit;font-size:11px}.nav-btn{min-width:38px;cursor:pointer}main{max-width:var(--content-max);margin:auto;padding:22px 28px 78px}footer{border-top:1px solid var(--border);background:var(--bg-soft)}.footer-inner{max-width:var(--content-max);margin:auto;padding:24px 28px;display:flex;justify-content:space-between;gap:18px;color:var(--muted);font-size:12px}.footer-links{display:flex;gap:12px;flex-wrap:wrap}.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800}.badge.green{color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)}.badge.amber{color:var(--amber);background:color-mix(in srgb,var(--amber) 14%,transparent)}@media(max-width:980px){.nav-inner{align-items:flex-start;flex-wrap:wrap;padding-inline:18px}.brand small{display:none}.nav-links{width:100%;margin-left:0;overflow-x:auto}main{padding:20px 18px 60px}.footer-inner{padding:22px 18px;flex-direction:column}}@media(max-width:520px){main{padding-inline:14px}.footer-inner{padding-inline:14px}}
     </style>
   </head>
   <body>
     <header class="nav">
       <div class="nav-inner">
-        <a class="brand" href={u('/')}><img src={u('/favicon.svg')} alt="DSH" /><span>DSH <span class="grad-text">Marketplace</span></span><small>Ecosystem</small></a>
+        <a class="brand" href={u('/')}><img src={u('/favicon.svg')} alt="DSH" /><span>DSH Marketplace</span><small>Registry V4</small></a>
         <nav class="nav-links" data-path={Astro.url.pathname.replace(/\/$/, '') || '/'}>
-          <a href={u('/')} data-nav="/" data-i18n="nav_marketplace">Marketplace</a>
-          <a href={u('/profiles')} data-nav={u('/profiles')} data-i18n="nav_profiles">Profiles</a>
-          <a href={u('/trending')} data-nav={u('/trending')} data-i18n="nav_trending">Trending</a>
-          <a href={u('/stats')} data-nav={u('/stats')} data-i18n="nav_stats">Stats</a>
-          <a href={u('/docs')} data-nav={u('/docs')} data-i18n="nav_api">API</a>
-          <a href={u('/feed.xml')} target="_blank" data-i18n="nav_rss">RSS</a>
-          <select id="lang-select" class="nav-select" data-i18n-aria="aria_language" aria-label="Language">
-            {SUPPORTED_LANGS.map((lang) => <option value={lang}>{LANGUAGE_LABELS[lang]}</option>)}
-          </select>
-          <button id="theme-toggle" class="nav-btn" type="button" data-i18n-aria="aria_theme" aria-label="Toggle theme">🌙</button>
+          <a href={u('/')} data-nav="/" data-msg="marketplace">{message('marketplace')}</a>
+          <a href={u('/trust')} data-nav={u('/trust')} data-msg="trust">{message('trust')}</a>
+          <a href={u('/publishers/')} data-nav={u('/publishers')} data-msg="publishers">{message('publishers')}</a>
+          <a href={u('/trending')} data-nav={u('/trending')} data-msg="trending">{message('trending')}</a>
+          <a href={u('/stats')} data-nav={u('/stats')} data-msg="stats">{message('stats')}</a>
+          <a href={u('/docs')} data-nav={u('/docs')} data-msg="docs">{message('docs')}</a>
+          <select id="lang-select" class="nav-select" aria-label="Language">{SUPPORTED_LANGS.map((lang) => <option value={lang}>{LANGUAGE_LABELS[lang]}</option>)}</select>
+          <button id="theme-toggle" class="nav-btn" type="button" aria-label="Toggle theme">◐</button>
         </nav>
       </div>
     </header>
     <main><slot /></main>
     <footer>
       <div class="footer-inner">
-        <span data-i18n="footer_summary">DSH Plugin Marketplace · Registry V3 + dsh-plugin Catalog · local install only</span>
-        <span class="footer-links">
-          <a href={apiUrl('/api/v1/health')} data-i18n="footer_api_health">API health</a>
-          <a href={u('/ecosystem')} data-i18n="footer_ecosystem">Ecosystem alias</a>
-          <a href={u('/docs')} data-i18n="footer_docs">Docs</a>
-        </span>
+        <span data-msg="footer_summary">{message('footer_summary')}</span>
+        <span class="footer-links"><a href={apiUrl('/api/v2/health')}>API V2</a><a href={apiUrl('/api/v2/capabilities')}>Capabilities</a><a href={u('/docs')} data-msg="docs">{message('docs')}</a></span>
       </div>
     </footer>
     <script>
       import { initI18n } from '../scripts/i18n';
       import { initTheme } from '../scripts/theme';
-      initI18n();
-      initTheme();
+      initI18n(); initTheme();
     </script>
   </body>
 </html>

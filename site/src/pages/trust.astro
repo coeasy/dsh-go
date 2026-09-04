@@ -4,79 +4,54 @@ import { resolve } from 'node:path';
 import Layout from '../layouts/Layout.astro';
 import { u } from '../lib/urls';
 
-let packages: any[] = [];
-try { packages = JSON.parse(readFileSync(resolve('..', 'catalog', 'registry-v3.json'), 'utf8')).plugins || []; } catch { packages = []; }
-
-function trust(item: any) {
-  const security = item.security || {};
-  const publisher = item.publisher || {};
-  const ownership = publisher.repository_ownership || 'unverified';
-  let score = 0;
-  if (security.provenance) score += 20;
-  if (security.signature) score += 25;
-  if (security.sbom) score += 15;
-  if (security.license) score += 10;
-  if (ownership === 'verified' || publisher.verified === true) score += 25;
-  else if (ownership === 'declared' || ownership === 'required') score += 10;
-  if (item.metadata?.verified === true) score += 10;
-  const critical = (security.advisories || []).some((advisory: any) => String(advisory?.severity || '').toLowerCase() === 'critical');
-  if (security.yanked === true) score -= 25;
-  if (security.revoked === true) score -= 100;
-  if (critical) score -= 50;
-  score = Math.max(0, Math.min(100, score));
-  const tier = security.revoked || critical ? 'unverified' : score >= 80 ? 'trusted' : score >= 55 ? 'verified' : score >= 25 ? 'community' : 'unverified';
-  return { score, tier, ownership, critical, revoked: security.revoked === true, yanked: security.yanked === true };
+let registry: any = { packages: [], publishers: [], advisories: [] };
+try { registry = JSON.parse(readFileSync(resolve('..', 'catalog', 'registry-v4.json'), 'utf8')); } catch { /* generated before production build */ }
+const publisherMap = new Map((registry.publishers || []).map((publisher: any) => [String(publisher.id), publisher]));
+function latestSafe(pkg: any) {
+  return [...(pkg.releases || [])].filter((release: any) => !release.revoked && !release.yanked).sort((a:any,b:any)=>String(b.version).localeCompare(String(a.version),undefined,{numeric:true}))[0] || null;
 }
-const latest = new Map<string, any>();
-for (const item of packages) {
-  const type = item.type || item.runtime?.type || 'plugin';
-  if ((item.channel || item.release_channel || 'stable') !== 'stable') continue;
-  const key = `${type}:${item.id}`;
-  const previous = latest.get(key);
-  if (!previous || String(item.version).localeCompare(String(previous.version), undefined, { numeric: true }) > 0) latest.set(key, item);
+function trust(pkg: any, release: any) {
+  const publisher = publisherMap.get(String(pkg.publisher_id)) as any;
+  const security = release?.security || {};
+  const publisherVerified = publisher?.verified === true || publisher?.repository_ownership === 'verified';
+  const cryptoVerified = security.cryptographic_signature_verified === true || security.signature?.cryptographic_verified === true || security.signature?.verified === true && security.signature?.verification_method === 'cryptographic';
+  const provenanceVerified = security.slsa_provenance_verified === true || security.provenance?.verified === true;
+  const sbomVerified = security.sbom?.verified === true;
+  const critical = (registry.advisories || []).some((advisory:any) => advisory.package?.type === pkg.type && advisory.package?.id === pkg.id && String(advisory.severity || '').toLowerCase() === 'critical');
+  const blocked = !release || release.revoked === true || critical;
+  const tier = blocked ? 'blocked' : publisherVerified && cryptoVerified ? 'trusted' : publisherVerified || cryptoVerified || provenanceVerified ? 'verified' : 'community';
+  return { tier, publisherVerified, cryptoVerified, provenanceVerified, sbomVerified, critical, blocked };
 }
-const rows = [...latest.values()].map((item) => ({ item, trust: trust(item), type: item.type || item.runtime?.type || 'plugin' }));
-const counts = rows.reduce((acc: Record<string, number>, row) => { acc[row.trust.tier] = (acc[row.trust.tier] || 0) + 1; return acc; }, {});
-const blocked = rows.filter((row) => row.trust.revoked || row.trust.critical).length;
-const verifiedPublishers = rows.filter((row) => row.trust.ownership === 'verified').length;
-const notable = [...rows].sort((a, b) => b.trust.score - a.trust.score || Number(b.item.metadata?.stars || 0) - Number(a.item.metadata?.stars || 0)).slice(0, 24);
+const rows = (registry.packages || []).map((pkg:any) => { const release=latestSafe(pkg); return { pkg, release, trust: trust(pkg, release) }; });
+const counts = rows.reduce((acc:any,row:any)=>{acc[row.trust.tier]=(acc[row.trust.tier]||0)+1;return acc;},{});
+const notable = [...rows].filter((row:any)=>row.release).sort((a:any,b:any)=>{
+  const weight=(row:any)=>row.trust.tier==='trusted'?3:row.trust.tier==='verified'?2:row.trust.tier==='community'?1:0;
+  return weight(b)-weight(a)||Number(b.pkg.metadata?.stars||0)-Number(a.pkg.metadata?.stars||0);
+}).slice(0,30);
 ---
 
-<Layout title="Trust Center · DSH Marketplace" description="Publisher identity, supply-chain evidence, advisories and install trust for DSH packages.">
-  <section class="hero">
-    <span class="kicker">Marketplace V4</span>
-    <h1>Trust Center</h1>
-    <p>Trust is computed from publisher ownership and supply-chain evidence. Popularity is shown separately and never makes a package trusted.</p>
-    <div class="stats">
-      <span><b>{rows.length}</b><small>latest stable packages</small></span>
-      <span><b>{counts.trusted || 0}</b><small>trusted</small></span>
-      <span><b>{counts.verified || 0}</b><small>verified</small></span>
-      <span><b>{verifiedPublishers}</b><small>publisher ownership verified</small></span>
-      <span><b>{blocked}</b><small>revoked / critical advisory</small></span>
-    </div>
-  </section>
+<Layout title="Trust Center · DSH Marketplace" description="Cryptographic signer verification, publisher identity, immutable releases and security advisories for Registry V4 packages.">
+  <section class="hero"><span>Registry V4 Trust</span><h1>Trust Center</h1><p>A package is never marked trusted because it is popular or merely declares a signature. <strong>Trusted</strong> requires verified publisher ownership and successful cryptographic signature verification.</p><div class="stats"><div><b>{rows.length}</b><small>packages</small></div><div><b>{counts.trusted || 0}</b><small>trusted</small></div><div><b>{counts.verified || 0}</b><small>partially verified</small></div><div><b>{counts.community || 0}</b><small>community</small></div><div><b>{counts.blocked || 0}</b><small>blocked</small></div></div></section>
 
   <section class="principles">
-    <article><h2>Publisher identity</h2><p>Repository ownership is independent from stars, downloads or ranking. Cross-registry publisher identity conflicts fail closed.</p></article>
-    <article><h2>Supply chain</h2><p>Provenance, signature, SBOM and license evidence increase trust. Runtime installation still verifies immutable commit/digest locally.</p></article>
-    <article><h2>Security policy</h2><p>Yanked versions are skipped. Revoked, critical-advisory and below-minimum-safe versions are blocked by both resolver and installer.</p></article>
-    <article><h2>Local authority</h2><p>Marketplace APIs and MCP only discover and plan. Installation always runs through the local Runtime, approval gate and pending-restart lifecycle.</p></article>
+    <article><h2>Trusted means cryptographic</h2><p>Digest equality confirms bytes, not signer identity. Trusted requires successful cryptographic verification plus verified publisher ownership.</p></article>
+    <article><h2>Immutable release identity</h2><p>Every installable Registry V4 release is pinned to a 40-character source commit and is resolved before the local transaction starts.</p></article>
+    <article><h2>Fail closed</h2><p>Revoked releases and critical security advisories are blocked by Resolver V2. Yanked releases are not selected for new installs.</p></article>
+    <article><h2>Local authority</h2><p>Marketplace, REST and MCP can return plans only. The local DSH Runtime owns permissions, filesystem writes, activation and rollback.</p></article>
   </section>
 
-  <div class="section-head"><div><span class="kicker">Evidence-backed packages</span><h2>Highest trust signals</h2></div><a href={u('/')}>Marketplace →</a></div>
+  <div class="section-head"><div><span>Evidence-backed packages</span><h2>Registry trust signals</h2></div><a href={u('/')}>Marketplace →</a></div>
   <section class="grid">
-    {notable.map(({ item, trust, type }) => (
+    {notable.map(({ pkg, release, trust }: any) => (
       <article class="card">
-        <div class="top"><span class={`tier ${trust.tier}`}>{trust.tier}</span><span class="score">{trust.score}/100</span></div>
-        <h3>{item.metadata?.name || item.id}</h3>
-        <code>{type}:{item.id}@{item.version}</code>
-        <p>{item.metadata?.description || item.source?.repo || ''}</p>
-        <div class="meta"><span>Publisher: {item.publisher?.id || item.source?.repo?.split('/')[0] || 'unknown'}</span><span>★ {Number(item.metadata?.stars || 0).toLocaleString()}</span></div>
+        <div class="top"><span class={`tier ${trust.tier}`}>{trust.tier}</span><span>{pkg.type.toUpperCase()}</span></div>
+        <h3>{pkg.metadata?.name || pkg.id}</h3><code>{pkg.type}:{pkg.id}@{release.version}</code><p>{pkg.metadata?.description || pkg.source?.repo || ''}</p>
+        <dl><div><dt>Publisher ownership</dt><dd>{trust.publisherVerified ? '✓ verified' : '—'}</dd></div><div><dt>Cryptographic signature</dt><dd>{trust.cryptoVerified ? '✓ verified' : '—'}</dd></div><div><dt>SLSA provenance</dt><dd>{trust.provenanceVerified ? '✓ verified' : '—'}</dd></div><div><dt>SBOM evidence</dt><dd>{trust.sbomVerified ? '✓ verified' : '—'}</dd></div></dl>
       </article>
     ))}
   </section>
 </Layout>
 
 <style>
-  .hero{max-width:1100px;margin:28px auto 34px;text-align:center}.kicker{color:var(--accent);font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}.hero h1{font-size:clamp(38px,6vw,62px);margin:8px 0 8px;letter-spacing:-.045em}.hero p{max-width:800px;margin:0 auto;color:var(--muted);font-size:16px}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:25px}.stats span,.principles article,.card{border:1px solid var(--border);border-radius:16px;background:var(--card);box-shadow:var(--shadow-sm)}.stats span{padding:14px}.stats b{display:block;font-size:23px}.stats small{color:var(--muted)}.principles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:30px 0 42px}.principles article{padding:18px}.principles h2{font-size:16px;margin:0 0 6px}.principles p{font-size:13px;color:var(--muted);margin:0}.section-head{display:flex;justify-content:space-between;align-items:end;margin:0 0 14px}.section-head h2{margin:4px 0 0}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}.card{padding:18px}.card .top{display:flex;justify-content:space-between}.tier{font-size:11px;font-weight:850;padding:4px 8px;border-radius:999px;background:var(--bg-soft)}.tier.trusted{color:var(--green)}.tier.verified{color:var(--accent)}.score{color:var(--muted);font-size:12px}.card h3{margin:12px 0 3px}.card code{font-size:12px;color:var(--muted)}.card p{font-size:13px;color:var(--muted);min-height:42px}.meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px}@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.principles{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.stats,.principles{grid-template-columns:1fr}}
+  .hero{max-width:1080px;margin:28px auto 32px;text-align:center}.hero>span,.section-head span{font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}.hero h1{font-size:clamp(40px,6vw,62px);letter-spacing:-.05em;margin:6px 0}.hero p{max-width:820px;margin:auto;color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-top:24px}.stats div,.principles article,.card{border:1px solid var(--border);border-radius:15px;background:var(--card);box-shadow:var(--shadow-sm)}.stats div{padding:13px}.stats b,.stats small{display:block}.stats b{font-size:22px}.stats small{color:var(--muted);font-size:10px}.principles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:30px 0 40px}.principles article{padding:17px}.principles h2{margin:0 0 6px;font-size:15px}.principles p{margin:0;color:var(--muted);font-size:12px}.section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}.section-head h2{margin:3px 0 0}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}.card{padding:17px}.top{display:flex;justify-content:space-between;color:var(--muted);font-size:10px}.tier{font-weight:900;text-transform:uppercase;padding:3px 7px;border-radius:999px;background:var(--bg-soft)}.tier.trusted{color:var(--green)}.tier.verified{color:var(--accent)}.tier.blocked{color:var(--red)}.card h3{margin:11px 0 2px}.card>code{font-size:11px;color:var(--muted)}.card>p{min-height:40px;color:var(--muted);font-size:12px}.card dl{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0}.card dl div{padding:8px;background:var(--bg-soft);border-radius:9px}.card dt{font-size:9px;color:var(--muted)}.card dd{margin:3px 0 0;font-size:10px}@media(max-width:900px){.principles{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}}@media(max-width:560px){.principles,.stats{grid-template-columns:1fr}}
 </style>

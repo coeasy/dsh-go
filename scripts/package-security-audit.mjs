@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { readFile, readdir } from 'node:fs/promises';
-import { extname, join, resolve } from 'node:path';
+import { extname, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { findPackageManifest } from '../runtime/package-manifest.mjs';
+import { readDshManifest } from '../runtime/package-manifest.mjs';
 import { inspectPermissions } from '../runtime/permissions.mjs';
 
 const SOURCE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.sh', '.ps1']);
@@ -29,8 +29,9 @@ async function walk(root, out = [], depth = 0) {
 
 export async function auditPackageSecurity(root = process.cwd()) {
   const base = resolve(root);
-  const manifestResult = await findPackageManifest(base);
-  const declared = inspectPermissions(manifestResult?.manifest?.permissions || []);
+  const manifestResult = await readDshManifest(base);
+  const manifest = manifestResult.manifest;
+  const declared = inspectPermissions(manifest.permissions || []);
   const declaredSet = new Set(declared.permissions);
   const findings = [];
   for (const file of await walk(base)) {
@@ -45,7 +46,7 @@ export async function auditPackageSecurity(root = process.cwd()) {
       findings.push({
         rule: rule.id,
         severity: rule.severity,
-        file: file.slice(base.length + 1),
+        file: relative(base, file).replaceAll('\\', '/'),
         required_permission: rule.permission,
         permission_declared: declaredSet.has(rule.permission) || (rule.permission === 'network' && declaredSet.has('network.unrestricted')),
       });
@@ -64,10 +65,14 @@ export async function auditPackageSecurity(root = process.cwd()) {
   const high = findings.filter((finding) => finding.severity === 'high');
   return {
     safe: undeclared.length === 0 && high.every((finding) => finding.permission_declared),
-    manifest: manifestResult ? manifestResult.file : null,
+    manifest: manifestResult.file,
+    manifest_version: manifest.manifest_version,
+    package: { type: manifest.type, id: manifest.id, version: manifest.version, channel: manifest.channel },
+    publisher: manifest.publisher.id,
     declared_permissions: declared.permissions,
     findings,
     undeclared_permissions: [...new Set(undeclared.map((finding) => finding.required_permission))].sort(),
+    trust_note: 'local source audit does not establish publisher ownership or cryptographic release trust',
   };
 }
 

@@ -1,5 +1,5 @@
 import { arch as osArch, platform as osPlatform } from 'node:os';
-import { satisfiesVersion } from './semver.mjs';
+import { satisfiesRange } from '../packages/protocol-core/index.mjs';
 import { DSH_RUNTIME_VERSION } from './version.mjs';
 
 function normalizePlatform(value) {
@@ -27,7 +27,7 @@ export function currentRuntimeEnvironment(options = {}) {
 
 function checkVersion(name, actual, range, reasons, checks) {
   if (!range) return;
-  const ok = satisfiesVersion(actual, String(range));
+  const ok = satisfiesRange(actual, String(range));
   checks.push({ name, actual, expected: String(range), ok });
   if (!ok) reasons.push(`${name} ${actual} does not satisfy ${range}`);
 }

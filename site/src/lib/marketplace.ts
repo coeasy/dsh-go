@@ -1,7 +1,9 @@
-export const HOME_MIN_STARS = 100;
-export const HOME_MAX_STARS = 5000;
-export const HOME_HARD_MAX_STARS = 10000;
-export const HOME_TOP_LIMIT = 100;
+import marketplacePolicy from '../config/marketplace-policy.json';
+
+export const HOME_MIN_STARS = marketplacePolicy.discovery.home_min_stars;
+export const HOME_MAX_STARS = marketplacePolicy.discovery.home_max_stars;
+export const HOME_HARD_MAX_STARS = marketplacePolicy.discovery.home_hard_max_stars;
+export const HOME_TOP_LIMIT = marketplacePolicy.discovery.home_top_limit;
 
 export interface MarketplacePlugin {
   slug?: string;

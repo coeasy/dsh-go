@@ -6,12 +6,14 @@ import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { assertSafeEvidenceResolution, assertSafeEvidenceUrl } from './supply-chain-verifier.mjs';
 
 const exec = promisify(execFile);
 const DIGEST_RE = /^sha256-[0-9a-f]{64}$/i;
 const FORMATS = new Set(['tgz', 'tar.gz']);
 const DEFAULT_ARTIFACT_TIMEOUT_MS = 60_000;
 const DEFAULT_ARTIFACT_MAX_BYTES = 256 * 1024 * 1024;
+const MAX_ARTIFACT_REDIRECTS = 3;
 
 function positiveOption(value, fallback) {
   const number = Number(value);
@@ -25,9 +27,8 @@ export function isReleaseArtifact(artifact) {
 export function validateReleaseArtifact(artifact) {
   const errors = [];
   if (!isReleaseArtifact(artifact)) errors.push('artifact.kind must be release-archive');
-  let url = null;
-  try { url = new URL(String(artifact?.url || '')); } catch { errors.push('artifact.url must be a valid URL'); }
-  if (url && url.protocol !== 'https:') errors.push('artifact.url must use https');
+  try { assertSafeEvidenceUrl(String(artifact?.url || '')); }
+  catch (error) { errors.push(`artifact.url is unsafe: ${error instanceof Error ? error.message : String(error)}`); }
   if (!DIGEST_RE.test(String(artifact?.digest || ''))) errors.push('artifact.digest must be sha256-<64 hex>');
   if (!FORMATS.has(String(artifact?.format || ''))) errors.push('artifact.format must be tgz or tar.gz');
   const strip = Number(artifact?.strip_components ?? 1);
@@ -56,26 +57,42 @@ async function assertExtractedTreeInside(root) {
   await walk(rootReal);
 }
 
+async function fetchReleaseResponse(url, options, timeoutMs) {
+  let current = assertSafeEvidenceUrl(url);
+  const fetchImpl = options.fetch || fetch;
+  for (let redirect = 0; redirect <= MAX_ARTIFACT_REDIRECTS; redirect += 1) {
+    await assertSafeEvidenceResolution(current, { lookup: options.lookup, timeoutMs });
+    const response = await fetchImpl(current, {
+      headers: { Accept: 'application/octet-stream', 'User-Agent': 'dsh-runtime-release-installer' },
+      redirect: 'manual',
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      if (redirect === MAX_ARTIFACT_REDIRECTS) throw new Error('release artifact has too many redirects');
+      const location = response.headers.get('location');
+      if (!location) throw new Error(`release artifact redirect ${response.status} has no location`);
+      current = assertSafeEvidenceUrl(new URL(location, current));
+      continue;
+    }
+    if (!response.ok || !response.body) throw new Error(`release artifact download failed: HTTP ${response.status}`);
+    return { response, finalUrl: current };
+  }
+  throw new Error('release artifact has too many redirects');
+}
+
 export async function downloadReleaseArtifact(artifact, file, options = {}) {
   const validation = validateReleaseArtifact(artifact);
   if (!validation.ok) throw new Error(`invalid release artifact: ${validation.errors.join('; ')}`);
   const timeoutMs = positiveOption(options.timeout, DEFAULT_ARTIFACT_TIMEOUT_MS);
   const maxBytes = positiveOption(options.maxBytes, DEFAULT_ARTIFACT_MAX_BYTES);
   await mkdir(dirname(resolve(file)), { recursive: true });
-  const response = await fetch(artifact.url, {
-    headers: { Accept: 'application/octet-stream', 'User-Agent': 'dsh-runtime-release-installer' },
-    redirect: 'follow',
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-  if (!response.ok || !response.body) throw new Error(`release artifact download failed: HTTP ${response.status}`);
+  const { response, finalUrl } = await fetchReleaseResponse(artifact.url, options, timeoutMs);
   const contentLength = Number(response.headers.get('content-length'));
   if (Number.isFinite(contentLength) && contentLength > maxBytes) {
     const error = new Error(`release artifact exceeds ${maxBytes} bytes`);
     error.code = 'DSH_RELEASE_ARTIFACT_TOO_LARGE';
     throw error;
   }
-  const finalUrl = new URL(response.url || artifact.url);
-  if (finalUrl.protocol !== 'https:') throw new Error('release artifact redirect downgraded from https');
 
   const hash = createHash('sha256');
   let bytes = 0;

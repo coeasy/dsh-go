@@ -1,26 +1,26 @@
-name: Ecosystem Package Release
+name: Ecosystem Package Release V2
 
 on:
   workflow_call:
     inputs:
       channel:
-        description: Marketplace channel
+        description: Registry release channel
         required: false
         default: stable
         type: string
       marketplace_repository:
-        description: DSH marketplace repository to refresh after release
+        description: DSH Registry V4 repository to refresh after release
         required: false
         default: coeasy/dsh-go
         type: string
       package_path:
-        description: Repository-relative package directory; empty means the repository root
+        description: Repository-relative package directory; empty means repository root
         required: false
         default: ''
         type: string
     secrets:
       marketplace_token:
-        description: Token or GitHub App token allowed to dispatch marketplace sync
+        description: Token or GitHub App token allowed to dispatch Registry V4 sync
         required: false
 
 permissions:
@@ -29,7 +29,7 @@ permissions:
   attestations: write
 
 concurrency:
-  group: dsh-package-release-${{ github.repository }}-${{ github.ref }}
+  group: dsh-package-release-v2-${{ github.repository }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -52,7 +52,7 @@ jobs:
           const url = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
           const token = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
           if (!url || !token) throw new Error('OIDC token endpoint is unavailable');
-          fetch(url + (url.includes('?') ? '&' : '?') + 'audience=dsh-package-release', {
+          fetch(url + (url.includes('?') ? '&' : '?') + 'audience=dsh-package-release-v2', {
             headers: { Authorization: 'bearer ' + token },
           }).then(async (response) => {
             if (!response.ok) throw new Error('OIDC token request failed: ' + response.status);
@@ -72,7 +72,7 @@ jobs:
           path: .dsh-toolkit
           persist-credentials: false
 
-      - name: Validate and audit package source
+      - name: Validate Manifest V2 and audit local source
         env:
           PACKAGE_PATH: ${{ inputs.package_path }}
         shell: bash
@@ -83,7 +83,7 @@ jobs:
           node .dsh-toolkit/runtime/dsh.mjs package validate "$PACKAGE_ROOT"
           node .dsh-toolkit/runtime/dsh.mjs package audit "$PACKAGE_ROOT"
 
-      - name: Pack deterministic DSH package release
+      - name: Pack deterministic Package Protocol V2 release
         id: pack
         env:
           PACKAGE_PATH: ${{ inputs.package_path }}
@@ -121,20 +121,15 @@ jobs:
           cmp dist/dsh-package-sbom.cdx.json .dsh-repro/dsh-package-sbom.cdx.json
           cmp dist/SHA256SUMS .dsh-repro/SHA256SUMS
 
-      - name: Enforce canonical discoverable release tag
+      - name: Enforce canonical release tag
         env:
           TAG: ${{ steps.pack.outputs.tag }}
-          PACKAGE_ID: ${{ steps.pack.outputs.id }}
-          PACKAGE_VERSION: ${{ steps.pack.outputs.version }}
+          CANONICAL_TAG: ${{ steps.pack.outputs.canonical_tag }}
         shell: bash
         run: |
           set -euo pipefail
-          EXPECTED_DEFAULT="v$PACKAGE_VERSION"
-          EXPECTED_PACKAGE="$PACKAGE_ID-v$PACKAGE_VERSION"
-          [ "$TAG" = "$EXPECTED_DEFAULT" ] || [ "$TAG" = "$EXPECTED_PACKAGE" ] || {
-            echo "DSH package releases must use canonical tag $EXPECTED_DEFAULT or $EXPECTED_PACKAGE" >&2
-            exit 1
-          }
+          [ "$TAG" = "$CANONICAL_TAG" ] || { echo "DSH package release tag must be $CANONICAL_TAG" >&2; exit 1; }
+          git check-ref-format "refs/tags/$TAG"
 
       - name: Bind immutable release tag to source commit
         env:
@@ -142,7 +137,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git check-ref-format "refs/tags/$TAG"
           remote_tag="$(git ls-remote --tags origin "refs/tags/$TAG" | awk 'NR == 1 { print $1 }')"
           if [ -n "$remote_tag" ]; then
             remote_target="$(git ls-remote --tags origin "refs/tags/$TAG^{}" | awk 'NR == 1 { print $1 }')"
@@ -197,10 +191,10 @@ jobs:
             gh release create "$TAG" "${assets[@]}" \
               --verify-tag \
               --title "$PACKAGE_ID $PACKAGE_VERSION" \
-              --notes "Immutable DSH ecosystem package release $PACKAGE_ID@$PACKAGE_VERSION. dsh-package-release.json binds the artifact digest to this source commit."
+              --notes "Immutable Package Protocol V2 release $PACKAGE_ID@$PACKAGE_VERSION. The release descriptor binds Manifest V2, artifact digest and source commit."
           fi
 
-      - name: Refresh marketplace Registry V3
+      - name: Refresh Marketplace Registry V4
         env:
           GH_TOKEN: ${{ secrets.marketplace_token }}
           MARKETPLACE_REPOSITORY: ${{ inputs.marketplace_repository }}
@@ -209,8 +203,8 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${GH_TOKEN:-}" ]; then
-            echo "marketplace_token not configured; release is complete, marketplace refresh was not dispatched"
+            echo "marketplace_token not configured; immutable package release is complete, Registry V4 refresh was not dispatched"
             exit 0
           fi
-          payload="$(jq -nc --arg repository "$GITHUB_REPOSITORY" --arg tag "$TAG" '{event_type:"sync-plugins",client_payload:{mode:"incremental",repository:$repository,tag:$tag}}')"
+          payload="$(jq -nc --arg repository "$GITHUB_REPOSITORY" --arg tag "$TAG" '{event_type:"sync-plugins",client_payload:{mode:"incremental",repository:$repository,tag:$tag,protocol_version:2,registry_version:4}}')"
           printf '%s' "$payload" | gh api --method POST "repos/$MARKETPLACE_REPOSITORY/dispatches" --input -

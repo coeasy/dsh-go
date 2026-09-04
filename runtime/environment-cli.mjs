@@ -1,5 +1,5 @@
-import { cliJsonMode, printCliError, printCliValue } from './cli-output.mjs';
-import { createEnvironmentLock, restoreEnvironmentLock, verifyEnvironmentLock } from './environment-lock.mjs';
+import { createEnvironmentLock, verifyEnvironmentLock } from './environment-lock.mjs';
+import { supervisedEnvironmentRestore } from './supervisor.mjs';
 
 function option(args, name) {
   const index = args.indexOf(name);
@@ -16,27 +16,28 @@ export async function runEnvironmentCli(args = process.argv.slice(2)) {
     lockFile: option(args, '--file') || option(args, '--lock-file'),
     registryFile: option(args, '--runtime-registry'),
     storeRoot: option(args, '--store'),
+    source: 'cli',
   };
   let result;
   if (command === 'lock') result = await createEnvironmentLock(common);
   else if (command === 'verify-lock') result = await verifyEnvironmentLock(common);
   else if (command === 'restore') {
-    result = await restoreEnvironmentLock({
+    result = await supervisedEnvironmentRestore({
       ...common,
       dryRun: args.includes('--dry-run'),
       approved: args.includes('--yes'),
     });
   } else throw new Error(`unknown environment command: ${command}`);
 
-  if (cliJsonMode()) printCliValue(result, { command, argv: args });
-  else console.log(JSON.stringify(result, null, 2));
   if (command === 'verify-lock' && !result.ok) process.exitCode = 1;
   return result;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runEnvironmentCli().catch((error) => {
-    printCliError(error, { prefix: '[dsh-environment]', argv: process.argv.slice(2) });
+  runEnvironmentCli().then((result) => {
+    console.log(JSON.stringify(result, null, 2));
+  }).catch((error) => {
+    console.error(`[dsh-environment] ${error.code ? `${error.code}: ` : ''}${error.message}`);
     process.exitCode = 1;
   });
 }

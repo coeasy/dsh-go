@@ -1,24 +1,30 @@
 # DSH Go Marketplace MCP package
 
-This is the independently packaged DSH MCP layer for the dsh-go Marketplace.
-It uses the read-only `https://dsh-go.pages.dev/api/v1/mcp` endpoint and does
-not execute shell commands, write files, read secrets, install packages, or
-restart the DSH client remotely.
+This is the independently packaged read-only MCP discovery layer for DSH Go Marketplace.
+It uses the canonical `https://dsh-go.pages.dev/api/v2/mcp` endpoint and Manifest V2.
+The remote service can search, inspect, resolve, and create install plans, but it cannot
+write local Runtime State, read local secrets, install packages, or restart a DSH client.
 
-Install it from a DSH Runtime with:
+The canonical package coordinate is:
 
-```bash
-dsh mcp install dsh-go-marketplace@0.1.2
-dsh startup activate
-dsh mcp start dsh-go-marketplace
+```text
+mcp:coeasy/dsh-go-marketplace@0.1.2
 ```
 
-After it is active, invoke a discovery tool locally:
+Install and activate it through the local Runtime Supervisor:
 
 ```bash
-dsh mcp invoke dsh-go-marketplace search_plugins --input '{"q":"mcp","limit":10}'
+dsh package install mcp:coeasy/dsh-go-marketplace@0.1.2 --yes
+dsh runtime activate --yes
 ```
 
-The DSH Runtime performs preflight, permission consent, immutable source or
-release-artifact verification, local activation, and runtime network policy
-checks. A successful install never restarts the client automatically.
+Inspect the package locally with:
+
+```bash
+dsh package info mcp:coeasy/dsh-go-marketplace@0.1.2
+```
+
+Package installation performs Registry V4 resolution, policy and permission evaluation,
+immutable source/artifact verification, content-addressable storage, one transactional
+Runtime State V4 publish, and explicit activation. Successful installation never restarts
+the host automatically.

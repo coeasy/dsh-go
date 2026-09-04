@@ -1,10 +1,10 @@
 import { resolve } from 'node:path';
-import { packageKey } from './package-model.mjs';
+import { packageKey } from '../packages/protocol-core/index.mjs';
 import { registryPath } from './registry.mjs';
 import { withFileLock } from './file-lock.mjs';
 
 function lockPath(type, id, registryFile) {
-  const key = packageKey(type, id).replace(':', '-');
+  const key = packageKey(type, id).replaceAll(':', '-').replaceAll('/', '-');
   return `${resolve(registryFile || registryPath())}.${key}.operation.lock`;
 }
 

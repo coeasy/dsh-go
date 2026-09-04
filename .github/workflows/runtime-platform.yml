@@ -1,159 +1,93 @@
-name: Runtime Platform 0.1.0
+name: Runtime Platform V4
 
 on:
   pull_request:
+    branches: [main]
     paths:
       - "bin/**"
       - "runtime/**"
-      - "mcp/**"
-      - "skills/**"
-      - "agents/**"
-      - "profiles/**"
+      - "packages/protocol-core/**"
+      - "packages/registry-core/**"
+      - "packages/resolver/**"
+      - "packages/policy-core/**"
       - "schemas/**"
       - "scripts/check-contract.mjs"
-      - "scripts/checksum.mjs"
-      - "scripts/package-security-audit.mjs"
-      - "scripts/generate-sbom.mjs"
-      - "scripts/verify-package-evidence.mjs"
-      - "scripts/registry-distribution.mjs"
-      - "scripts/validate-registry-v3.mjs"
-      - "scripts/package-release-pack.mjs"
-      - "scripts/provider-adapter-pack.mjs"
-      - "scripts/provider-adapter-publish.mjs"
-      - "tests/runtime-platform/**"
-      - "tests/production-v2/**"
-      - "tests/completion/**"
-      - "tests/e2e/**"
+      - "scripts/check-architecture.mjs"
+      - "scripts/registry-v4-*.mjs"
+      - "scripts/registry-distribution-v2.mjs"
+      - "scripts/build-search-index-v3.mjs"
+      - "tests/architecture-v4/**"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/runtime-platform.yml"
-      - ".github/workflows/package-release.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: runtime-platform-${{ github.ref }}
+  group: runtime-platform-v4-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  runtime-e2e:
-    name: Runtime regression (ubuntu)
+  runtime-linux:
+    name: Canonical Runtime V4 (ubuntu)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - name: Install dependencies
-        run: npm ci
-      - name: Verify public contract
-        run: npm run contract:check
-      - name: Runtime Platform tests
-        run: npm run runtime:test
-      - name: Production compatibility tests
-        run: npm run test:production-v2
-      - name: Runtime completion tests
-        run: npm run completion:test
-      - name: Runtime Registry compatibility
-        run: npm run runtime:check
-      - name: Package smoke
-        run: npm pack --dry-run
-      - name: Runtime syntax smoke
+      - run: npm ci
+      - name: Canonical contract
+        run: |
+          npm run contract:check
+          npm run architecture:check
+      - name: Runtime architecture tests
+        run: npx vitest run tests/architecture-v4
+      - name: Runtime syntax
         shell: bash
         run: |
-          node --check bin/dsh.mjs
-          node --check bin/dsh-core.mjs
-          node --check runtime/dsh.mjs
-          node --check runtime/control-cli.mjs
-          node --check runtime/catalog.mjs
-          node --check runtime/compatibility.mjs
-          node --check runtime/permissions.mjs
-          node --check runtime/permission-policy.mjs
-          node --check runtime/package-manifest.mjs
-          node --check runtime/preflight.mjs
-          node --check runtime/client-bridge.mjs
-          node --check runtime/client-host.mjs
-          node --check runtime/config-store.mjs
-          node --check runtime/secret-store.mjs
-          node --check runtime/dependency-guard.mjs
-          node --check runtime/transaction.mjs
-          node --check runtime/execution.mjs
-          node --check runtime/cli.mjs
-          node --check runtime/installer.mjs
-          node --check runtime/artifact-installer.mjs
-          node --check runtime/release-discovery.mjs
-          node --check runtime/loader.mjs
-          node --check runtime/registry.mjs
-          node --check runtime/resolver.mjs
-          node --check runtime/health.mjs
-          node --check runtime/rollback.mjs
-          node --check runtime/mcp-tools.mjs
-          node --check runtime/host-bridge.mjs
-          node --check runtime/startup.mjs
-          node --check runtime/provider-cli.mjs
-          node --check runtime/provider-store.mjs
-          node --check scripts/check-contract.mjs
-          node --check scripts/package-security-audit.mjs
-          node --check scripts/generate-sbom.mjs
-          node --check scripts/registry-distribution.mjs
-          node --check scripts/package-release-pack.mjs
-          node --check scripts/provider-adapter-pack.mjs
-          node --check scripts/provider-adapter-publish.mjs
+          find packages/protocol-core packages/registry-core packages/resolver packages/policy-core runtime bin -type f -name '*.mjs' -print0 \
+            | xargs -0 -n1 node --check
+      - name: CLI contract
+        run: |
+          node bin/dsh.mjs --help | grep -F 'dsh package install <type:id@range>'
+          node bin/dsh.mjs --help | grep -F 'dsh://package/install'
+          node bin/dsh.mjs --help | grep -F 'Runtime Supervisor'
+      - name: Package smoke
+        run: npm pack --dry-run
 
-  client-bridge-matrix:
-    name: Client Runtime (${{ matrix.os }})
+  runtime-cross-platform:
+    name: Canonical Runtime V4 (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, macos-latest]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - name: Install dependencies
-        run: npm ci
-      - name: Verify public contract
-        run: npm run contract:check
-      - name: Runtime Platform cross-platform tests
-        run: npm run runtime:test
-      - name: Production compatibility tests
-        run: npm run test:production-v2
-      - name: Runtime completion tests
-        run: npm run completion:test
-      - name: Official CLI smoke
-        run: node bin/dsh.mjs --version
-      - name: Production CLI smoke
-        run: node runtime/dsh.mjs version
-      - name: Protocol registration plan
-        run: node bin/dsh.mjs host registration
-      - name: Runtime entrypoint smoke
-        shell: bash
+      - run: npm ci
+      - name: Architecture conformance
+        run: npm run architecture:check
+      - name: Protocol, Policy, Registry, Resolver, State and Deep Link tests
+        run: npx vitest run tests/architecture-v4
+      - name: Canonical CLI syntax
         run: |
           node --check bin/dsh.mjs
-          node --check bin/dsh-core.mjs
-          node --check runtime/control-cli.mjs
-          node --check runtime/execution.mjs
-          node --check runtime/transaction.mjs
-          node --check runtime/resolver.mjs
-          node --check runtime/preflight.mjs
-          node --check runtime/client-bridge.mjs
+          node --check runtime/dsh.mjs
+          node --check runtime/supervisor.mjs
+          node --check runtime/activation-manager.mjs
+          node --check runtime/host-bridge.mjs
           node --check runtime/client-host.mjs
-          node --check runtime/artifact-installer.mjs
-          node --check runtime/release-discovery.mjs
-          node --check runtime/provider-cli.mjs
-          node --check runtime/provider-store.mjs
-          node --check scripts/check-contract.mjs
-          node --check scripts/package-release-pack.mjs
-          node --check scripts/provider-adapter-pack.mjs
+      - name: Protocol registration plan is canonical
+        shell: bash
+        run: |
+          node -e "import('./runtime/host-bridge.mjs').then(m=>{const p=m.protocolRegistration({platform:process.platform});if(!JSON.stringify(p).includes('package install-link'))process.exit(1)})"

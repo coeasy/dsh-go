@@ -1,0 +1,16 @@
+{
+  "name": "@dsh-go/policy-core",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./index.d.mts",
+      "default": "./index.mjs"
+    },
+    "./permissions": {
+      "types": "./permissions.d.mts",
+      "default": "./permissions.mjs"
+    }
+  }
+}

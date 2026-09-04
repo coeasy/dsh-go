@@ -1,16 +1,19 @@
 import { describe, it, expect } from 'vitest';
+import { isAuthoritativeDshManifest } from '../scripts/repository-identity.mjs';
 
-// 顶层动态 import 走 Node 原生 ESM 加载，避免 vitest 对 .mjs 的 transform 兼容问题
-const { buildFeed, dedupeTags, computeTrendScore, detectCategory, isAuthoritativeManifestFile, normalizeCategory, restRepositoryState, sanitizeManifest } = await import('../scripts/sync.mjs');
+const { buildFeed, dedupeTags, computeTrendScore, detectCategory, normalizeCategory, restRepositoryState, sanitizeManifest } = await import('../scripts/discovery-sync.mjs');
 
 describe('manifest authority', () => {
-  it('只有 dsh-plugin.json 能作为 DSH manifest', () => {
-    expect(isAuthoritativeManifestFile('dsh-plugin.json')).toBe(true);
-    expect(isAuthoritativeManifestFile('package.json')).toBe(false);
-    expect(isAuthoritativeManifestFile('plugin.json')).toBe(false);
+  it('only dsh-package.json can become install authority; legacy ecosystem files are discovery signals only', () => {
+    expect(isAuthoritativeDshManifest('dsh-package.json')).toBe(true);
+    expect(isAuthoritativeDshManifest('dsh-plugin.json')).toBe(false);
+    expect(isAuthoritativeDshManifest('dsh-mcp.json')).toBe(false);
+    expect(isAuthoritativeDshManifest('dsh-skill.json')).toBe(false);
+    expect(isAuthoritativeDshManifest('dsh-agent.json')).toBe(false);
+    expect(isAuthoritativeDshManifest('package.json')).toBe(false);
   });
 
-  it('清洗 manifest 字段并拒绝非法分类', () => {
+  it('sanitizes discovery metadata without granting installation authority', () => {
     expect(normalizeCategory('mcp', 'other')).toBe('mcp');
     expect(normalizeCategory('toString', 'other')).toBe('other');
     expect(sanitizeManifest({ name: ' Brand ', description: ' demo ', category: 'not-real', tags: 'bad' })).toEqual({ name: 'Brand', description: 'demo', tags: [] });
@@ -19,7 +22,7 @@ describe('manifest authority', () => {
 });
 
 describe('category detection', () => {
-  it('使用 token 匹配避免 substring 误判', () => {
+  it('uses token matching instead of substring matches', () => {
     expect(detectCategory({ topics: [], description: 'MCP server bridge', name: 'Bridge' }, null)).toBe('mcp');
     expect(detectCategory({ topics: [], description: 'Webhook integration bridge', name: 'Bridge' }, null)).toBe('integration');
     expect(detectCategory({ topics: [], description: 'A codebook formatter', name: 'Codebook' }, null)).toBe('other');
@@ -29,18 +32,12 @@ describe('category detection', () => {
 
 describe('REST repository state', () => {
   it('preserves true watcher counts when search results omit subscribers_count', () => {
-    expect(restRepositoryState({ archived: false, disabled: false }, { watchers: 443 })).toEqual({
-      watchers: 443, deprecated: false, disabled: false,
-    });
-    expect(restRepositoryState({ subscribers_count: 12, archived: true, disabled: true }, { watchers: 443 })).toEqual({
-      watchers: 12, deprecated: true, disabled: true,
-    });
+    expect(restRepositoryState({ archived: false, disabled: false }, { watchers: 443 })).toEqual({ watchers: 443, deprecated: false, disabled: false });
+    expect(restRepositoryState({ subscribers_count: 12, archived: true, disabled: true }, { watchers: 443 })).toEqual({ watchers: 12, deprecated: true, disabled: true });
   });
 
   it('preserves inactive state if a partial REST record omits lifecycle flags', () => {
-    expect(restRepositoryState({}, { watchers: 9, deprecated: true, disabled: true })).toEqual({
-      watchers: 9, deprecated: true, disabled: true,
-    });
+    expect(restRepositoryState({}, { watchers: 9, deprecated: true, disabled: true })).toEqual({ watchers: 9, deprecated: true, disabled: true });
   });
 });
 
@@ -59,12 +56,11 @@ describe('public feed liveness', () => {
 });
 
 describe('dedupeTags', () => {
-  it('去重、去空、小写化、忽略无效', () => {
+  it('deduplicates, trims and lowercases tags', () => {
     expect(dedupeTags(['AI', 'ai', '', null, ' Agent ', undefined, 'agent'])).toEqual(['ai', 'agent']);
   });
-  it('合并 manifest.tags 与 topics 场景', () => {
-    const tags = dedupeTags(['vision', 'AI', 'vision', 'ocr']);
-    expect(tags).toEqual(['vision', 'ai', 'ocr']);
+  it('merges manifest tags and topics safely', () => {
+    expect(dedupeTags(['vision', 'AI', 'vision', 'ocr'])).toEqual(['vision', 'ai', 'ocr']);
   });
 });
 
@@ -75,16 +71,15 @@ describe('computeTrendScore', () => {
   const oldUpd = new Date(now - 30 * day).toISOString();
   const freshCreated = new Date(now - 5 * day).toISOString();
 
-  it('近期更新与近期创建加权更高', () => {
+  it('weights recently updated records higher', () => {
     const a = computeTrendScore({ stars: 10, updated_at: recent, created_at: oldUpd } as any);
     const b = computeTrendScore({ stars: 10, updated_at: oldUpd, created_at: oldUpd } as any);
-    expect(a).toBeGreaterThan(b);
-    expect(a - b).toBe(20); // 仅 updated 加权
+    expect(a - b).toBe(20);
   });
 
-  it('近期创建额外 +10', () => {
+  it('adds the recent-creation bonus independently', () => {
     const c = computeTrendScore({ stars: 5, updated_at: recent, created_at: freshCreated } as any);
     const d = computeTrendScore({ stars: 5, updated_at: oldUpd, created_at: oldUpd } as any);
-    expect(c - d).toBe(30); // 20 updated + 10 created
+    expect(c - d).toBe(30);
   });
 });
