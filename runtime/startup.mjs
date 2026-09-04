@@ -1,6 +1,6 @@
 import { loadInstalledPackage } from './loader.mjs';
 import { recordRuntimeEvent } from './lifecycle.mjs';
-import { packageKey } from './package-model.mjs';
+import { packageKey } from '../packages/protocol-core/index.mjs';
 import { packageActivationState } from './package-status.mjs';
 import { recoverPackageTransactions } from './transaction.mjs';
 import { recoverEnvironmentTransactions } from './environment-lock.mjs';
@@ -15,7 +15,7 @@ import { withPackageOperationLock } from './package-operation-lock.mjs';
 function isActivationCandidate(record) {
   if (!record || record.state === 'removed' || record.state === 'disabled' || record.enabled === false) return false;
   if (record.state === 'failed' && !record.restart_required) return false;
-  return record.state === 'installed' || record.restart_required === true || record.activated !== true;
+  return record.state === 'installed' || record.state === 'pending-restart' || record.restart_required === true || record.activated !== true;
 }
 
 async function markActivationFailed(type, id, error, registryFile) {
@@ -47,37 +47,28 @@ export async function activatePendingPackages(options = {}) {
     recoverEnvironmentTransactions({ registryFile }),
   ]);
   const registry = await readRuntimeRegistry(registryFile);
-  const packages = registry.packages || [];
+  const packages = registry.packages;
   const candidates = packages.filter(isActivationCandidate);
   const activated = [];
   const failed = [];
 
   for (const record of candidates) {
+    const key = packageKey(record.type, record.id);
     try {
-      const loaded = await loadInstalledPackage(record.type || 'plugin', record.id, {
-        registryFile,
-        version: record.version,
-      });
+      const loaded = await loadInstalledPackage(record.type, record.id, { registryFile, version: record.version });
       activated.push({
         id: loaded.id,
         type: loaded.type,
-        key: packageKey(loaded.type, loaded.id),
+        key,
         version: loaded.version,
         commit: loaded.commit,
-        activation: loaded.activation,
         activation_state: 'active',
         binding: loaded.binding,
         restart_required: loaded.restart_required,
       });
     } catch (error) {
-      await markActivationFailed(record.type || 'plugin', record.id, error, registryFile);
-      failed.push({
-        type: record.type || 'plugin',
-        id: record.id,
-        key: packageKey(record.type || 'plugin', record.id),
-        activation_state: 'failed',
-        error: error.message,
-      });
+      await markActivationFailed(record.type, record.id, error, registryFile);
+      failed.push({ type: record.type, id: record.id, key, activation_state: 'failed', error: error.message });
     }
   }
 
@@ -87,8 +78,8 @@ export async function activatePendingPackages(options = {}) {
     pending: candidates.length,
     pending_packages: candidates.map((record) => ({
       id: record.id,
-      type: record.type || 'plugin',
-      key: packageKey(record.type || 'plugin', record.id),
+      type: record.type,
+      key: packageKey(record.type, record.id),
       activation_state: packageActivationState(record),
     })),
     activated,
@@ -98,8 +89,4 @@ export async function activatePendingPackages(options = {}) {
       && environmentRecovery.recovered.every((item) => !item.error && item.state !== 'conflict'),
     restart_required: failed.length > 0,
   };
-}
-
-export async function activatePendingPlugins(options = {}) {
-  return activatePendingPackages(options);
 }
