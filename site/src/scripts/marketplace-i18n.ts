@@ -19,26 +19,8 @@ function setLabelText(selector: string, key: string) {
 function translateCount(recommended = false) {
   const count = document.querySelector<HTMLElement>('#market-count');
   if (!count) return;
-  const match = count.textContent?.match(/\d+/);
-  const n = Number(match?.[0] || 0);
-  count.textContent = marketTr(recommended ? 'market_count_recommended' : 'market_count', activeLang, { n });
-}
-
-function bindRuntimeRefresh() {
-  if (listenersBound) return;
-  listenersBound = true;
-  const refreshCount = () => queueMicrotask(() => translateCount(false));
-  document.querySelector('#market-search')?.addEventListener('input', refreshCount);
-  document.querySelector('#market-verified')?.addEventListener('change', refreshCount);
-  document.querySelector('#market-registry')?.addEventListener('change', refreshCount);
-  document.querySelectorAll('[data-market-filter],[data-category-filter],[data-show-all]').forEach((element) => element.addEventListener('click', refreshCount));
-
-  document.querySelectorAll<HTMLButtonElement>('[data-copy-command]').forEach((button) => {
-    const observer = new MutationObserver(() => {
-      if (button.textContent === 'Copied') button.textContent = marketTr('market_copied', activeLang);
-    });
-    observer.observe(button, { childList: true, characterData: true, subtree: true });
-  });
+  const value = count.dataset.count || count.textContent?.match(/\d+/)?.[0] || '0';
+  count.textContent = marketTr(recommended ? 'market_count_recommended' : 'market_count', activeLang, { n: Number(value) });
 }
 
 function localizeCards() {
@@ -53,35 +35,61 @@ function localizeCards() {
     }
 
     const description = card.querySelector<HTMLElement>('.description');
-    if (description && (description.textContent?.trim() === '暂无描述' || description.dataset.i18nEmpty === 'true')) {
+    if (description && (description.textContent?.trim() === '暂无描述' || description.textContent?.trim() === 'No description available' || description.dataset.i18nEmpty === 'true')) {
       description.dataset.i18nEmpty = 'true';
       description.textContent = marketTr('market_no_description', activeLang);
     }
 
     card.querySelectorAll<HTMLElement>('.meta-row span').forEach((meta) => {
       const value = meta.textContent?.trim() || '';
-      if (value.startsWith('Updated ') || meta.dataset.i18nKind === 'updated') {
+      if (value.startsWith('Updated ') || value.startsWith('更新于 ') || meta.dataset.i18nKind === 'updated') {
         meta.dataset.i18nKind = 'updated';
-        meta.dataset.i18nValue ||= value.replace(/^Updated\s+/, '');
+        meta.dataset.i18nValue ||= value.replace(/^(?:Updated|更新于)\s+/, '');
         meta.textContent = marketTr('market_updated_item', activeLang, { date: meta.dataset.i18nValue || '' });
-      } else if (/^\d+ deps$/.test(value) || meta.dataset.i18nKind === 'deps') {
+      } else if (/^\d+ deps$/.test(value) || /^\d+ 个依赖$/.test(value) || meta.dataset.i18nKind === 'deps') {
         meta.dataset.i18nKind = 'deps';
         meta.dataset.i18nValue ||= value.match(/^\d+/)?.[0] || '0';
         meta.textContent = marketTr('market_deps', activeLang, { n: meta.dataset.i18nValue });
-      } else if (value.startsWith('commit ') || meta.dataset.i18nKind === 'commit') {
+      } else if (value.startsWith('commit ') || value.startsWith('提交 ') || meta.dataset.i18nKind === 'commit') {
         meta.dataset.i18nKind = 'commit';
-        meta.dataset.i18nValue ||= value.replace(/^commit\s+/, '');
+        meta.dataset.i18nValue ||= value.replace(/^(?:commit|提交)\s+/, '');
         meta.textContent = marketTr('market_commit', activeLang, { sha: meta.dataset.i18nValue || '' });
-      } else if (value === 'Catalog linked' || meta.dataset.i18nKind === 'catalog-linked') {
+      } else if (value === 'Catalog linked' || value === '已关联 Catalog' || meta.dataset.i18nKind === 'catalog-linked') {
         meta.dataset.i18nKind = 'catalog-linked';
         meta.textContent = marketTr('market_catalog_linked', activeLang);
       }
     });
 
-    const actions = card.querySelectorAll<HTMLElement>('.card-actions > *');
-    if (actions[0]) actions[0].textContent = marketTr('market_details', activeLang);
-    if (actions[1]) actions[1].textContent = marketTr('market_open_dsh', activeLang);
-    if (actions[2] && actions[2].textContent !== marketTr('market_copied', activeLang)) actions[2].textContent = marketTr('market_copy_cli', activeLang);
+    const details = card.querySelector<HTMLElement>('[data-action="details"]');
+    const sourceLink = card.querySelector<HTMLElement>('[data-action="source"]');
+    const open = card.querySelector<HTMLElement>('[data-action="open-dsh"]');
+    const copy = card.querySelector<HTMLElement>('[data-copy-command]');
+    if (details) details.textContent = marketTr('market_details', activeLang);
+    if (sourceLink) sourceLink.textContent = marketTr('market_source', activeLang);
+    if (open) open.textContent = marketTr('market_open_dsh', activeLang);
+    if (copy && copy.dataset.copyState !== 'copied') copy.textContent = marketTr('market_copy_cli', activeLang);
+  });
+
+  const grid = document.querySelector<HTMLElement>('#market-grid');
+  if (grid) {
+    grid.dataset.copyPrompt = marketTr('market_copy_prompt', activeLang);
+    grid.dataset.copyLabel = marketTr('market_copy_cli', activeLang);
+    grid.dataset.copiedLabel = marketTr('market_copied', activeLang);
+  }
+}
+
+function bindRuntimeRefresh() {
+  if (listenersBound) return;
+  listenersBound = true;
+  const refreshCount = () => queueMicrotask(() => translateCount(false));
+  document.querySelector('#market-search')?.addEventListener('input', refreshCount);
+  document.querySelector('#market-verified')?.addEventListener('change', refreshCount);
+  document.querySelector('#market-registry')?.addEventListener('change', refreshCount);
+  document.querySelectorAll('[data-market-filter],[data-category-filter],[data-show-all]').forEach((element) => element.addEventListener('click', refreshCount));
+  document.addEventListener('dsh:marketplacerender', () => {
+    localizeCards();
+    const popular = document.querySelector<HTMLButtonElement>('[data-market-filter="popular"]')?.classList.contains('active') === true;
+    translateCount(popular);
   });
 }
 
@@ -118,7 +126,7 @@ export function applyMarketplaceI18n(lang: Lang) {
   const title = document.querySelector<HTMLElement>('.market-hero h1');
   const titleAccent = title?.querySelector<HTMLElement>('.grad-text');
   if (title && titleAccent) {
-    title.firstChild!.textContent = `${marketTr('market_title_before', activeLang)} `;
+    if (title.firstChild) title.firstChild.textContent = `${marketTr('market_title_before', activeLang)} `;
     titleAccent.textContent = marketTr('market_title_ecosystem', activeLang);
   }
   text('.market-hero > p', 'market_intro');
@@ -157,10 +165,9 @@ export function applyMarketplaceI18n(lang: Lang) {
   if (facts[0]) {
     const strong = facts[0].querySelector<HTMLElement>('strong');
     const desc = facts[0].querySelector<HTMLElement>('span');
-    const titleText = strong?.textContent || '';
-    const range = titleText.match(/([\d.]+[Kk]?)\s*[–-]\s*([\d.]+[Kk]?)/);
+    const range = strong?.textContent?.match(/([\d.]+[Kk]?)\s*[–-]\s*([\d.]+[Kk]?)/);
     const numbers = desc?.textContent?.match(/\d+/g) || [];
-    if (strong) strong.textContent = marketTr('market_fact_top_title', activeLang, { min: range?.[1] || '100', max: range?.[2] || '10k' });
+    if (strong) strong.textContent = marketTr('market_fact_top_title', activeLang, { min: range?.[1] || '100', max: range?.[2] || '5k' });
     if (desc) desc.textContent = marketTr('market_fact_top_desc', activeLang, { giants: numbers[0] || 0, aggregators: numbers[1] || 0 });
   }
   if (facts[1]) {
@@ -182,7 +189,7 @@ export function applyMarketplaceI18n(lang: Lang) {
     const key = button.dataset.marketFilter === 'all' ? 'market_filter_all' : 'market_filter_recommended';
     const small = button.querySelector<HTMLElement>('small');
     const count = small?.textContent || '';
-    button.childNodes[0].textContent = `${marketTr(key, activeLang)} `;
+    if (button.childNodes[0]) button.childNodes[0].textContent = `${marketTr(key, activeLang)} `;
     if (small) small.textContent = count;
   });
   setLabelText('.check-filter:has(#market-verified)', 'market_filter_verified');
