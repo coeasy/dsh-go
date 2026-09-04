@@ -1,74 +1,39 @@
 {
-  "manifest_version": "1.0.0",
-  "id": "dsh-go-marketplace",
-  "name": "DSH Go Marketplace",
-  "version": "0.1.2",
-  "release_tag": "dsh-go-marketplace-v0.1.2",
+  "schema_version": 2,
   "type": "mcp",
-  "description": "Read-only DSH plugin, package, and ecosystem discovery through the dsh-go Marketplace API.",
-  "category": "mcp",
-  "tags": [
-    "dsh",
-    "marketplace",
-    "mcp",
-    "registry"
-  ],
+  "id": "coeasy/dsh-go-marketplace",
+  "version": "0.1.2",
+  "channel": "stable",
+  "name": "DSH Go Marketplace",
+  "description": "Read-only DSH package and ecosystem discovery through the canonical API V2 MCP endpoint.",
+  "runtime": {
+    "type": "mcp",
+    "transport": "streamable-http",
+    "activation": "remote"
+  },
+  "entrypoints": {
+    "mcp": "https://dsh-go.pages.dev/api/v2/mcp"
+  },
   "capabilities": [
     "marketplace.discovery",
     "registry.read",
-    "install.plan"
-  ],
-  "dependencies": [],
-  "provides": [
-    "dsh-go-marketplace",
-    "marketplace-discovery"
+    "install.plan",
+    "mcp.tools"
   ],
   "permissions": [
-    "network"
+    "network",
+    "mcp.tools"
   ],
-  "permission_policy": {
-    "network": {
-      "allow": [
-        "dsh-go.pages.dev"
-      ]
-    }
-  },
+  "dependencies": [],
   "compatibility": {
-    "os": [
-      "linux",
-      "darwin",
-      "win32"
-    ],
-    "arch": [
-      "x64",
-      "arm64"
-    ],
-    "node": ">=20.0.0",
-    "runtime": ">=0.1.0",
-    "client": ">=0.1.0"
+    "os": ["linux", "darwin", "win32"],
+    "arch": ["x64", "arm64"],
+    "node": ">=22.0.0"
   },
-  "publisher": {
-    "provider": "github",
-    "id": "coeasy",
-    "repository_ownership": "required"
-  },
-  "security": {
-    "provenance": null,
-    "signature": null,
-    "sbom": null,
-    "license": "MIT"
-  },
-  "mcp": {
-    "transport": "streamable-http",
-    "url": "https://dsh-go.pages.dev/api/v1/mcp",
-    "tools": [
-      "list_plugins",
-      "get_plugin",
-      "list_categories",
-      "search_plugins",
-      "list_ecosystem",
-      "get_ecosystem_item",
-      "plan_local_install"
-    ]
+  "metadata": {
+    "category": "mcp",
+    "tags": ["dsh", "marketplace", "mcp", "registry"],
+    "repository": "coeasy/dsh-go",
+    "homepage": "https://dsh-go.pages.dev"
   }
 }
