@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "repository": "coeasy/dsh-go",
+      "package_path": "packages/dsh-go-marketplace-plugin",
+      "ref": "main",
+      "enabled": true
+    }
+  ]
+}
