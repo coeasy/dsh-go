@@ -23,9 +23,9 @@ function blockedReason(registry, pkg, release) {
     ...(Array.isArray(registry.advisories) ? registry.advisories : []),
     ...(Array.isArray(release.security?.advisories) ? release.security.advisories.map((item) => ({ ...item, package: { type: pkg.type, id: pkg.id } })) : []),
   ];
-  const critical = advisories.find((advisory) => String(advisory?.severity || '').toLowerCase() === 'critical' && advisoryApplies(advisory, pkg.type, pkg.id, release.version));
-  if (critical) return { code: ERROR_CODES.SECURITY_ADVISORY_BLOCKED, reason: `critical-advisory:${critical.id || 'unknown'}`, advisory: critical };
-  return null;
+  const critical = advisories.find((advisory) => String(advisory?.severity || '').toLowerCase() === 'critical'
+    && advisoryApplies(advisory, pkg.type, pkg.id, release.version));
+  return critical ? { code: ERROR_CODES.SECURITY_ADVISORY_BLOCKED, reason: `critical-advisory:${critical.id || 'unknown'}`, advisory: critical } : null;
 }
 
 function compatible(release, environment) {
@@ -38,9 +38,7 @@ function compatible(release, environment) {
 }
 
 function packageMap(registry) {
-  if (!registry || Number(registry.schema_version) !== 4 || !Array.isArray(registry.packages)) {
-    throw new Error('Resolver V2 requires Registry V4');
-  }
+  if (!registry || Number(registry.schema_version) !== 4 || !Array.isArray(registry.packages)) throw new Error('Resolver V2 requires Registry V4');
   return new Map(registry.packages.map((item) => [packageKey(item.type, item.id), item]));
 }
 
@@ -53,22 +51,41 @@ function dependencyRequest(dependency, channel) {
   });
 }
 
+function nodeFor(pkg, release, dependencies = []) {
+  return {
+    key: packageKey(pkg.type, pkg.id),
+    type: pkg.type,
+    id: pkg.id,
+    version: release.version,
+    channel: release.channel,
+    commit: release.commit,
+    source: { ...(pkg.source || {}), commit: release.commit },
+    artifact: release.artifact || {},
+    runtime: release.runtime || {},
+    entrypoints: release.entrypoints || {},
+    capabilities: [...(release.capabilities || [])].sort(),
+    permissions: [...(release.permissions || [])].sort(),
+    compatibility: release.compatibility || {},
+    security: release.security || {},
+    dependencies: [...dependencies].sort(),
+    publisher_id: pkg.publisher_id,
+    publisher: pkg.publisher || null,
+    metadata: pkg.metadata || {},
+  };
+}
+
 function chooseRelease(registry, pkg, request, environment) {
   const blocked = [];
-  const compatibleCandidates = [];
+  const candidates = [];
   for (const release of pkg.releases || []) {
     if (String(release.channel || 'stable') !== request.channel) continue;
     if (!satisfiesRange(release.version, request.range)) continue;
     const reason = blockedReason(registry, pkg, release);
-    if (reason) {
-      blocked.push({ release, ...reason });
-      continue;
-    }
-    if (!compatible(release, environment)) continue;
-    compatibleCandidates.push(release);
+    if (reason) { blocked.push({ release, ...reason }); continue; }
+    if (compatible(release, environment)) candidates.push(release);
   }
-  compatibleCandidates.sort((left, right) => compareVersion(right.version, left.version));
-  if (compatibleCandidates.length) return { release: compatibleCandidates[0], blocked };
+  candidates.sort((left, right) => compareVersion(right.version, left.version));
+  if (candidates.length) return candidates[0];
   if (blocked.length) {
     const strongest = blocked.find((item) => item.code === ERROR_CODES.PACKAGE_REVOKED)
       || blocked.find((item) => item.code === ERROR_CODES.SECURITY_ADVISORY_BLOCKED)
@@ -88,22 +105,15 @@ function stableStringify(value) {
 
 function fnv1a64(value) {
   let hash = 0xcbf29ce484222325n;
-  const prime = 0x100000001b3n;
   for (const byte of new TextEncoder().encode(value)) {
     hash ^= BigInt(byte);
-    hash = BigInt.asUintN(64, hash * prime);
+    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
   }
   return hash.toString(16).padStart(16, '0');
 }
 
 export function resolutionHash(plan) {
-  return `r2-${fnv1a64(stableStringify({
-    registry_revision: plan.registry_revision,
-    root: plan.root,
-    graph: plan.graph,
-    order: plan.order,
-    environment: plan.environment,
-  }))}`;
+  return `r2-${fnv1a64(stableStringify({ registry_revision: plan.registry_revision, root: plan.root, graph: plan.graph, order: plan.order, environment: plan.environment }))}`;
 }
 
 export function resolvePackage(registry, rawRequest, environment = {}) {
@@ -122,35 +132,22 @@ export function resolvePackage(registry, rawRequest, environment = {}) {
     return key;
   }
 
-  function effectiveRequest(key) {
+  function selectForConstraints(key) {
     const list = constraints.get(key) || [];
     const [type, ...idParts] = key.split(':');
     const id = idParts.join(':');
     const channels = [...new Set(list.map((entry) => entry.channel))];
-    if (channels.length !== 1) {
-      throw new ProtocolError(ERROR_CODES.DEPENDENCY_CONFLICT, `dependency channel conflict for ${key}`, { constraints: list });
-    }
-    return {
-      type,
-      id,
-      channel: channels[0],
-      ranges: list.map((entry) => entry.range),
-    };
-  }
-
-  function selectForConstraints(key) {
-    const request = effectiveRequest(key);
+    if (channels.length !== 1) throw new ProtocolError(ERROR_CODES.DEPENDENCY_CONFLICT, `dependency channel conflict for ${key}`, { constraints: list });
     const pkg = packages.get(key);
     if (!pkg) throw new ProtocolError(ERROR_CODES.PACKAGE_NOT_FOUND, `package not found in Registry V4: ${key}`);
+    const request = { type, id, channel: channels[0], range: '*' };
     const candidates = (pkg.releases || [])
       .filter((release) => String(release.channel || 'stable') === request.channel)
-      .filter((release) => request.ranges.every((range) => satisfiesRange(release.version, range)))
+      .filter((release) => list.every((entry) => satisfiesRange(release.version, entry.range)))
       .filter((release) => !blockedReason(registry, pkg, release))
       .filter((release) => compatible(release, environment))
       .sort((left, right) => compareVersion(right.version, left.version));
-    if (!candidates.length) {
-      throw new ProtocolError(ERROR_CODES.DEPENDENCY_CONFLICT, `no release satisfies merged dependency constraints for ${key}`, { constraints: request.ranges });
-    }
+    if (!candidates.length) throw new ProtocolError(ERROR_CODES.DEPENDENCY_CONFLICT, `no release satisfies merged dependency constraints for ${key}`, { constraints: list });
     return { pkg, release: candidates[0] };
   }
 
@@ -162,7 +159,6 @@ export function resolvePackage(registry, rawRequest, environment = {}) {
     const selected = selectForConstraints(key);
     const existing = nodes.get(key);
     if (existing && existing.version === selected.release.version && visited.has(key)) return;
-
     visiting.push(key);
     const dependencies = [];
     for (const dependency of selected.release.dependencies || []) {
@@ -174,65 +170,34 @@ export function resolvePackage(registry, rawRequest, environment = {}) {
     }
     visiting.pop();
     visited.add(key);
-    nodes.set(key, {
-      key,
-      type: selected.pkg.type,
-      id: selected.pkg.id,
-      version: selected.release.version,
-      channel: selected.release.channel,
-      commit: selected.release.commit,
-      artifact: selected.release.artifact || {},
-      permissions: [...(selected.release.permissions || [])].sort(),
-      compatibility: selected.release.compatibility || {},
-      security: selected.release.security || {},
-      dependencies: dependencies.sort(),
-      publisher_id: selected.pkg.publisher_id,
-      source: selected.pkg.source,
-    });
+    nodes.set(key, nodeFor(selected.pkg, selected.release, dependencies));
   }
 
   const rootKey = addConstraint(rootRequest);
   const rootPackage = packages.get(rootKey);
   if (!rootPackage) throw new ProtocolError(ERROR_CODES.PACKAGE_NOT_FOUND, `package not found in Registry V4: ${rootKey}`);
-  const rootSelection = chooseRelease(registry, rootPackage, rootRequest, environment);
-  nodes.set(rootKey, {
-    key: rootKey,
-    type: rootPackage.type,
-    id: rootPackage.id,
-    version: rootSelection.release.version,
-    channel: rootSelection.release.channel,
-    commit: rootSelection.release.commit,
-    artifact: rootSelection.release.artifact || {},
-    permissions: [...(rootSelection.release.permissions || [])].sort(),
-    compatibility: rootSelection.release.compatibility || {},
-    security: rootSelection.release.security || {},
-    dependencies: [],
-    publisher_id: rootPackage.publisher_id,
-    source: rootPackage.source,
-  });
+  chooseRelease(registry, rootPackage, rootRequest, environment);
   visit(rootKey);
 
   const order = [];
   const ordered = new Set();
   function append(key) {
     if (ordered.has(key)) return;
-    const node = nodes.get(key);
-    for (const dependency of node?.dependencies || []) append(dependency);
+    for (const dependency of nodes.get(key)?.dependencies || []) append(dependency);
     ordered.add(key);
     order.push(key);
   }
   append(rootKey);
 
   const graph = [...nodes.values()].sort((a, b) => a.key.localeCompare(b.key));
-  const permissionSet = new Set();
-  for (const node of graph) for (const permission of node.permissions) permissionSet.add(permission);
+  const permissions = [...new Set(graph.flatMap((node) => node.permissions))].sort();
   const plan = {
     protocol_version: 2,
     registry_revision: registry.revision,
     root: nodes.get(rootKey),
     graph,
     order,
-    permissions: [...permissionSet].sort(),
+    permissions,
     conflicts: [],
     restart_required: true,
     environment: { ...environment },
