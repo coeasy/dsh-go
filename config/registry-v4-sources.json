@@ -7,5 +7,19 @@
       "ref": "main",
       "enabled": true
     }
+  ],
+  "required_packages": [
+    {
+      "repository": "coeasy/dsh-go",
+      "package_path": "packages/dsh-go-marketplace",
+      "type": "mcp",
+      "id": "coeasy/dsh-go-marketplace"
+    },
+    {
+      "repository": "coeasy/dsh-go",
+      "package_path": "packages/dsh-go-marketplace-plugin",
+      "type": "plugin",
+      "id": "coeasy/dsh-go-marketplace-plugin"
+    }
   ]
 }
