@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { normalizePackageId, normalizePackageType, packageKey } from '../packages/protocol-core/index.mjs';
 import { assertPolicyAllowed, compactPolicySnapshot } from '../packages/policy-core/index.mjs';
-import { activatePackage } from './platform.mjs';
+import { recordRuntimeEvent, transitionPackage } from './lifecycle.mjs';
 import { getRuntimeAdapter } from './adapters/index.mjs';
 import {
   getRuntimePackage,
@@ -42,6 +42,26 @@ function hydrateRuntimeRecord(record, lock, target) {
     resolution_hash: lock.resolution_hash || null,
     registry_revision: lock.registry_revision || null,
   };
+}
+
+function activateRuntimeRecord(record, binding) {
+  if (record.enabled === false || record.state === 'disabled') {
+    const error = new Error(`cannot activate disabled runtime package: ${packageKey(record.type, record.id)}`);
+    error.code = 'DSH_PACKAGE_DISABLED';
+    throw error;
+  }
+  let next = record;
+  if (['installed', 'pending-restart', 'failed'].includes(next.state)) {
+    next = transitionPackage(next, 'verifying', { event: 'activation-verify' });
+  }
+  next = transitionPackage(next, 'active', { event: 'activated' });
+  return recordRuntimeEvent({
+    ...next,
+    activated: true,
+    restart_required: false,
+    health: null,
+    binding,
+  }, 'activation-committed');
 }
 
 export async function prepareInstalledPackage(type, id, options = {}) {
@@ -93,7 +113,7 @@ export async function prepareInstalledPackage(type, id, options = {}) {
   await adapter.activate({ ...prepared, binding, record: runtimeRecord, options });
 
   const hydrated = hydrateRuntimeRecord(runtimeRecord, lock, target);
-  const activatedRecord = activatePackage({
+  const activatedRecord = activateRuntimeRecord({
     ...hydrated,
     adapter: { type: adapter.type, abi_version: adapter.abi_version },
     policy_snapshot: compactPolicySnapshot(policy),
