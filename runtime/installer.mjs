@@ -3,8 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { assertPackageType, safePackageId } from './package-model.mjs';
-import { packageRoot, pluginRoot } from './registry.mjs';
+import { normalizePackageId, normalizePackageType } from '../packages/protocol-core/index.mjs';
+import { packageRoot } from './registry.mjs';
 import { verifyInstalledCommit, verifyResolvedPackage } from './verifier.mjs';
 import { assertCompatibility } from './compatibility.mjs';
 import { assertPermissionConsent, inspectPermissions } from './permissions.mjs';
@@ -19,12 +19,8 @@ import { withPackageOperationLock } from './package-operation-lock.mjs';
 const exec = promisify(execFile);
 const DEFAULT_GIT_TIMEOUT_MS = 120_000;
 
-export function defaultPluginHome() {
-  return pluginRoot();
-}
-
 export function defaultPackageHome(type) {
-  return packageRoot(assertPackageType(type));
+  return packageRoot(normalizePackageType(type));
 }
 
 async function git(args, cwd, options = {}) {
@@ -40,8 +36,8 @@ async function git(args, cwd, options = {}) {
 }
 
 function assertNotYanked(pkg) {
-  if (pkg?.security?.yanked !== true) return;
-  const error = new Error(`runtime package is yanked and cannot be installed: ${pkg.type || 'plugin'}:${pkg.id}@${pkg.version}`);
+  if (pkg?.security?.yanked !== true && pkg?.yanked !== true) return;
+  const error = new Error(`runtime package is yanked and cannot be installed: ${pkg.type}:${pkg.id}@${pkg.version}`);
   error.code = 'DSH_PACKAGE_YANKED';
   throw error;
 }
@@ -85,9 +81,6 @@ function enterpriseRegistryIdentity() {
       organization: String(process.env.DSH_SELECTED_REGISTRY_ORGANIZATION || '').trim() || null,
     };
   }
-  const registryIndex = process.argv.indexOf('--registry');
-  const directRegistry = registryIndex >= 0 ? String(process.argv[registryIndex + 1] || '').trim() : '';
-  if (directRegistry) return { name: directRegistry, url: directRegistry, trusted: false, organization: null };
   return { name: 'official', url: null, trusted: true, organization: null };
 }
 
@@ -101,53 +94,59 @@ function sourceWithRegistryProvenance(source, registry) {
   };
 }
 
-export async function installPackage(inputPackage, options = {}) {
-  const type = assertPackageType(inputPackage?.type || 'plugin');
-  assertNotYanked({ ...inputPackage, type });
-  assertPackageSecurityAllowed({ ...inputPackage, type });
-  const sourceVerification = verifyResolvedPackage({ ...inputPackage, type });
-  if (!sourceVerification.ok) throw new Error('runtime package verification failed: ' + sourceVerification.errors.join('; '));
+function canonicalPackage(inputPackage) {
+  if (!inputPackage?.type) throw new Error('runtime package type is required');
+  const type = normalizePackageType(inputPackage.type);
+  const id = normalizePackageId(inputPackage.id);
+  const version = String(inputPackage.version || '').trim();
+  if (!version) throw new Error(`runtime package version is required: ${type}:${id}`);
+  const source = { ...(inputPackage.source || {}) };
+  const repo = String(source.repo || inputPackage.repo || '').trim().toLowerCase();
+  const commit = String(source.commit || inputPackage.commit || '').trim().toLowerCase();
+  return { ...inputPackage, type, id, version, source: { ...source, repo, commit }, repo, commit };
+}
 
-  let pkg = inputPackage;
-  // A dry-run must be deterministic and side-effect free. Release discovery
-  // performs a network lookup, so defer it to the real install path; the
-  // caller can still explicitly provide a release artifact when planning.
+export async function installPackage(inputPackage, options = {}) {
+  let pkg = canonicalPackage(inputPackage);
+  const type = pkg.type;
+  assertNotYanked(pkg);
+  assertPackageSecurityAllowed(pkg);
+  const sourceVerification = verifyResolvedPackage(pkg);
+  if (!sourceVerification.ok) throw new Error(`runtime package verification failed: ${sourceVerification.errors.join('; ')}`);
+
   if (!options.dryRun && !isReleaseArtifact(pkg.artifact) && options.releaseDiscovery !== false && !options.repositoryUrl) {
-    const discovered = await discoverReleaseArtifact({ ...pkg, type }, {
+    const discovered = await discoverReleaseArtifact(pkg, {
       timeout: options.releaseDiscoveryTimeout,
       strict: options.releaseDiscoveryStrict === true,
     });
-    if (discovered) pkg = { ...pkg, artifact: { ...pkg.artifact, ...discovered } };
+    if (discovered) pkg = canonicalPackage({ ...pkg, artifact: { ...pkg.artifact, ...discovered } });
   }
-  assertPackageSecurityAllowed({ ...pkg, type });
-  const verification = verifyResolvedPackage({ ...pkg, type });
-  if (!verification.ok) throw new Error('runtime package verification failed: ' + verification.errors.join('; '));
 
+  assertPackageSecurityAllowed(pkg);
+  const verification = verifyResolvedPackage(pkg);
+  if (!verification.ok) throw new Error(`runtime package verification failed: ${verification.errors.join('; ')}`);
   const compatibility = assertCompatibility(pkg, options.environment);
   const permissions = inspectPermissions(pkg.permissions);
   const registryContext = enterpriseRegistryIdentity();
   const locallyApproved = options.approved === true || options.dryRun === true || process.env.DSH_PERMISSION_APPROVED === '1';
   await enforceEnterprisePolicy({
-    package: { ...pkg, type },
+    package: pkg,
     publisher: pkg.publisher,
     permissions: pkg.permissions,
     registry: registryContext,
     approved: locallyApproved,
     operation: options.force ? 'replace' : 'install',
   }, { file: options.enterprisePolicyFile });
-  if (!options.dryRun) {
-    assertPermissionConsent(pkg.permissions, {
-      approved: locallyApproved,
-    });
-  }
+  if (!options.dryRun) assertPermissionConsent(pkg.permissions, { approved: locallyApproved });
 
   const root = resolve(options.root || defaultPackageHome(type));
-  const target = join(root, safePackageId(pkg.id));
-  const backup = target + '.backup';
+  const target = join(root, ...pkg.id.split('/'));
+  const backup = `${target}.backup`;
   const evidenceDeclared = hasDeclaredSupplyChainEvidence(pkg.security);
   const releaseArtifact = isReleaseArtifact(pkg.artifact);
   const installSource = releaseArtifact ? 'release-archive' : 'git-source';
   const plan = {
+    key: `${type}:${pkg.id}`,
     id: pkg.id,
     type,
     version: pkg.version,
@@ -156,13 +155,15 @@ export async function installPackage(inputPackage, options = {}) {
     commit: pkg.commit,
     target,
     backup,
+    registry_revision: pkg.registry_revision || null,
+    resolution_hash: pkg.resolution_hash || null,
     source_registry: registryContext.name,
     source_registry_url: registryContext.url,
     source_registry_trusted: registryContext.trusted === true,
     source_registry_organization: registryContext.organization,
     install_source: installSource,
     artifact_url: releaseArtifact ? pkg.artifact.url : null,
-    artifact_digest: releaseArtifact ? pkg.artifact.digest : null,
+    artifact_digest: releaseArtifact ? (pkg.artifact.digest || pkg.artifact.integrity || null) : null,
     release_tag: releaseArtifact ? pkg.artifact.release_tag || null : null,
     restart_required: true,
     compatibility,
@@ -179,121 +180,115 @@ export async function installPackage(inputPackage, options = {}) {
     let targetCommitted = false;
 
     try {
-    let artifactVerification = null;
-    if (releaseArtifact) {
+      let artifactVerification = null;
+      if (releaseArtifact) {
         artifactVerification = await installReleaseArtifact(pkg.artifact, temp, {
           timeout: options.artifactTimeout,
           maxBytes: options.artifactMaxBytes,
           commandTimeout: options.artifactCommandTimeout,
         });
-    } else {
-      await mkdir(temp, { recursive: true });
-      await git(['init', '-q'], temp, options);
-      await git(['remote', 'add', 'origin', options.repositoryUrl || 'https://github.com/' + pkg.repo + '.git'], temp, options);
-      await git(['fetch', '--depth', '1', 'origin', pkg.commit], temp, options);
-      await git(['checkout', '--detach', '-q', 'FETCH_HEAD'], temp, options);
-      await verifyInstalledCommit(temp, pkg.commit, options);
-    }
-
-    let evidenceReport = null;
-    if (evidenceDeclared) {
-      evidenceReport = await verifySecurityEvidence(pkg.security, { root: temp, online: false });
-      const identity = await verifySupplyChainIdentity(pkg.security, evidenceReport, {
-        root: temp,
-        cosignPath: options.cosignPath,
-        cosignRunner: options.cosignRunner,
-        hostEnv: options.hostEnv,
-      });
-      evidenceReport.identity = identity;
-      evidenceReport.cryptographic_signature_verified = identity.cryptographic_signature_verified === true;
-      evidenceReport.slsa_provenance_verified = identity.slsa_provenance_verified === true;
-      evidenceReport.valid = evidenceReport.valid === true && identity.valid === true;
-      if (!evidenceReport.valid) {
-        const failed = evidenceReport.evidence
-          .filter((item) => ['digest-mismatch', 'verification-error'].includes(item.status))
-          .map((item) => `${item.kind}:${item.status}`)
-          .concat(identityFailures(evidenceReport));
-        const error = new Error(`supply-chain evidence verification failed: ${failed.join(', ') || 'unknown evidence failure'}`);
-        error.code = 'DSH_SUPPLY_CHAIN_EVIDENCE_INVALID';
-        error.evidence = evidenceReport;
-        throw error;
+      } else {
+        if (!pkg.repo || !pkg.commit) throw new Error(`immutable git source is required: ${type}:${pkg.id}@${pkg.version}`);
+        await mkdir(temp, { recursive: true });
+        await git(['init', '-q'], temp, options);
+        await git(['remote', 'add', 'origin', options.repositoryUrl || `https://github.com/${pkg.repo}.git`], temp, options);
+        await git(['fetch', '--depth', '1', 'origin', pkg.commit], temp, options);
+        await git(['checkout', '--detach', '-q', 'FETCH_HEAD'], temp, options);
+        await verifyInstalledCommit(temp, pkg.commit, options);
       }
-    }
-    const compactEvidence = compactEvidenceReport(evidenceReport);
 
-    const lock = {
-      registry_version: 3,
-      runtime_registry_version: 3,
-      id: pkg.id,
-      type,
-      package_type: type,
-      version: pkg.version,
-      channel: pkg.channel || 'stable',
-      source: sourceWithRegistryProvenance(pkg.source, registryContext),
-      source_registry: registryContext.name,
-      source_registry_url: registryContext.url,
-      source_registry_trusted: registryContext.trusted === true,
-      source_registry_organization: registryContext.organization,
-      artifact: pkg.artifact,
-      installation: {
-        source: installSource,
-        artifact_digest_verified: artifactVerification?.verified === true,
-        artifact_digest: artifactVerification?.digest || null,
-        artifact_url: artifactVerification?.url || null,
-        verified_at: new Date().toISOString(),
-      },
-      runtime: pkg.runtime,
-      capabilities: pkg.capabilities || [],
-      dependencies: pkg.dependencies || [],
-      permissions: pkg.permissions || [],
-      permission_policy: pkg.permission_policy || null,
-      permission_manifest: pkg.permission_manifest || null,
-      compatibility: pkg.compatibility || {},
-      publisher: pkg.publisher || null,
-      security: pkg.security || null,
-      supply_chain_verification: compactEvidence,
-      conflicts: pkg.conflicts || [],
-      replaces: pkg.replaces || [],
-      provides: pkg.provides || [],
-      type_config: pkg.type_config || null,
-      installed_at: new Date().toISOString(),
-      restart_required: true,
-    };
-    await writeFile(join(temp, '.dsh-install.json'), JSON.stringify(lock, null, 2) + '\n', 'utf8');
-
-    if (options.force) {
-      await rm(backup, { recursive: true, force: true });
-      try {
-        await rename(target, backup);
-        backupMoved = true;
-      } catch (error) {
-        if (error?.code !== 'ENOENT') throw error;
+      let evidenceReport = null;
+      if (evidenceDeclared) {
+        evidenceReport = await verifySecurityEvidence(pkg.security, { root: temp, online: false });
+        const identity = await verifySupplyChainIdentity(pkg.security, evidenceReport, {
+          root: temp,
+          cosignPath: options.cosignPath,
+          cosignRunner: options.cosignRunner,
+          hostEnv: options.hostEnv,
+        });
+        evidenceReport.identity = identity;
+        evidenceReport.cryptographic_signature_verified = identity.cryptographic_signature_verified === true;
+        evidenceReport.slsa_provenance_verified = identity.slsa_provenance_verified === true;
+        evidenceReport.valid = evidenceReport.valid === true && identity.valid === true;
+        if (!evidenceReport.valid) {
+          const failed = evidenceReport.evidence
+            .filter((item) => ['digest-mismatch', 'verification-error'].includes(item.status))
+            .map((item) => `${item.kind}:${item.status}`)
+            .concat(identityFailures(evidenceReport));
+          const error = new Error(`supply-chain evidence verification failed: ${failed.join(', ') || 'unknown evidence failure'}`);
+          error.code = 'DSH_SUPPLY_CHAIN_EVIDENCE_INVALID';
+          error.evidence = evidenceReport;
+          throw error;
+        }
       }
-    } else {
-      try {
-        await access(target);
-        throw new Error(`runtime package already installed: ${type}:${pkg.id} (use --force to replace)`);
-      } catch (error) {
-        if (error?.code !== 'ENOENT') throw error;
-      }
-    }
+      const compactEvidence = compactEvidenceReport(evidenceReport);
 
-    await mkdir(dirname(target), { recursive: true });
-    await rename(temp, target);
-    targetCommitted = true;
-    return {
-      ...plan,
-      artifact_verified: artifactVerification?.verified === true,
-      supply_chain: {
-        declared: evidenceDeclared,
-        checked: evidenceDeclared,
-        valid: evidenceReport?.valid ?? null,
-        summary: evidenceReport?.summary || null,
-        cryptographic_signature_verified: evidenceReport?.cryptographic_signature_verified === true,
-        slsa_provenance_verified: evidenceReport?.slsa_provenance_verified === true,
-      },
-      backup: options.force && backupMoved ? backup : undefined,
-    };
+      const lock = {
+        schema_version: 4,
+        runtime_state_version: 4,
+        protocol_version: 2,
+        id: pkg.id,
+        type,
+        version: pkg.version,
+        channel: pkg.channel || 'stable',
+        source: sourceWithRegistryProvenance(pkg.source, registryContext),
+        registry_revision: pkg.registry_revision || null,
+        resolution_hash: pkg.resolution_hash || null,
+        artifact: pkg.artifact || {},
+        installation: {
+          source: installSource,
+          artifact_digest_verified: artifactVerification?.verified === true,
+          artifact_digest: artifactVerification?.digest || null,
+          artifact_url: artifactVerification?.url || null,
+          verified_at: new Date().toISOString(),
+        },
+        runtime: pkg.runtime || {},
+        entrypoints: pkg.entrypoints || {},
+        capabilities: pkg.capabilities || [],
+        dependencies: pkg.dependencies || [],
+        permissions: pkg.permissions || [],
+        compatibility: pkg.compatibility || {},
+        publisher: pkg.publisher || null,
+        security: pkg.security || null,
+        supply_chain_verification: compactEvidence,
+        installed_at: new Date().toISOString(),
+        restart_required: true,
+      };
+      await writeFile(join(temp, '.dsh-install.json'), `${JSON.stringify(lock, null, 2)}\n`, 'utf8');
+
+      if (options.force) {
+        await rm(backup, { recursive: true, force: true });
+        try {
+          await rename(target, backup);
+          backupMoved = true;
+        } catch (error) {
+          if (error?.code !== 'ENOENT') throw error;
+        }
+      } else {
+        try {
+          await access(target);
+          throw new Error(`runtime package already installed: ${type}:${pkg.id} (use --force to replace)`);
+        } catch (error) {
+          if (error?.code !== 'ENOENT') throw error;
+        }
+      }
+
+      await mkdir(dirname(target), { recursive: true });
+      await rename(temp, target);
+      targetCommitted = true;
+      return {
+        ...plan,
+        artifact_verified: artifactVerification?.verified === true,
+        supply_chain: {
+          declared: evidenceDeclared,
+          checked: evidenceDeclared,
+          valid: evidenceReport?.valid ?? null,
+          summary: evidenceReport?.summary || null,
+          cryptographic_signature_verified: evidenceReport?.cryptographic_signature_verified === true,
+          slsa_provenance_verified: evidenceReport?.slsa_provenance_verified === true,
+        },
+        backup: options.force && backupMoved ? backup : undefined,
+      };
     } catch (error) {
       await rm(temp, { recursive: true, force: true }).catch((cleanupError) => {
         error.filesystem_cleanup_error = cleanupError.message;
@@ -311,8 +306,4 @@ export async function installPackage(inputPackage, options = {}) {
       throw error;
     }
   }, options);
-}
-
-export async function installPlugin(plugin, options = {}) {
-  return installPackage({ ...plugin, type: 'plugin' }, options);
 }
