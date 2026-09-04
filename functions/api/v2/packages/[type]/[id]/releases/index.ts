@@ -1,8 +1,8 @@
-import { ERROR_CODES, ProtocolError } from '../../../../../../packages/protocol-core/index.mjs';
-import { apiData, apiError, optionsResponse, requestId, statusForError } from '../../../../../_api-v2';
-import type { Env } from '../../../../../_lib';
-import { loadRegistryV4 } from '../../../../../_registry-v4';
-import { findRegistryPackage, sortedReleases } from '../../../../../_registry-v4-query';
+import { ERROR_CODES, ProtocolError } from '../../../../../../../packages/protocol-core/index.mjs';
+import { apiData, apiError, optionsResponse, requestId, statusForError } from '../../../../../../_api-v2';
+import type { Env } from '../../../../../../_lib';
+import { loadRegistryV4 } from '../../../../../../_registry-v4';
+import { findRegistryPackage, sortedReleases } from '../../../../../../_registry-v4-query';
 
 function param(value: string | string[] | undefined): string { return Array.isArray(value) ? value[0] || '' : value || ''; }
 
