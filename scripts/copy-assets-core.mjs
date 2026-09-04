@@ -4,7 +4,8 @@ import { access, cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/pro
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
-import { buildRegistryV4 } from '../packages/registry-core/index.mjs';
+import { validateRegistryV4 } from '../packages/registry-core/index.mjs';
+import { buildRegistryV4FromDiscovery } from './registry-v4-source.mjs';
 import { buildSearchIndexV3 } from './build-search-index-v3.mjs';
 import { writeRegistryDistributionV2 } from './registry-distribution-v2.mjs';
 
@@ -27,25 +28,38 @@ const CATALOG_DIR = resolve(ROOT, 'catalog');
 const TARGET_DIR = resolve(ROOT, 'site/public/catalog');
 const SCRIPTS_SRC = resolve(ROOT, 'site/src/scripts');
 const SCRIPTS_DST = resolve(ROOT, 'site/public/scripts');
-const REGISTRY_SOURCE = resolve(CATALOG_DIR, process.env.DSH_REGISTRY_SOURCE_FILE || 'registry-v3.json');
+const DISCOVERY_FILE = resolve(CATALOG_DIR, 'plugins.json');
 const REGISTRY_V4_FILE = resolve(CATALOG_DIR, 'registry-v4.json');
+const CANDIDATE_FILE = resolve(CATALOG_DIR, 'registry-candidates-v1.json');
 
 async function exists(path) {
   try { await access(path); return true; } catch { return false; }
 }
 
+async function readOptionalJson(file) {
+  if (!(await exists(file))) return null;
+  return JSON.parse(await readFile(file, 'utf8'));
+}
+
 async function buildCanonicalRegistry() {
-  if (!(await exists(REGISTRY_SOURCE))) throw new Error(`Registry build source is missing: ${REGISTRY_SOURCE}`);
-  const source = JSON.parse(await readFile(REGISTRY_SOURCE, 'utf8'));
-  const records = Array.isArray(source.plugins) ? source.plugins : Array.isArray(source.packages) ? source.packages : [];
-  if (!records.length) throw new Error('Registry build source contains no records');
-  const registry = buildRegistryV4(records, {
-    generated_at: process.env.DSH_GENERATED_AT || source.generated?.at || new Date().toISOString(),
-    source: 'dsh-go-canonical-build',
-  });
-  await writeFile(REGISTRY_V4_FILE, `${JSON.stringify(registry)}\n`, 'utf8');
+  let registry = await readOptionalJson(REGISTRY_V4_FILE);
+  let candidates = await readOptionalJson(CANDIDATE_FILE);
+  if (registry) {
+    registry = validateRegistryV4(registry);
+  } else {
+    const discovery = await readOptionalJson(DISCOVERY_FILE);
+    if (!discovery?.plugins?.length) throw new Error('Registry V4 is missing and discovery candidate input is empty; run npm run sync:registry');
+    const built = await buildRegistryV4FromDiscovery(discovery, {
+      token: process.env.GITHUB_TOKEN || '',
+      generated_at: process.env.DSH_GENERATED_AT || new Date().toISOString(),
+    });
+    registry = validateRegistryV4(built.registry);
+    candidates = built.candidates;
+    await writeFile(REGISTRY_V4_FILE, `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
+    await writeFile(CANDIDATE_FILE, `${JSON.stringify(candidates, null, 2)}\n`, 'utf8');
+  }
   await writeFile(resolve(TARGET_DIR, 'registry-v4.json'), `${JSON.stringify(registry)}\n`, 'utf8');
-  return registry;
+  return { registry, candidates };
 }
 
 async function copyOptionalJson(file) {
@@ -63,11 +77,10 @@ async function removeLegacyPublicSurfaces() {
     resolve(TARGET_DIR, 'search-index-v2.json'),
     resolve(TARGET_DIR, 'distribution-v1'),
     resolve(TARGET_DIR, 'plugins.json'),
+    resolve(TARGET_DIR, 'registry-candidates-v1.json'),
     resolve(TARGET_DIR, 'catalog-v3'),
     resolve(ROOT, 'site/public/install'),
-  ]) {
-    await rm(path, { recursive: true, force: true });
-  }
+  ]) await rm(path, { recursive: true, force: true });
 }
 
 async function syncBrowserScripts() {
@@ -83,9 +96,9 @@ async function syncBrowserScripts() {
 async function main() {
   await mkdir(TARGET_DIR, { recursive: true });
   await removeLegacyPublicSurfaces();
-  const registry = await buildCanonicalRegistry();
+  const { registry, candidates } = await buildCanonicalRegistry();
 
-  const searchIndex = buildSearchIndexV3(registry);
+  const searchIndex = buildSearchIndexV3(registry, candidates);
   await writeFile(resolve(TARGET_DIR, 'search-index-v3.json'), `${JSON.stringify(searchIndex)}\n`, 'utf8');
 
   const distribution = await writeRegistryDistributionV2(registry, resolve(TARGET_DIR, 'registry-v4'));
@@ -99,7 +112,7 @@ async function main() {
   }
   await syncBrowserScripts();
 
-  console.log(`Canonical assets ready: Registry V4 ${registry.metadata.package_count} packages, Search Index V3 ${searchIndex.count} items, Distribution V2 ${distribution.package_count} shards`);
+  console.log(`Canonical assets ready: Registry V4 ${registry.metadata.package_count} installable packages, Search Index V3 ${searchIndex.count} discovery items (${searchIndex.discovery_only_count} discovery-only), Distribution V2 ${distribution.package_count} shards`);
 }
 
 main().catch((error) => {
