@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 04 Sep 2026 13:23:41 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 04 Sep 2026 13:59:45 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T13:21:57Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:21:57 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T13:58:40Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:58:40 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-04T10:36:03Z</guid>
-      <pubDate>Fri, 04 Sep 2026 10:36:03 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-04T13:54:59Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:54:59 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -86,8 +86,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-04T13:19:26Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:19:26 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-04T13:58:26Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:58:26 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -119,10 +119,10 @@
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;README.md&quot; &lt;img alt=&quot;English&quot; src=&quot;https://img.shields.io/badge/EN English blue?style=flat square&quot; &lt;/a &lt;a href=&quot;d</description>
     </item>
     <item>
-      <title>🔄 awesome-dsh-plugin</title>
+      <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-03T13:19:16Z</guid>
-      <pubDate>Thu, 03 Sep 2026 13:19:16 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-04T13:50:15Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:50:15 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -147,17 +147,17 @@
       <description>Yao Agents ✨ All your agents and workspaces in one place, on every device you own. Track tasks on a board, accessible from desktop, mobile, browser, or API. Self hosted. 🏠 Homepage: https://yaoagents</description>
     </item>
     <item>
-      <title>🔄 dsh-routing-suite</title>
+      <title>🆕 dsh-routing-suite</title>
       <link>https://github.com/yjh051108/dsh-routing-suite</link>
-      <guid isPermaLink="false">yjh051108/dsh-routing-suite@2026-09-02T17:34:41Z</guid>
-      <pubDate>Wed, 02 Sep 2026 17:34:41 GMT</pubDate>
+      <guid isPermaLink="false">yjh051108/dsh-routing-suite@2026-09-04T13:51:03Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:51:03 GMT</pubDate>
       <description>dsh routing suite — 注入器 × 思维模式路由 × 分级模式 套装 一个仓库装齐三件套： 运行时注入器 （免重启运行时管理层）+ 思维模式路由预设 （任务感知推理模式，P1 P23 实测）+ 分级任务协议 （脑暴出题 → 规格化计划 → 打卡制 → 组收官 → 终验，含红队门与审计端点）。 中文 English 组件入口（快速跳转） 组件 说明 入口 injector 运行时注入</description>
     </item>
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-04T13:16:41Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:16:41 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-04T13:39:47Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:39:47 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 openpencil</title>
       <link>https://github.com/ZSeven-W/openpencil</link>
-      <guid isPermaLink="false">ZSeven-W/openpencil@2026-09-04T09:22:30Z</guid>
-      <pubDate>Fri, 04 Sep 2026 09:22:30 GMT</pubDate>
+      <guid isPermaLink="false">ZSeven-W/openpencil@2026-09-04T13:34:27Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:34:27 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;./crates/op host desktop/assets/icon.png&quot; alt=&quot;OpenPencil&quot; width=&quot;120&quot; / &lt;/p &lt;h1 align=&quot;center&quot; OpenPencil&lt;</description>
     </item>
     <item>
