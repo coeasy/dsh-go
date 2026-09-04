@@ -49,18 +49,14 @@ export function validateDshManifest(manifest, options = {}) {
   };
 }
 
-export async function findDshManifest(root) {
+async function findManifestFile(root) {
   const file = resolve(root, 'dsh-package.json');
   try { await access(file); return file; } catch { return null; }
 }
 
-export async function readDshManifest(root, options = {}) {
-  const file = await findDshManifest(root);
-  if (!file) {
-    const error = new Error(`Manifest V2 is required: ${resolve(root, 'dsh-package.json')}`);
-    error.code = 'DSH_MANIFEST_NOT_FOUND';
-    throw error;
-  }
+export async function findPackageManifest(root, options = {}) {
+  const file = await findManifestFile(root);
+  if (!file) return null;
   let parsed;
   try { parsed = JSON.parse(await readFile(file, 'utf8')); }
   catch (error) {
@@ -68,8 +64,16 @@ export async function readDshManifest(root, options = {}) {
     wrapped.code = 'DSH_MANIFEST_INVALID';
     throw wrapped;
   }
-  const result = validateDshManifest(parsed, options);
-  return { file, manifest: result.manifest, validation: result };
+  const validation = validateDshManifest(parsed, options);
+  return { path: file, file, manifest: validation.manifest, validation };
+}
+
+export async function readDshManifest(root, options = {}) {
+  const found = await findPackageManifest(root, options);
+  if (found) return { file: found.file, manifest: found.manifest, validation: found.validation };
+  const error = new Error(`Manifest V2 is required: ${resolve(root, 'dsh-package.json')}`);
+  error.code = 'DSH_MANIFEST_NOT_FOUND';
+  throw error;
 }
 
 export function manifestSourceSummary(manifest = {}) {
