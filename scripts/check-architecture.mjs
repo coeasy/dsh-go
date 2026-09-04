@@ -42,6 +42,18 @@ function imports(text) {
   return [...text.matchAll(/(?:import\s+(?:[^'";]+?\s+from\s+)?|export\s+[^'";]+?\s+from\s+|import\()\s*['"]([^'"]+)['"]/g)].map((match) => match[1]);
 }
 
+async function relativeImportExists(entry, spec) {
+  if (!spec.startsWith('.')) return true;
+  const base = resolve(dirname(entry.file), spec);
+  const candidates = [
+    base,
+    `${base}.mjs`, `${base}.js`, `${base}.ts`, `${base}.mts`, `${base}.astro`, `${base}.json`, `${base}.css`,
+    join(base, 'index.mjs'), join(base, 'index.js'), join(base, 'index.ts'), join(base, 'index.mts'),
+  ];
+  for (const candidate of candidates) if (await exists(candidate)) return true;
+  return false;
+}
+
 const sourceFiles = await contents([
   ...await filesUnder('runtime', ['.mjs', '.js', '.ts']),
   ...await filesUnder('packages', ['.mjs', '.js', '.ts', '.mts']),
@@ -51,6 +63,9 @@ const sourceFiles = await contents([
 ]);
 
 for (const entry of sourceFiles) {
+  for (const spec of imports(entry.text)) {
+    if (!await relativeImportExists(entry, spec)) fail(entry.path, 'relative import target is missing', spec);
+  }
   if (/runtime\/(?:package-model|semver|resolver|solver-v2)\.mjs$/.test(entry.path)) fail(entry.path, 'duplicate protocol/resolver implementation is forbidden');
   if (/from\s+['"]\.\/(?:package-model|semver|resolver|solver-v2)\.mjs['"]/.test(entry.text)) fail(entry.path, 'deleted runtime protocol/resolver implementation import');
   if (entry.path.startsWith('site/src/') && imports(entry.text).some((value) => value.includes('/runtime/') || value.startsWith('../../../runtime') || value.startsWith('../../runtime'))) fail(entry.path, 'Site must not import Local Runtime');
@@ -70,6 +85,13 @@ for (const legacy of [
   'runtime/semver.mjs',
   'runtime/resolver.mjs',
   'runtime/solver-v2.mjs',
+  'runtime/catalog.mjs',
+  'runtime/registry-distribution.mjs',
+  'runtime/cli.mjs',
+  'runtime/control-cli.mjs',
+  'runtime/preflight.mjs',
+  'runtime/platform.mjs',
+  'runtime/registry-manager.mjs',
   'site/src/pages/plugin/[slug].astro',
   'site/src/pages/ecosystem/[id].astro',
 ]) {
