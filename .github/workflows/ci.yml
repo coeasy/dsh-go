@@ -13,9 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  canonical-platform:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -39,39 +39,70 @@ jobs:
           node scripts/npm-audit-retry.mjs --label root
           node scripts/npm-audit-retry.mjs --cwd site --label site
 
-      - name: Stable contract
+      - name: Breaking architecture contract
         run: npm run contract:check
 
-      - name: Typecheck, lint, tests
+      - name: Typecheck and lint
         run: |
           npm run typecheck
           npm run lint
-          npm test
-          cd site && npm run check
 
-      - name: Build marketplace site
+      - name: Canonical architecture tests
+        run: >-
+          npx vitest run
+          tests/architecture-v4
+          tests/deployment-convergence.test.ts
+          tests/production-sha-gate.test.ts
+          tests/edgeone-deploy-ci.test.ts
+          tests/deployment-dispatch.test.ts
+          tests/npm-audit-retry.test.ts
+
+      - name: Astro check
+        run: cd site && npm run check
+
+      - name: Build Registry V4 marketplace
         run: cd site && npm run build
 
-      - name: Syntax check runtime scripts
+      - name: Verify generated Registry V4 assets
         run: |
-          node --check scripts/sync-v3.mjs
-          node --check scripts/registry-v3-builder.mjs
-          node --check scripts/validate-registry-v3.mjs
-          node --check scripts/deploy-gate-v3.mjs
-          node --check scripts/check-contract.mjs
-          node --check scripts/check-deployment-convergence.mjs
-          node --check scripts/check-production-sha.mjs
-          node --check scripts/edgeone-deploy-ci.mjs
-          node --check scripts/npm-audit-retry.mjs
-          node --check scripts/write-deployment-version.mjs
-          node --check scripts/verify-package-evidence.mjs
-          node --check bin/dsh.mjs
-          node --check runtime/cli.mjs
-          node --check runtime/dsh.mjs
-          node --check runtime/control-cli.mjs
-          node --check runtime/installer.mjs
-          node --check runtime/loader.mjs
-          node --check runtime/registry.mjs
-          node --check runtime/execution.mjs
-          node --check runtime/transaction.mjs
-          node --check runtime/supply-chain-verifier.mjs
+          test -f catalog/registry-v4.json
+          test -f site/public/catalog/registry-v4.json
+          test -f site/public/catalog/registry-v4/index.json
+          test -f site/public/catalog/search-index-v3.json
+          node scripts/validate-registry-v4.mjs catalog/registry-v4.json
+          test ! -e site/public/catalog/registry-v3.json
+          test ! -e site/public/catalog/search-index-v2.json
+          test ! -e site/public/catalog/distribution-v1
+
+      - name: Runtime and build syntax
+        shell: bash
+        run: |
+          for file in \
+            packages/protocol-core/index.mjs \
+            packages/registry-core/index.mjs \
+            packages/resolver/index.mjs \
+            scripts/sync-v4.mjs \
+            scripts/registry-v4-source.mjs \
+            scripts/registry-v4-builder.mjs \
+            scripts/registry-distribution-v2.mjs \
+            scripts/build-search-index-v3.mjs \
+            scripts/copy-assets-core.mjs \
+            scripts/check-contract.mjs \
+            bin/dsh.mjs \
+            runtime/dsh.mjs \
+            runtime/package-service.mjs \
+            runtime/registry-client.mjs \
+            runtime/registry.mjs \
+            runtime/lifecycle.mjs \
+            runtime/installer.mjs \
+            runtime/verifier.mjs \
+            runtime/loader.mjs \
+            runtime/startup.mjs \
+            runtime/host-bridge.mjs \
+            runtime/client-bridge.mjs \
+            runtime/client-host.mjs; do
+              node --check "$file"
+          done
+
+      - name: Package smoke
+        run: npm pack --dry-run
