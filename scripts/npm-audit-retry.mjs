@@ -266,7 +266,16 @@ export async function runOsvAudit({
   };
 }
 
-export function runAudit({ cwd, timeoutMs = AUDIT_TIMEOUT_MS, spawnImpl = spawn } = {}) {
+/**
+ * @param {{ cwd?: string, timeoutMs?: number, killGraceMs?: number, cleanupGraceMs?: number, spawnImpl?: typeof spawn }} [options]
+ */
+export function runAudit({
+  cwd,
+  timeoutMs = AUDIT_TIMEOUT_MS,
+  killGraceMs = 5_000,
+  cleanupGraceMs = 5_000,
+  spawnImpl = spawn,
+} = {}) {
   return new Promise((resolvePromise) => {
     const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
     const child = spawnImpl(command, buildAuditArgs(), {
@@ -278,11 +287,30 @@ export function runAudit({ cwd, timeoutMs = AUDIT_TIMEOUT_MS, spawnImpl = spawn 
     let settled = false;
     let timedOut = false;
     let killHandle;
+    let cleanupHandle;
     const timeoutHandle = setTimeout(() => {
       timedOut = true;
-      child.kill('SIGTERM');
-      killHandle = setTimeout(() => child.kill('SIGKILL'), 5_000);
+      try {
+        child.kill('SIGTERM');
+      } catch {
+        /* process exited between checks */
+      }
+      killHandle = setTimeout(() => {
+        if (settled) return;
+        try {
+          child.kill('SIGKILL');
+        } catch {
+          /* process exited between checks */
+        }
+        cleanupHandle = setTimeout(() => {
+          if (settled) return;
+          finish(124, 'SIGKILL', true);
+        }, cleanupGraceMs);
+        cleanupHandle.unref?.();
+      }, killGraceMs);
+      killHandle.unref?.();
     }, timeoutMs);
+    timeoutHandle.unref?.();
 
     const writeOutput = (chunk) => {
       const text = String(chunk);
@@ -290,16 +318,18 @@ export function runAudit({ cwd, timeoutMs = AUDIT_TIMEOUT_MS, spawnImpl = spawn 
       process.stdout.write(text);
     };
 
-    const finish = (code, signal = null) => {
+    const finish = (code, signal = null, processCleanupFailed = false) => {
       if (settled) return;
       settled = true;
       clearTimeout(timeoutHandle);
       clearTimeout(killHandle);
+      clearTimeout(cleanupHandle);
       resolvePromise({
         code: code ?? 1,
         output: timedOut ? `${output}\nnpm audit process timed out` : output,
         signal,
         timedOut,
+        process_cleanup_failed: processCleanupFailed,
       });
     };
 

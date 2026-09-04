@@ -1,6 +1,7 @@
+import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   AUDIT_TIMEOUT_MS,
   MAX_ATTEMPTS,
@@ -14,6 +15,7 @@ import {
   parseArgs,
   parseOsvAuditResults,
   run,
+  runAudit,
   runOsvAudit,
 } from '../scripts/npm-audit-retry.mjs';
 
@@ -94,6 +96,33 @@ describe('npm audit retry gate', () => {
     expect(exitCode).toBe(0);
     expect(attempts).toBe(2);
     expect(sleeps).toEqual([10_000]);
+  });
+
+  it('settles when a timed-out npm process never emits close', async () => {
+    const child = new EventEmitter() as EventEmitter & {
+      stdout: EventEmitter;
+      stderr: EventEmitter;
+      kill: ReturnType<typeof vi.fn>;
+    };
+    child.stdout = new EventEmitter();
+    child.stderr = new EventEmitter();
+    child.kill = vi.fn();
+
+    const result = await runAudit({
+      cwd: resolve('.'),
+      timeoutMs: 1,
+      killGraceMs: 1,
+      cleanupGraceMs: 1,
+      spawnImpl: (() => child) as never,
+    });
+
+    expect(result).toMatchObject({
+      code: 124,
+      timedOut: true,
+      process_cleanup_failed: true,
+    });
+    expect(child.kill).toHaveBeenNthCalledWith(1, 'SIGTERM');
+    expect(child.kill).toHaveBeenNthCalledWith(2, 'SIGKILL');
   });
 
   it('does not retry a vulnerability failure', async () => {
