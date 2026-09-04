@@ -19,6 +19,7 @@ const FORBIDDEN = [
   'site/dist/catalog/search-index-v2.json',
   'site/dist/catalog/distribution-v1',
   'site/dist/catalog/plugins.json',
+  'site/dist/catalog/registry-candidates-v1.json',
   'site/dist/catalog/catalog-v3',
 ];
 
@@ -27,7 +28,7 @@ async function json(path) { return JSON.parse(await readFile(resolve(ROOT, path)
 function hash(value) { return createHash('sha256').update(value).digest('hex'); }
 
 for (const path of REQUIRED) if (!await exists(path)) throw new Error(`required deploy artifact is missing: ${path}`);
-for (const path of FORBIDDEN) if (await exists(path)) throw new Error(`legacy deploy artifact must not be published: ${path}`);
+for (const path of FORBIDDEN) if (await exists(path)) throw new Error(`legacy/private deploy artifact must not be published: ${path}`);
 
 const sourceRegistry = validateRegistryV4(await json('catalog/registry-v4.json'));
 const builtRegistry = validateRegistryV4(await json('site/dist/catalog/registry-v4.json'));
@@ -44,7 +45,9 @@ if (Number(distribution.metadata?.package_count ?? Object.keys(distribution.pack
 const search = await json('site/dist/catalog/search-index-v3.json');
 if (search.version !== 3 || search.registry_schema_version !== 4) throw new Error('invalid Search Index V3');
 if (search.registry_revision !== builtRegistry.revision) throw new Error('Search Index V3 revision differs from Registry V4');
-if (search.count !== builtRegistry.packages.length) throw new Error(`Search Index V3 count differs from Registry V4: ${search.count} vs ${builtRegistry.packages.length}`);
+if (Number(search.installable_count) !== builtRegistry.packages.length) throw new Error(`Search Index V3 installable count differs from Registry V4: ${search.installable_count} vs ${builtRegistry.packages.length}`);
+if (search.count < search.installable_count || search.count !== search.installable_count + Number(search.discovery_only_count || 0)) throw new Error('Search Index V3 discovery/installable counts are inconsistent');
+if ((search.items || []).some((item) => item.has_safe_release === true && item.installable !== true)) throw new Error('Search Index V3 exposes a safe release without installable authority');
 
 const discovery = await json('site/dist/.well-known/dsh-marketplace.json');
 if (discovery.schema !== 'dsh-marketplace-discovery.v2' || discovery.protocol?.version !== 2 || discovery.api?.version !== 'v2' || discovery.registry?.version !== 4) throw new Error('platform discovery contract is not Protocol V2 / API V2 / Registry V4');
@@ -61,6 +64,8 @@ const summary = {
   distribution_version: 2,
   search_index_version: 3,
   packages: builtRegistry.packages.length,
+  discovery_items: search.count,
+  discovery_only: search.discovery_only_count,
   releases: builtRegistry.packages.reduce((sum, item) => sum + item.releases.length, 0),
   registry_bytes: registrySize,
   registry_sha256: hash(await readFile(resolve(ROOT, 'site/dist/catalog/registry-v4.json'))),
