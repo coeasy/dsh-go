@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   dispatchDeployments,
+  extractWorkflowRunUrl,
   isWorkflowRegistrationError,
   parseWorkflowList,
+  parseWorkflowRunId,
   validateRevision,
 } from '../scripts/dispatch-deployments.mjs';
 
@@ -23,10 +25,17 @@ describe('deployment dispatch fan-out', () => {
     expect(isWorkflowRegistrationError('HTTP 403: Resource not accessible by integration')).toBe(false);
   });
 
+  it('extracts and validates workflow run references for ordered smoke dispatch', () => {
+    const url = 'https://github.com/example/repo/actions/runs/12345';
+    expect(extractWorkflowRunUrl(`queued\n${url}\n`)).toBe(url);
+    expect(parseWorkflowRunId(url)).toBe('12345');
+    expect(parseWorkflowRunId('67890')).toBe('67890');
+  });
+
   it('continues fan-out after one provider fails and retries registration lag only', async () => {
     const calls: string[] = [];
     let pagesAttempt = 0;
-    const execute = vi.fn(async (args: string[]) => {
+    const execute = vi.fn(async (args: string[], _options?: { timeoutMs?: number }) => {
       const workflow = args[2];
       calls.push(workflow);
       if (workflow === 'deploy.yml') {
@@ -59,5 +68,63 @@ describe('deployment dispatch fan-out', () => {
 
     expect(calls).toEqual(['deploy.yml', 'deploy-pages.yml', 'deploy-pages.yml', 'deploy-edgeone.yml']);
     expect(wait).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for all provider runs before dispatching monitor', async () => {
+    const calls: string[] = [];
+    const execute = vi.fn(async (args: string[], _options?: { timeoutMs?: number }) => {
+      if (args[0] === 'workflow') {
+        const workflow = args[2];
+        calls.push(`dispatch:${workflow}`);
+        const runId = workflow === 'deploy.yml' ? '101' : '102';
+        return { code: 0, stdout: `https://github.com/example/repo/actions/runs/${runId}\n`, stderr: '', timedOut: false };
+      }
+      calls.push(`watch:${args[2]}`);
+      return { code: 0, stdout: 'completed', stderr: '', timedOut: false };
+    });
+
+    const result = await dispatchDeployments({
+      env: {
+        DEPLOY_REVISION: 'c'.repeat(40),
+        DEPLOY_WORKFLOWS: 'deploy.yml deploy-pages.yml monitor.yml',
+        DEPLOY_WAIT_TIMEOUT_MS: '60000',
+      },
+      execute,
+    });
+
+    expect(calls).toEqual([
+      'dispatch:deploy.yml',
+      'dispatch:deploy-pages.yml',
+      'watch:101',
+      'watch:102',
+      'dispatch:monitor.yml',
+    ]);
+    expect(result.map((item) => [item.workflow, item.status])).toEqual([
+      ['deploy.yml', 'completed'],
+      ['deploy-pages.yml', 'completed'],
+      ['monitor.yml', 'dispatched'],
+    ]);
+    expect(execute.mock.calls[2][1]).toMatchObject({ timeoutMs: 60000 });
+  });
+
+  it('blocks monitor when a provider dispatch fails', async () => {
+    const calls: string[] = [];
+    const execute = vi.fn(async (args: string[]) => {
+      if (args[0] !== 'workflow') throw new Error('monitor must not be watched');
+      const workflow = args[2];
+      calls.push(`dispatch:${workflow}`);
+      if (workflow === 'deploy.yml') return { code: 1, stdout: '', stderr: 'provider denied', timedOut: false };
+      return { code: 0, stdout: 'https://github.com/example/repo/actions/runs/202', stderr: '', timedOut: false };
+    });
+
+    await expect(dispatchDeployments({
+      env: {
+        DEPLOY_REVISION: 'd'.repeat(40),
+        DEPLOY_WORKFLOWS: 'deploy.yml deploy-pages.yml monitor.yml',
+      },
+      execute,
+    })).rejects.toThrow('2 failed dispatch');
+
+    expect(calls).toEqual(['dispatch:deploy.yml', 'dispatch:deploy-pages.yml']);
   });
 });

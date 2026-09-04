@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 const DEFAULT_RETRIES = 5;
 const DEFAULT_RETRY_DELAY_MS = 5_000;
 const DEFAULT_COMMAND_TIMEOUT_MS = 60_000;
+const DEFAULT_DEPLOY_WAIT_TIMEOUT_MS = 35 * 60_000;
 const COMMAND_KILL_GRACE_MS = 1_000;
 
 export function validateRevision(value) {
@@ -26,6 +27,22 @@ export function parseWorkflowList(value) {
     if (!/^[A-Za-z0-9._/-]+\.ya?ml$/.test(workflow)) throw new Error(`Invalid workflow path: ${workflow}`);
   }
   return [...new Set(workflows)];
+}
+
+export function isMonitorWorkflow(workflow) {
+  return String(workflow || '').split('/').at(-1) === 'monitor.yml';
+}
+
+export function extractWorkflowRunUrl(value) {
+  return String(value || '').match(/https:\/\/github\.com\/[^\s]+\/actions\/runs\/\d+/)?.[0] || '';
+}
+
+export function parseWorkflowRunId(value) {
+  const text = String(value || '').trim();
+  const urlMatch = text.match(/\/actions\/runs\/(\d+)(?:[/?#\s]|$)/);
+  if (urlMatch) return urlMatch[1];
+  if (/^\d+$/.test(text)) return text;
+  throw new Error(`Unable to determine GitHub Actions run ID from: ${text || '(empty)'}`);
 }
 
 export function isWorkflowRegistrationError(value) {
@@ -88,6 +105,36 @@ function runGh(args, { timeoutMs = DEFAULT_COMMAND_TIMEOUT_MS, env = process.env
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export async function waitForWorkflow({
+  workflow,
+  runUrl,
+  timeoutMs = DEFAULT_DEPLOY_WAIT_TIMEOUT_MS,
+  env = process.env,
+  execute = runGh,
+} = {}) {
+  try {
+    const runId = parseWorkflowRunId(runUrl);
+    const result = await execute(['run', 'watch', runId, '--exit-status'], { timeoutMs, env });
+    const output = `${result.stdout || ''}\n${result.stderr || ''}`.trim();
+    if (result.code === 0) {
+      return { workflow, runId, status: 'completed', error: '' };
+    }
+    return {
+      workflow,
+      runId,
+      status: 'failed',
+      error: output || (result.timedOut ? `deployment run ${runId} wait timed out` : `deployment run ${runId} exited with ${result.code}`),
+    };
+  } catch (error) {
+    return {
+      workflow,
+      runId: '',
+      status: 'failed',
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 function writeOutput(name, value) {
   if (!process.env.GITHUB_OUTPUT) return;
   appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${String(value)}\n`);
@@ -109,11 +156,12 @@ export async function dispatchDeployments({ env = process.env, execute = runGh, 
   const retries = parseBoundedInt(env.DEPLOY_DISPATCH_RETRIES, 'DEPLOY_DISPATCH_RETRIES', DEFAULT_RETRIES, 1, 8);
   const retryDelayMs = parseBoundedInt(env.DEPLOY_DISPATCH_RETRY_DELAY_MS, 'DEPLOY_DISPATCH_RETRY_DELAY_MS', DEFAULT_RETRY_DELAY_MS, 0, 60_000);
   const commandTimeoutMs = parseBoundedInt(env.DEPLOY_DISPATCH_TIMEOUT_MS, 'DEPLOY_DISPATCH_TIMEOUT_MS', DEFAULT_COMMAND_TIMEOUT_MS, 5_000, 120_000);
+  const deployWaitTimeoutMs = parseBoundedInt(env.DEPLOY_WAIT_TIMEOUT_MS, 'DEPLOY_WAIT_TIMEOUT_MS', DEFAULT_DEPLOY_WAIT_TIMEOUT_MS, 60_000, 45 * 60_000);
   const results = [];
 
   console.log(`Authoritative deployment revision: ${revision}`);
 
-  for (const workflow of workflows) {
+  const dispatchWorkflow = async (workflow) => {
     let status = 'failed';
     let runUrl = '';
     let lastError = '';
@@ -130,7 +178,7 @@ export async function dispatchDeployments({ env = process.env, execute = runGh, 
 
       if (result.code === 0) {
         status = 'dispatched';
-        runUrl = (result.stdout || '').trim().split(/\r?\n/).filter(Boolean).at(-1) || '';
+        runUrl = extractWorkflowRunUrl(output);
         console.log(`${workflow}: dispatched${runUrl ? ` -> ${runUrl}` : ''}`);
         break;
       }
@@ -148,9 +196,51 @@ export async function dispatchDeployments({ env = process.env, execute = runGh, 
     }
 
     results.push({ workflow, status, runUrl, error: lastError, attempts: attemptsUsed });
+  };
+
+  const providerWorkflows = workflows.filter((workflow) => !isMonitorWorkflow(workflow));
+  const monitorWorkflows = workflows.filter(isMonitorWorkflow);
+
+  for (const workflow of providerWorkflows) await dispatchWorkflow(workflow);
+
+  const dispatchFailures = results.filter((result) => result.status !== 'dispatched');
+  if (monitorWorkflows.length > 0 && dispatchFailures.length === 0 && providerWorkflows.length > 0) {
+    const waitResults = await Promise.all(results.map((result) => waitForWorkflow({
+      workflow: result.workflow,
+      runUrl: result.runUrl,
+      timeoutMs: deployWaitTimeoutMs,
+      env,
+      execute,
+    })));
+    for (const waitResult of waitResults) {
+      const result = results.find((item) => item.workflow === waitResult.workflow);
+      if (!result) continue;
+      result.status = waitResult.status;
+      result.error = waitResult.error;
+      if (waitResult.status === 'completed') {
+        console.log(`${waitResult.workflow}: deployment run ${waitResult.runId} completed successfully`);
+      } else {
+        console.error(`${waitResult.workflow}: ${waitResult.error}`);
+      }
+    }
   }
 
-  const failures = results.filter((result) => result.status !== 'dispatched');
+  const deploymentFailures = results.filter((result) => result.status !== 'completed' && result.status !== 'dispatched');
+  if (deploymentFailures.length > 0) {
+    for (const workflow of monitorWorkflows) {
+      results.push({
+        workflow,
+        status: 'blocked',
+        runUrl: '',
+        error: `monitor blocked because ${deploymentFailures.map((result) => result.workflow).join(', ')} did not complete successfully`,
+        attempts: 0,
+      });
+    }
+  } else {
+    for (const workflow of monitorWorkflows) await dispatchWorkflow(workflow);
+  }
+
+  const failures = results.filter((result) => !['completed', 'dispatched'].includes(result.status));
   writeOutput('dispatched', failures.length === 0 ? 'true' : 'false');
   writeOutput('dispatch_failures', failures.map((result) => result.workflow).join(','));
 

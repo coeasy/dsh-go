@@ -125,6 +125,7 @@ jobs:
           DEPLOY_LABEL: Cloudflare Pages, GitHub Pages, Tencent EdgeOne, final production smoke
           DEPLOY_DISPATCH_RETRIES: "5"
           DEPLOY_DISPATCH_RETRY_DELAY_MS: "5000"
+          DEPLOY_WAIT_TIMEOUT_MS: "2100000"
         run: node scripts/dispatch-deployments.mjs
       - name: Summary
         if: always()
