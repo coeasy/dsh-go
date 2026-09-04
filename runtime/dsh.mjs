@@ -1,18 +1,14 @@
 #!/usr/bin/env node
-import { activatePendingPackages } from './startup.mjs';
 import { loadRuntimeRegistryV4 } from './registry-client.mjs';
+import { listPackages, packageInfo, planPackage, runtimeStatus, verifyPackageRequest } from './package-service.mjs';
 import {
-  installPackageRequest,
-  listPackages,
-  packageInfo,
-  planPackage,
-  removePackageRequest,
-  rollbackPackageRequest,
-  runtimeStatus,
-  setPackageEnabled,
-  updatePackageRequest,
-  verifyPackageRequest,
-} from './package-service.mjs';
+  supervisedActivate,
+  supervisedInstall,
+  supervisedRemove,
+  supervisedRollback,
+  supervisedSetEnabled,
+  supervisedUpdate,
+} from './supervisor.mjs';
 import { parseDshUri, registerProtocolHandler } from './host-bridge.mjs';
 import { runProviderCli } from './provider-cli.mjs';
 import { runEnvironmentCli } from './environment-cli.mjs';
@@ -26,8 +22,8 @@ Usage:
   dsh package update <type:id@range> --yes [--channel stable]
   dsh package remove <type:id@range> --yes
   dsh package rollback <type:id@range> --yes
-  dsh package enable <type:id@range>
-  dsh package disable <type:id@range>
+  dsh package enable <type:id@range> --yes
+  dsh package disable <type:id@range> --yes
   dsh package verify <type:id@range>
   dsh package info <type:id@range>
   dsh package list [--all]
@@ -37,7 +33,7 @@ Usage:
   dsh registry package <type:id@range> [--channel stable]
 
   dsh runtime status
-  dsh runtime activate
+  dsh runtime activate --yes
   dsh runtime register-protocol
 
   dsh provider <list|search|info|install|update|rollback> ...
@@ -54,6 +50,7 @@ Global:
 Canonical package coordinate is mandatory: <type>:<id>@<range>.
 Package types: ${PACKAGE_TYPES.join(', ')}.
 Channels: ${RELEASE_CHANNELS.join(', ')}.
+All local mutations require explicit --yes approval and are serialized by Runtime Supervisor.
 Legacy plugin aliases, implicit package types, github: specs and old command shapes are not supported.`;
 
 function option(args, name, fallback = undefined) {
@@ -83,6 +80,7 @@ function commonOptions(args) {
     dryRun: args.includes('--dry-run'),
     force: args.includes('--force'),
     all: args.includes('--all'),
+    source: 'cli',
   };
 }
 
@@ -98,15 +96,15 @@ async function runPackage(args, options) {
   if (action === 'install-link') {
     if (!coordinate) throw new Error('package install-link requires a canonical dsh://package/install URL');
     const link = parseDshUri(coordinate);
-    return installPackageRequest(link.request, { ...options, channel: link.request.channel });
+    return supervisedInstall(link.request, { ...options, channel: link.request.channel, source: 'deep-link-cli' });
   }
   if (!coordinate) throw new Error(`package ${action || '<command>'} requires canonical coordinate <type>:<id>@<range>`);
-  if (action === 'install') return installPackageRequest(coordinate, options);
-  if (action === 'update') return updatePackageRequest(coordinate, options);
-  if (action === 'remove') return removePackageRequest(coordinate, options);
-  if (action === 'rollback') return rollbackPackageRequest(coordinate, options);
-  if (action === 'enable') return setPackageEnabled(coordinate, true, options);
-  if (action === 'disable') return setPackageEnabled(coordinate, false, options);
+  if (action === 'install') return supervisedInstall(coordinate, options);
+  if (action === 'update') return supervisedUpdate(coordinate, options);
+  if (action === 'remove') return supervisedRemove(coordinate, options);
+  if (action === 'rollback') return supervisedRollback(coordinate, options);
+  if (action === 'enable') return supervisedSetEnabled(coordinate, true, options);
+  if (action === 'disable') return supervisedSetEnabled(coordinate, false, options);
   if (action === 'verify') return verifyPackageRequest(coordinate, options);
   if (action === 'info') return packageInfo(coordinate, options);
   if (action === 'plan') return planPackage(coordinate, options);
@@ -139,7 +137,7 @@ async function runRegistry(args, options) {
 async function runRuntime(args, options) {
   const action = args[0] || 'status';
   if (action === 'status') return runtimeStatus(options);
-  if (action === 'activate') return activatePendingPackages({ registryFile: options.registryFile });
+  if (action === 'activate') return supervisedActivate(options);
   if (action === 'register-protocol') return registerProtocolHandler();
   throw new Error(`unknown runtime command: ${action}`);
 }
