@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 04 Sep 2026 13:59:45 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 04 Sep 2026 15:18:58 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T13:58:40Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:58:40 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T15:17:11Z</guid>
+      <pubDate>Fri, 04 Sep 2026 15:17:11 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-04T13:54:59Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:54:59 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-04T15:12:35Z</guid>
+      <pubDate>Fri, 04 Sep 2026 15:12:35 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -51,15 +51,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-04T12:12:54Z</guid>
-      <pubDate>Fri, 04 Sep 2026 12:12:54 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-04T15:13:19Z</guid>
+      <pubDate>Fri, 04 Sep 2026 15:13:19 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-04T13:07:18Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:07:18 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-04T14:57:27Z</guid>
+      <pubDate>Fri, 04 Sep 2026 14:57:27 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -86,15 +86,15 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-04T13:58:26Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:58:26 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-04T13:59:00Z</guid>
+      <pubDate>Fri, 04 Sep 2026 13:59:00 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-04T13:14:49Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:14:49 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-04T14:50:07Z</guid>
+      <pubDate>Fri, 04 Sep 2026 14:50:07 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-04T13:50:15Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:50:15 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-04T14:43:49Z</guid>
+      <pubDate>Fri, 04 Sep 2026 14:43:49 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -156,8 +156,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-04T13:39:47Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:39:47 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-04T15:00:43Z</guid>
+      <pubDate>Fri, 04 Sep 2026 15:00:43 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
@@ -191,8 +191,8 @@
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-04T13:13:22Z</guid>
-      <pubDate>Fri, 04 Sep 2026 13:13:22 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-04T14:38:08Z</guid>
+      <pubDate>Fri, 04 Sep 2026 14:38:08 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
     <item>

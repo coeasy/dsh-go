@@ -1,7 +1,7 @@
 {
   "schema_version": 4,
-  "generated_at": "2026-09-04T13:59:45.638Z",
-  "revision": "a0d90b507a75f153ee3e07b3855c0b409e480f5b02ad0839d0e18e5c1cb5f57f",
+  "generated_at": "2026-09-04T15:18:58.604Z",
+  "revision": "332d7d15a77451b2486fbdb93176e6da26e48babe0183b2bcfe5095817aa0eea",
   "packages": [
     {
       "type": "mcp",
@@ -26,7 +26,7 @@
         "verified": true,
         "stars": 1,
         "rank": 1,
-        "updated_at": "2026-09-04T13:58:40Z",
+        "updated_at": "2026-09-04T15:17:11Z",
         "repo_url": "https://github.com/coeasy/dsh-go",
         "manifest_file": "dsh-package.json",
         "language": "JavaScript",
@@ -34,10 +34,10 @@
       },
       "releases": [
         {
-          "version": "0.1.2",
+          "version": "0.1.3",
           "channel": "stable",
-          "commit": "d7819248723053daacd02fdc7cee6fb1af793f88",
-          "published_at": "2026-09-04T13:58:40Z",
+          "commit": "cc708df727017914d3f402593fa8a807f7d4412c",
+          "published_at": "2026-09-04T15:15:56.000Z",
           "dependencies": [],
           "compatibility": {
             "os": [
@@ -56,10 +56,14 @@
             "network"
           ],
           "artifact": {
-            "kind": "git-source",
-            "url": "https://github.com/coeasy/dsh-go/archive/d7819248723053daacd02fdc7cee6fb1af793f88.tar.gz",
-            "release_tag": null,
-            "package_path": null
+            "kind": "release-archive",
+            "url": "https://github.com/coeasy/dsh-go/releases/download/coeasy-dsh-go-marketplace-v0.1.3/coeasy-dsh-go-marketplace-0.1.3.tgz",
+            "digest": "sha256-84f96c58a287a68766bb10f74997b9b32370de29ab2ca2543f38bb1682fb688e",
+            "format": "tgz",
+            "strip_components": 3,
+            "integrity": "sha256-84f96c58a287a68766bb10f74997b9b32370de29ab2ca2543f38bb1682fb688e",
+            "release_tag": "coeasy-dsh-go-marketplace-v0.1.3",
+            "package_path": "packages/dsh-go-marketplace"
           },
           "security": {},
           "entrypoints": {
@@ -80,6 +84,91 @@
           "revoked": false
         }
       ]
+    },
+    {
+      "type": "plugin",
+      "id": "coeasy/dsh-go-marketplace-plugin",
+      "publisher_id": "coeasy",
+      "source": {
+        "provider": "github",
+        "repo": "coeasy/dsh-go"
+      },
+      "metadata": {
+        "category": "marketplace",
+        "tags": [
+          "dsh",
+          "marketplace",
+          "desktop",
+          "tauri",
+          "package-manager"
+        ],
+        "repository": "coeasy/dsh-go",
+        "local_host_api": "v2",
+        "remote_api": "v2",
+        "auto_restart": false,
+        "name": "DSH Go Marketplace Desktop",
+        "description": "Desktop Marketplace UI for Package Protocol V2. Remote services are discovery-only; all local mutations are delegated to the authenticated Runtime Supervisor through Local Host API V2.",
+        "verified": true,
+        "stars": 0,
+        "rank": 0,
+        "updated_at": "",
+        "repo_url": "https://github.com/coeasy/dsh-go",
+        "manifest_file": "dsh-package.json",
+        "language": null,
+        "license": null
+      },
+      "releases": [
+        {
+          "version": "0.1.3",
+          "channel": "stable",
+          "commit": "cc708df727017914d3f402593fa8a807f7d4412c",
+          "published_at": "2026-09-04T15:15:56.000Z",
+          "dependencies": [],
+          "compatibility": {
+            "os": [
+              "linux",
+              "darwin",
+              "win32"
+            ],
+            "arch": [
+              "x64",
+              "arm64"
+            ],
+            "node": ">=22.0.0"
+          },
+          "permissions": [
+            "network"
+          ],
+          "artifact": {
+            "kind": "release-archive",
+            "url": "https://github.com/coeasy/dsh-go/releases/download/coeasy-dsh-go-marketplace-plugin-v0.1.3/coeasy-dsh-go-marketplace-plugin-0.1.3.tgz",
+            "digest": "sha256-f92d7e1c64d5c45170ebb076612dbcd799b037dd87b04b8320b1275e983ffa58",
+            "format": "tgz",
+            "strip_components": 3,
+            "integrity": "sha256-f92d7e1c64d5c45170ebb076612dbcd799b037dd87b04b8320b1275e983ffa58",
+            "release_tag": "coeasy-dsh-go-marketplace-plugin-v0.1.3",
+            "package_path": "packages/dsh-go-marketplace-plugin"
+          },
+          "security": {},
+          "entrypoints": {
+            "main": "index.mjs",
+            "ui": "ui/index.html"
+          },
+          "runtime": {
+            "type": "plugin",
+            "host": "tauri-or-compatible-webview",
+            "activation": "explicit"
+          },
+          "capabilities": [
+            "marketplace.discovery",
+            "marketplace.ui",
+            "package-manager.ipc",
+            "runtime.status"
+          ],
+          "yanked": false,
+          "revoked": false
+        }
+      ]
     }
   ],
   "publishers": [
@@ -94,11 +183,12 @@
   "advisories": [],
   "metadata": {
     "source": "dsh-go-sync-v4",
-    "package_count": 1,
-    "release_count": 1,
-    "discovery_count": 13709,
-    "candidate_count": 13709,
-    "quarantined_count": 13646,
+    "package_count": 2,
+    "release_count": 2,
+    "discovery_count": 13717,
+    "explicit_source_count": 1,
+    "candidate_count": 13718,
+    "quarantined_count": 13654,
     "rejected_count": 62
   }
 }
