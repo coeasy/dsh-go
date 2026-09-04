@@ -66,8 +66,9 @@ export async function auditPackageSecurity(root = process.cwd()) {
   return {
     safe: undeclared.length === 0 && high.every((finding) => finding.permission_declared),
     manifest: manifestResult.file,
-    manifest_schema_version: manifest.schema_version,
+    manifest_version: manifest.manifest_version,
     package: { type: manifest.type, id: manifest.id, version: manifest.version, channel: manifest.channel },
+    publisher: manifest.publisher.id,
     declared_permissions: declared.permissions,
     findings,
     undeclared_permissions: [...new Set(undeclared.map((finding) => finding.required_permission))].sort(),

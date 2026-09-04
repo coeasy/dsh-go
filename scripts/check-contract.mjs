@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { access, readFile, readdir } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
+import { validatePackageManifest, PACKAGE_MANIFEST_VERSION } from '../packages/protocol-core/manifest.mjs';
 import {
   DSH_API_VERSION,
   DSH_DISTRIBUTION_VERSION,
@@ -41,12 +42,14 @@ expect('Registry schema version', DSH_REGISTRY_SCHEMA_VERSION, 4);
 expect('Distribution version', DSH_DISTRIBUTION_VERSION, 2);
 expect('Search Index version', DSH_SEARCH_INDEX_VERSION, 3);
 expect('Runtime State version', DSH_RUNTIME_STATE_VERSION, 4);
-expect('Package Manifest version', DSH_PACKAGE_MANIFEST_VERSION, 2);
+expect('Package Manifest version', DSH_PACKAGE_MANIFEST_VERSION, PACKAGE_MANIFEST_VERSION);
 
 for (const path of [
   'packages/protocol-core/index.mjs',
+  'packages/protocol-core/manifest.mjs',
   'packages/registry-core/index.mjs',
   'packages/resolver/index.mjs',
+  'schemas/dsh-package-v2.schema.json',
   'scripts/sync-v4.mjs',
   'scripts/validate-registry-v4.mjs',
   'scripts/registry-distribution-v2.mjs',
@@ -69,6 +72,37 @@ for (const path of [
   'site/src/pages/plugin',
   'site/src/pages/ecosystem/[id].astro',
 ]) await mustNotExist(path);
+
+const manifestSchema = await json('schemas/dsh-package-v2.schema.json');
+expect('Manifest V2 JSON Schema version marker', manifestSchema.properties?.manifest_version?.const, PACKAGE_MANIFEST_VERSION);
+if (manifestSchema.properties?.schema_version) errors.push('Manifest V2 JSON Schema must not expose legacy schema_version');
+
+async function collectPackageManifests(root, depth = 0) {
+  if (depth > 5) return [];
+  let entries;
+  try { entries = await readdir(root, { withFileTypes: true }); } catch { return []; }
+  const files = [];
+  for (const entry of entries) {
+    if (['node_modules', '.git', 'dist', 'build', '.astro'].includes(entry.name)) continue;
+    const child = join(root, entry.name);
+    if (entry.isDirectory()) files.push(...await collectPackageManifests(child, depth + 1));
+    else if (entry.name === 'dsh-package.json') files.push(child);
+  }
+  return files;
+}
+
+const packageManifests = [resolve('dsh-package.json'), ...await collectPackageManifests(resolve('packages'))];
+if (!packageManifests.length) errors.push('at least one canonical dsh-package.json is required');
+for (const file of packageManifests) {
+  try {
+    const manifest = JSON.parse(await readFile(file, 'utf8'));
+    if ('schema_version' in manifest) errors.push(`${file}: legacy schema_version is forbidden in Manifest V2`);
+    expect(`${file} manifest_version`, manifest.manifest_version, PACKAGE_MANIFEST_VERSION);
+    validatePackageManifest(manifest);
+  } catch (error) {
+    errors.push(`${file}: invalid Manifest V2 (${error.message})`);
+  }
+}
 
 const discovery = await json('site/public/.well-known/dsh-marketplace.json');
 expect('discovery schema', discovery.schema, 'dsh-marketplace-discovery.v2');
@@ -136,4 +170,4 @@ if (errors.length) {
   for (const error of errors) console.error(`- ${error}`);
   process.exit(1);
 }
-console.log('DSH canonical contract passed: Protocol V2 / Registry V4 / Distribution V2 / Search V3 / Runtime State V4 / API V2.');
+console.log(`DSH canonical contract passed: Protocol V2 / Manifest V2 (${packageManifests.length}) / Registry V4 / Distribution V2 / Search V3 / Runtime State V4 / API V2.`);

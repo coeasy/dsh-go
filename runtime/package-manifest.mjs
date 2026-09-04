@@ -1,41 +1,33 @@
 import { access, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { validatePackageManifest, PACKAGE_MANIFEST_SCHEMA_VERSION } from '../packages/protocol-core/manifest.mjs';
+import { validatePackageManifest, PACKAGE_MANIFEST_VERSION } from '../packages/protocol-core/manifest.mjs';
 import { formatPackageCoordinate } from '../packages/protocol-core/index.mjs';
 
 export const DSH_MANIFEST_FILES = Object.freeze(['dsh-package.json']);
-export const DSH_MANIFEST_SCHEMA_VERSION = PACKAGE_MANIFEST_SCHEMA_VERSION;
+export const DSH_MANIFEST_VERSION = PACKAGE_MANIFEST_VERSION;
 
-function canonical(value) {
-  const manifest = validatePackageManifest(value);
-  return {
-    schema_version: manifest.schema_version,
-    type: manifest.type,
-    id: manifest.id,
-    version: manifest.version,
-    channel: manifest.channel,
-    name: manifest.name,
-    description: manifest.description,
-    runtime: manifest.runtime,
-    entrypoints: manifest.entrypoints,
-    capabilities: manifest.capabilities,
-    permissions: manifest.permissions,
-    dependencies: manifest.dependencies,
-    compatibility: manifest.compatibility,
-    metadata: manifest.metadata,
-  };
+function canonical(value, options = {}) {
+  return validatePackageManifest(value, options);
 }
 
 export function normalizeDshManifest(manifest, options = {}) {
   if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) throw new Error('dsh-package.json must contain a JSON object');
-  if (manifest.schema_version !== PACKAGE_MANIFEST_SCHEMA_VERSION) {
-    const error = new Error(`unsupported dsh-package.json schema_version=${String(manifest.schema_version)}; Manifest V2 is required`);
-    error.code = 'DSH_MANIFEST_SCHEMA_UNSUPPORTED';
+  if ('schema_version' in manifest) {
+    const error = new Error('legacy dsh-package.json schema_version is not supported; Manifest V2 requires manifest_version: 2');
+    error.code = 'DSH_MANIFEST_VERSION_UNSUPPORTED';
     throw error;
   }
-  const normalized = canonical(manifest);
-  if (options.type && normalized.type !== String(options.type).trim().toLowerCase()) throw new Error(`manifest type mismatch: expected ${options.type}, got ${normalized.type}`);
-  return normalized;
+  if (manifest.manifest_version !== PACKAGE_MANIFEST_VERSION) {
+    const error = new Error(`unsupported dsh-package.json manifest_version=${String(manifest.manifest_version)}; Manifest V2 is required`);
+    error.code = 'DSH_MANIFEST_VERSION_UNSUPPORTED';
+    throw error;
+  }
+  try {
+    return canonical(manifest, options);
+  } catch (error) {
+    if (!error.code) error.code = 'DSH_MANIFEST_INVALID';
+    throw error;
+  }
 }
 
 export function validateDshManifest(manifest, options = {}) {
@@ -80,12 +72,14 @@ export function manifestSourceSummary(manifest = {}) {
   const normalized = normalizeDshManifest(manifest);
   return {
     coordinate: formatPackageCoordinate({ type: normalized.type, id: normalized.id, range: normalized.version, channel: normalized.channel }),
-    schema_version: normalized.schema_version,
+    manifest_version: normalized.manifest_version,
     name: normalized.name,
-    runtime_type: normalized.runtime?.type || normalized.type,
-    entrypoints: Object.keys(normalized.entrypoints || {}).sort(),
-    capabilities: [...(normalized.capabilities || [])],
-    permissions: [...(normalized.permissions || [])],
+    publisher: normalized.publisher.id,
+    runtime_type: normalized.runtime.type,
+    entrypoints: Object.keys(normalized.entrypoints).sort(),
+    capabilities: [...normalized.capabilities],
+    permissions: [...normalized.permissions],
+    security_evidence: Object.keys(normalized.security).sort(),
   };
 }
 
@@ -93,8 +87,9 @@ export function createManifestTemplate(input = {}) {
   const type = input.type || 'plugin';
   const id = input.id || 'owner/package';
   const version = input.version || '0.1.0';
+  const publisherId = input.publisher?.id || String(id).split('/')[0] || 'publisher';
   return canonical({
-    schema_version: PACKAGE_MANIFEST_SCHEMA_VERSION,
+    manifest_version: PACKAGE_MANIFEST_VERSION,
     type,
     id,
     version,
@@ -107,6 +102,16 @@ export function createManifestTemplate(input = {}) {
     permissions: input.permissions || [],
     dependencies: input.dependencies || [],
     compatibility: input.compatibility || {},
+    publisher: input.publisher || { id: publisherId },
+    security: input.security || {},
     metadata: input.metadata || {},
+    ...(input.source ? { source: input.source } : {}),
+    ...(input.release ? { release: input.release } : {}),
+    ...(input.permission_policy ? { permission_policy: input.permission_policy } : {}),
+    ...(input.localization ? { localization: input.localization } : {}),
+    ...(input.conflicts ? { conflicts: input.conflicts } : {}),
+    ...(input.replaces ? { replaces: input.replaces } : {}),
+    ...(input.provides ? { provides: input.provides } : {}),
+    ...(input[type] ? { [type]: input[type] } : {}),
   });
 }

@@ -20,18 +20,23 @@ async function fixtureRepository() {
   await exec('git', ['config', 'user.email', 'dsh-test@example.invalid'], { cwd: repo, windowsHide: true });
   await exec('git', ['config', 'user.name', 'DSH Test'], { cwd: repo, windowsHide: true });
   await writeFile(join(repo, 'dsh-package.json'), JSON.stringify({
-    schema_version: 2,
+    manifest_version: 2,
     type: 'skill',
     id: 'owner/e2e',
     version: '1.0.0',
     channel: 'stable',
     name: 'E2E Skill',
+    description: 'Runtime lifecycle fixture for canonical Manifest V2.',
     capabilities: ['skill'],
     permissions: [],
     dependencies: [],
     compatibility: {},
     entrypoints: { main: 'SKILL.md' },
-    runtime: { executor: 'markdown' },
+    runtime: { type: 'skill', executor: 'markdown' },
+    publisher: { id: 'owner' },
+    security: {},
+    metadata: { category: 'skills' },
+    source: { provider: 'github', repo: 'owner/e2e' },
   }, null, 2));
   await writeFile(join(repo, 'SKILL.md'), '# E2E Skill\n');
   await exec('git', ['add', '.'], { cwd: repo, windowsHide: true });

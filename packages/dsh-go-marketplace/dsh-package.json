@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "manifest_version": 2,
   "type": "mcp",
   "id": "coeasy/dsh-go-marketplace",
   "version": "0.1.2",
@@ -30,10 +30,20 @@
     "arch": ["x64", "arm64"],
     "node": ">=22.0.0"
   },
+  "publisher": {
+    "id": "coeasy",
+    "provider": "github",
+    "url": "https://github.com/coeasy"
+  },
+  "security": {},
   "metadata": {
     "category": "mcp",
     "tags": ["dsh", "marketplace", "mcp", "registry"],
     "repository": "coeasy/dsh-go",
     "homepage": "https://dsh-go.pages.dev"
+  },
+  "source": {
+    "provider": "github",
+    "repo": "coeasy/dsh-go"
   }
 }

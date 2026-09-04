@@ -1,13 +1,18 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { validatePackageManifest } from '../../packages/protocol-core/manifest.mjs';
 
 describe('desktop Marketplace V2 boundary', () => {
   it('uses Manifest V2 and canonical Protocol/API versions', async () => {
-    const manifest = JSON.parse(await readFile(resolve('packages/dsh-go-marketplace-plugin/dsh-package.json'), 'utf8'));
-    expect(manifest.schema_version).toBe(2);
+    const raw = JSON.parse(await readFile(resolve('packages/dsh-go-marketplace-plugin/dsh-package.json'), 'utf8'));
+    const manifest = validatePackageManifest(raw);
+    expect(manifest.manifest_version).toBe(2);
+    expect(raw).not.toHaveProperty('schema_version');
     expect(manifest.type).toBe('plugin');
     expect(manifest.id).toBe('coeasy/dsh-go-marketplace-plugin');
+    expect(manifest.publisher.id).toBe('coeasy');
+    expect(manifest.source).toMatchObject({ provider: 'github', repo: 'coeasy/dsh-go' });
     expect(manifest.metadata?.local_host_api).toBe('v2');
     expect(manifest.metadata?.remote_api).toBe('v2');
     expect(manifest.metadata?.auto_restart).toBe(false);

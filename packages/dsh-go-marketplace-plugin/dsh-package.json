@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "manifest_version": 2,
   "type": "plugin",
   "id": "coeasy/dsh-go-marketplace-plugin",
   "version": "0.1.2",
@@ -30,6 +30,12 @@
     "arch": ["x64", "arm64"],
     "node": ">=22.0.0"
   },
+  "publisher": {
+    "id": "coeasy",
+    "provider": "github",
+    "url": "https://github.com/coeasy"
+  },
+  "security": {},
   "metadata": {
     "category": "marketplace",
     "tags": ["dsh", "marketplace", "desktop", "tauri", "package-manager"],
@@ -37,5 +43,9 @@
     "local_host_api": "v2",
     "remote_api": "v2",
     "auto_restart": false
+  },
+  "source": {
+    "provider": "github",
+    "repo": "coeasy/dsh-go"
   }
 }
