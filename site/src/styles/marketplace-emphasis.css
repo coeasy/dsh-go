@@ -1,6 +1,22 @@
-/* High-specificity typography layer for the resource list.
- * It intentionally overrides the older component-scoped compact values.
+/* High-specificity typography and layout layer for the resource list.
+ * Keep cards stable when category filters mix short and long descriptions.
  */
+.market-grid {
+  align-items: stretch !important;
+}
+.market-grid .market-card {
+  display: grid !important;
+  grid-template-rows: minmax(0, 1fr) auto !important;
+  height: 100% !important;
+  min-width: 0 !important;
+}
+.market-grid .market-card .card-main {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 21px 21px 17px !important;
+}
 .market-grid .market-card h2 {
   font-size:20px !important;
   line-height:1.32 !important;
@@ -13,13 +29,22 @@
   font-weight:650 !important;
 }
 .market-grid .market-card .description {
+  display:-webkit-box !important;
+  -webkit-box-orient:vertical !important;
+  -webkit-line-clamp:4 !important;
+  line-clamp:4;
+  overflow:hidden !important;
+  max-height:6.8em !important;
   color:color-mix(in srgb,var(--fg) 86%,var(--muted)) !important;
   font-size:16px !important;
   line-height:1.7 !important;
-  min-height:110px !important;
+  min-height:6.8em !important;
   margin:14px 0 16px !important;
   font-weight:520 !important;
-  -webkit-line-clamp:4 !important;
+  overflow-wrap:anywhere;
+}
+.market-grid .market-card .meta-row {
+  margin-top:auto !important;
 }
 .market-grid .market-card .kind,
 .market-grid .market-card .source,
@@ -29,9 +54,16 @@
   font-size:12px !important;
   line-height:1.35 !important;
 }
-.market-grid .market-card .stars { font-size:13.5px !important; }
-.market-grid .market-card .card-main { padding:21px 21px 17px !important; }
-.market-grid .market-card .card-actions { padding:12px 14px !important; }
+.market-grid .market-card .stars {
+  flex:0 0 auto;
+  font-size:13.5px !important;
+}
+.market-grid .market-card .card-actions {
+  align-self:end !important;
+  width:100% !important;
+  margin-top:0 !important;
+  padding:12px 14px !important;
+}
 .market-grid .market-card .card-actions .ghost,
 .market-grid .market-card .card-actions .install {
   min-height:38px !important;
@@ -46,8 +78,10 @@
   .market-grid .market-card { min-height:365px !important; }
 }
 @media (max-width:639px) {
+  .market-grid .market-card { height:auto !important; }
   .market-grid .market-card .description {
     min-height:0 !important;
+    max-height:6.8em !important;
     font-size:15.5px !important;
   }
 }
