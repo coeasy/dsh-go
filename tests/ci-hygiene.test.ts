@@ -34,6 +34,8 @@ describe('CI and deployment hygiene', () => {
     expect(ci).toContain('npm run lint');
     expect(ci).toContain('npm test');
     expect(ci).toContain('cd site && npm run check');
+    expect(ci).toContain('node scripts/npm-audit-retry.mjs --label root');
+    expect(ci).toContain('node scripts/npm-audit-retry.mjs --cwd site --label site');
   });
 
   it('bounds every externally waiting release and validation job', () => {
@@ -48,7 +50,8 @@ describe('CI and deployment hygiene', () => {
     const freeze = workflow('release-freeze.yml');
     expect(freeze).toContain('workflow_call:');
     expect(freeze).toContain('Release revision must be an exact 40-character SHA');
-    expect(freeze).toContain('npm audit --audit-level=high');
+    expect(freeze).toContain('node scripts/npm-audit-retry.mjs --label root');
+    expect(freeze).toContain('node scripts/npm-audit-retry.mjs --cwd site --label site');
     expect(freeze).toContain('npm run contract:check');
     expect(freeze).toContain('npm run registry:verify');
     expect(freeze).toContain('npm run runtime:check');
@@ -169,5 +172,9 @@ describe('CI and deployment hygiene', () => {
     expect(hygiene).toContain("gh pr list --repo \"$GITHUB_REPOSITORY\" --state open");
     expect(hygiene).toContain('encoded="$(jq -rn --arg value "$branch" \'$value|@uri\')"');
     expect(hygiene).toContain('git/refs/heads/$encoded');
+
+    const securityAudit = workflow('security-audit.yml');
+    expect(securityAudit).toContain('npm-audit-retry.mjs');
+    expect(securityAudit).toContain('GITHUB_WORKSPACE');
   });
 });

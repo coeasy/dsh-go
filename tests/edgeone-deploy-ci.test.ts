@@ -289,9 +289,17 @@ describe('EdgeOne CI deployment helpers', () => {
 
   it('checks only the supported makers deploy CLI surface', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
-    const calls: Array<{ command: string; args: string[] }> = [];
-    const execute = async (command: string, args: string[]) => {
-      calls.push({ command, args });
+    const calls: Array<{
+      command: string;
+      args: string[];
+      options: { timeoutMs?: number; env?: Record<string, string | undefined>; cwd?: string };
+    }> = [];
+    const execute = async (
+      command: string,
+      args: string[],
+      options: { timeoutMs?: number; env?: Record<string, string | undefined>; cwd?: string } = {},
+    ) => {
+      calls.push({ command, args, options });
       return { code: 0, stdout: '', stderr: '', timedOut: false };
     };
 
@@ -300,10 +308,12 @@ describe('EdgeOne CI deployment helpers', () => {
       execute,
     });
 
-    expect(calls).toEqual([{
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({
       command: 'npx',
       args: ['--yes', 'edgeone@1.6.28', 'makers', 'deploy', '--help'],
-    }]);
+      options: { cwd: './site/dist' },
+    });
     expect(calls.flatMap((call) => call.args)).not.toContain('link');
   });
 

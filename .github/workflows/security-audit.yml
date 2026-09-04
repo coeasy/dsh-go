@@ -51,4 +51,4 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
       - name: Block high and critical vulnerabilities
-        run: npm audit --audit-level=high
+        run: node "$GITHUB_WORKSPACE/scripts/npm-audit-retry.mjs" --label "${{ matrix.project }}"
