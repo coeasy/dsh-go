@@ -1,6 +1,6 @@
 import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { packageKey } from '../packages/protocol-core/index.mjs';
 import { installPackage } from './installer.mjs';
 import { createRuntimePackageRecord, recordRuntimeEvent } from './lifecycle.mjs';
@@ -15,14 +15,16 @@ import {
 
 export const TRANSACTION_SCHEMA_VERSION = 2;
 
-export function transactionsRoot() {
+export function transactionsRoot(options = {}) {
+  if (options.transactionHome) return resolve(options.transactionHome);
+  if (options.registryFile) return join(dirname(resolve(options.registryFile)), 'transactions-v2');
   return resolve(process.env.DSH_TRANSACTION_HOME || join(runtimeRoot(), 'transactions-v2'));
 }
 
-function transactionDir(id) {
+function transactionDir(id, options = {}) {
   const value = String(id || '');
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(value)) throw new Error(`unsafe transaction id: ${value || '<empty>'}`);
-  return join(transactionsRoot(), value);
+  return join(transactionsRoot(options), value);
 }
 
 async function writeJournal(dir, journal) {
@@ -85,7 +87,7 @@ async function rollbackMoves(moves) {
   for (const move of [...moves].reverse()) {
     await rm(move.target, { recursive: true, force: true }).catch(() => {});
     if (move.backup && await pathExists(move.backup)) {
-      await mkdir(resolve(move.target, '..'), { recursive: true }).catch(() => {});
+      await mkdir(dirname(resolve(move.target)), { recursive: true }).catch(() => {});
       await rename(move.backup, move.target).catch((error) => {
         error.code = error.code || 'DSH_TRANSACTION_ROLLBACK_FAILED';
         throw error;
@@ -105,11 +107,6 @@ function planCommitted(state, journal) {
   });
 }
 
-/**
- * Execute one deterministic Resolution Plan V2 as a single Runtime State V4
- * commit. Filesystem moves are journaled before state publication so crashes
- * can be recovered without a partially published package graph.
- */
 export async function executeResolutionTransaction(plan, options = {}) {
   if (!plan || plan.protocol_version !== 2 || !Array.isArray(plan.graph) || !Array.isArray(plan.order) || !plan.resolution_hash) {
     throw new Error('Resolution Plan V2 is required');
@@ -120,7 +117,7 @@ export async function executeResolutionTransaction(plan, options = {}) {
     throw error;
   }
   const transactionId = options.transactionId || randomUUID();
-  const dir = transactionDir(transactionId);
+  const dir = transactionDir(transactionId, options);
   const snapshot = await readRuntimeRegistry(options.registryFile);
   const nodes = new Map(plan.graph.map((node) => [node.key, node]));
   const moves = [];
@@ -129,7 +126,7 @@ export async function executeResolutionTransaction(plan, options = {}) {
     id: transactionId,
     state: 'preparing',
     created_at: new Date().toISOString(),
-    registry_file: options.registryFile || null,
+    registry_file: options.registryFile ? resolve(options.registryFile) : null,
     expected_generation: snapshot.generation,
     registry_revision: plan.registry_revision,
     resolution_hash: plan.resolution_hash,
@@ -214,7 +211,7 @@ export async function executeResolutionTransaction(plan, options = {}) {
 }
 
 export async function recoverPackageTransactions(options = {}) {
-  const root = transactionsRoot();
+  const root = transactionsRoot(options);
   let entries;
   try { entries = await readdir(root, { withFileTypes: true }); }
   catch (error) { if (error?.code === 'ENOENT') return { recovered: [], healthy: true }; throw error; }
