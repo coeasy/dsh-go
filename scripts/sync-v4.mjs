@@ -15,6 +15,7 @@ const REGISTRY_FILE = resolve(CATALOG, 'registry-v4.json');
 const CANDIDATE_FILE = resolve(CATALOG, 'registry-candidates-v1.json');
 const SEARCH_FILE = resolve(PUBLIC, 'search-index-v3.json');
 const DISTRIBUTION_DIR = resolve(PUBLIC, 'registry-v4');
+const SOURCE_FILE = resolve(ROOT, 'config/registry-v4-sources.json');
 
 function arg(name) { return process.argv.includes(name); }
 function runDiscovery(mode) {
@@ -27,14 +28,24 @@ function runDiscovery(mode) {
 
 async function loadJson(file) { return JSON.parse(await readFile(file, 'utf8')); }
 
+async function loadExplicitSources() {
+  const config = await loadJson(SOURCE_FILE);
+  if (config?.schema_version !== 1 || !Array.isArray(config.sources)) throw new Error('config/registry-v4-sources.json must use schema_version=1 and a sources array');
+  return config.sources;
+}
+
 async function main() {
   const mode = arg('--incremental') ? 'incremental' : arg('--registry-only') ? 'registry-only' : 'full';
   if (mode !== 'registry-only') runDiscovery(mode);
 
-  const discovery = await loadJson(resolve(CATALOG, 'plugins.json'));
+  const [discovery, explicitSources] = await Promise.all([
+    loadJson(resolve(CATALOG, 'plugins.json')),
+    loadExplicitSources(),
+  ]);
   const built = await buildRegistryV4FromDiscovery(discovery, {
     token: process.env.GITHUB_TOKEN || '',
     generated_at: new Date().toISOString(),
+    explicitSources,
   });
   const registry = validateRegistryV4(built.registry);
   await mkdir(CATALOG, { recursive: true });
@@ -50,6 +61,7 @@ async function main() {
     registry_version: registry.schema_version,
     registry_revision: registry.revision,
     installable_packages: registry.metadata.package_count,
+    explicit_sources: registry.metadata.explicit_source_count,
     candidates: built.candidates.counts,
     search_items: search.count,
     distribution_shards: distribution.package_count,
