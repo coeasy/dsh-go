@@ -7,7 +7,7 @@ describe('Marketplace detail generation and filtered-card UI contract', () => {
     expect(DETAIL_THRESHOLD).toBe(200);
 
     const pluginDetail = readFileSync(new URL('../site/src/pages/plugin/[slug].astro', import.meta.url), 'utf8');
-    expect(pluginDetail).toContain('p.stars >= DETAIL_THRESHOLD');
+    expect(pluginDetail).toContain('Number(plugin.stars || 0) >= DETAIL_THRESHOLD');
 
     const ecosystemDetail = readFileSync(new URL('../site/src/pages/ecosystem/[id].astro', import.meta.url), 'utf8');
     expect(ecosystemDetail).toContain('variant._stars >= DETAIL_THRESHOLD');
