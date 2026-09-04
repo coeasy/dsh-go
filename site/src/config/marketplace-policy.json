@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "discovery": {
+    "home_min_stars": 100,
+    "home_max_stars": 5000,
+    "home_hard_max_stars": 10000,
+    "home_top_limit": 100
+  },
+  "detail": {
+    "min_stars": 200
+  },
+  "generated_install_scripts": {
+    "min_stars": 200
+  }
+}
