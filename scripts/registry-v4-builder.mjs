@@ -1,19 +1,22 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { buildRegistryV4 } from '../packages/registry-core/index.mjs';
+import { buildRegistryV4FromDiscovery } from './registry-v4-source.mjs';
+import { validateRegistryV4 } from '../packages/registry-core/index.mjs';
 
 const root = process.cwd();
-const sourcePath = resolve(root, process.env.DSH_REGISTRY_SOURCE || 'catalog/registry-v3.json');
+const sourcePath = resolve(root, process.env.DSH_DISCOVERY_SOURCE || 'catalog/plugins.json');
 const outputPath = resolve(root, process.env.DSH_REGISTRY_V4_OUTPUT || 'catalog/registry-v4.json');
+const candidatePath = resolve(root, process.env.DSH_REGISTRY_CANDIDATES_OUTPUT || 'catalog/registry-candidates-v1.json');
 
 const source = JSON.parse(await readFile(sourcePath, 'utf8'));
-const records = Array.isArray(source.plugins) ? source.plugins : Array.isArray(source.packages) ? source.packages : [];
-if (!records.length) throw new Error(`registry source contains no package records: ${sourcePath}`);
+if (!Array.isArray(source.plugins) || !source.plugins.length) throw new Error(`discovery source contains no records: ${sourcePath}`);
 
-const registry = buildRegistryV4(records, {
-  generated_at: process.env.DSH_GENERATED_AT || source.generated?.at || new Date().toISOString(),
-  source: 'dsh-go-registry-v4-builder',
+const { registry, candidates, stats } = await buildRegistryV4FromDiscovery(source, {
+  token: process.env.GITHUB_TOKEN || '',
+  generated_at: process.env.DSH_GENERATED_AT || new Date().toISOString(),
 });
-await writeFile(outputPath, `${JSON.stringify(registry)}\n`, 'utf8');
-console.log(`Registry V4: ${registry.metadata.package_count} packages / ${registry.metadata.release_count} releases / revision ${registry.revision}`);
+validateRegistryV4(registry);
+await writeFile(outputPath, `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
+await writeFile(candidatePath, `${JSON.stringify(candidates, null, 2)}\n`, 'utf8');
+console.log(`Registry V4: ${registry.metadata.package_count} installable packages / ${registry.metadata.release_count} releases / quarantined=${stats.quarantined} rejected=${stats.rejected} / revision ${registry.revision}`);
