@@ -1,67 +1,41 @@
 {
-  "manifest_version": "1.0.0",
-  "id": "dsh-go-marketplace-plugin",
-  "name": "DSH Go Marketplace Desktop",
-  "version": "0.1.0",
-  "release_tag": "dsh-go-marketplace-plugin-v0.1.0",
+  "schema_version": 2,
   "type": "plugin",
-  "description": "Desktop Marketplace UI and local Package Manager IPC client for DSH hosts. Discovery is remote/read-only; package mutations are delegated to the authenticated local DSH Client Host.",
-  "category": "marketplace",
-  "tags": ["dsh", "marketplace", "desktop", "tauri", "package-manager"],
+  "id": "coeasy/dsh-go-marketplace-plugin",
+  "version": "0.1.2",
+  "channel": "stable",
+  "name": "DSH Go Marketplace Desktop",
+  "description": "Desktop Marketplace UI for Package Protocol V2. Remote services are discovery-only; all local mutations are delegated to the authenticated Runtime Supervisor through Local Host API V2.",
+  "runtime": {
+    "type": "plugin",
+    "host": "tauri-or-compatible-webview",
+    "activation": "explicit"
+  },
+  "entrypoints": {
+    "main": "index.mjs",
+    "ui": "ui/index.html"
+  },
   "capabilities": [
     "marketplace.ui",
     "marketplace.discovery",
     "package-manager.ipc",
-    "runtime.status",
-    "enterprise.policy.read"
+    "runtime.status"
+  ],
+  "permissions": [
+    "network"
   ],
   "dependencies": [],
-  "provides": ["dsh-marketplace-desktop", "dsh-package-center"],
-  "permissions": ["network"],
-  "permission_policy": {
-    "network": {
-      "allow": [
-        "https://dsh-go.pages.dev",
-        "https://coeasy.github.io",
-        "http://127.0.0.1:43731",
-        "http://localhost:43731"
-      ]
-    }
-  },
   "compatibility": {
     "os": ["linux", "darwin", "win32"],
     "arch": ["x64", "arm64"],
-    "node": ">=20.0.0",
-    "runtime": ">=0.1.0",
-    "client": ">=0.1.0"
+    "node": ">=22.0.0"
   },
-  "publisher": {
-    "provider": "github",
-    "id": "coeasy",
-    "repository_ownership": "required"
-  },
-  "security": {
-    "provenance": null,
-    "signature": null,
-    "sbom": null,
-    "license": "MIT"
-  },
-  "plugin": {
-    "entrypoint": "index.mjs",
-    "ui": "ui/index.html",
-    "host": "tauri-or-compatible-webview",
-    "bridge": {
-      "protocol": "dsh-client-host-v1",
-      "tauri_command": "dsh_client_host_request",
-      "health": "/health",
-      "contract": "/v1/desktop/contract",
-      "center": "/v1/desktop/center",
-      "enterprise_policy": "/v1/enterprise/policy"
-    },
-    "restart": {
-      "mode": "host-delegated",
-      "auto_restart": false,
-      "event": "dsh:restart-requested"
-    }
+  "metadata": {
+    "category": "marketplace",
+    "tags": ["dsh", "marketplace", "desktop", "tauri", "package-manager"],
+    "repository": "coeasy/dsh-go",
+    "local_host_api": "v2",
+    "remote_api": "v2",
+    "auto_restart": false
   }
 }
