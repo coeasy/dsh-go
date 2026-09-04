@@ -70,6 +70,7 @@ for (const entry of sourceFiles) {
 
 for (const legacy of [
   'bin/dsh-core.mjs', 'marketplace', 'mcp/v1', 'profiles/v1', 'skills/v1', 'agents/v1', 'functions/api/v1', 'functions/_package-request.ts', 'functions/_registry.ts', 'functions/_marketplace-v4.ts',
+  'functions/api/_api-v2.ts', 'functions/api/_lib.ts', 'functions/api/_registry-v4.ts', 'functions/api/_registry-v4-query.ts', 'functions/packages/protocol-core/index.mjs', 'functions/packages/protocol-core/index.d.mts',
   'runtime/package-model.mjs', 'runtime/semver.mjs', 'runtime/resolver.mjs', 'runtime/solver-v2.mjs', 'runtime/catalog.mjs', 'runtime/registry-distribution.mjs', 'runtime/cli.mjs', 'runtime/control-cli.mjs', 'runtime/preflight.mjs', 'runtime/platform.mjs', 'runtime/registry-manager.mjs',
   'scripts/registry-builder.mjs', 'scripts/registry-distribution.mjs', 'scripts/catalog-distribution.mjs', 'scripts/sync.mjs', 'scripts/sync-v3-final.mjs',
   'schemas/dsh-marketplace-discovery.schema.json', 'schemas/dsh-package.schema.json', 'site/public/schemas/dsh-marketplace-discovery.schema.json',
