@@ -21,6 +21,13 @@ function requestFrom(value, options = {}) {
     : normalizePackageRequest({ ...value, channel: value?.channel || options.channel || 'stable', registry: value?.registry || options.registry });
 }
 
+function requireApproval(operation, options) {
+  if (options.approved === true || options.dryRun === true) return;
+  const error = new Error(`local ${operation} requires explicit approval`);
+  error.code = 'DSH_PERMISSION_DENIED';
+  throw error;
+}
+
 export async function planPackage(value, options = {}) {
   const request = requestFrom(value, options);
   const registry = options.registryData || await loadRuntimeRegistryV4(options);
@@ -32,12 +39,8 @@ export async function installPackageRequest(value, options = {}) {
   const registry = options.registryData || await loadRuntimeRegistryV4(options);
   const plan = resolvePackage(registry, request, options.environment || {});
   if (options.dryRun) return { operation: 'install', request, plan, changed: false, restart_required: true };
-  if (options.approved !== true) {
-    const error = new Error('local installation requires explicit approval');
-    error.code = 'DSH_PERMISSION_DENIED';
-    throw error;
-  }
-  const transaction = await executeResolutionTransaction(plan, { ...options, approved: true });
+  requireApproval('installation', options);
+  const transaction = await executeResolutionTransaction(plan, { ...options, approved: true, advisories: registry.advisories || [] });
   return { operation: 'install', request, plan, ...transaction, auto_restart: false };
 }
 
@@ -52,11 +55,7 @@ export async function removePackageRequest(coordinate, options = {}) {
   const state = await readRuntimeRegistry(options.registryFile);
   const current = getRuntimePackage(state, request.type, request.id, { includeRemoved: true });
   if (!current || current.state === 'removed') return { operation: 'remove', changed: false, key: packageKey(request.type, request.id), auto_restart: false };
-  if (options.approved !== true) {
-    const error = new Error('local removal requires explicit approval');
-    error.code = 'DSH_PERMISSION_DENIED';
-    throw error;
-  }
+  requireApproval('removal', options);
   const target = current.path ? resolve(current.path) : packagePath(current.type, current.id);
   await rm(target, { recursive: true, force: true });
   await updateRuntimeRegistry((latest) => markRuntimePackageRemoved(latest, current.type, current.id, { version: current.version }), options.registryFile);
@@ -64,6 +63,7 @@ export async function removePackageRequest(coordinate, options = {}) {
 }
 
 export async function setPackageEnabled(coordinate, enabled, options = {}) {
+  requireApproval(enabled ? 'enable' : 'disable', options);
   const request = requestFrom(coordinate, options);
   const result = await updateRuntimeRegistry((state) => {
     const current = getRuntimePackage(state, request.type, request.id, { includeRemoved: true });
@@ -71,7 +71,13 @@ export async function setPackageEnabled(coordinate, enabled, options = {}) {
     const nextState = enabled ? 'pending-restart' : 'disabled';
     const transitioned = transitionPackage(current, nextState, {
       event: enabled ? 'enabled' : 'disabled',
-      patch: { enabled, activated: false, restart_required: true, binding: null },
+      patch: {
+        enabled,
+        activated: false,
+        restart_required: true,
+        binding: null,
+        activation: enabled ? { ...(current.activation || {}), failed_attempts: 0, failure_fingerprint: null } : current.activation,
+      },
     });
     return upsertRuntimePackage(state, transitioned);
   }, options.registryFile);
@@ -103,12 +109,8 @@ export async function verifyPackageRequest(coordinate, options = {}) {
 }
 
 export async function rollbackPackageRequest(coordinate, options = {}) {
+  requireApproval('rollback', options);
   const item = await packageInfo(coordinate, options);
-  if (options.approved !== true) {
-    const error = new Error('local rollback requires explicit approval');
-    error.code = 'DSH_PERMISSION_DENIED';
-    throw error;
-  }
   const backup = item.rollback?.backup_path || `${item.path ? resolve(item.path) : packagePath(item.type, item.id)}.backup`;
   const target = item.path ? resolve(item.path) : packagePath(item.type, item.id);
   const displaced = `${target}.rollback-displaced-${Date.now()}`;
@@ -125,10 +127,26 @@ export async function rollbackPackageRequest(coordinate, options = {}) {
       path: target,
       source: lock.source,
       commit: lock.source.commit,
+      runtime: lock.runtime || {},
+      entrypoints: lock.entrypoints || {},
+      capabilities: lock.capabilities || [],
+      dependencies: lock.dependencies || [],
+      permissions: lock.permissions || [],
+      compatibility: lock.compatibility || {},
+      publisher: lock.publisher || null,
+      security: lock.security || null,
+      artifact: lock.artifact || null,
+      content: lock.content || null,
+      content_digest: lock.content_digest || lock.content?.digest || null,
+      trust_snapshot: lock.trust_snapshot || null,
+      policy_snapshot: lock.policy_snapshot || null,
+      supply_chain_verification: lock.supply_chain_verification || null,
+      adapter: lock.adapter || null,
       state: 'pending-restart',
       activated: false,
       restart_required: true,
       binding: null,
+      activation: { attempts: 0, failed_attempts: 0, failure_fingerprint: null, rollback_from: item.version },
       registry_revision: lock.registry_revision || item.registry_revision || null,
       resolution_hash: lock.resolution_hash || null,
       rollback: null,
@@ -150,8 +168,10 @@ export async function runtimeStatus(options = {}) {
     schema_version: state.schema_version,
     generation: state.generation,
     updated_at: state.updated_at,
+    activation: state.activation || null,
     package_count: state.packages.length,
     states: counts,
     auto_restart: false,
+    mutation_authority: 'Runtime Supervisor',
   };
 }
