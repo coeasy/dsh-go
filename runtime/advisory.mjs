@@ -1,14 +1,24 @@
-import { compareVersions, satisfiesVersion } from './semver.mjs';
-import { inferPackageType } from './package-model.mjs';
+import {
+  compareVersion,
+  normalizePackageId,
+  normalizePackageType,
+  normalizeReleaseChannel,
+  normalizeVersionRange,
+  satisfiesRange,
+} from '../packages/protocol-core/index.mjs';
 
 function advisoryList(pkg) {
-  return Array.isArray(pkg?.security?.advisories) ? pkg.security.advisories : Array.isArray(pkg?.advisories) ? pkg.advisories : [];
+  return Array.isArray(pkg?.security?.advisories)
+    ? pkg.security.advisories
+    : Array.isArray(pkg?.advisories)
+      ? pkg.advisories
+      : [];
 }
 
 export function packageAdvisories(pkg) {
   return advisoryList(pkg).filter((item) => {
     const range = item?.affected || item?.range || '*';
-    return satisfiesVersion(pkg.version, range);
+    try { return satisfiesRange(pkg.version, range); } catch { return false; }
   }).map((item) => ({
     id: String(item.id || item.advisory_id || 'unknown'),
     severity: String(item.severity || 'unknown').toLowerCase(),
@@ -24,7 +34,7 @@ export function packageSecurityDecision(pkg, options = {}) {
   const revoked = pkg?.security?.revoked === true || pkg?.revoked === true;
   const yanked = pkg?.security?.yanked === true || pkg?.yanked === true;
   const minimumSafe = pkg?.security?.minimum_safe_version || pkg?.minimum_safe_version || null;
-  const belowMinimum = Boolean(minimumSafe && compareVersions(pkg.version, minimumSafe) < 0);
+  const belowMinimum = Boolean(minimumSafe && compareVersion(pkg.version, minimumSafe) < 0);
   const critical = advisories.filter((item) => item.severity === 'critical');
   const blocked = revoked || belowMinimum || (options.blockCritical !== false && critical.length > 0);
   return {
@@ -38,27 +48,46 @@ export function packageSecurityDecision(pkg, options = {}) {
   };
 }
 
+function registryReleases(registry, request) {
+  const type = normalizePackageType(request.type);
+  const id = normalizePackageId(request.id);
+  const channel = normalizeReleaseChannel(request.channel || 'stable');
+  const range = normalizeVersionRange(request.range || request.version || request.versionRange || '*');
+  const pkg = (registry?.packages || []).find((item) => {
+    try { return normalizePackageType(item.type) === type && normalizePackageId(item.id) === id; }
+    catch { return false; }
+  });
+  if (!pkg) return { type, id, channel, range, releases: [] };
+  const releases = (pkg.releases || [])
+    .filter((release) => normalizeReleaseChannel(release.channel || 'stable') === channel)
+    .filter((release) => {
+      try { return satisfiesRange(release.version, range); } catch { return false; }
+    })
+    .map((release) => ({
+      ...release,
+      type,
+      id,
+      publisher: release.publisher || pkg.publisher || (pkg.publisher_id ? { id: pkg.publisher_id } : null),
+      metadata: { ...(pkg.metadata || {}), ...(release.metadata || {}) },
+    }))
+    .sort((left, right) => compareVersion(right.version, left.version));
+  return { type, id, channel, range, releases };
+}
+
 export function inspectPackageAdvisories(registry, request) {
-  const range = request.version || request.versionRange || '*';
-  const channel = request.channel || 'stable';
-  const candidates = (registry?.plugins || [])
-    .filter((item) => inferPackageType(item) === request.type)
-    .filter((item) => String(item.id || '').toLowerCase() === String(request.id || '').toLowerCase())
-    .filter((item) => (item.channel || item.release_channel || 'stable') === channel)
-    .filter((item) => satisfiesVersion(item.version, range))
-    .sort((left, right) => compareVersions(right.version, left.version));
-  if (!candidates.length) {
-    const error = new Error(`runtime package not found for advisory inspection: ${request.type}:${request.id}@${range} [${channel}]`);
+  const selected = registryReleases(registry, request);
+  if (!selected.releases.length) {
+    const error = new Error(`runtime package not found for advisory inspection: ${selected.type}:${selected.id}@${selected.range} [${selected.channel}]`);
     error.code = 'DSH_PACKAGE_NOT_FOUND';
     throw error;
   }
   return {
-    request: { type: request.type, id: request.id, version: range, channel },
-    versions: candidates.map((item) => ({
-      type: request.type,
-      id: item.id,
+    request: { type: selected.type, id: selected.id, range: selected.range, channel: selected.channel },
+    versions: selected.releases.map((item) => ({
+      type: selected.type,
+      id: selected.id,
       version: item.version,
-      channel,
+      channel: selected.channel,
       security: packageSecurityDecision(item),
     })),
   };
@@ -67,13 +96,13 @@ export function inspectPackageAdvisories(registry, request) {
 export function assertPackageSecurityAllowed(pkg, options = {}) {
   const decision = packageSecurityDecision(pkg, options);
   if (decision.revoked) {
-    const error = new Error(`runtime package is revoked: ${pkg.type || 'plugin'}:${pkg.id}@${pkg.version}`);
+    const error = new Error(`runtime package is revoked: ${pkg.type}:${pkg.id}@${pkg.version}`);
     error.code = 'DSH_PACKAGE_REVOKED';
     error.security = decision;
     throw error;
   }
   if (decision.below_minimum_safe_version || decision.critical > 0) {
-    const error = new Error(`runtime package is blocked by security advisory: ${pkg.type || 'plugin'}:${pkg.id}@${pkg.version}`);
+    const error = new Error(`runtime package is blocked by security advisory: ${pkg.type}:${pkg.id}@${pkg.version}`);
     error.code = 'DSH_SECURITY_ADVISORY_BLOCKED';
     error.security = decision;
     throw error;
