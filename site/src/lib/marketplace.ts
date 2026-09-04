@@ -1,4 +1,4 @@
-import marketplacePolicy from '../../../config/marketplace-policy.json';
+import marketplacePolicy from '../config/marketplace-policy.json';
 
 export const HOME_MIN_STARS = marketplacePolicy.discovery.home_min_stars;
 export const HOME_MAX_STARS = marketplacePolicy.discovery.home_max_stars;
