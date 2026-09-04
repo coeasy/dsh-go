@@ -12,6 +12,7 @@ describe('Deployment V4 path authority', () => {
       'config/registry-v4-sources.json',
       'packages/dsh-go-marketplace-plugin/index.mjs',
       'scripts/audit-catalog-identity.mjs',
+      'scripts/dispatch-deployments.mjs',
       'packages/protocol-core/index.mjs',
     ]);
     expect(result.sync_owned).toBe(true);
@@ -20,8 +21,10 @@ describe('Deployment V4 path authority', () => {
       'packages/dsh-go-marketplace-plugin/index.mjs',
       'packages/protocol-core/index.mjs',
       'scripts/audit-catalog-identity.mjs',
+      'scripts/dispatch-deployments.mjs',
     ]);
     expect(result.generated_registry).toBe(false);
+    expect(result.deploy_relevant).toBe(false);
   });
 
   it('recognizes generated Registry V4 publication as a separate protected authority', () => {

@@ -27,4 +27,26 @@ describe('Deployment V4 contract', () => {
     expect(gate).toContain('discovery.registry?.version !== 4');
     expect(gate).toContain("Object.keys(openapi.paths || {}).some((path) => !path.startsWith('/api/v2'))");
   });
+
+  it('requires the final smoke to verify Cloudflare, GitHub Pages and EdgeOne', () => {
+    const monitor = text('.github/workflows/monitor.yml');
+    expect(monitor).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.cool' }}");
+    expect(monitor).toContain('EDGEONE_STABLE_CONFIGURED: "true"');
+    expect(monitor).toContain('Check Cloudflare exact SHA');
+    expect(monitor).toContain('Check Cloudflare Registry V4');
+    expect(monitor).toContain('Check GitHub Pages exact SHA');
+    expect(monitor).toContain('Check GitHub Pages Registry V4');
+    expect(monitor).toContain('Check EdgeOne exact SHA');
+    expect(monitor).toContain('Check EdgeOne Registry V4');
+    expect(monitor).toContain('EdgeOne SHA:$EDGEONE_SHA');
+    expect(monitor).toContain('EdgeOne Registry V4:$EDGEONE_REGISTRY');
+  });
+
+  it('makes Sync V4 wait for the final smoke through the shared dispatcher', () => {
+    const sync = text('.github/workflows/sync.yml');
+    const dispatcher = text('scripts/dispatch-deployments.mjs');
+    expect(sync).toContain('scripts/dispatch-deployments.mjs');
+    expect(sync).toContain('deploy.yml deploy-pages.yml deploy-edgeone.yml monitor.yml');
+    expect(dispatcher).toContain("await waitForResults(monitorResults, 'final production smoke')");
+  });
 });

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 const SYNC_OWNED_EXACT = new Set([
   'scripts/sync-v4.mjs',
   'scripts/discovery-sync.mjs',
+  'scripts/dispatch-deployments.mjs',
   'scripts/repository-identity.mjs',
   'scripts/github-discovery.mjs',
   'scripts/checksum.mjs',

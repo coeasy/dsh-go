@@ -21,8 +21,8 @@ env:
   DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}
   SITE_URL: ${{ vars.SITE_URL || 'https://dsh-go.pages.dev' }}
   GITHUB_PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-  EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || '' }}
-  EDGEONE_STABLE_CONFIGURED: ${{ vars.EDGEONE_SITE_URL != '' }}
+  EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.cool' }}
+  EDGEONE_STABLE_CONFIGURED: "true"
 
 jobs:
   health-check:

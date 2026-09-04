@@ -6,6 +6,7 @@ on:
     paths:
       - "scripts/sync-v4.mjs"
       - "scripts/discovery-sync.mjs"
+      - "scripts/dispatch-deployments.mjs"
       - "scripts/registry-v4-*.mjs"
       - "scripts/repository-identity.mjs"
       - "scripts/github-discovery.mjs"
