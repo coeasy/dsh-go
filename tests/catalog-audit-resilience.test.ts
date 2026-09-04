@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 const { nextGraphqlPageSize } = await import('../scripts/github-discovery.mjs');
 const { auditCatalogIdentity, buildAuditReport } = await import('../scripts/audit-catalog-identity.mjs');
+const { normalizeStoredPlugin } = await import('../scripts/repository-identity.mjs');
 
 describe('complete discovery resilience', () => {
   it('backs GraphQL page size down without going below the safe floor', () => {
@@ -42,6 +43,26 @@ describe('catalog identity audit report', () => {
     expect(report.warning_count).toBe(0);
     expect(report.ok).toBe(true);
     expect(report.errors).toEqual([]);
+  });
+
+  it('canonicalizes retained GitHub metadata before strict identity audit', () => {
+    const normalized: any = normalizeStoredPlugin({
+      full_name: 'owner/demo',
+      repo_name: 'wrong',
+      repo_url: 'https://api.github.com/repos/owner/demo',
+      name: 'Pretty Display Name',
+      metadata_source: 'github',
+      homepage: 'https://example.com',
+      manifest_file: null,
+      verified: false,
+      install_cmd: 'dsh plugin install github:owner/demo',
+    });
+    expect(normalized.repo_name).toBe('demo');
+    expect(normalized.repo_url).toBe('https://github.com/owner/demo');
+    expect(normalized.name).toBe('demo');
+    expect(normalized.homepage).toBe('https://example.com/');
+    expect(normalized.install_cmd).toBe('');
+    expect(auditCatalogIdentity({ plugins: [normalized] }).errors).toEqual([]);
   });
 
   it('accepts a verified Manifest V2 record with the canonical package install command', () => {
