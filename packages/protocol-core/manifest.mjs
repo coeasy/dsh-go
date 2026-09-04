@@ -69,7 +69,11 @@ export function safePackageReleaseName(value) {
   return String(value || '').trim().replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-export function packageReleaseTag({ id, version, package_path: packagePath = null } = {}) {
+/**
+ * @param {{ id?: string, version?: string, package_path?: string | null }} input
+ */
+export function packageReleaseTag(input = {}) {
+  const { id, version, package_path: packagePath = null } = input;
   const normalizedId = normalizePackageId(id);
   const normalizedVersion = String(version || '').trim().replace(/^v/, '');
   parseVersion(normalizedVersion);

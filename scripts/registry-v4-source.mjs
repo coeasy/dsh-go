@@ -5,6 +5,7 @@ import { normalizeStoredPlugin, isAuthoritativeDshManifest } from './repository-
 
 const COMMIT_RE = /^[0-9a-f]{40}$/i;
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const PACKAGE_TYPES = new Set(['plugin', 'mcp', 'skill', 'agent']);
 
 async function sleep(ms) { return new Promise((accept) => setTimeout(accept, ms)); }
 
@@ -78,12 +79,22 @@ function metadataFor(plugin, id, repo, manifest = null) {
   };
 }
 
+function diagnosticTypeFor(plugin) {
+  if (PACKAGE_TYPES.has(String(plugin.package_type || '').toLowerCase())) return normalizePackageType(plugin.package_type);
+  if (plugin.category === 'mcp') return 'mcp';
+  if (plugin.category === 'skills') return 'skill';
+  if (plugin.category === 'agent') return 'agent';
+  return 'plugin';
+}
+
 function candidateFor(plugin, status, reason, extra = {}) {
   const repo = String(plugin.full_name || plugin.source?.repo || '').trim();
   let type = null;
   let id = String(plugin.package_id || plugin.id || plugin.slug || repo).trim().toLowerCase();
   try {
-    if (plugin.package_type) type = normalizePackageType(plugin.package_type);
+    // Diagnostic type/identity is discovery metadata only. Registry V4 authority is
+    // always rebuilt from Manifest V2 at the immutable commit below.
+    type = diagnosticTypeFor(plugin);
     id = normalizePackageId(id);
   } catch { /* diagnostics remain best-effort and non-authoritative */ }
   return {
