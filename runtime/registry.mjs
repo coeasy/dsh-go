@@ -29,6 +29,17 @@ export function packageRoot(type) {
   return join(base, normalizedType);
 }
 
+function normalizeActivationMeta(value = {}, generation = 0) {
+  const meta = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  const number = (input, fallback = null) => Number.isInteger(Number(input)) && Number(input) >= 0 ? Number(input) : fallback;
+  return {
+    active_generation: number(meta.active_generation, generation),
+    candidate_generation: number(meta.candidate_generation, null),
+    last_known_good_generation: number(meta.last_known_good_generation, generation),
+    last_activation_at: meta.last_activation_at || null,
+  };
+}
+
 function normalizeRecord(item) {
   const type = normalizePackageType(item?.type);
   const id = normalizePackageId(item?.id);
@@ -57,6 +68,13 @@ function normalizeRecord(item) {
     publisher: item.publisher || null,
     security: item.security || null,
     artifact: item.artifact || null,
+    content_digest: item.content_digest || item.content?.digest || null,
+    content: item.content || (item.content_digest ? { algorithm: 'sha256', digest: item.content_digest } : null),
+    trust_snapshot: item.trust_snapshot || null,
+    policy_snapshot: item.policy_snapshot || null,
+    supply_chain_verification: item.supply_chain_verification || null,
+    adapter: item.adapter || null,
+    activation: item.activation && typeof item.activation === 'object' ? item.activation : null,
     resolution_hash: item.resolution_hash || null,
     registry_revision: item.registry_revision || null,
     history: Array.isArray(item.history) && item.history.length ? item.history.slice(-100) : base.history,
@@ -84,6 +102,12 @@ async function hydrateRecordFromInstallLock(item) {
       publisher: lock.publisher || null,
       security: lock.security || null,
       artifact: lock.artifact || null,
+      content_digest: lock.content_digest || lock.content?.digest || item.content_digest || null,
+      content: lock.content || item.content || null,
+      trust_snapshot: lock.trust_snapshot || item.trust_snapshot || null,
+      policy_snapshot: lock.policy_snapshot || item.policy_snapshot || null,
+      supply_chain_verification: lock.supply_chain_verification || item.supply_chain_verification || null,
+      adapter: lock.adapter || item.adapter || null,
       installed_at: lock.installed_at || item.installed_at,
     };
   } catch {
@@ -108,10 +132,12 @@ export function validateRuntimeState(data) {
     seen.add(key);
     return normalized;
   });
+  const generation = Number(data.generation) || 0;
   return {
     schema_version: RUNTIME_STATE_SCHEMA_VERSION,
-    generation: Number(data.generation) || 0,
+    generation,
     updated_at: data.updated_at || new Date().toISOString(),
+    activation: normalizeActivationMeta(data.activation, generation),
     packages,
   };
 }
@@ -127,7 +153,13 @@ export async function readRuntimeRegistry(file = registryPath()) {
     return hydrateState(validateRuntimeState(JSON.parse(await readFile(file, 'utf8'))));
   } catch (error) {
     if (error?.code === 'ENOENT') {
-      return { schema_version: RUNTIME_STATE_SCHEMA_VERSION, generation: 0, updated_at: new Date().toISOString(), packages: [] };
+      return {
+        schema_version: RUNTIME_STATE_SCHEMA_VERSION,
+        generation: 0,
+        updated_at: new Date().toISOString(),
+        activation: normalizeActivationMeta({}, 0),
+        packages: [],
+      };
     }
     throw error;
   }
@@ -177,10 +209,7 @@ async function acquireRegistryLock(file, options = {}) {
         if (Date.now() - info.mtimeMs > REGISTRY_LOCK_STALE_MS) {
           const ownerAlive = await lockOwnerAlive(lockFile);
           if (ownerAlive === null) continue;
-          if (ownerAlive === false) {
-            await unlink(lockFile);
-            continue;
-          }
+          if (ownerAlive === false) { await unlink(lockFile); continue; }
         }
       } catch (inspectError) {
         if (inspectError?.code === 'ENOENT') continue;
@@ -219,10 +248,17 @@ export async function writeRuntimeRegistry(state, file = registryPath(), options
       seen.add(key);
       packages.push(normalized);
     }
+    const nextGeneration = currentGeneration + 1;
+    const activation = normalizeActivationMeta(state.activation, currentGeneration);
     const next = {
       schema_version: RUNTIME_STATE_SCHEMA_VERSION,
-      generation: currentGeneration + 1,
+      generation: nextGeneration,
       updated_at: new Date().toISOString(),
+      activation: {
+        ...activation,
+        active_generation: activation.active_generation === currentGeneration ? nextGeneration : activation.active_generation,
+        last_known_good_generation: activation.last_known_good_generation === currentGeneration ? nextGeneration : activation.last_known_good_generation,
+      },
       packages,
     };
     await mkdir(dirname(targetFile), { recursive: true });
@@ -247,9 +283,8 @@ export async function updateRuntimeRegistry(mutator, file = registryPath(), opti
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const current = await readRuntimeRegistry(file);
     const next = await mutator(current);
-    try {
-      return await writeRuntimeRegistry(next, file, options);
-    } catch (error) {
+    try { return await writeRuntimeRegistry(next, file, options); }
+    catch (error) {
       if (error?.code !== 'DSH_TRANSACTION_CONFLICT' || attempt === attempts - 1) throw error;
       lastConflict = error;
       await new Promise((accept) => setTimeout(accept, 20 * (attempt + 1)));
@@ -288,8 +323,7 @@ export function markRuntimePackageRemoved(state, type, id, details = {}) {
   if (!current) throw new Error(`runtime package is not installed: ${type}:${id}`);
   const removed = recordRuntimeEvent(
     { ...current, state: 'removed', enabled: false, activated: false, restart_required: true, health: null, binding: null },
-    'removed',
-    details,
+    'removed', details,
   );
   return upsertRuntimePackage(state, removed);
 }
@@ -298,10 +332,5 @@ export function packagePath(type, id, root = packageRoot(type)) {
   return join(resolve(root), ...normalizePackageId(id).split('/'));
 }
 
-export async function removePath(path) {
-  await rm(path, { recursive: true, force: true });
-}
-
-export async function pathExists(path) {
-  try { await access(path); return true; } catch { return false; }
-}
+export async function removePath(path) { await rm(path, { recursive: true, force: true }); }
+export async function pathExists(path) { try { await access(path); return true; } catch { return false; } }
