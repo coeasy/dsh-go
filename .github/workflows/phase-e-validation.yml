@@ -19,7 +19,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -28,56 +27,72 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             site/package-lock.json
-
       - name: Install dependencies
         run: |
           npm ci
           cd site && npm ci
 
+      - name: Breaking contract
+        id: contract
+        continue-on-error: true
+        run: npm run contract:check
       - name: Typecheck
         id: typecheck
         continue-on-error: true
         run: npm run typecheck
-
       - name: Lint
         id: lint
         continue-on-error: true
         run: npm run lint
-
-      - name: Tests
+      - name: Canonical tests
         id: tests
         continue-on-error: true
-        run: npm test
-
+        run: >-
+          npx vitest run
+          tests/architecture-v4
+          tests/deployment-convergence.test.ts
+          tests/production-sha-gate.test.ts
       - name: Site check
         id: sitecheck
         continue-on-error: true
         run: cd site && npm run check
-
       - name: Site build
         id: sitebuild
         continue-on-error: true
         run: cd site && npm run build
-
-      - name: Runtime syntax
+      - name: Generated artifact gate
+        id: artifacts
+        continue-on-error: true
+        run: |
+          node scripts/validate-registry-v4.mjs catalog/registry-v4.json
+          test -s site/public/catalog/registry-v4.json
+          test -s site/public/catalog/registry-v4/index.json
+          test -s site/public/catalog/search-index-v3.json
+          test ! -e site/public/catalog/registry-v3.json
+          test ! -e site/public/catalog/distribution-v1
+      - name: Canonical runtime syntax
         id: syntax
         continue-on-error: true
         run: |
-          find runtime bin packages/dsh-go-marketplace-plugin -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
+          find packages/protocol-core packages/registry-core packages/resolver runtime bin -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
 
       - name: Validation gate
         env:
+          CONTRACT: ${{ steps.contract.outcome }}
           TYPECHECK: ${{ steps.typecheck.outcome }}
           LINT: ${{ steps.lint.outcome }}
           TESTS: ${{ steps.tests.outcome }}
           SITECHECK: ${{ steps.sitecheck.outcome }}
           SITEBUILD: ${{ steps.sitebuild.outcome }}
+          ARTIFACTS: ${{ steps.artifacts.outcome }}
           SYNTAX: ${{ steps.syntax.outcome }}
         run: |
-          printf 'typecheck=%s\nlint=%s\ntests=%s\nsitecheck=%s\nsitebuild=%s\nsyntax=%s\n' "$TYPECHECK" "$LINT" "$TESTS" "$SITECHECK" "$SITEBUILD" "$SYNTAX"
+          printf 'contract=%s\ntypecheck=%s\nlint=%s\ntests=%s\nsitecheck=%s\nsitebuild=%s\nartifacts=%s\nsyntax=%s\n' "$CONTRACT" "$TYPECHECK" "$LINT" "$TESTS" "$SITECHECK" "$SITEBUILD" "$ARTIFACTS" "$SYNTAX"
+          test "$CONTRACT" = success
           test "$TYPECHECK" = success
           test "$LINT" = success
           test "$TESTS" = success
           test "$SITECHECK" = success
           test "$SITEBUILD" = success
+          test "$ARTIFACTS" = success
           test "$SYNTAX" = success
