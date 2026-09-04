@@ -36,8 +36,8 @@ jobs:
 
       - name: Dependency security audit
         run: |
-          npm audit --audit-level=high
-          cd site && npm audit --audit-level=high
+          node scripts/npm-audit-retry.mjs --label root
+          node scripts/npm-audit-retry.mjs --cwd site --label site
 
       - name: Stable contract
         run: npm run contract:check
@@ -62,6 +62,7 @@ jobs:
           node --check scripts/check-deployment-convergence.mjs
           node --check scripts/check-production-sha.mjs
           node --check scripts/edgeone-deploy-ci.mjs
+          node --check scripts/npm-audit-retry.mjs
           node --check scripts/write-deployment-version.mjs
           node --check scripts/verify-package-evidence.mjs
           node --check bin/dsh.mjs
