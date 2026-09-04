@@ -2,116 +2,65 @@
 import Layout from '../layouts/Layout.astro';
 import { u, apiBase } from '../lib/urls';
 const BASE = apiBase();
-
 const endpoints = [
-  { method: 'GET', path: '/api/v1/plugins', desc: '插件列表（过滤/搜索/排序/分页）' },
-  { method: 'GET', path: '/api/v1/plugins/:slug', desc: '单个插件详情 + 相关推荐' },
-  { method: 'GET', path: '/api/v1/categories', desc: '分类注册表（含计数）' },
-  { method: 'GET', path: '/api/v1/stats', desc: '聚合统计 + Top 榜单' },
-  { method: 'GET', path: '/api/v1/search?q=关键词', desc: '快速搜索（q 必填）' },
-  { method: 'GET', path: '/api/v1/meta', desc: '同步元信息（供监控）' },
-  { method: 'GET', path: '/api/v1/health', desc: '健康检查' },
-  { method: 'GET', path: '/api/v1/ecosystem', desc: 'Registry V3 生态条目（plugin / MCP / skill / agent）' },
-  { method: 'GET', path: '/api/v1/ecosystem/:id', desc: '生态条目详情与版本' },
-  { method: 'GET', path: '/api/v1/marketplace', desc: 'Marketplace V4 多语言首页' },
-  { method: 'GET', path: '/api/v1/package-detail?id=:id&type=:type', desc: '包详情、信任与本地安装计划' },
-  { method: 'GET', path: '/api/v1/install-plan?id=:id&type=:type', desc: '解析本地安装计划（只读）' },
-  { method: 'GET', path: '/api/v1/advisories', desc: '安全公告、撤回与下架状态' },
-  { method: 'GET', path: '/api/v1/publishers/:id', desc: 'Publisher 身份与包组合' },
-  { method: 'GET', path: '/api/v1/profiles', desc: '本地 Profile 原子应用契约' },
-  { method: 'GET', path: '/api/v1/bundles', desc: '本地 Bundle 原子安装契约' },
-  { method: 'GET', path: '/api/v1/providers', desc: 'Provider Adapter 版本与能力' },
-  { method: 'GET', path: '/api/v1/providers/:id', desc: 'Provider Adapter 详情' },
-  { method: 'GET', path: '/api/v1/registry', desc: 'Registry V3 原始权威数据' },
-  { method: 'GET', path: '/api/v1/capabilities', desc: '能力清单与部署语义' },
-  { method: 'POST', path: '/api/v1/mcp', desc: 'MCP 端点（JSON-RPC 2.0，AI Agent 查询）' },
+  ['GET','/api/v2','API V2 capability map'],
+  ['GET','/api/v2/capabilities','Protocol, package type and channel capabilities'],
+  ['GET','/api/v2/health','Registry V4 health and revision'],
+  ['GET','/api/v2/packages?q=&type=&limit=','Package collection'],
+  ['GET','/api/v2/packages/:type/:id','Canonical package + releases'],
+  ['GET','/api/v2/packages/:type/:id/releases','Package release history'],
+  ['GET','/api/v2/packages/:type/:id/releases/:version','One immutable release'],
+  ['GET','/api/v2/search?q=&type=&limit=','Registry V4 search'],
+  ['POST','/api/v2/resolve','Resolve package + dependency graph'],
+  ['POST','/api/v2/install-plan','Build a local-only install plan'],
+  ['GET','/api/v2/publishers','Publisher identities'],
+  ['GET','/api/v2/publishers/:id','Publisher + package portfolio'],
+  ['GET','/api/v2/advisories','Security advisories'],
+  ['GET','/api/v2/advisories/:id','Security advisory detail'],
+  ['GET','/api/v2/registry/revision','Registry V4 revision'],
+  ['GET','/api/v2/registry/delta?from=:revision','Delta negotiation / full-refresh signal'],
+  ['POST','/api/v2/mcp','MCP Tools V2 JSON-RPC endpoint'],
 ];
-
-const params = [
-  ['category', '分类 id，如 web-ui、mcp、skills'],
-  ['verified', 'true 仅含已验证插件'],
-  ['search', '关键词（匹配名称/描述/标签）'],
-  ['sort', 'stars | trend | updated | created | name'],
-  ['order', 'asc | desc，默认 desc'],
-  ['page', '页码，默认 1'],
-  ['per_page', '每页数量，默认 50，最大 200'],
-  ['created_after / updated_after', '按时间过滤（ISO 时间字符串）'],
-];
-
-const curlExample = `<span>curl "${BASE}/api/v1/plugins?category=web-ui&verified=true&sort=stars"</span>
-<span>curl "${BASE}/api/v1/search?q=vision&limit=10"</span>
-<span>curl -H "If-None-Match: a1b2c3d4e5f60718" ${BASE}/api/v1/plugins</span>
-<span>curl -X POST ${BASE}/api/v1/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_plugins","arguments":{"q":"agent"}}}'</span>`;
-
-const mcpConfigHtml = `<span>// ~/.config/Claude/claude_desktop_config.json</span>
-<span>{</span>
-<span>  "mcpServers": {</span>
-<span>    "dsh-go": {</span>
-<span>      "url": "${BASE}/api/v1/mcp",</span>
-<span>      "transport": "streamable-http"</span>
-<span>    }</span>
-<span>  }</span>
-<span>}</span>`;
-
-const etagHtml = `<span>// 浏览器 / Node.js（把 API_BASE 换成实际的 Base URL）</span>
-<span>let etag = null, cache = null;</span>
-<span>async function getPlugins(params) {</span>
-<span>  const headers = {};</span>
-<span>  if (etag) headers['If-None-Match'] = etag;</span>
-<span>  const res = await fetch('${BASE}/api/v1/plugins?' + params, { headers });</span>
-<span>  if (res.status === 304) return cache;</span>
-<span>  etag = res.headers.get('ETag');</span>
-<span>  cache = await res.json();</span>
-<span>  return cache;</span>
-<span>}</span>`;
+const resolveBody = JSON.stringify({ request: { type:'skill', id:'owner/example', range:'^1.2.0', channel:'stable' }, environment: { dsh_version:'1.0.0', os:'linux', arch:'x64' } }, null, 2);
+const mcpBody = JSON.stringify({ jsonrpc:'2.0', id:1, method:'tools/call', params:{ name:'package_search', arguments:{ query:'agent', type:'agent', limit:10 } } }, null, 2);
 ---
 
-<Layout title="API 文档 · DSH Go" description="DSH Go 开放 API 参考">
+<Layout title="API V2 · DSH Go" description="Canonical DSH Registry V4 API and MCP Tools V2 reference">
   <article class="docs-page">
-    <header class="docs-head">
-      <span>Developer platform</span>
-      <h1 data-i18n="doc_title">API 文档</h1>
-      <p data-i18n="doc_intro">公开、免费、CORS 全开、无需认证，支持 <code>If-None-Match</code> ETag 协商缓存。数据每日 08:18 自动同步。</p>
-    </header>
+    <header class="docs-head"><span>Protocol V2 · Registry V4</span><h1>DSH API V2</h1><p>One package protocol, one registry model and one resolver. The remote API only discovers and resolves packages; installation always executes in the local DSH runtime after explicit confirmation.</p></header>
 
-    <section class="doc-section">
-      <h2 data-i18n="doc_basics">基础信息</h2>
-      <ul>
-        <li data-i18n="doc_baseurl" data-base={BASE}>Base URL: <code>{BASE}</code></li>
-        <li data-i18n="doc_openapi">规范文件：<a href={u('/openapi.json')} target="_blank">/openapi.json</a>（可导入 Postman / Apifox）</li>
-        <li data-i18n="doc_fresh" data-api-url={BASE}>数据新鲜度：<a href={`${BASE}/api/v1/meta`} target="_blank">{BASE}/api/v1/meta</a></li>
-        <li data-i18n="doc_ratelimit">速率限制：每 IP 每 10 秒 20 次（Cloudflare WAF 免费规则）</li>
-      </ul>
-    </section>
+    <section class="doc-section"><h2>Canonical package identity</h2><p>Every package is identified by <code>(type, id)</code>. The canonical coordinate is <code>&lt;type&gt;:&lt;id&gt;@&lt;semver-range&gt;</code>. Supported types are <code>plugin</code>, <code>mcp</code>, <code>skill</code>, and <code>agent</code>. There is no implicit plugin type and no legacy <code>github:</code> syntax.</p><pre><code>skill:owner/example@^1.2.0
+agent:owner/agent@*
+mcp:owner/server@2.0.0</code></pre></section>
 
-    <section class="doc-section">
-      <h2 data-i18n="doc_endpoints">端点一览</h2>
-      <div class="table-wrap"><table class="table">
-        <thead><tr><th data-i18n="th_method">方法</th><th data-i18n="th_path">路径</th><th data-i18n="th_desc">说明</th></tr></thead>
-        <tbody>{endpoints.map((e) => (<tr><td class="m">{e.method}</td><td><code>{e.path}</code></td><td>{e.desc}</td></tr>))}</tbody>
-      </table></div>
-    </section>
+    <section class="doc-section"><h2>Response contract</h2><p>Success is always <code>{ data, meta }</code>. Failure is always <code>{ error: { code, message, details? }, meta }</code>. <code>meta.request_id</code> is present on API responses and Registry-backed endpoints also expose the active Registry revision.</p><pre><code>{`{
+  "data": { ... },
+  "meta": {
+    "request_id": "...",
+    "registry_revision": "..."
+  }
+}`}</code></pre></section>
 
-    <section class="doc-section">
-      <h2 data-i18n="doc_params">常用参数（/api/v1/plugins）</h2>
-      <div class="table-wrap"><table class="table">
-        <thead><tr><th data-i18n="th_param">参数</th><th data-i18n="th_desc2">说明</th></tr></thead>
-        <tbody>{params.map(([k, v]) => <tr><td><code>{k}</code></td><td>{v}</td></tr>)}</tbody>
-      </table></div>
-    </section>
+    <section class="doc-section"><h2>Endpoints</h2><div class="table-wrap"><table><thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead><tbody>{endpoints.map(([method,path,desc]) => <tr><td class="method">{method}</td><td><code>{path}</code></td><td>{desc}</td></tr>)}</tbody></table></div></section>
 
-    <section class="doc-section"><h2 data-i18n="doc_examples">调用示例</h2><pre><code set:html={curlExample}></code></pre></section>
+    <section class="doc-section"><h2>Resolve</h2><pre><code>{`curl -X POST "${BASE}/api/v2/resolve" \
+  -H "Content-Type: application/json" \
+  -d '${resolveBody.replaceAll("'", "'\\''")}'`}</code></pre><p>The resolver returns a deterministic dependency graph, install order, aggregated permissions and a <code>resolution_hash</code>. Revoked, yanked and critical-advisory releases are fail-closed.</p></section>
 
-    <section class="doc-section"><h2 data-i18n="doc_resp">响应格式</h2><p data-i18n="doc_resp_text">列表端点返回 <code>&#123; meta, pagination, plugins &#125;</code>；详情返回 <code>&#123; plugin, related, meta &#125;</code>；错误统一为 <code>&#123; error: &#123; code, message &#125; &#125;</code>。</p></section>
+    <section class="doc-section"><h2>Install plan</h2><pre><code>{`curl -X POST "${BASE}/api/v2/install-plan" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"skill","id":"owner/example","range":"^1.2.0","channel":"stable"}'`}</code></pre><p>The returned plan contains the canonical local command <code>dsh package install ...</code> and <code>dsh://package/install</code> deep link. The API never performs the installation.</p></section>
 
-    <section class="doc-section"><h2 data-i18n="doc_data">数据下载与订阅</h2><ul><li data-i18n="doc_raw">原始全量数据：<a href={u('/catalog/plugins.json')} target="_blank">/catalog/plugins.json</a></li><li data-i18n="doc_rss">RSS 订阅：<a href={u('/feed.xml')} target="_blank">/feed.xml</a></li></ul></section>
+    <section class="doc-section"><h2>MCP Tools V2</h2><p>The MCP endpoint exposes only canonical Registry V4 tools: <code>package_search</code>, <code>package_get</code>, <code>package_releases</code>, <code>package_resolve</code>, <code>package_install_plan</code>, <code>publisher_get</code>, <code>advisory_get</code>, and <code>registry_status</code>.</p><pre><code>{`curl -X POST "${BASE}/api/v2/mcp" \
+  -H "Content-Type: application/json" \
+  -d '${mcpBody.replaceAll("'", "'\\''")}'`}</code></pre></section>
 
-    <section class="doc-section"><h2 data-i18n="doc_mcp">MCP 接入（Claude Desktop）</h2><p data-i18n="doc_mcp_text">在 Claude Desktop 配置文件中添加以下 MCP Server，即可让 Claude 直接查询 DSH 插件目录：</p><pre><code set:html={mcpConfigHtml}></code></pre></section>
+    <section class="doc-section"><h2>Distribution</h2><ul><li>Registry authority: <a href={u('/catalog/registry-v4.json')}><code>/catalog/registry-v4.json</code></a></li><li>Sharded Distribution V2: <a href={u('/catalog/registry-v4/index.json')}><code>/catalog/registry-v4/index.json</code></a></li><li>Discovery Search Index V3: <a href={u('/catalog/search-index-v3.json')}><code>/catalog/search-index-v3.json</code></a></li><li>OpenAPI: <a href={u('/openapi.json')}><code>/openapi.json</code></a></li></ul></section>
 
-    <section class="doc-section"><h2 data-i18n="doc_etag">带 ETag 的增量轮询（节省流量）</h2><p data-i18n="doc_etag_text">客户端缓存 <code>ETag</code>，下次请求带 <code>If-None-Match</code>，数据未变时服务器返回 <code>304</code> 而不传输任何内容。</p><pre><code set:html={etagHtml}></code></pre></section>
+    <section class="doc-section"><h2>Breaking upgrade policy</h2><p><strong>API V1 is removed.</strong> Clients must use API V2, Registry V4, Protocol V2 and canonical package coordinates. There is no compatibility proxy or dual-write migration surface.</p></section>
   </article>
 </Layout>
 
 <style>
-  .docs-page{max-width:1280px;margin:0 auto}.docs-head{text-align:center;padding:34px 0 20px}.docs-head>span{color:var(--accent);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.docs-head h1{font-size:clamp(36px,4.5vw,50px);letter-spacing:-.04em;margin:7px 0}.docs-head p{max-width:860px;margin:0 auto;color:var(--muted);font-size:16px;line-height:1.7}.docs-head code{font-size:.92em}.doc-section{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:22px 24px;margin:0 0 18px;box-shadow:var(--shadow-sm)}.doc-section h2{font-size:21px;margin:0 0 14px}.doc-section p,.doc-section li{font-size:14.5px;line-height:1.7;color:var(--muted)}.doc-section li+li{margin-top:5px}.table-wrap{overflow-x:auto}.table { border-collapse: collapse; width: 100%; min-width:680px }.table th, .table td { text-align: left; padding: 11px 13px; border-bottom: 1px solid var(--border); font-size: 14.5px; }.table th { color: var(--muted); font-weight: 700; }.table .m { font-weight: 800; color: var(--accent); width: 78px; }pre { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; padding: 16px; overflow-x: auto; font-size: 13.5px; line-height:1.65 }pre code { display: block; white-space: pre-wrap; }code { font-size: 13.5px; }@media(max-width:600px){.doc-section{padding:17px}.docs-head p{font-size:15px}}
+  .docs-page{max-width:1160px;margin:auto}.docs-head{text-align:center;padding:34px 0 24px}.docs-head>span{font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}.docs-head h1{font-size:clamp(38px,5vw,56px);letter-spacing:-.045em;margin:6px 0}.docs-head p{max-width:850px;margin:auto;color:var(--muted)}.doc-section{margin-bottom:14px;padding:22px;border:1px solid var(--border);border-radius:16px;background:var(--card);box-shadow:var(--shadow-sm)}.doc-section h2{margin:0 0 12px;font-size:20px}.doc-section p,.doc-section li{color:var(--muted);font-size:14px;line-height:1.7}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:720px}th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;font-size:13px}th{color:var(--muted)}.method{color:var(--accent);font-weight:850}pre{overflow:auto;padding:14px;border:1px solid var(--border);border-radius:11px;background:var(--bg-soft);font-size:12px;line-height:1.6}code{font-size:.92em}
 </style>
