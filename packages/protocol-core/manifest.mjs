@@ -65,6 +65,48 @@ function normalizeRuntime(value, type) {
   return { ...runtime, type };
 }
 
+function releaseDescriptorError(message) {
+  const error = new Error(message);
+  error.code = 'DSH_RELEASE_DESCRIPTOR_INVALID';
+  return error;
+}
+
+function normalizePackagePath(value) {
+  if (value === undefined || value === null || value === '' || value === '.') return null;
+  const path = String(value).trim().replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/+$/, '');
+  if (!path || path.startsWith('/') || path.split('/').some((part) => !part || part === '.' || part === '..')) {
+    throw releaseDescriptorError('release descriptor package_path must be a safe repository-relative directory');
+  }
+  return path;
+}
+
+function normalizeReleaseArtifact(value, repository, tag, packagePath) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw releaseDescriptorError('release descriptor artifact must be an object');
+  const kind = String(value.kind || '').trim();
+  const url = String(value.url || '').trim();
+  const digest = String(value.digest || value.integrity || '').trim().toLowerCase();
+  const format = String(value.format || '').trim().toLowerCase();
+  const stripComponents = Number(value.strip_components);
+  if (kind !== 'release-archive') throw releaseDescriptorError('release descriptor artifact.kind must be release-archive');
+  if (!/^sha256-[0-9a-f]{64}$/.test(digest)) throw releaseDescriptorError('release descriptor artifact.digest must be sha256-<64 hex>');
+  if (format !== 'tgz') throw releaseDescriptorError('release descriptor artifact.format must be tgz');
+  const expectedStrip = packagePath ? packagePath.split('/').length + 1 : 1;
+  if (!Number.isInteger(stripComponents) || stripComponents !== expectedStrip) {
+    throw releaseDescriptorError(`release descriptor artifact.strip_components must be ${expectedStrip}`);
+  }
+  let parsed;
+  try { parsed = new URL(url); }
+  catch { throw releaseDescriptorError('release descriptor artifact.url must be a valid URL'); }
+  if (parsed.protocol !== 'https:' || parsed.hostname.toLowerCase() !== 'github.com') {
+    throw releaseDescriptorError('release descriptor artifact.url must use https://github.com');
+  }
+  const expectedPrefix = `/${repository}/releases/download/${encodeURIComponent(tag)}/`;
+  if (!parsed.pathname.toLowerCase().startsWith(expectedPrefix.toLowerCase())) {
+    throw releaseDescriptorError('release descriptor artifact.url must belong to the declared repository and canonical release tag');
+  }
+  return { ...value, kind, url, digest, format, strip_components: stripComponents };
+}
+
 export function safePackageReleaseName(value) {
   return String(value || '').trim().replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '');
 }
@@ -149,4 +191,70 @@ export function validatePackageManifest(input, options = {}) {
     ...(provides.length ? { provides } : {}),
     ...(typeConfig ? { [type]: typeConfig } : {}),
   };
+}
+
+export function validatePackageReleaseDescriptor(input, options = {}) {
+  try {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) throw releaseDescriptorError('release descriptor must be an object');
+    if (input.release_version !== PACKAGE_RELEASE_DESCRIPTOR_VERSION
+      || input.protocol_version !== 2
+      || input.manifest_version !== PACKAGE_MANIFEST_VERSION) {
+      throw releaseDescriptorError(`release descriptor must use release_version=${PACKAGE_RELEASE_DESCRIPTOR_VERSION}, protocol_version=2 and manifest_version=${PACKAGE_MANIFEST_VERSION}`);
+    }
+    const type = normalizePackageType(input.type);
+    const id = normalizePackageId(input.id);
+    const version = String(input.version || '').trim().replace(/^v/, '');
+    parseVersion(version);
+    const channel = normalizeReleaseChannel(input.channel);
+    const repository = String(input.repository || '').trim();
+    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) throw releaseDescriptorError('release descriptor repository must be owner/name');
+    const commit = String(input.commit || '').trim().toLowerCase();
+    if (!/^[0-9a-f]{40}$/.test(commit)) throw releaseDescriptorError('release descriptor commit must be an immutable 40-character SHA');
+    const packagePath = normalizePackagePath(input.package_path);
+    const tag = String(input.tag || '').trim();
+    const canonicalTag = packageReleaseTag({ id, version, package_path: packagePath });
+    if (tag !== canonicalTag) throw releaseDescriptorError(`release descriptor tag must be canonical: ${canonicalTag}`);
+    const manifest = validatePackageManifest(input.manifest, { type, id, version });
+    if (manifest.channel !== channel) throw releaseDescriptorError('release descriptor channel must match Manifest V2');
+    if (manifest.source?.provider === 'github' && manifest.source?.repo
+      && String(manifest.source.repo).toLowerCase() !== repository.toLowerCase()) {
+      throw releaseDescriptorError('release descriptor repository must match Manifest V2 source.repo');
+    }
+    const manifestFile = String(input.manifest_file || '').trim().replaceAll('\\', '/').replace(/^\.\//, '');
+    const expectedManifestFile = packagePath ? `${packagePath}/${PACKAGE_MANIFEST_FILE}` : PACKAGE_MANIFEST_FILE;
+    if (manifestFile !== expectedManifestFile) throw releaseDescriptorError(`release descriptor manifest_file must be ${expectedManifestFile}`);
+    const publishedAt = String(input.published_at || '').trim();
+    if (!publishedAt || Number.isNaN(Date.parse(publishedAt))) throw releaseDescriptorError('release descriptor published_at must be an ISO-8601 timestamp');
+    const artifact = normalizeReleaseArtifact(input.artifact, repository, tag, packagePath);
+
+    if (options.type !== undefined && type !== normalizePackageType(options.type)) throw releaseDescriptorError('release descriptor type does not match expected package');
+    if (options.id !== undefined && id !== normalizePackageId(options.id)) throw releaseDescriptorError('release descriptor id does not match expected package');
+    if (options.version !== undefined && version !== String(options.version).trim().replace(/^v/, '')) throw releaseDescriptorError('release descriptor version does not match expected package');
+    if (options.channel !== undefined && channel !== normalizeReleaseChannel(options.channel)) throw releaseDescriptorError('release descriptor channel does not match expected package');
+    if (options.repository !== undefined && repository.toLowerCase() !== String(options.repository).trim().toLowerCase()) throw releaseDescriptorError('release descriptor repository does not match expected repository');
+    if (options.commit !== undefined && commit !== String(options.commit).trim().toLowerCase()) throw releaseDescriptorError('release descriptor commit does not match expected commit');
+    if (options.tag !== undefined && tag !== String(options.tag)) throw releaseDescriptorError('release descriptor tag does not match expected tag');
+    if (options.package_path !== undefined && packagePath !== normalizePackagePath(options.package_path)) throw releaseDescriptorError('release descriptor package_path does not match expected package scope');
+
+    return {
+      release_version: PACKAGE_RELEASE_DESCRIPTOR_VERSION,
+      protocol_version: 2,
+      manifest_version: PACKAGE_MANIFEST_VERSION,
+      id,
+      type,
+      version,
+      channel,
+      repository,
+      commit,
+      tag,
+      published_at: new Date(publishedAt).toISOString(),
+      manifest_file: manifestFile,
+      package_path: packagePath,
+      manifest,
+      artifact,
+    };
+  } catch (error) {
+    if (error?.code === 'DSH_RELEASE_DESCRIPTOR_INVALID') throw error;
+    throw releaseDescriptorError(error instanceof Error ? error.message : String(error));
+  }
 }
