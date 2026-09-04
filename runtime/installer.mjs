@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { normalizePackageId, normalizePackageType } from '../packages/protocol-core/index.mjs';
+import { assertPolicyAllowed, compactPolicySnapshot } from '../packages/policy-core/index.mjs';
 import { packageRoot } from './registry.mjs';
 import { verifyInstalledCommit, verifyResolvedPackage } from './verifier.mjs';
 import { assertCompatibility } from './compatibility.mjs';
@@ -15,6 +16,9 @@ import { installReleaseArtifact, isReleaseArtifact } from './artifact-installer.
 import { discoverReleaseArtifact } from './release-discovery.mjs';
 import { enforceEnterprisePolicy } from './enterprise-policy.mjs';
 import { withPackageOperationLock } from './package-operation-lock.mjs';
+import { copyCasSnapshot, snapshotDirectory } from './cas-store.mjs';
+import { createReleaseTrustSnapshot } from './trust-store.mjs';
+import { getRuntimeAdapter } from './adapters/index.mjs';
 
 const exec = promisify(execFile);
 const DEFAULT_GIT_TIMEOUT_MS = 120_000;
@@ -26,13 +30,7 @@ export function defaultPackageHome(type) {
 async function git(args, cwd, options = {}) {
   const configuredTimeout = Number(options.timeoutMs ?? process.env.DSH_GIT_TIMEOUT_MS);
   const timeout = Number.isFinite(configuredTimeout) && configuredTimeout > 0 ? configuredTimeout : DEFAULT_GIT_TIMEOUT_MS;
-  return exec('git', args, {
-    cwd,
-    windowsHide: true,
-    maxBuffer: 8 * 1024 * 1024,
-    timeout,
-    killSignal: 'SIGTERM',
-  });
+  return exec('git', args, { cwd, windowsHide: true, maxBuffer: 8 * 1024 * 1024, timeout, killSignal: 'SIGTERM' });
 }
 
 function assertNotYanked(pkg) {
@@ -65,13 +63,16 @@ function compactEvidenceReport(report) {
 
 function identityFailures(report) {
   if (!report?.identity) return [];
-  return ['sigstore', 'slsa']
-    .map((kind) => report.identity[kind])
-    .filter((item) => item?.declared && item.valid === false)
-    .map((item) => `${item.kind}:${item.status}`);
+  return ['sigstore', 'slsa'].map((kind) => report.identity[kind]).filter((item) => item?.declared && item.valid === false).map((item) => `${item.kind}:${item.status}`);
 }
 
-function enterpriseRegistryIdentity() {
+function enterpriseRegistryIdentity(options = {}) {
+  if (options.registryIdentity && typeof options.registryIdentity === 'object') return {
+    name: String(options.registryIdentity.name || 'official'),
+    url: options.registryIdentity.url || null,
+    trusted: options.registryIdentity.trusted !== false,
+    organization: options.registryIdentity.organization || null,
+  };
   const selectedName = String(process.env.DSH_SELECTED_REGISTRY_NAME || '').trim();
   if (selectedName) {
     return {
@@ -115,10 +116,7 @@ export async function installPackage(inputPackage, options = {}) {
   if (!sourceVerification.ok) throw new Error(`runtime package verification failed: ${sourceVerification.errors.join('; ')}`);
 
   if (!options.dryRun && !isReleaseArtifact(pkg.artifact) && options.releaseDiscovery !== false && !options.repositoryUrl) {
-    const discovered = await discoverReleaseArtifact(pkg, {
-      timeout: options.releaseDiscoveryTimeout,
-      strict: options.releaseDiscoveryStrict === true,
-    });
+    const discovered = await discoverReleaseArtifact(pkg, { timeout: options.releaseDiscoveryTimeout, strict: options.releaseDiscoveryStrict === true });
     if (discovered) pkg = canonicalPackage({ ...pkg, artifact: { ...pkg.artifact, ...discovered } });
   }
 
@@ -127,7 +125,7 @@ export async function installPackage(inputPackage, options = {}) {
   if (!verification.ok) throw new Error(`runtime package verification failed: ${verification.errors.join('; ')}`);
   const compatibility = assertCompatibility(pkg, options.environment);
   const permissions = inspectPermissions(pkg.permissions);
-  const registryContext = enterpriseRegistryIdentity();
+  const registryContext = enterpriseRegistryIdentity(options);
   const locallyApproved = options.approved === true || options.dryRun === true || process.env.DSH_PERMISSION_APPROVED === '1';
   await enforceEnterprisePolicy({
     package: pkg,
@@ -145,6 +143,7 @@ export async function installPackage(inputPackage, options = {}) {
   const evidenceDeclared = hasDeclaredSupplyChainEvidence(pkg.security);
   const releaseArtifact = isReleaseArtifact(pkg.artifact);
   const installSource = releaseArtifact ? 'release-archive' : 'git-source';
+  const adapter = getRuntimeAdapter(type);
   const plan = {
     key: `${type}:${pkg.id}`,
     id: pkg.id,
@@ -164,10 +163,10 @@ export async function installPackage(inputPackage, options = {}) {
     install_source: installSource,
     artifact_url: releaseArtifact ? pkg.artifact.url : null,
     artifact_digest: releaseArtifact ? (pkg.artifact.digest || pkg.artifact.integrity || null) : null,
-    release_tag: releaseArtifact ? pkg.artifact.release_tag || null : null,
     restart_required: true,
     compatibility,
     permissions,
+    adapter: { type: adapter.type, abi_version: adapter.abi_version },
     supply_chain: { declared: evidenceDeclared, checked: false, valid: null },
   };
   if (options.dryRun) return plan;
@@ -222,7 +221,26 @@ export async function installPackage(inputPackage, options = {}) {
         }
       }
       const compactEvidence = compactEvidenceReport(evidenceReport);
+      const trustSnapshot = await createReleaseTrustSnapshot(pkg, compactEvidence || {}, { trustRoot: options.trustRoot, trustRootFile: options.trustRootFile });
+      const policy = assertPolicyAllowed({
+        operation: options.force ? 'update' : 'install',
+        package: pkg,
+        publisher: pkg.publisher,
+        permissions: pkg.permissions,
+        security: pkg.security,
+        advisories: options.advisories || [],
+        verification: compactEvidence || {},
+        publisher_verified: trustSnapshot.publisher_verified,
+        signer_identity: trustSnapshot.signer_identity,
+        signer_revoked: trustSnapshot.signer_revoked,
+        compatibility: { compatible: compatibility?.compatible !== false && compatibility?.ok !== false },
+        environment: options.environment || {},
+        registry: registryContext,
+        approved: locallyApproved,
+      });
+      const policySnapshot = compactPolicySnapshot(policy);
 
+      const content = await snapshotDirectory(temp, { root: options.storeRoot });
       const lock = {
         schema_version: 4,
         runtime_state_version: 4,
@@ -242,6 +260,8 @@ export async function installPackage(inputPackage, options = {}) {
           artifact_url: artifactVerification?.url || null,
           verified_at: new Date().toISOString(),
         },
+        content: { algorithm: 'sha256', digest: content.digest, entries: content.entries },
+        content_digest: content.digest,
         runtime: pkg.runtime || {},
         entrypoints: pkg.entrypoints || {},
         capabilities: pkg.capabilities || [],
@@ -251,19 +271,23 @@ export async function installPackage(inputPackage, options = {}) {
         publisher: pkg.publisher || null,
         security: pkg.security || null,
         supply_chain_verification: compactEvidence,
+        trust_snapshot: trustSnapshot,
+        policy_snapshot: policySnapshot,
+        adapter: { type: adapter.type, abi_version: adapter.abi_version },
         installed_at: new Date().toISOString(),
         restart_required: true,
       };
+
+      // The verified CAS snapshot is the materialization authority. The install
+      // lock is local metadata and is intentionally excluded from the content hash.
+      await rm(temp, { recursive: true, force: true });
+      await copyCasSnapshot(content.digest, temp, { root: options.storeRoot });
       await writeFile(join(temp, '.dsh-install.json'), `${JSON.stringify(lock, null, 2)}\n`, 'utf8');
 
       if (options.force) {
         await rm(backup, { recursive: true, force: true });
-        try {
-          await rename(target, backup);
-          backupMoved = true;
-        } catch (error) {
-          if (error?.code !== 'ENOENT') throw error;
-        }
+        try { await rename(target, backup); backupMoved = true; }
+        catch (error) { if (error?.code !== 'ENOENT') throw error; }
       } else {
         try {
           await access(target);
@@ -278,6 +302,11 @@ export async function installPackage(inputPackage, options = {}) {
       targetCommitted = true;
       return {
         ...plan,
+        content: { algorithm: 'sha256', digest: content.digest, entries: content.entries },
+        content_digest: content.digest,
+        trust_snapshot: trustSnapshot,
+        policy_snapshot: policySnapshot,
+        supply_chain_verification: compactEvidence,
         artifact_verified: artifactVerification?.verified === true,
         supply_chain: {
           declared: evidenceDeclared,
