@@ -6,6 +6,10 @@ import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { validateRegistryV4 } from '../packages/registry-core/index.mjs';
 import { buildRegistryV4FromDiscovery } from './registry-v4-source.mjs';
+import {
+  loadRegistryV4SourceConfig,
+  requiredRegistryPackageFailures,
+} from './registry-v4-config.mjs';
 import { buildSearchIndexV3 } from './build-search-index-v3.mjs';
 import { writeRegistryDistributionV2 } from './registry-distribution-v2.mjs';
 
@@ -31,6 +35,7 @@ const SCRIPTS_DST = resolve(ROOT, 'site/public/scripts');
 const DISCOVERY_FILE = resolve(CATALOG_DIR, 'plugins.json');
 const REGISTRY_V4_FILE = resolve(CATALOG_DIR, 'registry-v4.json');
 const CANDIDATE_FILE = resolve(CATALOG_DIR, 'registry-candidates-v1.json');
+const SOURCE_CONFIG_FILE = resolve(ROOT, 'config/registry-v4-sources.json');
 
 async function exists(path) {
   try { await access(path); return true; } catch { return false; }
@@ -47,12 +52,20 @@ async function buildCanonicalRegistry() {
   if (registry) {
     registry = validateRegistryV4(registry);
   } else {
-    const discovery = await readOptionalJson(DISCOVERY_FILE);
+    const [discovery, sourceConfig] = await Promise.all([
+      readOptionalJson(DISCOVERY_FILE),
+      loadRegistryV4SourceConfig(SOURCE_CONFIG_FILE),
+    ]);
     if (!discovery?.plugins?.length) throw new Error('Registry V4 is missing and discovery candidate input is empty; run npm run sync:registry');
     const built = await buildRegistryV4FromDiscovery(discovery, {
       token: process.env.GITHUB_TOKEN || '',
       generated_at: process.env.DSH_GENERATED_AT || new Date().toISOString(),
+      explicitSources: sourceConfig.sources,
     });
+    const requiredFailures = requiredRegistryPackageFailures(built, sourceConfig.required_packages);
+    if (requiredFailures.length) {
+      throw new Error(`Registry V4 build requires immutable Descriptor V2 releases: ${requiredFailures.map((item) => `${item.type}:${item.id} (${item.reason})`).join(', ')}`);
+    }
     registry = validateRegistryV4(built.registry);
     candidates = built.candidates;
     await writeFile(REGISTRY_V4_FILE, `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
