@@ -7,8 +7,14 @@ async function exists(path: string) {
 }
 
 describe('no legacy compatibility surfaces', () => {
-  it('does not retain obsolete Runtime, Registry, Sync, Search, API or detail-route implementations', async () => {
+  it('does not retain obsolete Runtime, Registry, Sync, Search, API, marketplace or ecosystem runtimes', async () => {
     const forbidden = [
+      'bin/dsh-core.mjs',
+      'marketplace',
+      'mcp/v1',
+      'profiles/v1',
+      'skills/v1',
+      'agents/v1',
       'functions/api/v1',
       'functions/_package-request.ts',
       'functions/_registry.ts',
@@ -25,8 +31,16 @@ describe('no legacy compatibility surfaces', () => {
       'scripts/deploy-gate-v3.mjs',
       'scripts/registry-v3-builder.mjs',
       'scripts/registry-pipeline-v3.mjs',
+      'scripts/registry-builder.mjs',
+      'scripts/registry-distribution.mjs',
+      'scripts/catalog-distribution.mjs',
+      'scripts/sync.mjs',
       'scripts/sync-v3.mjs',
+      'scripts/sync-v3-final.mjs',
       'scripts/build-search-index-v2.mjs',
+      'schemas/dsh-marketplace-discovery.schema.json',
+      'schemas/dsh-package.schema.json',
+      'site/public/schemas/dsh-marketplace-discovery.schema.json',
       'site/src/pages/plugin/[slug].astro',
       'site/src/pages/ecosystem/[id].astro',
       'site/src/components/UnifiedMarketplace.astro',
@@ -60,9 +74,18 @@ describe('no legacy compatibility surfaces', () => {
       expect(text, path).not.toContain('node scripts/deploy-gate-v3.mjs');
       expect(text, path).not.toContain('node scripts/registry-v3-builder.mjs');
       expect(text, path).not.toContain('node scripts/sync-v3.mjs');
-      if (path.includes('deploy') || path.includes('ci') || path.includes('phase-e')) {
-        expect(text, path).toContain('registry-v4');
-      }
+      if (path.includes('deploy') || path.includes('ci') || path.includes('phase-e')) expect(text, path).toContain('registry-v4');
     }
+  });
+
+  it('keeps public docs and machine discovery free of old API and install syntax', async () => {
+    for (const path of ['README.md', 'site/public/openapi.json', 'site/public/.well-known/dsh-marketplace.json']) {
+      const text = await readFile(resolve(path), 'utf8');
+      expect(text, path).not.toContain('/api/v1');
+      expect(text, path).not.toMatch(/\bdsh\s+(plugin|mcp|skill|agent)\s+install\b/);
+      expect(text, path).not.toContain('dsh://plugin/install');
+      expect(text, path).not.toContain('dsh://install?');
+    }
+    expect(await exists('site/public/schemas/dsh-marketplace-discovery-v2.schema.json')).toBe(true);
   });
 });
