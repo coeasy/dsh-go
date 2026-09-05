@@ -60,6 +60,8 @@ describe('Canonical package lifecycle E2E', () => {
       source: { provider: 'github', repo: 'owner/e2e', commit: fixture.commit },
       artifact: { kind: 'git-source' },
       capabilities: ['skill'],
+      runtime: { type: 'skill', executor: 'markdown' },
+      entrypoints: { main: 'SKILL.md' },
       permissions: [],
       dependencies: [],
       compatibility: {},
@@ -67,6 +69,8 @@ describe('Canonical package lifecycle E2E', () => {
       publisher: { id: 'owner', repository_ownership: 'verified', verified: true },
       metadata: { name: 'E2E Skill', stars: 250, verified: true },
     }], { generated_at: '2026-09-04T00:00:00.000Z' });
+
+    expect(registry.packages[0].releases[0].runtime).toEqual({ type: 'skill', executor: 'markdown' });
 
     const installed = await installPackageRequest('skill:owner/e2e@1.0.0', {
       registryData: registry,
@@ -79,6 +83,7 @@ describe('Canonical package lifecycle E2E', () => {
     expect(installed.changed).toBe(true);
     expect(installed.restart_required).toBe(true);
     expect(installed.plan.order).toEqual(['skill:owner/e2e']);
+    expect(installed.plan.root.runtime).toEqual({ type: 'skill', executor: 'markdown' });
 
     let state = await readRuntimeRegistry(registryFile);
     expect(state.schema_version).toBe(4);
