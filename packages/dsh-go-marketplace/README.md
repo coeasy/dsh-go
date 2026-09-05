@@ -8,20 +8,20 @@ write local Runtime State, read local secrets, install packages, or restart a DS
 The canonical package coordinate is:
 
 ```text
-mcp:coeasy/dsh-go-marketplace@0.1.3
+mcp:coeasy/dsh-go-marketplace@0.1.4
 ```
 
 Install and activate it through the local Runtime Supervisor:
 
 ```bash
-dsh package install mcp:coeasy/dsh-go-marketplace@0.1.3 --yes
+dsh package install mcp:coeasy/dsh-go-marketplace@0.1.4 --yes
 dsh runtime activate --yes
 ```
 
 Inspect the package locally with:
 
 ```bash
-dsh package info mcp:coeasy/dsh-go-marketplace@0.1.3
+dsh package info mcp:coeasy/dsh-go-marketplace@0.1.4
 ```
 
 Package installation performs Registry V4 resolution against an immutable Release Descriptor V2,
