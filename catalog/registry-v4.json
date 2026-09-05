@@ -1,7 +1,7 @@
 {
   "schema_version": 4,
-  "generated_at": "2026-09-05T00:59:04.983Z",
-  "revision": "67eff990d95d13ef33132c653c6f387a8f262aa79009664e315c9059faf3a47a",
+  "generated_at": "2026-09-05T01:09:21.744Z",
+  "revision": "f1c71e6e34dba374cc3ee7e9bdf672a39d395178e112a5d43f15f83baec0e8bd",
   "packages": [
     {
       "type": "mcp",
@@ -26,7 +26,7 @@
         "verified": true,
         "stars": 1,
         "rank": 1,
-        "updated_at": "2026-09-05T00:58:07Z",
+        "updated_at": "2026-09-05T01:09:00Z",
         "repo_url": "https://github.com/coeasy/dsh-go",
         "manifest_file": "dsh-package.json",
         "language": "JavaScript",
@@ -34,10 +34,10 @@
       },
       "releases": [
         {
-          "version": "0.1.3",
+          "version": "0.1.4",
           "channel": "stable",
-          "commit": "cc708df727017914d3f402593fa8a807f7d4412c",
-          "published_at": "2026-09-04T15:15:56.000Z",
+          "commit": "618c9640a91e9a7f59b214bfb3808af78b546081",
+          "published_at": "2026-09-05T01:08:01.000Z",
           "dependencies": [],
           "compatibility": {
             "os": [
@@ -57,12 +57,12 @@
           ],
           "artifact": {
             "kind": "release-archive",
-            "url": "https://github.com/coeasy/dsh-go/releases/download/coeasy-dsh-go-marketplace-v0.1.3/coeasy-dsh-go-marketplace-0.1.3.tgz",
-            "digest": "sha256-84f96c58a287a68766bb10f74997b9b32370de29ab2ca2543f38bb1682fb688e",
+            "url": "https://github.com/coeasy/dsh-go/releases/download/coeasy-dsh-go-marketplace-v0.1.4/coeasy-dsh-go-marketplace-0.1.4.tgz",
+            "digest": "sha256-ae666fe4185a12130bad682b03458d674536de3e9a3043567cb3e94035621758",
             "format": "tgz",
             "strip_components": 3,
-            "integrity": "sha256-84f96c58a287a68766bb10f74997b9b32370de29ab2ca2543f38bb1682fb688e",
-            "release_tag": "coeasy-dsh-go-marketplace-v0.1.3",
+            "integrity": "sha256-ae666fe4185a12130bad682b03458d674536de3e9a3043567cb3e94035621758",
+            "release_tag": "coeasy-dsh-go-marketplace-v0.1.4",
             "package_path": "packages/dsh-go-marketplace"
           },
           "security": {},
@@ -119,10 +119,10 @@
       },
       "releases": [
         {
-          "version": "0.1.3",
+          "version": "0.1.4",
           "channel": "stable",
-          "commit": "cc708df727017914d3f402593fa8a807f7d4412c",
-          "published_at": "2026-09-04T15:15:56.000Z",
+          "commit": "618c9640a91e9a7f59b214bfb3808af78b546081",
+          "published_at": "2026-09-05T01:08:01.000Z",
           "dependencies": [],
           "compatibility": {
             "os": [
@@ -141,12 +141,12 @@
           ],
           "artifact": {
             "kind": "release-archive",
-            "url": "https://github.com/coeasy/dsh-go/releases/download/coeasy-dsh-go-marketplace-plugin-v0.1.3/coeasy-dsh-go-marketplace-plugin-0.1.3.tgz",
-            "digest": "sha256-f92d7e1c64d5c45170ebb076612dbcd799b037dd87b04b8320b1275e983ffa58",
+            "url": "https://github.com/coeasy/dsh-go/releases/download/coeasy-dsh-go-marketplace-plugin-v0.1.4/coeasy-dsh-go-marketplace-plugin-0.1.4.tgz",
+            "digest": "sha256-f94a8da625b0c63510667d6ee265cfdbae8cae41a9c33cdb7e56725322550458",
             "format": "tgz",
             "strip_components": 3,
-            "integrity": "sha256-f92d7e1c64d5c45170ebb076612dbcd799b037dd87b04b8320b1275e983ffa58",
-            "release_tag": "coeasy-dsh-go-marketplace-plugin-v0.1.3",
+            "integrity": "sha256-f94a8da625b0c63510667d6ee265cfdbae8cae41a9c33cdb7e56725322550458",
+            "release_tag": "coeasy-dsh-go-marketplace-plugin-v0.1.4",
             "package_path": "packages/dsh-go-marketplace-plugin"
           },
           "security": {},

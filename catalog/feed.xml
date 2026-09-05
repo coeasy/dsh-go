@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 05 Sep 2026 00:59:04 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 05 Sep 2026 01:09:21 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-05T00:58:07Z</guid>
-      <pubDate>Sat, 05 Sep 2026 00:58:07 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-05T01:09:00Z</guid>
+      <pubDate>Sat, 05 Sep 2026 01:09:00 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
