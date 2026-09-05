@@ -1,48 +1,15 @@
 import type { Env } from './_lib';
-import type { PackageType, ReleaseChannel } from '../packages/protocol-core/index.mjs';
+import type {
+  RegistryV4,
+  RegistryV4Dependency as CanonicalRegistryV4Dependency,
+  RegistryV4Package as CanonicalRegistryV4Package,
+  RegistryV4Release as CanonicalRegistryV4Release,
+} from '../packages/registry-core/index.mjs';
 
-export interface RegistryV4Dependency {
-  type: PackageType;
-  id: string;
-  range: string;
-  optional?: boolean;
-  channel?: ReleaseChannel;
-}
-
-export interface RegistryV4Release {
-  version: string;
-  channel: ReleaseChannel;
-  commit: string;
-  published_at?: string;
-  dependencies: RegistryV4Dependency[];
-  compatibility: Record<string, unknown>;
-  permissions: string[];
-  artifact: Record<string, unknown>;
-  security: Record<string, any>;
-  entrypoints?: Record<string, unknown>;
-  capabilities?: string[];
-  yanked: boolean;
-  revoked: boolean;
-}
-
-export interface RegistryV4Package {
-  type: PackageType;
-  id: string;
-  publisher_id: string;
-  source: { provider?: string; repo?: string };
-  metadata: Record<string, any>;
-  releases: RegistryV4Release[];
-}
-
-export interface RegistryV4Data {
-  schema_version: 4;
-  generated_at: string;
-  revision: string;
-  packages: RegistryV4Package[];
-  publishers: Array<Record<string, any>>;
-  advisories: Array<Record<string, any>>;
-  metadata: Record<string, any>;
-}
+export type RegistryV4Dependency = CanonicalRegistryV4Dependency;
+export type RegistryV4Release = CanonicalRegistryV4Release;
+export type RegistryV4Package = CanonicalRegistryV4Package;
+export type RegistryV4Data = RegistryV4;
 
 export async function loadRegistryV4(env: Env, requestUrl = 'https://dsh-go.pages.dev'): Promise<{ data: RegistryV4Data; etag: string }> {
   const response = await env.ASSETS.fetch(new URL('/catalog/registry-v4.json', requestUrl));
