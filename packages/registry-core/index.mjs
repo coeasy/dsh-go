@@ -41,6 +41,16 @@ function normalizeDependency(value) {
   };
 }
 
+function normalizeRuntimeDescriptor(value, type, id, version) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`Registry V4 release runtime descriptor is required: ${type}:${id}@${version}`);
+  }
+  if (value.type === undefined) throw new Error(`Registry V4 release runtime.type is required: ${type}:${id}@${version}`);
+  const runtimeType = normalizePackageType(value.type);
+  if (runtimeType !== type) throw new Error(`Registry V4 release runtime.type must match package type ${type}: ${type}:${id}@${version}`);
+  return { ...clone(value), type: runtimeType };
+}
+
 function normalizeRelease(record, type) {
   const version = String(record?.version || '').trim().replace(/^v/, '');
   parseVersion(version);
@@ -51,6 +61,7 @@ function normalizeRelease(record, type) {
   }
   const artifact = record?.artifact && typeof record.artifact === 'object' ? clone(record.artifact) : {};
   const integrity = String(artifact.integrity || artifact.digest || artifact.sha256 || '').trim();
+  const runtime = normalizeRuntimeDescriptor(record?.runtime, type, record?.id, version);
   return {
     version,
     channel: normalizeReleaseChannel(record?.channel),
@@ -65,7 +76,7 @@ function normalizeRelease(record, type) {
     },
     security: clone(record?.security || {}),
     entrypoints: clone(record?.entrypoints || {}),
-    runtime: clone(record?.runtime || {}),
+    runtime,
     capabilities: [...new Set((Array.isArray(record?.capabilities) ? record.capabilities : []).map(String))].sort(),
     yanked: record?.security?.yanked === true || record?.yanked === true,
     revoked: record?.security?.revoked === true || record?.revoked === true,
@@ -186,6 +197,7 @@ export function validateRegistryV4(registry) {
       parseVersion(release.version);
       release.channel = normalizeReleaseChannel(release.channel);
       if (!/^[0-9a-f]{40}$/i.test(String(release.commit || ''))) throw new Error(`Registry V4 release has invalid commit: ${key}@${release.version}`);
+      release.runtime = normalizeRuntimeDescriptor(release.runtime, item.type, item.id, release.version);
       for (const dependency of release.dependencies || []) normalizeDependency(dependency);
       const releaseKey = `${release.channel}:${release.version}`;
       if (releaseKeys.has(releaseKey)) throw new Error(`duplicate Registry V4 release: ${key}@${release.version} [${release.channel}]`);
