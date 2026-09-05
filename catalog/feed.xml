@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 04 Sep 2026 23:47:02 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 05 Sep 2026 00:59:04 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-04T23:45:33Z</guid>
-      <pubDate>Fri, 04 Sep 2026 23:45:33 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-05T00:58:07Z</guid>
+      <pubDate>Sat, 05 Sep 2026 00:58:07 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -163,8 +163,8 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-04T16:36:01Z</guid>
-      <pubDate>Fri, 04 Sep 2026 16:36:01 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-05T00:30:39Z</guid>
+      <pubDate>Sat, 05 Sep 2026 00:30:39 GMT</pubDate>
       <description>dsh web · DeepSeek Harness（DSH）Web GUI 插件聚合生态包 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/dsh web banner.png&quot; alt=&quot;dsh web&quot; width=&quot;100%&quot; &lt;/p &lt;p ali</description>
     </item>
     <item>
