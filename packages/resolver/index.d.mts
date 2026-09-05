@@ -15,13 +15,18 @@ export interface ResolvedNode {
   version: string;
   channel: ReleaseChannel;
   commit: string;
+  source: Record<string, unknown>;
   artifact: Record<string, unknown>;
+  runtime: Record<string, unknown> & { type?: PackageType };
+  entrypoints: Record<string, unknown>;
+  capabilities: string[];
   permissions: string[];
   compatibility: Record<string, unknown>;
   security: Record<string, unknown>;
   dependencies: string[];
   publisher_id?: string;
-  source?: Record<string, unknown>;
+  publisher?: Record<string, unknown> | null;
+  metadata: Record<string, unknown>;
 }
 
 export interface ResolutionPlan {
