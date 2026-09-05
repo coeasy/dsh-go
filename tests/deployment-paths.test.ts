@@ -62,4 +62,15 @@ describe('Deployment V4 path authority', () => {
     expect(workflow).toContain("steps.changes.outputs.deploy_relevant == 'true'");
     expect(workflow).not.toContain('scripts/sync*.mjs|scripts/registry-v4-*.mjs');
   });
+
+  it('requires all three production platforms in the final SHA and Registry V4 convergence smoke', () => {
+    const workflow = readFileSync(resolve(root, '.github/workflows/monitor.yml'), 'utf8');
+    expect(workflow).toContain("EDGEONE_SITE_URL: ${{ vars.EDGEONE_SITE_URL || 'https://dsh-go.edgeone.cool' }}");
+    expect(workflow).toContain('EDGEONE_STABLE_CONFIGURED: "true"');
+    expect(workflow).toContain('Check EdgeOne exact SHA');
+    expect(workflow).toContain('Check EdgeOne Registry V4');
+    expect(workflow).toContain('EXPECTED_REGISTRY_REVISION=$(node -p');
+    expect(workflow).toContain('All required production targets converged to SHA ${DEPLOYMENT_SHA} / Registry V4 ${EXPECTED_REGISTRY_REVISION}');
+    expect(workflow).toContain('- cross-platform identity: ${DEPLOYMENT_SHA} / ${REGISTRY_REVISION}');
+  });
 });
