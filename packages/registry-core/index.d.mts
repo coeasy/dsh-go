@@ -8,6 +8,11 @@ export interface RegistryV4Dependency {
   optional?: boolean;
 }
 
+export interface RegistryV4Runtime {
+  type: PackageType;
+  [key: string]: unknown;
+}
+
 export interface RegistryV4Release {
   version: string;
   channel: ReleaseChannel;
@@ -19,7 +24,7 @@ export interface RegistryV4Release {
   artifact: Record<string, unknown>;
   security: Record<string, unknown>;
   entrypoints: Record<string, unknown>;
-  runtime: Record<string, unknown>;
+  runtime: RegistryV4Runtime;
   capabilities: string[];
   yanked: boolean;
   revoked: boolean;
