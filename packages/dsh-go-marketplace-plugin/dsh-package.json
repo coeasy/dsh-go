@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "type": "plugin",
   "id": "coeasy/dsh-go-marketplace-plugin",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "channel": "stable",
   "name": "DSH Go Marketplace Desktop",
   "description": "Desktop Marketplace UI for Package Protocol V2. Remote services are discovery-only; all local mutations are delegated to the authenticated Runtime Supervisor through Local Host API V2.",
