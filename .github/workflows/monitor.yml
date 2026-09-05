@@ -179,6 +179,7 @@ jobs:
           PROVIDERS_EDGEONE: ${{ steps.providers.outputs.edgeone }}
         run: |
           set -euo pipefail
+          EXPECTED_REGISTRY_REVISION=$(node -p "require('./catalog/registry-v4.json').revision")
           failed=0
           for item in "Cloudflare API V2:$CLOUDFLARE_API" "Cloudflare SHA:$CLOUDFLARE_SHA" "Cloudflare Registry V4:$CLOUDFLARE_REGISTRY" "GitHub Pages SHA:$PAGES_SHA" "GitHub Pages Registry V4:$PAGES_REGISTRY" "Provider Cloudflare:$PROVIDERS_CLOUDFLARE" "Provider GitHub Pages:$PROVIDERS_PAGES"; do
             label=${item%%:*}; outcome=${item#*:}; [ "$outcome" = success ] || { echo "::error::Final smoke gate failed: ${label}=${outcome}"; failed=1; }
@@ -189,13 +190,17 @@ jobs:
             done
           fi
           [ "$failed" -eq 0 ]
-          echo "All required production targets converged to ${DEPLOYMENT_SHA} / Registry V4"
+          echo "All required production targets converged to SHA ${DEPLOYMENT_SHA} / Registry V4 ${EXPECTED_REGISTRY_REVISION}"
 
       - name: Final smoke summary
         if: always()
         run: |
+          REGISTRY_REVISION=$(node -p "require('./catalog/registry-v4.json').revision")
           echo "### Final production smoke · V4" >> "$GITHUB_STEP_SUMMARY"
           echo "- release SHA: ${DEPLOYMENT_SHA}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Registry V4 revision: ${REGISTRY_REVISION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- cross-platform identity: ${DEPLOYMENT_SHA} / ${REGISTRY_REVISION}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Cloudflare API/SHA/Registry: ${{ steps.cloudflare-api.outcome || 'skipped' }} / ${{ steps.cloudflare-sha.outcome || 'skipped' }} / ${{ steps.cloudflare-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- GitHub Pages SHA/Registry: ${{ steps.pages-sha.outcome || 'skipped' }} / ${{ steps.pages-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- EdgeOne target: ${EDGEONE_SITE_URL}" >> "$GITHUB_STEP_SUMMARY"
           echo "- EdgeOne SHA/Registry: ${{ steps.edgeone-sha.outcome || 'skipped' }} / ${{ steps.edgeone-registry.outcome || 'skipped' }}" >> "$GITHUB_STEP_SUMMARY"
