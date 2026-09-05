@@ -14,13 +14,16 @@ import { resolvePackage } from '../../packages/resolver/index.mjs';
 const commit = (char: string) => char.repeat(40);
 
 function record(overrides: Record<string, any> = {}) {
+  const type = Object.prototype.hasOwnProperty.call(overrides, 'type') ? overrides.type : 'skill';
   return {
-    type: 'skill',
+    type,
     id: 'owner/example',
     version: '1.2.0',
     channel: 'stable',
     source: { provider: 'github', repo: 'owner/example', commit: commit('a') },
     capabilities: ['skill'],
+    runtime: { type: type ?? 'skill', activation: 'explicit' },
+    entrypoints: { main: type === 'plugin' ? 'index.mjs' : 'SKILL.md' },
     dependencies: [],
     permissions: ['network:https'],
     compatibility: { dsh: '^1.0.0' },
@@ -64,6 +67,7 @@ describe('Registry V4 and Resolver V2', () => {
     expect(registry.schema_version).toBe(4);
     expect(registry.packages).toHaveLength(1);
     expect(registry.packages[0].releases.map((release: any) => release.version)).toEqual(['1.3.0', '1.2.0']);
+    expect(registry.packages[0].releases[0].runtime).toMatchObject({ type: 'skill', activation: 'explicit' });
     expect(registry.revision).toMatch(/^[0-9a-f]{64}$/);
     expect(validateRegistryV4(structuredClone(registry)).revision).toBe(registry.revision);
   });
@@ -77,13 +81,14 @@ describe('Registry V4 and Resolver V2', () => {
 
   it('resolves dependency graph in dependency-first order and aggregates permissions', () => {
     const registry = buildRegistryV4([
-      record({ type: 'plugin', id: 'owner/root', version: '2.0.0', source: { provider: 'github', repo: 'owner/root', commit: commit('c') }, dependencies: [{ type: 'skill', id: 'owner/example', range: '^1.0.0', channel: 'stable' }], permissions: ['filesystem:workspace'] }),
+      record({ type: 'plugin', id: 'owner/root', version: '2.0.0', source: { provider: 'github', repo: 'owner/root', commit: commit('c') }, runtime: { type: 'plugin', host: 'tauri-or-compatible-webview', activation: 'explicit' }, entrypoints: { main: 'index.mjs' }, dependencies: [{ type: 'skill', id: 'owner/example', range: '^1.0.0', channel: 'stable' }], permissions: ['filesystem:workspace'] }),
       record(),
       record({ version: '1.4.0', source: { provider: 'github', repo: 'owner/example', commit: commit('d') } }),
     ], { generated_at: '2026-09-04T00:00:00.000Z' });
     const plan = resolvePackage(registry, { type: 'plugin', id: 'owner/root', range: '*', channel: 'stable' }, { dsh_version: '1.5.0', os: 'linux', arch: 'x64' });
     expect(plan.protocol_version).toBe(2);
     expect(plan.root.key).toBe('plugin:owner/root');
+    expect(plan.root.runtime).toMatchObject({ type: 'plugin', activation: 'explicit' });
     expect(plan.graph.find((node: any) => node.key === 'skill:owner/example')?.version).toBe('1.4.0');
     expect(plan.order).toEqual(['skill:owner/example', 'plugin:owner/root']);
     expect(plan.permissions).toEqual(['filesystem:workspace', 'network:https']);
@@ -101,7 +106,7 @@ describe('Registry V4 and Resolver V2', () => {
 
   it('detects dependency cycles', () => {
     const registry = buildRegistryV4([
-      record({ type: 'plugin', id: 'owner/a', source: { provider: 'github', repo: 'owner/a', commit: commit('e') }, dependencies: [{ type: 'skill', id: 'owner/b', range: '*', channel: 'stable' }] }),
+      record({ type: 'plugin', id: 'owner/a', source: { provider: 'github', repo: 'owner/a', commit: commit('e') }, runtime: { type: 'plugin', activation: 'explicit' }, entrypoints: { main: 'index.mjs' }, dependencies: [{ type: 'skill', id: 'owner/b', range: '*', channel: 'stable' }] }),
       record({ id: 'owner/b', source: { provider: 'github', repo: 'owner/b', commit: commit('f') }, dependencies: [{ type: 'plugin', id: 'owner/a', range: '*', channel: 'stable' }] }),
     ]);
     expect(() => resolvePackage(registry, { type: 'plugin', id: 'owner/a', range: '*', channel: 'stable' })).toThrow(/cycle/i);
