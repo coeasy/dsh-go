@@ -74,6 +74,18 @@ describe('Deployment V4 path authority', () => {
     expect(workflow).toContain('Check EdgeOne Registry V4');
     expect(workflow).toContain('EXPECTED_REGISTRY_REVISION=$(node -p');
     expect(workflow).toContain('All required production targets converged to SHA ${DEPLOYMENT_SHA} / Registry V4 ${EXPECTED_REGISTRY_REVISION}');
-    expect(workflow).toContain('- cross-platform identity: ${DEPLOYMENT_SHA} / ${REGISTRY_REVISION}');
+    expect(workflow).toContain('- cross-platform identity: ${DEPLOYMENT_SHA:-unresolved} / ${REGISTRY_REVISION}');
+  });
+
+  it('resolves scheduled smoke identity from the deployed three-platform consensus instead of current main', () => {
+    const workflow = readFileSync(resolve(root, '.github/workflows/monitor.yml'), 'utf8');
+    expect(workflow).toContain('Resolve production deployment identity');
+    expect(workflow).toContain('SOURCE="three-platform production consensus"');
+    expect(workflow).toContain('CLOUDFLARE_SHA="$(resolve_sha "Cloudflare Pages" "$SITE_URL")"');
+    expect(workflow).toContain('PAGES_SHA="$(resolve_sha "GitHub Pages" "$GITHUB_PAGES_URL")"');
+    expect(workflow).toContain('EDGEONE_SHA="$(resolve_sha "Tencent EdgeOne" "$EDGEONE_SITE_URL")"');
+    expect(workflow).toContain('ref: ${{ steps.target.outputs.sha }}');
+    expect(workflow).toContain('echo "DEPLOYMENT_SHA=$SHA" >> "$GITHUB_ENV"');
+    expect(workflow).not.toContain('DEPLOYMENT_SHA: ${{ inputs.commit_sha || github.sha }}');
   });
 });
