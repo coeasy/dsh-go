@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 05 Sep 2026 01:13:06 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 05 Sep 2026 04:42:11 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -23,22 +23,22 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-04T19:41:25Z</guid>
-      <pubDate>Fri, 04 Sep 2026 19:41:25 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-05T04:34:05Z</guid>
+      <pubDate>Sat, 05 Sep 2026 04:34:05 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-04T21:30:25Z</guid>
-      <pubDate>Fri, 04 Sep 2026 21:30:25 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-05T03:35:07Z</guid>
+      <pubDate>Sat, 05 Sep 2026 03:35:07 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo An agent meta harness for Claude C</description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-04T16:04:29Z</guid>
-      <pubDate>Fri, 04 Sep 2026 16:04:29 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-05T04:19:21Z</guid>
+      <pubDate>Sat, 05 Sep 2026 04:19:21 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;strong English&lt;/strong · &lt;a href=&quot;./README ZH.md&quot; 简体中文&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;a href=&quot;https://trendshift.io/repositorie</description>
     </item>
     <item>
@@ -51,26 +51,26 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-04T15:55:33Z</guid>
-      <pubDate>Fri, 04 Sep 2026 15:55:33 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-05T02:29:50Z</guid>
+      <pubDate>Sat, 05 Sep 2026 02:29:50 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-04T21:29:23Z</guid>
-      <pubDate>Fri, 04 Sep 2026 21:29:23 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-05T04:29:34Z</guid>
+      <pubDate>Sat, 05 Sep 2026 04:29:34 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
-      <title>🔄 awesome-gpt-image-2</title>
+      <title>🆕 awesome-gpt-image-2</title>
       <link>https://github.com/freestylefly/awesome-gpt-image-2</link>
       <guid isPermaLink="false">freestylefly/awesome-gpt-image-2@2026-09-03T03:26:32Z</guid>
       <pubDate>Thu, 03 Sep 2026 03:26:32 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;./data/images/banner.svg&quot; alt=&quot;GPT Image2 Prompt System&quot; width=&quot;800&quot; / &lt;/p &lt;h3 align=&quot;center&quot; Prompt as Code G</description>
     </item>
     <item>
-      <title>🔄 PicGo</title>
+      <title>🆕 PicGo</title>
       <link>https://github.com/Molunerfinn/PicGo</link>
       <guid isPermaLink="false">Molunerfinn/PicGo@2026-09-01T12:01:25Z</guid>
       <pubDate>Tue, 01 Sep 2026 12:01:25 GMT</pubDate>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-04T22:29:07Z</guid>
-      <pubDate>Fri, 04 Sep 2026 22:29:07 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-05T03:17:57Z</guid>
+      <pubDate>Sat, 05 Sep 2026 03:17:57 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -112,7 +112,7 @@
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/public/logo.png&quot; alt=&quot;Voyager logo&quot; width=&quot;120&quot; height=&quot;120&quot; &lt;h3 Make Your AI Experience Truly Yours ✨&lt;</description>
     </item>
     <item>
-      <title>🔄 learn-harness-engineering</title>
+      <title>🆕 learn-harness-engineering</title>
       <link>https://github.com/walkinglabs/learn-harness-engineering</link>
       <guid isPermaLink="false">walkinglabs/learn-harness-engineering@2026-08-26T01:08:59Z</guid>
       <pubDate>Wed, 26 Aug 2026 01:08:59 GMT</pubDate>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-04T17:11:25Z</guid>
-      <pubDate>Fri, 04 Sep 2026 17:11:25 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-05T04:36:20Z</guid>
+      <pubDate>Sat, 05 Sep 2026 04:36:20 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -133,17 +133,17 @@
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
     </item>
     <item>
-      <title>🔄 MemOS</title>
+      <title>🆕 MemOS</title>
       <link>https://github.com/MemTensor/MemOS</link>
       <guid isPermaLink="false">MemTensor/MemOS@2026-09-03T12:30:14Z</guid>
       <pubDate>Thu, 03 Sep 2026 12:30:14 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
     </item>
     <item>
-      <title>🔄 yao</title>
+      <title>🆕 yao</title>
       <link>https://github.com/YaoApp/yao</link>
-      <guid isPermaLink="false">YaoApp/yao@2026-09-03T07:19:19Z</guid>
-      <pubDate>Thu, 03 Sep 2026 07:19:19 GMT</pubDate>
+      <guid isPermaLink="false">YaoApp/yao@2026-09-05T04:31:38Z</guid>
+      <pubDate>Sat, 05 Sep 2026 04:31:38 GMT</pubDate>
       <description>Yao Agents ✨ All your agents and workspaces in one place, on every device you own. Track tasks on a board, accessible from desktop, mobile, browser, or API. Self hosted. 🏠 Homepage: https://yaoagents</description>
     </item>
     <item>
@@ -163,8 +163,8 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-05T00:30:39Z</guid>
-      <pubDate>Sat, 05 Sep 2026 00:30:39 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-05T03:31:05Z</guid>
+      <pubDate>Sat, 05 Sep 2026 03:31:05 GMT</pubDate>
       <description>dsh web · DeepSeek Harness（DSH）Web GUI 插件聚合生态包 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/dsh web banner.png&quot; alt=&quot;dsh web&quot; width=&quot;100%&quot; &lt;/p &lt;p ali</description>
     </item>
     <item>
@@ -191,8 +191,8 @@
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-05T01:09:39Z</guid>
-      <pubDate>Sat, 05 Sep 2026 01:09:39 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-05T03:22:39Z</guid>
+      <pubDate>Sat, 05 Sep 2026 03:22:39 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
     <item>
@@ -203,14 +203,14 @@
       <description>iPolloWork &lt;p align=&quot;center&quot; English · &lt;a href=&quot;./docs/translations/README ZH.md&quot; 简体中文&lt;/a · &lt;a href=&quot;./docs/translations/README ZH hk.md&quot; 繁體中文&lt;/a · &lt;a h</description>
     </item>
     <item>
-      <title>🔄 petdex</title>
+      <title>🆕 petdex</title>
       <link>https://github.com/crafter-station/petdex</link>
       <guid isPermaLink="false">crafter-station/petdex@2026-08-31T11:47:51Z</guid>
       <pubDate>Mon, 31 Aug 2026 11:47:51 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;public/brand/petdex desktop icon.png&quot; alt=&quot;Petdex&quot; width=&quot;120&quot; / &lt;h1 Petdex&lt;/h1 &lt;p The public gallery of animated c</description>
     </item>
     <item>
-      <title>🔄 modlens</title>
+      <title>🆕 modlens</title>
       <link>https://github.com/liustack/modlens</link>
       <guid isPermaLink="false">liustack/modlens@2026-09-01T06:47:52Z</guid>
       <pubDate>Tue, 01 Sep 2026 06:47:52 GMT</pubDate>
