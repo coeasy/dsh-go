@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 06 Sep 2026 15:34:13 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 06 Sep 2026 20:30:52 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-06T10:56:53Z</guid>
-      <pubDate>Sun, 06 Sep 2026 10:56:53 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-06T15:34:26Z</guid>
+      <pubDate>Sun, 06 Sep 2026 15:34:26 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-06T15:24:54Z</guid>
-      <pubDate>Sun, 06 Sep 2026 15:24:54 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-06T18:06:04Z</guid>
+      <pubDate>Sun, 06 Sep 2026 18:06:04 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -44,8 +44,8 @@
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/amruthpillai/reactive-resume</link>
-      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-09-06T15:31:38Z</guid>
-      <pubDate>Sun, 06 Sep 2026 15:31:38 GMT</pubDate>
+      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-09-06T19:39:02Z</guid>
+      <pubDate>Sun, 06 Sep 2026 19:39:02 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://rxresu.me&quot; &lt;img src=&quot;apps/web/public/opengraph/banner.jpg&quot; alt=&quot;Reactive Resume&quot; / &lt;/a &lt;h1 Reactive Resume&l</description>
     </item>
     <item>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-06T15:28:44Z</guid>
-      <pubDate>Sun, 06 Sep 2026 15:28:44 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-06T18:45:09Z</guid>
+      <pubDate>Sun, 06 Sep 2026 18:45:09 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -86,15 +86,15 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-06T15:00:07Z</guid>
-      <pubDate>Sun, 06 Sep 2026 15:00:07 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-06T15:54:36Z</guid>
+      <pubDate>Sun, 06 Sep 2026 15:54:36 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-05T19:12:24Z</guid>
-      <pubDate>Sat, 05 Sep 2026 19:12:24 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-06T20:16:59Z</guid>
+      <pubDate>Sun, 06 Sep 2026 20:16:59 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 openpencil</title>
       <link>https://github.com/ZSeven-W/openpencil</link>
-      <guid isPermaLink="false">ZSeven-W/openpencil@2026-09-06T14:34:33Z</guid>
-      <pubDate>Sun, 06 Sep 2026 14:34:33 GMT</pubDate>
+      <guid isPermaLink="false">ZSeven-W/openpencil@2026-09-06T17:20:08Z</guid>
+      <pubDate>Sun, 06 Sep 2026 17:20:08 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;./crates/op host desktop/assets/icon.png&quot; alt=&quot;OpenPencil&quot; width=&quot;120&quot; / &lt;/p &lt;h1 align=&quot;center&quot; OpenPencil&lt;</description>
     </item>
     <item>
@@ -191,8 +191,8 @@
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-06T13:13:45Z</guid>
-      <pubDate>Sun, 06 Sep 2026 13:13:45 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-06T20:25:34Z</guid>
+      <pubDate>Sun, 06 Sep 2026 20:25:34 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
     <item>
