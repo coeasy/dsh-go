@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 06 Sep 2026 04:53:34 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 06 Sep 2026 10:56:42 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-05T15:21:47Z</guid>
-      <pubDate>Sat, 05 Sep 2026 15:21:47 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-06T08:05:06Z</guid>
+      <pubDate>Sun, 06 Sep 2026 08:05:06 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-06T04:44:49Z</guid>
-      <pubDate>Sun, 06 Sep 2026 04:44:49 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-06T09:36:02Z</guid>
+      <pubDate>Sun, 06 Sep 2026 09:36:02 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -37,29 +37,29 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-06T02:56:29Z</guid>
-      <pubDate>Sun, 06 Sep 2026 02:56:29 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-06T08:38:31Z</guid>
+      <pubDate>Sun, 06 Sep 2026 08:38:31 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;strong English&lt;/strong · &lt;a href=&quot;./README ZH.md&quot; 简体中文&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;a href=&quot;https://trendshift.io/repositorie</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/amruthpillai/reactive-resume</link>
-      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-09-06T04:44:48Z</guid>
-      <pubDate>Sun, 06 Sep 2026 04:44:48 GMT</pubDate>
+      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-09-06T10:53:44Z</guid>
+      <pubDate>Sun, 06 Sep 2026 10:53:44 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://rxresu.me&quot; &lt;img src=&quot;apps/web/public/opengraph/banner.jpg&quot; alt=&quot;Reactive Resume&quot; / &lt;/a &lt;h1 Reactive Resume&l</description>
     </item>
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-05T14:58:49Z</guid>
-      <pubDate>Sat, 05 Sep 2026 14:58:49 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-06T07:01:48Z</guid>
+      <pubDate>Sun, 06 Sep 2026 07:01:48 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-06T04:29:09Z</guid>
-      <pubDate>Sun, 06 Sep 2026 04:29:09 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-06T09:30:06Z</guid>
+      <pubDate>Sun, 06 Sep 2026 09:30:06 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -79,15 +79,15 @@
     <item>
       <title>🆕 distilly</title>
       <link>https://github.com/titanwings/distilly</link>
-      <guid isPermaLink="false">titanwings/distilly@2026-09-04T11:54:10Z</guid>
-      <pubDate>Fri, 04 Sep 2026 11:54:10 GMT</pubDate>
+      <guid isPermaLink="false">titanwings/distilly@2026-09-06T06:18:46Z</guid>
+      <pubDate>Sun, 06 Sep 2026 06:18:46 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/social preview distilly v7.png&quot; alt=&quot;Distilly — Distill how they think into Person Profiles for Agents&quot; width=&quot;100%&quot; &l</description>
     </item>
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-06T02:56:48Z</guid>
-      <pubDate>Sun, 06 Sep 2026 02:56:48 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-06T07:36:32Z</guid>
+      <pubDate>Sun, 06 Sep 2026 07:36:32 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -170,15 +170,15 @@
     <item>
       <title>🆕 skill</title>
       <link>https://github.com/anbeime/skill</link>
-      <guid isPermaLink="false">anbeime/skill@2026-09-05T06:45:01Z</guid>
-      <pubDate>Sat, 05 Sep 2026 06:45:01 GMT</pubDate>
+      <guid isPermaLink="false">anbeime/skill@2026-09-06T06:55:34Z</guid>
+      <pubDate>Sun, 06 Sep 2026 06:55:34 GMT</pubDate>
       <description>🎯 技能商店 Skill Store 收录最全、更新最快的AI Agent技能库，涵盖 文档处理、内容创作、编程开发、机器学习、自动化工作流 等多个领域的精选技能包。 🧠 知易（ZhiYi）多模型智能知识管家 — 一个对话框调度所有模型，240+技能即插即用，四色卡片让AI真正记住你。 👉 立即体验 · ⭐ 知易开源版 📊 统计数据 官方技能 : 182 个（来自 awesome agen</description>
     </item>
     <item>
       <title>🆕 openpencil</title>
       <link>https://github.com/ZSeven-W/openpencil</link>
-      <guid isPermaLink="false">ZSeven-W/openpencil@2026-09-05T19:11:03Z</guid>
-      <pubDate>Sat, 05 Sep 2026 19:11:03 GMT</pubDate>
+      <guid isPermaLink="false">ZSeven-W/openpencil@2026-09-06T08:39:21Z</guid>
+      <pubDate>Sun, 06 Sep 2026 08:39:21 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;./crates/op host desktop/assets/icon.png&quot; alt=&quot;OpenPencil&quot; width=&quot;120&quot; / &lt;/p &lt;h1 align=&quot;center&quot; OpenPencil&lt;</description>
     </item>
     <item>
@@ -191,15 +191,15 @@
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-05T23:55:23Z</guid>
-      <pubDate>Sat, 05 Sep 2026 23:55:23 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-06T10:52:08Z</guid>
+      <pubDate>Sun, 06 Sep 2026 10:52:08 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
     <item>
       <title>🆕 iPolloWork</title>
       <link>https://github.com/Devin-AXIS/iPolloWork</link>
-      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-05T06:56:04Z</guid>
-      <pubDate>Sat, 05 Sep 2026 06:56:04 GMT</pubDate>
+      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-06T07:07:23Z</guid>
+      <pubDate>Sun, 06 Sep 2026 07:07:23 GMT</pubDate>
       <description>iPolloWork &lt;p align=&quot;center&quot; English · &lt;a href=&quot;./docs/translations/README ZH.md&quot; 简体中文&lt;/a · &lt;a href=&quot;./docs/translations/README ZH hk.md&quot; 繁體中文&lt;/a · &lt;a h</description>
     </item>
     <item>
