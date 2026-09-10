@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 09 Sep 2026 21:01:52 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 10 Sep 2026 04:57:06 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -16,22 +16,22 @@
     <item>
       <title>🆕 deepseek-harness</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
-      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-09-09T14:23:10Z</guid>
-      <pubDate>Wed, 09 Sep 2026 14:23:10 GMT</pubDate>
+      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-09-10T04:45:36Z</guid>
+      <pubDate>Thu, 10 Sep 2026 04:45:36 GMT</pubDate>
       <description>DeepSeek Harness English 中文 DeepSeek Harness ( dsh ) is an open source agent harness developed by DeepSeek AI. It is built on an everything is a plugin architecture and powered by Cordis, whose design</description>
     </item>
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-09T20:47:24Z</guid>
-      <pubDate>Wed, 09 Sep 2026 20:47:24 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-10T04:52:11Z</guid>
+      <pubDate>Thu, 10 Sep 2026 04:52:11 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-09T20:57:26Z</guid>
-      <pubDate>Wed, 09 Sep 2026 20:57:26 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-10T04:06:41Z</guid>
+      <pubDate>Thu, 10 Sep 2026 04:06:41 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo An agent meta harness for Claude C</description>
     </item>
     <item>
@@ -44,22 +44,22 @@
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/amruthpillai/reactive-resume</link>
-      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-09-09T11:04:24Z</guid>
-      <pubDate>Wed, 09 Sep 2026 11:04:24 GMT</pubDate>
+      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-09-10T00:51:32Z</guid>
+      <pubDate>Thu, 10 Sep 2026 00:51:32 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://rxresu.me&quot; &lt;img src=&quot;apps/web/public/opengraph/banner.jpg&quot; alt=&quot;Reactive Resume&quot; / &lt;/a &lt;h1 Reactive Resume&l</description>
     </item>
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-09T16:13:10Z</guid>
-      <pubDate>Wed, 09 Sep 2026 16:13:10 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-10T04:41:59Z</guid>
+      <pubDate>Thu, 10 Sep 2026 04:41:59 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-09T19:57:06Z</guid>
-      <pubDate>Wed, 09 Sep 2026 19:57:06 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-10T03:36:15Z</guid>
+      <pubDate>Thu, 10 Sep 2026 03:36:15 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -79,8 +79,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-09T17:49:34Z</guid>
-      <pubDate>Wed, 09 Sep 2026 17:49:34 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-10T04:47:42Z</guid>
+      <pubDate>Thu, 10 Sep 2026 04:47:42 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -93,15 +93,15 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-09T16:40:26Z</guid>
-      <pubDate>Wed, 09 Sep 2026 16:40:26 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-10T04:32:01Z</guid>
+      <pubDate>Thu, 10 Sep 2026 04:32:01 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-09-09T19:34:36Z</guid>
-      <pubDate>Wed, 09 Sep 2026 19:34:36 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-09-10T04:28:20Z</guid>
+      <pubDate>Thu, 10 Sep 2026 04:28:20 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;img src=&quot;./docs/images/logo.png&quot; alt=&quot;WeKnora Logo&quot; height=&quot;120&quot;/ &lt;/picture &lt;/p &lt;p align=&quot;center&quot; &lt;pi</description>
     </item>
     <item>
@@ -149,8 +149,8 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-09T16:43:29Z</guid>
-      <pubDate>Wed, 09 Sep 2026 16:43:29 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-10T01:11:44Z</guid>
+      <pubDate>Thu, 10 Sep 2026 01:11:44 GMT</pubDate>
       <description>dsh web · DeepSeek Harness（DSH）Web GUI 插件聚合生态包 中文 English &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/dsh web banner.png&quot; alt=&quot;dsh web&quot; width=&quot;100%&quot; &lt;/p &lt;p ali</description>
     </item>
     <item>
@@ -163,8 +163,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-09T20:57:06Z</guid>
-      <pubDate>Wed, 09 Sep 2026 20:57:06 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-10T03:03:43Z</guid>
+      <pubDate>Thu, 10 Sep 2026 03:03:43 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
@@ -191,8 +191,8 @@
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-09T20:57:33Z</guid>
-      <pubDate>Wed, 09 Sep 2026 20:57:33 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-10T04:44:24Z</guid>
+      <pubDate>Thu, 10 Sep 2026 04:44:24 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
     <item>
