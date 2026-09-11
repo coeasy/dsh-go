@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 11 Sep 2026 04:55:27 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 11 Sep 2026 11:22:19 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-10T16:33:03Z</guid>
-      <pubDate>Thu, 10 Sep 2026 16:33:03 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-11T04:55:42Z</guid>
+      <pubDate>Fri, 11 Sep 2026 04:55:42 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,30 +23,30 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-11T04:47:51Z</guid>
-      <pubDate>Fri, 11 Sep 2026 04:47:51 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-11T11:01:10Z</guid>
+      <pubDate>Fri, 11 Sep 2026 11:01:10 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-11T00:02:45Z</guid>
-      <pubDate>Fri, 11 Sep 2026 00:02:45 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-11T08:25:03Z</guid>
+      <pubDate>Fri, 11 Sep 2026 08:25:03 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo An agent meta harness for Claude C</description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-11T02:56:58Z</guid>
-      <pubDate>Fri, 11 Sep 2026 02:56:58 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-11T08:48:21Z</guid>
+      <pubDate>Fri, 11 Sep 2026 08:48:21 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;strong English&lt;/strong · &lt;a href=&quot;./README ZH.md&quot; 简体中文&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;a href=&quot;https://trendshift.io/repositorie</description>
     </item>
     <item>
       <title>🆕 app</title>
       <link>https://github.com/reactive-resume/app</link>
-      <guid isPermaLink="false">reactive-resume/app@2026-09-11T01:43:31Z</guid>
-      <pubDate>Fri, 11 Sep 2026 01:43:31 GMT</pubDate>
-      <description>[!IMPORTANT] Repository migration planned: Reactive Resume is moving from amruthpillai/reactive resume to reactive resume/app on GitHub. Docker Hub stays at amruthpillai/reactive resume . The new GitH</description>
+      <guid isPermaLink="false">reactive-resume/app@2026-09-11T10:54:59Z</guid>
+      <pubDate>Fri, 11 Sep 2026 10:54:59 GMT</pubDate>
+      <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/app on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR is now available at ghcr.io/reactive resume/app . Ver</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
@@ -58,15 +58,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-11T04:44:55Z</guid>
-      <pubDate>Fri, 11 Sep 2026 04:44:55 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-11T10:54:47Z</guid>
+      <pubDate>Fri, 11 Sep 2026 10:54:47 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-11T03:46:10Z</guid>
-      <pubDate>Fri, 11 Sep 2026 03:46:10 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-11T11:19:52Z</guid>
+      <pubDate>Fri, 11 Sep 2026 11:19:52 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -93,22 +93,22 @@
     <item>
       <title>🆕 distilly</title>
       <link>https://github.com/titanwings/distilly</link>
-      <guid isPermaLink="false">titanwings/distilly@2026-09-11T03:11:03Z</guid>
-      <pubDate>Fri, 11 Sep 2026 03:11:03 GMT</pubDate>
+      <guid isPermaLink="false">titanwings/distilly@2026-09-11T05:17:30Z</guid>
+      <pubDate>Fri, 11 Sep 2026 05:17:30 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/social preview distilly v7.png&quot; alt=&quot;Distilly — Distill how they think into Person Profiles for Agents&quot; width=&quot;100%&quot; &l</description>
     </item>
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-11T04:00:29Z</guid>
-      <pubDate>Fri, 11 Sep 2026 04:00:29 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-11T08:22:33Z</guid>
+      <pubDate>Fri, 11 Sep 2026 08:22:33 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-09-10T06:43:00Z</guid>
-      <pubDate>Thu, 10 Sep 2026 06:43:00 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-09-11T09:59:28Z</guid>
+      <pubDate>Fri, 11 Sep 2026 09:59:28 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;img src=&quot;./docs/images/logo.png&quot; alt=&quot;WeKnora Logo&quot; height=&quot;120&quot;/ &lt;/picture &lt;/p &lt;p align=&quot;center&quot; &lt;pi</description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 skill</title>
       <link>https://github.com/anbeime/skill</link>
-      <guid isPermaLink="false">anbeime/skill@2026-09-10T07:05:12Z</guid>
-      <pubDate>Thu, 10 Sep 2026 07:05:12 GMT</pubDate>
+      <guid isPermaLink="false">anbeime/skill@2026-09-11T07:04:24Z</guid>
+      <pubDate>Fri, 11 Sep 2026 07:04:24 GMT</pubDate>
       <description>🎯 技能商店 Skill Store 收录最全、更新最快的AI Agent技能库，涵盖 文档处理、内容创作、编程开发、机器学习、自动化工作流 等多个领域的精选技能包。 🧠 知易智能基座 ：20+模型自由切换，知识永远留在你手里 —一个对话框调度所有模型，240+技能即插即用，四色卡片让AI真正记住你。 👉 申请体验 📊 统计数据 官方技能 : 182 个（来自 awesome agent </description>
     </item>
     <item>
@@ -198,15 +198,15 @@
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-11T04:47:51Z</guid>
-      <pubDate>Fri, 11 Sep 2026 04:47:51 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-11T11:00:23Z</guid>
+      <pubDate>Fri, 11 Sep 2026 11:00:23 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
     <item>
       <title>🆕 iPolloWork</title>
       <link>https://github.com/Devin-AXIS/iPolloWork</link>
-      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-10T11:10:52Z</guid>
-      <pubDate>Thu, 10 Sep 2026 11:10:52 GMT</pubDate>
+      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-11T10:45:48Z</guid>
+      <pubDate>Fri, 11 Sep 2026 10:45:48 GMT</pubDate>
       <description>iPolloWork &lt;p align=&quot;center&quot; English · &lt;a href=&quot;./docs/translations/README ZH.md&quot; 简体中文&lt;/a · &lt;a href=&quot;./docs/translations/README ZH hk.md&quot; 繁體中文&lt;/a · &lt;a h</description>
     </item>
     <item>
