@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 12 Sep 2026 15:38:03 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 12 Sep 2026 20:40:34 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-12T10:47:03Z</guid>
-      <pubDate>Sat, 12 Sep 2026 10:47:03 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-12T15:38:18Z</guid>
+      <pubDate>Sat, 12 Sep 2026 15:38:18 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,15 +23,15 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-12T15:27:40Z</guid>
-      <pubDate>Sat, 12 Sep 2026 15:27:40 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-12T18:06:54Z</guid>
+      <pubDate>Sat, 12 Sep 2026 18:06:54 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-12T15:32:31Z</guid>
-      <pubDate>Sat, 12 Sep 2026 15:32:31 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-12T20:07:03Z</guid>
+      <pubDate>Sat, 12 Sep 2026 20:07:03 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo An agent meta harness for Claude C</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-12T14:39:07Z</guid>
-      <pubDate>Sat, 12 Sep 2026 14:39:07 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-12T17:22:47Z</guid>
+      <pubDate>Sat, 12 Sep 2026 17:22:47 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-12T15:28:58Z</guid>
-      <pubDate>Sat, 12 Sep 2026 15:28:58 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-12T18:32:06Z</guid>
+      <pubDate>Sat, 12 Sep 2026 18:32:06 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -100,8 +100,8 @@
     <item>
       <title>🆕 distilly</title>
       <link>https://github.com/titanwings/distilly</link>
-      <guid isPermaLink="false">titanwings/distilly@2026-09-11T05:17:30Z</guid>
-      <pubDate>Fri, 11 Sep 2026 05:17:30 GMT</pubDate>
+      <guid isPermaLink="false">titanwings/distilly@2026-09-12T18:15:02Z</guid>
+      <pubDate>Sat, 12 Sep 2026 18:15:02 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/social preview distilly v7.png&quot; alt=&quot;Distilly — Distill how they think into Person Profiles for Agents&quot; width=&quot;100%&quot; &l</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-09-12T15:34:38Z</guid>
-      <pubDate>Sat, 12 Sep 2026 15:34:38 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-09-12T16:04:17Z</guid>
+      <pubDate>Sat, 12 Sep 2026 16:04:17 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;img src=&quot;./docs/images/logo.png&quot; alt=&quot;WeKnora Logo&quot; height=&quot;120&quot;/ &lt;/picture &lt;/p &lt;p align=&quot;center&quot; &lt;pi</description>
     </item>
     <item>
@@ -203,18 +203,18 @@
       <description>iPolloWork &lt;p align=&quot;center&quot; English · &lt;a href=&quot;./docs/translations/README ZH.md&quot; 简体中文&lt;/a · &lt;a href=&quot;./docs/translations/README ZH hk.md&quot; 繁體中文&lt;/a · &lt;a h</description>
     </item>
     <item>
-      <title>🆕 loopx</title>
-      <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-12T15:36:56Z</guid>
-      <pubDate>Sat, 12 Sep 2026 15:36:56 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
-    </item>
-    <item>
       <title>🆕 ouroboros</title>
       <link>https://github.com/Q00/ouroboros</link>
-      <guid isPermaLink="false">Q00/ouroboros@2026-09-11T12:32:43Z</guid>
-      <pubDate>Fri, 11 Sep 2026 12:32:43 GMT</pubDate>
+      <guid isPermaLink="false">Q00/ouroboros@2026-09-12T19:00:55Z</guid>
+      <pubDate>Sat, 12 Sep 2026 19:00:55 GMT</pubDate>
       <description>&lt;! mcp name: io.github.Q00/ouroboros &lt;p align=&quot;right&quot; &lt;strong English&lt;/strong &lt;a href=&quot;./README.ko.md&quot; 한국어&lt;/a &lt;a href=&quot;./README.zh CN.md&quot; 简体中文&lt;/a </description>
+    </item>
+    <item>
+      <title>🆕 loopx</title>
+      <link>https://github.com/huangruiteng/loopx</link>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-12T20:36:52Z</guid>
+      <pubDate>Sat, 12 Sep 2026 20:36:52 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
   </channel>
 </rss>
