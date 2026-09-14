@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 14 Sep 2026 18:08:08 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 14 Sep 2026 21:55:24 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-14T12:47:53Z</guid>
-      <pubDate>Mon, 14 Sep 2026 12:47:53 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-14T18:08:24Z</guid>
+      <pubDate>Mon, 14 Sep 2026 18:08:24 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,15 +23,15 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-14T17:41:26Z</guid>
-      <pubDate>Mon, 14 Sep 2026 17:41:26 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-14T20:48:38Z</guid>
+      <pubDate>Mon, 14 Sep 2026 20:48:38 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-14T17:22:46Z</guid>
-      <pubDate>Mon, 14 Sep 2026 17:22:46 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-14T21:35:29Z</guid>
+      <pubDate>Mon, 14 Sep 2026 21:35:29 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo An agent meta harness for Claude C</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-14T16:15:52Z</guid>
-      <pubDate>Mon, 14 Sep 2026 16:15:52 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-14T21:29:43Z</guid>
+      <pubDate>Mon, 14 Sep 2026 21:29:43 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -170,8 +170,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-14T17:09:43Z</guid>
-      <pubDate>Mon, 14 Sep 2026 17:09:43 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-14T21:49:31Z</guid>
+      <pubDate>Mon, 14 Sep 2026 21:49:31 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
@@ -205,15 +205,15 @@
     <item>
       <title>🆕 ouroboros</title>
       <link>https://github.com/Q00/ouroboros</link>
-      <guid isPermaLink="false">Q00/ouroboros@2026-09-14T17:30:39Z</guid>
-      <pubDate>Mon, 14 Sep 2026 17:30:39 GMT</pubDate>
+      <guid isPermaLink="false">Q00/ouroboros@2026-09-14T19:17:54Z</guid>
+      <pubDate>Mon, 14 Sep 2026 19:17:54 GMT</pubDate>
       <description>&lt;! mcp name: io.github.Q00/ouroboros &lt;p align=&quot;right&quot; &lt;strong English&lt;/strong &lt;a href=&quot;./README.ko.md&quot; 한국어&lt;/a &lt;a href=&quot;./README.zh CN.md&quot; 简体中文&lt;/a </description>
     </item>
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-14T18:03:49Z</guid>
-      <pubDate>Mon, 14 Sep 2026 18:03:49 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-14T21:50:26Z</guid>
+      <pubDate>Mon, 14 Sep 2026 21:50:26 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
   </channel>
