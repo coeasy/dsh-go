@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 14 Sep 2026 12:47:32 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 14 Sep 2026 18:08:08 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-14T05:11:05Z</guid>
-      <pubDate>Mon, 14 Sep 2026 05:11:05 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-14T12:47:53Z</guid>
+      <pubDate>Mon, 14 Sep 2026 12:47:53 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,22 +23,22 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-14T12:42:22Z</guid>
-      <pubDate>Mon, 14 Sep 2026 12:42:22 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-14T17:41:26Z</guid>
+      <pubDate>Mon, 14 Sep 2026 17:41:26 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-14T09:18:32Z</guid>
-      <pubDate>Mon, 14 Sep 2026 09:18:32 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-14T17:22:46Z</guid>
+      <pubDate>Mon, 14 Sep 2026 17:22:46 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo An agent meta harness for Claude C</description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-14T08:33:16Z</guid>
-      <pubDate>Mon, 14 Sep 2026 08:33:16 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-14T16:15:14Z</guid>
+      <pubDate>Mon, 14 Sep 2026 16:15:14 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;strong English&lt;/strong · &lt;a href=&quot;./README ZH.md&quot; 简体中文&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;a href=&quot;https://trendshift.io/repositorie</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-14T12:40:12Z</guid>
-      <pubDate>Mon, 14 Sep 2026 12:40:12 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-14T15:54:50Z</guid>
+      <pubDate>Mon, 14 Sep 2026 15:54:50 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-14T12:44:25Z</guid>
-      <pubDate>Mon, 14 Sep 2026 12:44:25 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-14T16:15:52Z</guid>
+      <pubDate>Mon, 14 Sep 2026 16:15:52 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -107,15 +107,15 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-12T09:18:10Z</guid>
-      <pubDate>Sat, 12 Sep 2026 09:18:10 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-14T12:34:13Z</guid>
+      <pubDate>Mon, 14 Sep 2026 12:34:13 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-09-14T12:37:38Z</guid>
-      <pubDate>Mon, 14 Sep 2026 12:37:38 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-09-14T14:20:26Z</guid>
+      <pubDate>Mon, 14 Sep 2026 14:20:26 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;img src=&quot;./docs/images/logo.png&quot; alt=&quot;WeKnora Logo&quot; height=&quot;120&quot;/ &lt;/picture &lt;/p &lt;p align=&quot;center&quot; &lt;pi</description>
     </item>
     <item>
@@ -168,18 +168,18 @@
       <description>dsh web · DeepSeek Harness Web GUI 插件与主题 中文 English dsh web 是 DeepSeek Harness（DSH）Web GUI 的开源插件集合，为 AI 编程工作台提供任务自动化、手机远程控制、SSH 终端、Git 可视化和自定义主题。既可将插件全家桶安装到 dsh web ，也可下载内置运行时与插件的 macOS / Windows 桌面客户</description>
     </item>
     <item>
+      <title>🆕 honcho</title>
+      <link>https://github.com/plastic-labs/honcho</link>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-14T17:09:43Z</guid>
+      <pubDate>Mon, 14 Sep 2026 17:09:43 GMT</pubDate>
+      <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
+    </item>
+    <item>
       <title>🆕 dsh-routing-suite</title>
       <link>https://github.com/yjh051108/dsh-routing-suite</link>
       <guid isPermaLink="false">yjh051108/dsh-routing-suite@2026-09-04T13:51:03Z</guid>
       <pubDate>Fri, 04 Sep 2026 13:51:03 GMT</pubDate>
       <description>dsh routing suite — 注入器 × 思维模式路由 × 分级模式 套装 一个仓库装齐三件套： 运行时注入器 （免重启运行时管理层）+ 思维模式路由预设 （任务感知推理模式，P1 P23 实测）+ 分级任务协议 （脑暴出题 → 规格化计划 → 打卡制 → 组收官 → 终验，含红队门与审计端点）。 中文 English 组件入口（快速跳转） 组件 说明 入口 injector 运行时注入</description>
-    </item>
-    <item>
-      <title>🆕 honcho</title>
-      <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-11T20:33:45Z</guid>
-      <pubDate>Fri, 11 Sep 2026 20:33:45 GMT</pubDate>
-      <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
       <title>🆕 skill</title>
@@ -203,18 +203,18 @@
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;./crates/op host desktop/assets/icon.png&quot; alt=&quot;OpenPencil&quot; width=&quot;120&quot; / &lt;/p &lt;h1 align=&quot;center&quot; OpenPencil&lt;</description>
     </item>
     <item>
-      <title>🆕 loopx</title>
-      <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-14T12:29:18Z</guid>
-      <pubDate>Mon, 14 Sep 2026 12:29:18 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
-    </item>
-    <item>
       <title>🆕 ouroboros</title>
       <link>https://github.com/Q00/ouroboros</link>
-      <guid isPermaLink="false">Q00/ouroboros@2026-09-14T10:55:03Z</guid>
-      <pubDate>Mon, 14 Sep 2026 10:55:03 GMT</pubDate>
+      <guid isPermaLink="false">Q00/ouroboros@2026-09-14T17:30:39Z</guid>
+      <pubDate>Mon, 14 Sep 2026 17:30:39 GMT</pubDate>
       <description>&lt;! mcp name: io.github.Q00/ouroboros &lt;p align=&quot;right&quot; &lt;strong English&lt;/strong &lt;a href=&quot;./README.ko.md&quot; 한국어&lt;/a &lt;a href=&quot;./README.zh CN.md&quot; 简体中文&lt;/a </description>
+    </item>
+    <item>
+      <title>🆕 loopx</title>
+      <link>https://github.com/huangruiteng/loopx</link>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-14T18:03:49Z</guid>
+      <pubDate>Mon, 14 Sep 2026 18:03:49 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
   </channel>
 </rss>
