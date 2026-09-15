@@ -156,24 +156,24 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 4k | TypeScript | 2026-09-07 | The first vision plugin for DeepSeek Harne… |
 | 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 3.6k | TypeScript | 2026-09-14 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 332 | JavaScript | 2026-09-15 | 基于 DeepSeek Harness（DSH）的 SillyTavern 类文字游… |
-| 4 | [dsh-im](https://github.com/xmanrui/dsh-im) | 1.3k | JavaScript | 2026-09-15 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
-| 5 | [dsh-plugin-shop](https://github.com/LivXue/dsh-plugin-shop) | 747 | TypeScript | 2026-09-15 | The most comprehensive DeepSeek Harness pl… |
-| 6 | [dsh-purge](https://github.com/YuJunZhiXue/dsh-purge) | 976 | JavaScript | 2026-09-15 | DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；… |
-| 7 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 1.1k | JavaScript | 2026-09-15 | Eyes for text-only DeepSeek Harness agents… |
-| 8 | [deepseek-harness-desktop](https://github.com/dsh-tauri-desk/deepseek-harness-desktop) | 2.1k | TypeScript | 2026-09-15 | DeepSeek Harness Tauri 桌面版 \| Only 5mb ins… |
-| 9 | [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) | 3k | TypeScript | 2026-09-15 | DSH 官方公众号收录的 TUI 补位插件：Claude Code 风，鲸鱼顶栏/实… |
-| 10 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 1.4k | TypeScript | 2026-09-15 | The best DeepSeek Harness plugin for conte… |
-| 11 | [dsh-dafeiyu](https://github.com/QCYTSN/dsh-dafeiyu) | 328 | JavaScript | 2026-09-15 | Desktop-native BigFish companion for DeepS… |
-| 12 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 302 | JavaScript | 2026-09-15 | DeepSeek Harness session cost meter plugin… |
-| 13 | [dsh-univer-office](https://github.com/dream-num/dsh-univer-office) | 345 | TypeScript | 2026-09-15 | Give DeepSeek Harness a real office enviro… |
-| 14 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-09-15 | DSH Plugin Radar — 开源可自部署的 DSH 插件生态雷达：自动发现… |
-| 15 | [deepseek-harness-desktop](https://github.com/ningbainb/deepseek-harness-desktop) | 560 | TypeScript | 2026-09-15 | Open-source Windows desktop client and GUI… |
-| 16 | [dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale) | 2.1k | TypeScript | 2026-09-15 | Whale Girl skin series for DeepSeek Harnes… |
-| 17 | [dsh_desktop](https://github.com/myYangyunfan/dsh_desktop) | 664 | JavaScript | 2026-09-15 | DeepSeek Harness (dsh) Windows desktop cli… |
-| 18 | [jingyun-dsh](https://github.com/jingyunstudio/jingyun-dsh) | 380 | TypeScript | 2026-09-15 | 基于 Jingyun Studio + DeepSeek Harness (DSH)… |
-| 19 | [DSH-taskboard](https://github.com/shengsheng90/DSH-taskboard) | 324 | TypeScript | 2026-09-15 | Native local Taskboard plugin for DeepSeek… |
-| 20 | [dsh-genui](https://github.com/omdsh-dev/dsh-genui) | 458 | TypeScript | 2026-09-15 | GenUI for DeepSeek Harness: interactive UI… |
+| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-09-15 | DSH Plugin Radar — 开源可自部署的 DSH 插件生态雷达：自动发现… |
+| 4 | [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) | 3k | TypeScript | 2026-09-15 | DSH 官方公众号收录的 TUI 补位插件：Claude Code 风，鲸鱼顶栏/实… |
+| 5 | [deepseek-harness-desktop](https://github.com/dsh-tauri-desk/deepseek-harness-desktop) | 2.1k | TypeScript | 2026-09-15 | DeepSeek Harness Tauri 桌面版 \| Only 5mb ins… |
+| 6 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 332 | JavaScript | 2026-09-15 | 基于 DeepSeek Harness（DSH）的 SillyTavern 类文字游… |
+| 7 | [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | 587 | JavaScript | 2026-09-15 | DeepSeek Harness Desktop App: a local AI d… |
+| 8 | [dsh-im](https://github.com/xmanrui/dsh-im) | 1.3k | JavaScript | 2026-09-15 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
+| 9 | [dsh-plugin-shop](https://github.com/LivXue/dsh-plugin-shop) | 748 | TypeScript | 2026-09-15 | The most comprehensive DeepSeek Harness pl… |
+| 10 | [dsh-purge](https://github.com/YuJunZhiXue/dsh-purge) | 984 | JavaScript | 2026-09-15 | DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；… |
+| 11 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 1.1k | JavaScript | 2026-09-15 | Eyes for text-only DeepSeek Harness agents… |
+| 12 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 1.4k | TypeScript | 2026-09-15 | The best DeepSeek Harness plugin for conte… |
+| 13 | [dsh-dafeiyu](https://github.com/QCYTSN/dsh-dafeiyu) | 329 | JavaScript | 2026-09-15 | Desktop-native BigFish companion for DeepS… |
+| 14 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 302 | JavaScript | 2026-09-15 | DeepSeek Harness session cost meter plugin… |
+| 15 | [dsh-univer-office](https://github.com/dream-num/dsh-univer-office) | 345 | TypeScript | 2026-09-15 | Give DeepSeek Harness a real office enviro… |
+| 16 | [deepseek-harness-desktop](https://github.com/ningbainb/deepseek-harness-desktop) | 561 | TypeScript | 2026-09-15 | Open-source Windows desktop client and GUI… |
+| 17 | [dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale) | 2.1k | TypeScript | 2026-09-15 | Whale Girl skin series for DeepSeek Harnes… |
+| 18 | [dsh_desktop](https://github.com/myYangyunfan/dsh_desktop) | 664 | JavaScript | 2026-09-15 | DeepSeek Harness (dsh) Windows desktop cli… |
+| 19 | [jingyun-dsh](https://github.com/jingyunstudio/jingyun-dsh) | 383 | TypeScript | 2026-09-15 | 基于 Jingyun Studio + DeepSeek Harness (DSH)… |
+| 20 | [DSH-taskboard](https://github.com/shengsheng90/DSH-taskboard) | 324 | TypeScript | 2026-09-15 | Native local Taskboard plugin for DeepSeek… |
 
 更新时间：2026-09-15
 <!-- HOT-PLUGINS:END -->
