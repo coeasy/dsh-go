@@ -1,6 +1,6 @@
 {
   "schema_version": 4,
-  "generated_at": "2026-09-15T21:29:50.966Z",
+  "generated_at": "2026-09-16T05:01:39.634Z",
   "revision": "231ae6f81de296230b836fe0607a3db278dbaddcf68d8c71ba90c9eb13fe54a4",
   "packages": [
     {
@@ -185,10 +185,10 @@
     "source": "dsh-go-sync-v4",
     "package_count": 2,
     "release_count": 2,
-    "discovery_count": 15261,
+    "discovery_count": 15278,
     "explicit_source_count": 1,
-    "candidate_count": 15262,
-    "quarantined_count": 15166,
+    "candidate_count": 15279,
+    "quarantined_count": 15183,
     "rejected_count": 94
   }
 }
