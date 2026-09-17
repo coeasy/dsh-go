@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 17 Sep 2026 17:09:11 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 17 Sep 2026 21:30:46 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-17T11:42:35Z</guid>
-      <pubDate>Thu, 17 Sep 2026 11:42:35 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-17T17:09:25Z</guid>
+      <pubDate>Thu, 17 Sep 2026 17:09:25 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,15 +23,15 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-17T16:59:24Z</guid>
-      <pubDate>Thu, 17 Sep 2026 16:59:24 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-17T20:17:35Z</guid>
+      <pubDate>Thu, 17 Sep 2026 20:17:35 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-17T06:26:22Z</guid>
-      <pubDate>Thu, 17 Sep 2026 06:26:22 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-17T18:35:18Z</guid>
+      <pubDate>Thu, 17 Sep 2026 18:35:18 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo An agent meta harness for Claude C</description>
     </item>
     <item>
@@ -44,8 +44,8 @@
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-09-17T10:25:09Z</guid>
-      <pubDate>Thu, 17 Sep 2026 10:25:09 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-09-17T20:27:27Z</guid>
+      <pubDate>Thu, 17 Sep 2026 20:27:27 GMT</pubDate>
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR builds now publish to ghcr.io/reactive re</description>
     </item>
     <item>
@@ -56,7 +56,7 @@
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/app on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR is now available at ghcr.io/reactive resume/app . Ver</description>
     </item>
     <item>
-      <title>🆕 reactive-resume</title>
+      <title>🔄 reactive-resume</title>
       <link>https://github.com/amruthpillai/reactive-resume</link>
       <guid isPermaLink="false">amruthpillai/reactive-resume@2026-09-10T10:48:00Z</guid>
       <pubDate>Thu, 10 Sep 2026 10:48:00 GMT</pubDate>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-17T13:48:58Z</guid>
-      <pubDate>Thu, 17 Sep 2026 13:48:58 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-17T17:15:27Z</guid>
+      <pubDate>Thu, 17 Sep 2026 17:15:27 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-17T16:58:36Z</guid>
-      <pubDate>Thu, 17 Sep 2026 16:58:36 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-17T18:38:20Z</guid>
+      <pubDate>Thu, 17 Sep 2026 18:38:20 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -170,8 +170,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-17T13:06:26Z</guid>
-      <pubDate>Thu, 17 Sep 2026 13:06:26 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-17T21:27:17Z</guid>
+      <pubDate>Thu, 17 Sep 2026 21:27:17 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
@@ -212,8 +212,8 @@
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-17T17:04:55Z</guid>
-      <pubDate>Thu, 17 Sep 2026 17:04:55 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-17T21:23:35Z</guid>
+      <pubDate>Thu, 17 Sep 2026 21:23:35 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
   </channel>
