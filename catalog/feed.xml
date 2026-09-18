@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 18 Sep 2026 16:33:37 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 18 Sep 2026 21:00:36 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-18T11:14:56Z</guid>
-      <pubDate>Fri, 18 Sep 2026 11:14:56 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-18T16:33:53Z</guid>
+      <pubDate>Fri, 18 Sep 2026 16:33:53 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-18T15:42:48Z</guid>
-      <pubDate>Fri, 18 Sep 2026 15:42:48 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-18T18:17:36Z</guid>
+      <pubDate>Fri, 18 Sep 2026 18:17:36 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-18T16:25:47Z</guid>
-      <pubDate>Fri, 18 Sep 2026 16:25:47 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-18T18:20:43Z</guid>
+      <pubDate>Fri, 18 Sep 2026 18:20:43 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;strong English&lt;/strong · &lt;a href=&quot;./README ZH.md&quot; 简体中文&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;a href=&quot;https://trendshift.io/repositorie</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-18T15:48:32Z</guid>
-      <pubDate>Fri, 18 Sep 2026 15:48:32 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-18T18:20:43Z</guid>
+      <pubDate>Fri, 18 Sep 2026 18:20:43 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-18T15:31:52Z</guid>
-      <pubDate>Fri, 18 Sep 2026 15:31:52 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-18T18:36:08Z</guid>
+      <pubDate>Fri, 18 Sep 2026 18:36:08 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 voyager</title>
       <link>https://github.com/Nagi-ovo/voyager</link>
-      <guid isPermaLink="false">Nagi-ovo/voyager@2026-09-17T01:46:56Z</guid>
-      <pubDate>Thu, 17 Sep 2026 01:46:56 GMT</pubDate>
+      <guid isPermaLink="false">Nagi-ovo/voyager@2026-09-18T20:06:56Z</guid>
+      <pubDate>Fri, 18 Sep 2026 20:06:56 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/public/logo.png&quot; alt=&quot;Voyager logo&quot; width=&quot;120&quot; height=&quot;120&quot; &lt;h3 Make Your AI Experience Truly Yours ✨&lt;</description>
     </item>
     <item>
@@ -170,8 +170,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-18T16:11:10Z</guid>
-      <pubDate>Fri, 18 Sep 2026 16:11:10 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-18T20:32:06Z</guid>
+      <pubDate>Fri, 18 Sep 2026 20:32:06 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
@@ -212,8 +212,8 @@
     <item>
       <title>🆕 loopx</title>
       <link>https://github.com/huangruiteng/loopx</link>
-      <guid isPermaLink="false">huangruiteng/loopx@2026-09-18T16:29:02Z</guid>
-      <pubDate>Fri, 18 Sep 2026 16:29:02 GMT</pubDate>
+      <guid isPermaLink="false">huangruiteng/loopx@2026-09-18T20:56:01Z</guid>
+      <pubDate>Fri, 18 Sep 2026 20:56:01 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; LoopX&lt;/h1 &lt;img src=&quot;docs/assets/loopx social preview.png&quot; alt=&quot;LoopX loop engineering social preview banner&quot; </description>
     </item>
   </channel>
