@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 19 Sep 2026 15:58:20 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 19 Sep 2026 20:49:48 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-19T10:59:46Z</guid>
-      <pubDate>Sat, 19 Sep 2026 10:59:46 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-19T15:58:35Z</guid>
+      <pubDate>Sat, 19 Sep 2026 15:58:35 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-19T15:45:11Z</guid>
-      <pubDate>Sat, 19 Sep 2026 15:45:11 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-19T18:18:00Z</guid>
+      <pubDate>Sat, 19 Sep 2026 18:18:00 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -37,15 +37,15 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-19T15:37:14Z</guid>
-      <pubDate>Sat, 19 Sep 2026 15:37:14 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-19T16:59:07Z</guid>
+      <pubDate>Sat, 19 Sep 2026 16:59:07 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;strong English&lt;/strong · &lt;a href=&quot;./README ZH.md&quot; 简体中文&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;a href=&quot;https://trendshift.io/repositorie</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-09-17T20:27:27Z</guid>
-      <pubDate>Thu, 17 Sep 2026 20:27:27 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-09-19T20:06:06Z</guid>
+      <pubDate>Sat, 19 Sep 2026 20:06:06 GMT</pubDate>
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR builds now publish to ghcr.io/reactive re</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-19T15:46:14Z</guid>
-      <pubDate>Sat, 19 Sep 2026 15:46:14 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-19T20:26:19Z</guid>
+      <pubDate>Sat, 19 Sep 2026 20:26:19 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-19T15:45:10Z</guid>
-      <pubDate>Sat, 19 Sep 2026 15:45:10 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-19T20:01:35Z</guid>
+      <pubDate>Sat, 19 Sep 2026 20:01:35 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -86,15 +86,15 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-19T15:51:55Z</guid>
-      <pubDate>Sat, 19 Sep 2026 15:51:55 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-19T19:45:33Z</guid>
+      <pubDate>Sat, 19 Sep 2026 19:45:33 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-09-19T15:37:29Z</guid>
-      <pubDate>Sat, 19 Sep 2026 15:37:29 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-09-19T16:17:11Z</guid>
+      <pubDate>Sat, 19 Sep 2026 16:17:11 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;img src=&quot;./docs/images/logo.png&quot; alt=&quot;WeKnora Logo&quot; height=&quot;120&quot;/ &lt;/picture &lt;/p &lt;p align=&quot;center&quot; &lt;pi</description>
     </item>
     <item>
