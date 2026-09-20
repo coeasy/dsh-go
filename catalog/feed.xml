@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 19 Sep 2026 20:49:48 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 20 Sep 2026 05:04:35 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-19T18:18:00Z</guid>
-      <pubDate>Sat, 19 Sep 2026 18:18:00 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-20T05:00:11Z</guid>
+      <pubDate>Sun, 20 Sep 2026 05:00:11 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-19T16:59:07Z</guid>
-      <pubDate>Sat, 19 Sep 2026 16:59:07 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-20T04:46:53Z</guid>
+      <pubDate>Sun, 20 Sep 2026 04:46:53 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;strong English&lt;/strong · &lt;a href=&quot;./README ZH.md&quot; 简体中文&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;a href=&quot;https://trendshift.io/repositorie</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-19T20:26:19Z</guid>
-      <pubDate>Sat, 19 Sep 2026 20:26:19 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-20T04:10:57Z</guid>
+      <pubDate>Sun, 20 Sep 2026 04:10:57 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-19T20:01:35Z</guid>
-      <pubDate>Sat, 19 Sep 2026 20:01:35 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-20T05:00:54Z</guid>
+      <pubDate>Sun, 20 Sep 2026 05:00:54 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -86,15 +86,15 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-19T19:45:33Z</guid>
-      <pubDate>Sat, 19 Sep 2026 19:45:33 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-20T04:56:36Z</guid>
+      <pubDate>Sun, 20 Sep 2026 04:56:36 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-09-19T16:17:11Z</guid>
-      <pubDate>Sat, 19 Sep 2026 16:17:11 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-09-20T04:28:24Z</guid>
+      <pubDate>Sun, 20 Sep 2026 04:28:24 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;img src=&quot;./docs/images/logo.png&quot; alt=&quot;WeKnora Logo&quot; height=&quot;120&quot;/ &lt;/picture &lt;/p &lt;p align=&quot;center&quot; &lt;pi</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-19T04:56:12Z</guid>
-      <pubDate>Sat, 19 Sep 2026 04:56:12 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-19T23:27:55Z</guid>
+      <pubDate>Sat, 19 Sep 2026 23:27:55 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -128,8 +128,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-19T13:31:09Z</guid>
-      <pubDate>Sat, 19 Sep 2026 13:31:09 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-20T02:44:29Z</guid>
+      <pubDate>Sun, 20 Sep 2026 02:44:29 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -163,22 +163,22 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-19T13:37:21Z</guid>
-      <pubDate>Sat, 19 Sep 2026 13:37:21 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-20T01:34:54Z</guid>
+      <pubDate>Sun, 20 Sep 2026 01:34:54 GMT</pubDate>
       <description>dsh web · DeepSeek Harness Web GUI 插件与主题 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 的模块化插件生态与桌面工作台，为 AI 智能体开发提供任务自动化看板、手机与跨设备远程控制、SSH 终端运维、Git 历史可视化以及个性化主题皮肤。用户既可以通过官方 profile 机制将插件全家桶一键挂载至已有</description>
     </item>
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-09-19T13:28:28Z</guid>
-      <pubDate>Sat, 19 Sep 2026 13:28:28 GMT</pubDate>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-09-20T03:34:25Z</guid>
+      <pubDate>Sun, 20 Sep 2026 03:34:25 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black v020.png&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 &lt</description>
     </item>
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-18T20:32:06Z</guid>
-      <pubDate>Fri, 18 Sep 2026 20:32:06 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-19T23:32:48Z</guid>
+      <pubDate>Sat, 19 Sep 2026 23:32:48 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
