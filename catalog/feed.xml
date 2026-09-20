@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 20 Sep 2026 16:16:00 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 20 Sep 2026 20:56:13 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-20T11:24:37Z</guid>
-      <pubDate>Sun, 20 Sep 2026 11:24:37 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-20T16:16:13Z</guid>
+      <pubDate>Sun, 20 Sep 2026 16:16:13 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-20T16:02:44Z</guid>
-      <pubDate>Sun, 20 Sep 2026 16:02:44 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-20T18:17:06Z</guid>
+      <pubDate>Sun, 20 Sep 2026 18:17:06 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-20T16:12:05Z</guid>
-      <pubDate>Sun, 20 Sep 2026 16:12:05 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-20T16:17:02Z</guid>
+      <pubDate>Sun, 20 Sep 2026 16:17:02 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-20T15:29:55Z</guid>
-      <pubDate>Sun, 20 Sep 2026 15:29:55 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-20T20:49:31Z</guid>
+      <pubDate>Sun, 20 Sep 2026 20:49:31 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -86,8 +86,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-20T16:12:39Z</guid>
-      <pubDate>Sun, 20 Sep 2026 16:12:39 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-20T19:28:42Z</guid>
+      <pubDate>Sun, 20 Sep 2026 19:28:42 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -128,8 +128,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-20T02:44:29Z</guid>
-      <pubDate>Sun, 20 Sep 2026 02:44:29 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-20T17:49:54Z</guid>
+      <pubDate>Sun, 20 Sep 2026 17:49:54 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 ouroboros</title>
       <link>https://github.com/Q00/ouroboros</link>
-      <guid isPermaLink="false">Q00/ouroboros@2026-09-20T13:58:19Z</guid>
-      <pubDate>Sun, 20 Sep 2026 13:58:19 GMT</pubDate>
+      <guid isPermaLink="false">Q00/ouroboros@2026-09-20T19:55:12Z</guid>
+      <pubDate>Sun, 20 Sep 2026 19:55:12 GMT</pubDate>
       <description>&lt;! mcp name: io.github.Q00/ouroboros &lt;p align=&quot;right&quot; &lt;strong English&lt;/strong &lt;a href=&quot;./README.ko.md&quot; 한국어&lt;/a &lt;a href=&quot;./README.zh CN.md&quot; 简体中文&lt;/a </description>
     </item>
     <item>
