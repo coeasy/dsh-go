@@ -155,27 +155,27 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 | # | 插件 | ★ Stars | 语言 | 最近更新 | 简介 |
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 4k | TypeScript | 2026-09-18 | The first vision plugin for DeepSeek Harne… |
-| 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 3.7k | TypeScript | 2026-09-20 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-09-20 | DSH Plugin Radar — open-source ecosystem r… |
-| 4 | [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) | 3.1k | TypeScript | 2026-09-20 | DSH 官方公众号收录的 TUI 补位插件：Claude Code 风，鲸鱼顶栏/实… |
-| 5 | [dsh-wallpaper-engine](https://github.com/elysia395/dsh-wallpaper-engine) | 317 | JavaScript | 2026-09-20 | 把本机 Wallpaper Engine 的壁纸变成 DSH 网页界面的背景：Vid… |
-| 6 | [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | 589 | JavaScript | 2026-09-20 | DeepSeek Harness Desktop App: a local AI d… |
-| 7 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 487 | Kotlin | 2026-09-20 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
-| 8 | [dsh-im](https://github.com/xmanrui/dsh-im) | 1.4k | JavaScript | 2026-09-20 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
-| 9 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 2.4k | TypeScript | 2026-09-20 | DeepSeek Harness Tauri 桌面版 \| Only 5mb ins… |
-| 10 | [dsh-market](https://github.com/dsh-market/dsh-market) | 4.3k | TypeScript | 2026-09-20 | The plugin market inside DeepSeek Harness … |
-| 11 | [dsh-image-gen](https://github.com/shanliuling/dsh-image-gen) | 443 | TypeScript | 2026-09-20 | AI image studio for DeepSeek Harness — gen… |
-| 12 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 407 | JavaScript | 2026-09-20 | 基于 DeepSeek Harness（DSH）的 SillyTavern 类文字游… |
-| 13 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 1.5k | TypeScript | 2026-09-20 | The best DeepSeek Harness plugin for conte… |
-| 14 | [dsh-redteam-model](https://github.com/SeaOf0/dsh-redteam-model) | 541 | Python | 2026-09-20 | 基于dsh web实现的多种模式，目的是服务于redteam进行授权的安全研究，覆盖… |
-| 15 | [jingyun-dsh](https://github.com/jingyunstudio/jingyun-dsh) | 520 | TypeScript | 2026-09-20 | 基于 Jingyun Studio + DeepSeek Harness (DSH)… |
-| 16 | [dsh-Mimir-Academic-research](https://github.com/1692775560/dsh-Mimir-Academic-research) | 507 | TypeScript | 2026-09-20 | Mimir — 一站式科研工作台插件：LaTeX 论文边写边编译、arXiv 文献管… |
-| 17 | [anysearch-dsh](https://github.com/anysearch-team/anysearch-dsh) | 422 | TypeScript | 2026-09-20 | AnySearch web search provider and advanced… |
-| 18 | [dsh-browser](https://github.com/omdsh-dev/dsh-browser) | 705 | TypeScript | 2026-09-20 | Chrome sidebar extension that lets DeepSee… |
-| 19 | [dsh-purge](https://github.com/YuJunZhiXue/dsh-purge) | 1.6k | JavaScript | 2026-09-20 | DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；… |
-| 20 | [oh-story-dsh](https://github.com/zenstory-ai/oh-story-dsh) | 386 | Python | 2026-09-20 | DeepSeek 写网文/小说的工作流插件：DeepSeek Harness 社区插… |
+| 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 3.7k | TypeScript | 2026-09-21 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
+| 3 | [dsh-purge](https://github.com/YuJunZhiXue/dsh-purge) | 1.7k | JavaScript | 2026-09-21 | DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；… |
+| 4 | [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | 589 | JavaScript | 2026-09-21 | DeepSeek Harness Desktop App: a local AI d… |
+| 5 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 2.4k | TypeScript | 2026-09-21 | DeepSeek Harness Tauri 桌面版 \| Only 5mb ins… |
+| 6 | [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) | 3.1k | TypeScript | 2026-09-21 | DSH 官方公众号收录的 TUI 补位插件：Claude Code 风，鲸鱼顶栏/实… |
+| 7 | [dsh-plugin-subscriptions](https://github.com/V1ki/dsh-plugin-subscriptions) | 374 | TypeScript | 2026-09-21 | Use ChatGPT (Codex), Claude, and Grok (X P… |
+| 8 | [dsh-market](https://github.com/dsh-market/dsh-market) | 4.3k | TypeScript | 2026-09-21 | The plugin market inside DeepSeek Harness … |
+| 9 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 1.5k | TypeScript | 2026-09-21 | The best DeepSeek Harness plugin for conte… |
+| 10 | [dsh-wallpaper-engine](https://github.com/elysia395/dsh-wallpaper-engine) | 318 | JavaScript | 2026-09-21 | 把本机 Wallpaper Engine 的壁纸变成 DSH 网页界面的背景：Vid… |
+| 11 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-09-20 | DSH Plugin Radar — open-source ecosystem r… |
+| 12 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 488 | Kotlin | 2026-09-20 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
+| 13 | [dsh-im](https://github.com/xmanrui/dsh-im) | 1.4k | JavaScript | 2026-09-20 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
+| 14 | [dsh-image-gen](https://github.com/shanliuling/dsh-image-gen) | 445 | TypeScript | 2026-09-20 | AI image studio for DeepSeek Harness — gen… |
+| 15 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 424 | JavaScript | 2026-09-20 | 基于 DeepSeek Harness（DSH）的 SillyTavern 类文字游… |
+| 16 | [dsh-redteam-model](https://github.com/SeaOf0/dsh-redteam-model) | 548 | Python | 2026-09-20 | 基于dsh web实现的多种模式，目的是服务于redteam进行授权的安全研究，覆盖… |
+| 17 | [jingyun-dsh](https://github.com/jingyunstudio/jingyun-dsh) | 530 | TypeScript | 2026-09-20 | 基于 Jingyun Studio + DeepSeek Harness (DSH)… |
+| 18 | [dsh-Mimir-Academic-research](https://github.com/1692775560/dsh-Mimir-Academic-research) | 519 | TypeScript | 2026-09-20 | Mimir — 一站式科研工作台插件：LaTeX 论文边写边编译、arXiv 文献管… |
+| 19 | [anysearch-dsh](https://github.com/anysearch-team/anysearch-dsh) | 422 | TypeScript | 2026-09-20 | AnySearch web search provider and advanced… |
+| 20 | [dsh-browser](https://github.com/omdsh-dev/dsh-browser) | 706 | TypeScript | 2026-09-20 | Chrome sidebar extension that lets DeepSee… |
 
-更新时间：2026-09-20
+更新时间：2026-09-21
 <!-- HOT-PLUGINS:END -->
 
 ## 同步与部署

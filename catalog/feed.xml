@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 20 Sep 2026 20:56:13 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 21 Sep 2026 05:10:35 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-20T18:17:06Z</guid>
-      <pubDate>Sun, 20 Sep 2026 18:17:06 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-21T05:05:07Z</guid>
+      <pubDate>Mon, 21 Sep 2026 05:05:07 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-20T16:17:02Z</guid>
-      <pubDate>Sun, 20 Sep 2026 16:17:02 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-21T04:43:07Z</guid>
+      <pubDate>Mon, 21 Sep 2026 04:43:07 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-20T13:30:05Z</guid>
-      <pubDate>Sun, 20 Sep 2026 13:30:05 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-21T04:20:16Z</guid>
+      <pubDate>Mon, 21 Sep 2026 04:20:16 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-20T20:49:31Z</guid>
-      <pubDate>Sun, 20 Sep 2026 20:49:31 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-21T04:16:06Z</guid>
+      <pubDate>Mon, 21 Sep 2026 04:16:06 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -84,18 +84,18 @@
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;./data/images/banner.svg&quot; alt=&quot;GPT Image2 Prompt System&quot; width=&quot;800&quot; / &lt;/p &lt;h3 align=&quot;center&quot; Prompt as Code G</description>
     </item>
     <item>
-      <title>🆕 dsh-desktop</title>
-      <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-20T19:28:42Z</guid>
-      <pubDate>Sun, 20 Sep 2026 19:28:42 GMT</pubDate>
-      <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
-    </item>
-    <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-09-20T16:05:12Z</guid>
-      <pubDate>Sun, 20 Sep 2026 16:05:12 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-09-21T05:06:01Z</guid>
+      <pubDate>Mon, 21 Sep 2026 05:06:01 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;img src=&quot;./docs/images/logo.png&quot; alt=&quot;WeKnora Logo&quot; height=&quot;120&quot;/ &lt;/picture &lt;/p &lt;p align=&quot;center&quot; &lt;pi</description>
+    </item>
+    <item>
+      <title>🆕 dsh-desktop</title>
+      <link>https://github.com/anywhere-labs/dsh-desktop</link>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-21T04:52:13Z</guid>
+      <pubDate>Mon, 21 Sep 2026 04:52:13 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
       <title>🆕 PicGo</title>
@@ -114,15 +114,15 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-20T07:29:58Z</guid>
-      <pubDate>Sun, 20 Sep 2026 07:29:58 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-21T01:32:48Z</guid>
+      <pubDate>Mon, 21 Sep 2026 01:32:48 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
       <title>🆕 voyager</title>
       <link>https://github.com/Nagi-ovo/voyager</link>
-      <guid isPermaLink="false">Nagi-ovo/voyager@2026-09-18T20:06:56Z</guid>
-      <pubDate>Fri, 18 Sep 2026 20:06:56 GMT</pubDate>
+      <guid isPermaLink="false">Nagi-ovo/voyager@2026-09-20T21:48:28Z</guid>
+      <pubDate>Sun, 20 Sep 2026 21:48:28 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/public/logo.png&quot; alt=&quot;Voyager logo&quot; width=&quot;120&quot; height=&quot;120&quot; &lt;h3 Make Your AI Experience Truly Yours ✨&lt;</description>
     </item>
     <item>
@@ -156,8 +156,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-09-20T13:53:04Z</guid>
-      <pubDate>Sun, 20 Sep 2026 13:53:04 GMT</pubDate>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-09-21T04:14:24Z</guid>
+      <pubDate>Mon, 21 Sep 2026 04:14:24 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black v020.png&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 &lt</description>
     </item>
     <item>
@@ -170,8 +170,8 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-20T14:07:30Z</guid>
-      <pubDate>Sun, 20 Sep 2026 14:07:30 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-21T03:57:22Z</guid>
+      <pubDate>Mon, 21 Sep 2026 03:57:22 GMT</pubDate>
       <description>dsh web · DeepSeek Harness Web GUI 插件与主题 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 的模块化插件生态与桌面工作台，为 AI 智能体开发提供任务自动化看板、手机与跨设备远程控制、SSH 终端运维、Git 历史可视化以及个性化主题皮肤。用户既可以通过官方 profile 机制将插件全家桶一键挂载至已有</description>
     </item>
     <item>
@@ -198,9 +198,16 @@
     <item>
       <title>🆕 iPolloWork</title>
       <link>https://github.com/Devin-AXIS/iPolloWork</link>
-      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-20T10:23:45Z</guid>
-      <pubDate>Sun, 20 Sep 2026 10:23:45 GMT</pubDate>
+      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-21T02:23:36Z</guid>
+      <pubDate>Mon, 21 Sep 2026 02:23:36 GMT</pubDate>
       <description>iPolloWork &lt;p align=&quot;center&quot; English · &lt;a href=&quot;./docs/translations/README ZH.md&quot; 简体中文&lt;/a · &lt;a href=&quot;./docs/translations/README ZH hk.md&quot; 繁體中文&lt;/a · &lt;a h</description>
+    </item>
+    <item>
+      <title>🆕 BrowserSkill</title>
+      <link>https://github.com/Tencent/BrowserSkill</link>
+      <guid isPermaLink="false">Tencent/BrowserSkill@2026-09-21T04:59:57Z</guid>
+      <pubDate>Mon, 21 Sep 2026 04:59:57 GMT</pubDate>
+      <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill banner&quot; / &lt;/p &lt;p align=&quot;center&quot; &lt;strong Le</description>
     </item>
     <item>
       <title>🆕 ouroboros</title>
@@ -208,13 +215,6 @@
       <guid isPermaLink="false">Q00/ouroboros@2026-09-20T19:55:12Z</guid>
       <pubDate>Sun, 20 Sep 2026 19:55:12 GMT</pubDate>
       <description>&lt;! mcp name: io.github.Q00/ouroboros &lt;p align=&quot;right&quot; &lt;strong English&lt;/strong &lt;a href=&quot;./README.ko.md&quot; 한국어&lt;/a &lt;a href=&quot;./README.zh CN.md&quot; 简体中文&lt;/a </description>
-    </item>
-    <item>
-      <title>🆕 BrowserSkill</title>
-      <link>https://github.com/Tencent/BrowserSkill</link>
-      <guid isPermaLink="false">Tencent/BrowserSkill@2026-09-20T12:54:38Z</guid>
-      <pubDate>Sun, 20 Sep 2026 12:54:38 GMT</pubDate>
-      <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill banner&quot; / &lt;/p &lt;p align=&quot;center&quot; &lt;strong Le</description>
     </item>
   </channel>
 </rss>
