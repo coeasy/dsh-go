@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 21 Sep 2026 22:03:38 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 22 Sep 2026 05:11:09 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-21T21:48:25Z</guid>
-      <pubDate>Mon, 21 Sep 2026 21:48:25 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-22T05:01:48Z</guid>
+      <pubDate>Tue, 22 Sep 2026 05:01:48 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-21T15:45:11Z</guid>
-      <pubDate>Mon, 21 Sep 2026 15:45:11 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-22T04:37:59Z</guid>
+      <pubDate>Tue, 22 Sep 2026 04:37:59 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-21T20:14:41Z</guid>
-      <pubDate>Mon, 21 Sep 2026 20:14:41 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-22T03:59:03Z</guid>
+      <pubDate>Tue, 22 Sep 2026 03:59:03 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-21T21:31:08Z</guid>
-      <pubDate>Mon, 21 Sep 2026 21:31:08 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-22T04:16:39Z</guid>
+      <pubDate>Tue, 22 Sep 2026 04:16:39 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-21T14:31:02Z</guid>
-      <pubDate>Mon, 21 Sep 2026 14:31:02 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-22T04:46:47Z</guid>
+      <pubDate>Tue, 22 Sep 2026 04:46:47 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-21T14:54:06Z</guid>
-      <pubDate>Mon, 21 Sep 2026 14:54:06 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-22T04:08:32Z</guid>
+      <pubDate>Tue, 22 Sep 2026 04:08:32 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -128,8 +128,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-21T17:48:50Z</guid>
-      <pubDate>Mon, 21 Sep 2026 17:48:50 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-22T01:05:05Z</guid>
+      <pubDate>Tue, 22 Sep 2026 01:05:05 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -149,15 +149,15 @@
     <item>
       <title>🆕 MemOS</title>
       <link>https://github.com/MemTensor/MemOS</link>
-      <guid isPermaLink="false">MemTensor/MemOS@2026-09-21T13:30:15Z</guid>
-      <pubDate>Mon, 21 Sep 2026 13:30:15 GMT</pubDate>
+      <guid isPermaLink="false">MemTensor/MemOS@2026-09-22T01:51:04Z</guid>
+      <pubDate>Tue, 22 Sep 2026 01:51:04 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
     </item>
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-09-21T16:56:10Z</guid>
-      <pubDate>Mon, 21 Sep 2026 16:56:10 GMT</pubDate>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-09-22T04:10:26Z</guid>
+      <pubDate>Tue, 22 Sep 2026 04:10:26 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black v020.png&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 &lt</description>
     </item>
     <item>
@@ -170,15 +170,15 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-21T08:34:05Z</guid>
-      <pubDate>Mon, 21 Sep 2026 08:34:05 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-09-22T03:08:43Z</guid>
+      <pubDate>Tue, 22 Sep 2026 03:08:43 GMT</pubDate>
       <description>dsh web · DeepSeek Harness Web GUI 插件与主题 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 的模块化插件生态与桌面工作台，为 AI 智能体开发提供任务自动化看板、手机与跨设备远程控制、SSH 终端运维、Git 历史可视化以及个性化主题皮肤。用户既可以通过官方 profile 机制将插件全家桶一键挂载至已有</description>
     </item>
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-21T21:43:12Z</guid>
-      <pubDate>Mon, 21 Sep 2026 21:43:12 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-21T22:51:41Z</guid>
+      <pubDate>Mon, 21 Sep 2026 22:51:41 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
@@ -191,8 +191,8 @@
     <item>
       <title>🆕 webnovel-writer</title>
       <link>https://github.com/lingfengQAQ/webnovel-writer</link>
-      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-09-21T13:34:24Z</guid>
-      <pubDate>Mon, 21 Sep 2026 13:34:24 GMT</pubDate>
+      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-09-22T04:12:54Z</guid>
+      <pubDate>Tue, 22 Sep 2026 04:12:54 GMT</pubDate>
       <description>Webnovel Writer &lt;a href=&quot;https://trendshift.io/repositories/22487&quot; target=&quot; blank&quot; &lt;img src=&quot;https://trendshift.io/api/badge/repositories/22487&quot; alt=&quot;lingfengQ</description>
     </item>
     <item>
@@ -205,15 +205,15 @@
     <item>
       <title>🆕 iPolloWork</title>
       <link>https://github.com/Devin-AXIS/iPolloWork</link>
-      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-21T09:28:02Z</guid>
-      <pubDate>Mon, 21 Sep 2026 09:28:02 GMT</pubDate>
+      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-22T03:56:46Z</guid>
+      <pubDate>Tue, 22 Sep 2026 03:56:46 GMT</pubDate>
       <description>iPolloWork &lt;p align=&quot;center&quot; English · &lt;a href=&quot;./docs/translations/README ZH.md&quot; 简体中文&lt;/a · &lt;a href=&quot;./docs/translations/README ZH hk.md&quot; 繁體中文&lt;/a · &lt;a h</description>
     </item>
     <item>
       <title>🆕 BrowserSkill</title>
       <link>https://github.com/Tencent/BrowserSkill</link>
-      <guid isPermaLink="false">Tencent/BrowserSkill@2026-09-21T13:55:48Z</guid>
-      <pubDate>Mon, 21 Sep 2026 13:55:48 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/BrowserSkill@2026-09-22T05:04:16Z</guid>
+      <pubDate>Tue, 22 Sep 2026 05:04:16 GMT</pubDate>
       <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill banner&quot; / &lt;/p &lt;p align=&quot;center&quot; &lt;strong Le</description>
     </item>
   </channel>
