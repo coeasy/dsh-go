@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 27 Sep 2026 17:04:55 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 27 Sep 2026 21:27:00 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-27T12:03:12Z</guid>
-      <pubDate>Sun, 27 Sep 2026 12:03:12 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-27T17:05:10Z</guid>
+      <pubDate>Sun, 27 Sep 2026 17:05:10 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,15 +23,15 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-27T01:31:35Z</guid>
-      <pubDate>Sun, 27 Sep 2026 01:31:35 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-27T18:18:52Z</guid>
+      <pubDate>Sun, 27 Sep 2026 18:18:52 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-27T15:13:12Z</guid>
-      <pubDate>Sun, 27 Sep 2026 15:13:12 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-27T20:02:47Z</guid>
+      <pubDate>Sun, 27 Sep 2026 20:02:47 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-27T16:54:51Z</guid>
-      <pubDate>Sun, 27 Sep 2026 16:54:51 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-27T18:36:48Z</guid>
+      <pubDate>Sun, 27 Sep 2026 18:36:48 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-25T22:27:38Z</guid>
-      <pubDate>Fri, 25 Sep 2026 22:27:38 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-27T18:00:53Z</guid>
+      <pubDate>Sun, 27 Sep 2026 18:00:53 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -117,6 +117,13 @@
       <guid isPermaLink="false">nocobase/nocobase@2026-09-25T14:52:16Z</guid>
       <pubDate>Fri, 25 Sep 2026 14:52:16 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
+    </item>
+    <item>
+      <title>🆕 voyager</title>
+      <link>https://github.com/voyager-crew/voyager</link>
+      <guid isPermaLink="false">voyager-crew/voyager@2026-09-27T20:47:32Z</guid>
+      <pubDate>Sun, 27 Sep 2026 20:47:32 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/public/logo.png&quot; alt=&quot;Voyager logo&quot; width=&quot;120&quot; height=&quot;120&quot; &lt;h3 Make Your AI Experience Truly Yours ✨&lt;</description>
     </item>
     <item>
       <title>🆕 voyager</title>
@@ -208,13 +215,6 @@
       <guid isPermaLink="false">yjh051108/dsh-routing-suite@2026-09-18T23:10:58Z</guid>
       <pubDate>Fri, 18 Sep 2026 23:10:58 GMT</pubDate>
       <description>dsh routing suite — 注入器 × 思维模式路由 × 分级模式 套装 一个仓库装齐三件套： 运行时注入器 （免重启运行时管理层）+ 思维模式路由预设 （任务感知推理模式，P1 P23 实测）+ 分级任务协议 （脑暴出题 → 规格化计划 → 打卡制 → 组收官 → 终验，含红队门与审计端点）。 中文 English 组件入口（快速跳转） 组件 说明 入口 injector 运行时注入</description>
-    </item>
-    <item>
-      <title>🆕 iPolloWork</title>
-      <link>https://github.com/Devin-AXIS/iPolloWork</link>
-      <guid isPermaLink="false">Devin-AXIS/iPolloWork@2026-09-27T15:41:41Z</guid>
-      <pubDate>Sun, 27 Sep 2026 15:41:41 GMT</pubDate>
-      <description>iPolloWork &lt;p align=&quot;center&quot; English · &lt;a href=&quot;./docs/translations/README ZH.md&quot; 简体中文&lt;/a · &lt;a href=&quot;./docs/translations/README ZH hk.md&quot; 繁體中文&lt;/a · &lt;a h</description>
     </item>
   </channel>
 </rss>
