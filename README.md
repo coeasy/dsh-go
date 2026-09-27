@@ -156,24 +156,24 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 4k | TypeScript | 2026-09-24 | The first vision plugin for DeepSeek Harne… |
 | 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 3.8k | TypeScript | 2026-09-27 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) | 3.6k | TypeScript | 2026-09-27 | DSH 官方公众号收录的 TUI 补位插件：鲸鱼顶栏/实时状态/流式思考/双击 Es… |
-| 4 | [DSH-X](https://github.com/yyh-001/DSH-X) | 539 | JavaScript | 2026-09-27 | DeepSeek Harness 轻量启动器。选一个版本，启动 DSH web。A … |
-| 5 | [dsh-plugin-shop](https://github.com/LivXue/dsh-plugin-shop) | 936 | TypeScript | 2026-09-27 | The most comprehensive DeepSeek Harness pl… |
-| 6 | [dsh-purge](https://github.com/YuJunZhiXue/dsh-purge) | 2.4k | JavaScript | 2026-09-27 | DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；… |
-| 7 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-09-27 | DSH Plugin Radar — open-source ecosystem r… |
-| 8 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 549 | Kotlin | 2026-09-27 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
+| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-09-27 | DSH Plugin Radar — open-source ecosystem r… |
+| 4 | [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) | 3.6k | TypeScript | 2026-09-27 | DSH 官方公众号收录的 TUI 补位插件：鲸鱼顶栏/实时状态/流式思考/双击 Es… |
+| 5 | [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | 417 | TypeScript | 2026-09-27 | Composable, view-based memory for DeepSeek… |
+| 6 | [dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) | 1.8k | JavaScript | 2026-09-27 | AgentTeams plugin for DeepSeek Harness |
+| 7 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 1.1k | JavaScript | 2026-09-27 | Eyes for text-only DeepSeek Harness agents… |
+| 8 | [dsh-purge](https://github.com/YuJunZhiXue/dsh-purge) | 2.4k | JavaScript | 2026-09-27 | DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；… |
 | 9 | [dsh-market](https://github.com/dsh-market/dsh-market) | 4.7k | TypeScript | 2026-09-27 | The plugin market inside DeepSeek Harness … |
-| 10 | [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | 417 | TypeScript | 2026-09-27 | Composable, view-based memory for DeepSeek… |
-| 11 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 340 | JavaScript | 2026-09-27 | Cost tracking for DeepSeek Harness: sessio… |
-| 12 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 524 | JavaScript | 2026-09-27 | 基于 DeepSeek Harness（DSH）的 SillyTavern 类文字游… |
-| 13 | [dsh-genui](https://github.com/omdsh-dev/dsh-genui) | 483 | TypeScript | 2026-09-27 | GenUI for DeepSeek Harness: interactive UI… |
-| 14 | [dsh-mobile](https://github.com/Clarklevis1995/dsh-mobile) | 365 | Kotlin | 2026-09-27 | DeepSeek Harness Mobile 是一个面向 DeepSeek Har… |
-| 15 | [dsh-im](https://github.com/xmanrui/dsh-im) | 1.5k | JavaScript | 2026-09-27 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
+| 10 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 1.5k | TypeScript | 2026-09-27 | The best DeepSeek Harness plugin for conte… |
+| 11 | [dsh-plugin-shop](https://github.com/LivXue/dsh-plugin-shop) | 937 | TypeScript | 2026-09-27 | The most comprehensive DeepSeek Harness pl… |
+| 12 | [dsh-im](https://github.com/xmanrui/dsh-im) | 1.5k | JavaScript | 2026-09-27 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
+| 13 | [dsh-commandcode-provider](https://github.com/Mars-Sea/dsh-commandcode-provider) | 337 | TypeScript | 2026-09-27 | Command Code provider plugin for DeepSeek … |
+| 14 | [dsh-mobile](https://github.com/Clarklevis1995/dsh-mobile) | 366 | Kotlin | 2026-09-27 | DeepSeek Harness Mobile 是一个面向 DeepSeek Har… |
+| 15 | [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | 324 | TypeScript | 2026-09-27 | DeepSeek Harness 的 Android App 与安全远程访问插件，支… |
 | 16 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 2.7k | TypeScript | 2026-09-27 | DeepSeek Harness Tauri 桌面版 \| Only 5mb ins… |
-| 17 | [dsh-commandcode-provider](https://github.com/Mars-Sea/dsh-commandcode-provider) | 337 | TypeScript | 2026-09-27 | Command Code provider plugin for DeepSeek … |
-| 18 | [dsh-wallpaper-engine](https://github.com/elysia395/dsh-wallpaper-engine) | 367 | JavaScript | 2026-09-27 | 把本机 Wallpaper Engine 的壁纸搬进 DSH 网页界面：场景壁纸由内… |
-| 19 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 1.5k | TypeScript | 2026-09-27 | The best DeepSeek Harness plugin for conte… |
-| 20 | [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | 587 | JavaScript | 2026-09-26 | DeepSeek Harness Desktop App: a local AI d… |
+| 17 | [DSH-X](https://github.com/yyh-001/DSH-X) | 544 | JavaScript | 2026-09-27 | DeepSeek Harness 轻量启动器。选一个版本，启动 DSH web。A … |
+| 18 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 552 | Kotlin | 2026-09-27 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
+| 19 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 340 | JavaScript | 2026-09-27 | Cost tracking for DeepSeek Harness: sessio… |
+| 20 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 526 | JavaScript | 2026-09-27 | 基于 DeepSeek Harness（DSH）的 SillyTavern 类文字游… |
 
 更新时间：2026-09-27
 <!-- HOT-PLUGINS:END -->
