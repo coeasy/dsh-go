@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 28 Sep 2026 19:44:20 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 28 Sep 2026 23:23:17 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-28T13:55:53Z</guid>
-      <pubDate>Mon, 28 Sep 2026 13:55:53 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-28T19:44:43Z</guid>
+      <pubDate>Mon, 28 Sep 2026 19:44:43 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-28T16:17:21Z</guid>
-      <pubDate>Mon, 28 Sep 2026 16:17:21 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-28T23:13:32Z</guid>
+      <pubDate>Mon, 28 Sep 2026 23:13:32 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-09-28T13:46:12Z</guid>
-      <pubDate>Mon, 28 Sep 2026 13:46:12 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-09-28T21:15:10Z</guid>
+      <pubDate>Mon, 28 Sep 2026 21:15:10 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-28T19:12:07Z</guid>
-      <pubDate>Mon, 28 Sep 2026 19:12:07 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-28T20:18:55Z</guid>
+      <pubDate>Mon, 28 Sep 2026 20:18:55 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-28T19:30:32Z</guid>
-      <pubDate>Mon, 28 Sep 2026 19:30:32 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-28T21:12:10Z</guid>
+      <pubDate>Mon, 28 Sep 2026 21:12:10 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-28T14:52:48Z</guid>
-      <pubDate>Mon, 28 Sep 2026 14:52:48 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-28T22:55:46Z</guid>
+      <pubDate>Mon, 28 Sep 2026 22:55:46 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -149,8 +149,8 @@
     <item>
       <title>🆕 EverOS</title>
       <link>https://github.com/EverMind-AI/EverOS</link>
-      <guid isPermaLink="false">EverMind-AI/EverOS@2026-09-24T10:31:33Z</guid>
-      <pubDate>Thu, 24 Sep 2026 10:31:33 GMT</pubDate>
+      <guid isPermaLink="false">EverMind-AI/EverOS@2026-09-28T21:34:57Z</guid>
+      <pubDate>Mon, 28 Sep 2026 21:34:57 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
     </item>
     <item>
@@ -191,8 +191,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-28T19:25:35Z</guid>
-      <pubDate>Mon, 28 Sep 2026 19:25:35 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-28T21:51:34Z</guid>
+      <pubDate>Mon, 28 Sep 2026 21:51:34 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
