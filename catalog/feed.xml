@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 28 Sep 2026 13:55:25 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 28 Sep 2026 19:44:20 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-09-28T05:39:30Z</guid>
-      <pubDate>Mon, 28 Sep 2026 05:39:30 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-09-28T13:55:53Z</guid>
+      <pubDate>Mon, 28 Sep 2026 13:55:53 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,23 +23,23 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-09-28T10:22:08Z</guid>
-      <pubDate>Mon, 28 Sep 2026 10:22:08 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-09-28T18:19:32Z</guid>
+      <pubDate>Mon, 28 Sep 2026 18:19:32 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The open source Claude Design alternative&lt;/h1 ⚡ OpenDesign Cloud — the official model service. One recharge to use both agent and image models inside Ope</description>
-    </item>
-    <item>
-      <title>🆕 ruflo</title>
-      <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-09-28T06:25:09Z</guid>
-      <pubDate>Mon, 28 Sep 2026 06:25:09 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-28T13:15:21Z</guid>
-      <pubDate>Mon, 28 Sep 2026 13:15:21 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-09-28T15:45:30Z</guid>
+      <pubDate>Mon, 28 Sep 2026 15:45:30 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
+    </item>
+    <item>
+      <title>🆕 ruflo</title>
+      <link>https://github.com/ruvnet/ruflo</link>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-09-28T16:17:21Z</guid>
+      <pubDate>Mon, 28 Sep 2026 16:17:21 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 4 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-28T13:50:46Z</guid>
-      <pubDate>Mon, 28 Sep 2026 13:50:46 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-09-28T19:12:07Z</guid>
+      <pubDate>Mon, 28 Sep 2026 19:12:07 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -86,15 +86,15 @@
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-09-28T13:24:03Z</guid>
-      <pubDate>Mon, 28 Sep 2026 13:24:03 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-09-28T17:32:23Z</guid>
+      <pubDate>Mon, 28 Sep 2026 17:32:23 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
     </item>
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-27T18:00:53Z</guid>
-      <pubDate>Sun, 27 Sep 2026 18:00:53 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-09-28T19:30:32Z</guid>
+      <pubDate>Mon, 28 Sep 2026 19:30:32 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-09-28T11:25:29Z</guid>
-      <pubDate>Mon, 28 Sep 2026 11:25:29 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-09-28T14:52:48Z</guid>
+      <pubDate>Mon, 28 Sep 2026 14:52:48 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -135,8 +135,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-27T16:21:44Z</guid>
-      <pubDate>Sun, 27 Sep 2026 16:21:44 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-09-28T16:19:47Z</guid>
+      <pubDate>Mon, 28 Sep 2026 16:19:47 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -191,8 +191,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-09-25T20:02:01Z</guid>
-      <pubDate>Fri, 25 Sep 2026 20:02:01 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-09-28T19:25:35Z</guid>
+      <pubDate>Mon, 28 Sep 2026 19:25:35 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 webnovel-writer</title>
       <link>https://github.com/lingfengQAQ/webnovel-writer</link>
-      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-09-25T16:04:44Z</guid>
-      <pubDate>Fri, 25 Sep 2026 16:04:44 GMT</pubDate>
+      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-09-28T13:29:20Z</guid>
+      <pubDate>Mon, 28 Sep 2026 13:29:20 GMT</pubDate>
       <description>Webnovel Writer &lt;a href=&quot;https://trendshift.io/repositories/22487&quot; target=&quot; blank&quot; &lt;img src=&quot;https://trendshift.io/api/badge/repositories/22487&quot; alt=&quot;lingfengQ</description>
     </item>
     <item>
