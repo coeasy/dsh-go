@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 02 Oct 2026 12:35:01 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 02 Oct 2026 17:56:03 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-02T05:54:23Z</guid>
-      <pubDate>Fri, 02 Oct 2026 05:54:23 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-02T12:35:21Z</guid>
+      <pubDate>Fri, 02 Oct 2026 12:35:21 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -30,22 +30,22 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-09-30T15:57:42Z</guid>
-      <pubDate>Wed, 30 Sep 2026 15:57:42 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-10-02T14:08:03Z</guid>
+      <pubDate>Fri, 02 Oct 2026 14:08:03 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-02T07:45:27Z</guid>
-      <pubDate>Fri, 02 Oct 2026 07:45:27 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-02T17:52:45Z</guid>
+      <pubDate>Fri, 02 Oct 2026 17:52:45 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 3 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-02T12:26:22Z</guid>
-      <pubDate>Fri, 02 Oct 2026 12:26:22 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-02T12:39:44Z</guid>
+      <pubDate>Fri, 02 Oct 2026 12:39:44 GMT</pubDate>
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR builds now publish to ghcr.io/reactive re</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-02T02:50:44Z</guid>
-      <pubDate>Fri, 02 Oct 2026 02:50:44 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-02T17:27:14Z</guid>
+      <pubDate>Fri, 02 Oct 2026 17:27:14 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-02T12:29:01Z</guid>
-      <pubDate>Fri, 02 Oct 2026 12:29:01 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-02T17:54:36Z</guid>
+      <pubDate>Fri, 02 Oct 2026 17:54:36 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -163,15 +163,15 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-02T12:23:34Z</guid>
-      <pubDate>Fri, 02 Oct 2026 12:23:34 GMT</pubDate>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-02T14:27:16Z</guid>
+      <pubDate>Fri, 02 Oct 2026 14:27:16 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black v020.png&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 &lt</description>
     </item>
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-02T09:47:56Z</guid>
-      <pubDate>Fri, 02 Oct 2026 09:47:56 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-02T17:23:32Z</guid>
+      <pubDate>Fri, 02 Oct 2026 17:23:32 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 与官方桌面客户端的模块化插件生态与 AI 智能体开发工作台。它为深度用户与开发者提供任务自动化看板（Cron 定时调度）、手机与跨设备远程控制、SSH 远程终端与集群运维、Git 提交历史图谱与多</description>
     </item>
     <item>
