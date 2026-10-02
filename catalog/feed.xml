@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 01 Oct 2026 22:48:02 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 02 Oct 2026 05:54:06 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-01T18:40:20Z</guid>
-      <pubDate>Thu, 01 Oct 2026 18:40:20 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-02T01:30:35Z</guid>
+      <pubDate>Fri, 02 Oct 2026 01:30:35 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
     </item>
     <item>
@@ -37,15 +37,15 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-01T22:39:27Z</guid>
-      <pubDate>Thu, 01 Oct 2026 22:39:27 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-02T05:42:49Z</guid>
+      <pubDate>Fri, 02 Oct 2026 05:42:49 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 3 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-01T22:29:34Z</guid>
-      <pubDate>Thu, 01 Oct 2026 22:29:34 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-02T00:11:42Z</guid>
+      <pubDate>Fri, 02 Oct 2026 00:11:42 GMT</pubDate>
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR builds now publish to ghcr.io/reactive re</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-01T16:57:30Z</guid>
-      <pubDate>Thu, 01 Oct 2026 16:57:30 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;img alt=&quot;OpenViking&quot; src=&quot;docs/images/ov logo.png&quot; width=&q</description>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-02T02:50:44Z</guid>
+      <pubDate>Fri, 02 Oct 2026 02:50:44 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-01T22:05:22Z</guid>
-      <pubDate>Thu, 01 Oct 2026 22:05:22 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-02T05:47:47Z</guid>
+      <pubDate>Fri, 02 Oct 2026 05:47:47 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -163,15 +163,15 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-01T17:02:27Z</guid>
-      <pubDate>Thu, 01 Oct 2026 17:02:27 GMT</pubDate>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-02T03:14:55Z</guid>
+      <pubDate>Fri, 02 Oct 2026 03:14:55 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black v020.png&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 &lt</description>
     </item>
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-01T10:34:26Z</guid>
-      <pubDate>Thu, 01 Oct 2026 10:34:26 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-02T05:00:23Z</guid>
+      <pubDate>Fri, 02 Oct 2026 05:00:23 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 与官方桌面客户端的模块化插件生态与 AI 智能体开发工作台。它为深度用户与开发者提供任务自动化看板（Cron 定时调度）、手机与跨设备远程控制、SSH 远程终端与集群运维、Git 提交历史图谱与多</description>
     </item>
     <item>
