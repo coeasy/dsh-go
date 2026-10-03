@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 02 Oct 2026 22:21:41 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 03 Oct 2026 05:30:42 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -16,15 +16,15 @@
     <item>
       <title>🆕 deepseek-harness</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
-      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-09-29T09:41:57Z</guid>
-      <pubDate>Tue, 29 Sep 2026 09:41:57 GMT</pubDate>
+      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-10-03T04:44:00Z</guid>
+      <pubDate>Sat, 03 Oct 2026 04:44:00 GMT</pubDate>
       <description>DeepSeek Harness English 中文 DeepSeek Harness ( dsh ) is an open source agent harness developed by DeepSeek AI. It is built on an everything is a plugin architecture and powered by Cordis, whose design</description>
     </item>
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-02T09:44:20Z</guid>
-      <pubDate>Fri, 02 Oct 2026 09:44:20 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-03T01:26:22Z</guid>
+      <pubDate>Sat, 03 Oct 2026 01:26:22 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-02T22:12:08Z</guid>
-      <pubDate>Fri, 02 Oct 2026 22:12:08 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-03T05:06:20Z</guid>
+      <pubDate>Sat, 03 Oct 2026 05:06:20 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 3 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-02T18:44:46Z</guid>
-      <pubDate>Fri, 02 Oct 2026 18:44:46 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-03T05:03:52Z</guid>
+      <pubDate>Sat, 03 Oct 2026 05:03:52 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-02T21:32:51Z</guid>
-      <pubDate>Fri, 02 Oct 2026 21:32:51 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-03T05:04:10Z</guid>
+      <pubDate>Sat, 03 Oct 2026 05:04:10 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -154,13 +154,6 @@
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
     </item>
     <item>
-      <title>🆕 MemOS</title>
-      <link>https://github.com/MemTensor/MemOS</link>
-      <guid isPermaLink="false">MemTensor/MemOS@2026-09-29T03:09:34Z</guid>
-      <pubDate>Tue, 29 Sep 2026 03:09:34 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
-    </item>
-    <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
       <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-02T14:27:16Z</guid>
@@ -168,10 +161,17 @@
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black v020.png&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 &lt</description>
     </item>
     <item>
+      <title>🆕 MemOS</title>
+      <link>https://github.com/MemTensor/MemOS</link>
+      <guid isPermaLink="false">MemTensor/MemOS@2026-09-29T03:09:34Z</guid>
+      <pubDate>Tue, 29 Sep 2026 03:09:34 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
+    </item>
+    <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-02T17:23:32Z</guid>
-      <pubDate>Fri, 02 Oct 2026 17:23:32 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-03T05:10:49Z</guid>
+      <pubDate>Sat, 03 Oct 2026 05:10:49 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 与官方桌面客户端的模块化插件生态与 AI 智能体开发工作台。它为深度用户与开发者提供任务自动化看板（Cron 定时调度）、手机与跨设备远程控制、SSH 远程终端与集群运维、Git 提交历史图谱与多</description>
     </item>
     <item>
