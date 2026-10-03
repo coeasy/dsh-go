@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 03 Oct 2026 16:31:32 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 03 Oct 2026 21:27:14 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-03T11:40:32Z</guid>
-      <pubDate>Sat, 03 Oct 2026 11:40:32 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-03T16:31:46Z</guid>
+      <pubDate>Sat, 03 Oct 2026 16:31:46 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,22 +23,22 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-03T01:26:22Z</guid>
-      <pubDate>Sat, 03 Oct 2026 01:26:22 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-03T18:50:01Z</guid>
+      <pubDate>Sat, 03 Oct 2026 18:50:01 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-10-03T15:10:38Z</guid>
-      <pubDate>Sat, 03 Oct 2026 15:10:38 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-10-03T16:59:57Z</guid>
+      <pubDate>Sat, 03 Oct 2026 16:59:57 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-03T16:21:24Z</guid>
-      <pubDate>Sat, 03 Oct 2026 16:21:24 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-03T21:20:37Z</guid>
+      <pubDate>Sat, 03 Oct 2026 21:20:37 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 3 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-03T16:05:51Z</guid>
-      <pubDate>Sat, 03 Oct 2026 16:05:51 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-03T16:56:45Z</guid>
+      <pubDate>Sat, 03 Oct 2026 16:56:45 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-03T16:30:00Z</guid>
-      <pubDate>Sat, 03 Oct 2026 16:30:00 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-03T21:02:10Z</guid>
+      <pubDate>Sat, 03 Oct 2026 21:02:10 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 webnovel-writer</title>
       <link>https://github.com/lingfengQAQ/webnovel-writer</link>
-      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-10-03T16:25:00Z</guid>
-      <pubDate>Sat, 03 Oct 2026 16:25:00 GMT</pubDate>
+      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-10-03T16:52:14Z</guid>
+      <pubDate>Sat, 03 Oct 2026 16:52:14 GMT</pubDate>
       <description>Webnovel Writer &lt;a href=&quot;https://trendshift.io/repositories/22487&quot; target=&quot; blank&quot; &lt;img src=&quot;https://trendshift.io/api/badge/repositories/22487&quot; alt=&quot;lingfengQ</description>
     </item>
     <item>
