@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 03 Oct 2026 11:40:11 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 03 Oct 2026 16:31:32 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-03T05:30:57Z</guid>
-      <pubDate>Sat, 03 Oct 2026 05:30:57 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-03T11:40:32Z</guid>
+      <pubDate>Sat, 03 Oct 2026 11:40:32 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -30,22 +30,22 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-10-02T14:08:03Z</guid>
-      <pubDate>Fri, 02 Oct 2026 14:08:03 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-10-03T15:10:38Z</guid>
+      <pubDate>Sat, 03 Oct 2026 15:10:38 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-03T08:33:22Z</guid>
-      <pubDate>Sat, 03 Oct 2026 08:33:22 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-03T16:21:24Z</guid>
+      <pubDate>Sat, 03 Oct 2026 16:21:24 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 3 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-02T12:39:44Z</guid>
-      <pubDate>Fri, 02 Oct 2026 12:39:44 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-03T12:49:34Z</guid>
+      <pubDate>Sat, 03 Oct 2026 12:49:34 GMT</pubDate>
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR builds now publish to ghcr.io/reactive re</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-03T11:10:54Z</guid>
-      <pubDate>Sat, 03 Oct 2026 11:10:54 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-03T16:05:51Z</guid>
+      <pubDate>Sat, 03 Oct 2026 16:05:51 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-03T11:36:21Z</guid>
-      <pubDate>Sat, 03 Oct 2026 11:36:21 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-03T16:30:00Z</guid>
+      <pubDate>Sat, 03 Oct 2026 16:30:00 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-10-03T09:44:59Z</guid>
-      <pubDate>Sat, 03 Oct 2026 09:44:59 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-10-03T13:39:42Z</guid>
+      <pubDate>Sat, 03 Oct 2026 13:39:42 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -170,8 +170,8 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-03T11:36:44Z</guid>
-      <pubDate>Sat, 03 Oct 2026 11:36:44 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-03T15:22:52Z</guid>
+      <pubDate>Sat, 03 Oct 2026 15:22:52 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 与官方桌面客户端的模块化插件生态与 AI 智能体开发工作台。它为深度用户与开发者提供任务自动化看板（Cron 定时调度）、手机与跨设备远程控制、SSH 远程终端与集群运维、Git 提交历史图谱与多</description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 webnovel-writer</title>
       <link>https://github.com/lingfengQAQ/webnovel-writer</link>
-      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-09-30T14:54:21Z</guid>
-      <pubDate>Wed, 30 Sep 2026 14:54:21 GMT</pubDate>
+      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-10-03T16:25:00Z</guid>
+      <pubDate>Sat, 03 Oct 2026 16:25:00 GMT</pubDate>
       <description>Webnovel Writer &lt;a href=&quot;https://trendshift.io/repositories/22487&quot; target=&quot; blank&quot; &lt;img src=&quot;https://trendshift.io/api/badge/repositories/22487&quot; alt=&quot;lingfengQ</description>
     </item>
     <item>
