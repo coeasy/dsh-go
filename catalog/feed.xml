@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 04 Oct 2026 16:54:54 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 04 Oct 2026 21:38:15 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-04T12:22:10Z</guid>
-      <pubDate>Sun, 04 Oct 2026 12:22:10 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-04T16:55:09Z</guid>
+      <pubDate>Sun, 04 Oct 2026 16:55:09 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,30 +23,30 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-04T02:08:04Z</guid>
-      <pubDate>Sun, 04 Oct 2026 02:08:04 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-04T18:40:19Z</guid>
+      <pubDate>Sun, 04 Oct 2026 18:40:19 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-10-04T16:41:31Z</guid>
-      <pubDate>Sun, 04 Oct 2026 16:41:31 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-10-04T17:35:34Z</guid>
+      <pubDate>Sun, 04 Oct 2026 17:35:34 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-04T14:38:25Z</guid>
-      <pubDate>Sun, 04 Oct 2026 14:38:25 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-04T21:24:31Z</guid>
+      <pubDate>Sun, 04 Oct 2026 21:24:31 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;! Try Ruflo — the 3 badges first time visitors actually act on &lt;! Ecosystem strip (collapsed visually with flat square) Ruflo English · 简体中文 An agent meta harne</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-04T16:37:15Z</guid>
-      <pubDate>Sun, 04 Oct 2026 16:37:15 GMT</pubDate>
-      <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR builds now publish to ghcr.io/reactive re</description>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-04T20:39:03Z</guid>
+      <pubDate>Sun, 04 Oct 2026 20:39:03 GMT</pubDate>
+      <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR images publish to ghcr.io/reactive resume</description>
     </item>
     <item>
       <title>🔄 app</title>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-04T10:23:25Z</guid>
-      <pubDate>Sun, 04 Oct 2026 10:23:25 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-04T18:43:23Z</guid>
+      <pubDate>Sun, 04 Oct 2026 18:43:23 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-04T16:45:04Z</guid>
-      <pubDate>Sun, 04 Oct 2026 16:45:04 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-04T21:12:46Z</guid>
+      <pubDate>Sun, 04 Oct 2026 21:12:46 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -126,7 +126,7 @@
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;docs/public/logo.png&quot; alt=&quot;Voyager logo&quot; width=&quot;120&quot; height=&quot;120&quot; &lt;h3 Make Your AI Experience Truly Yours ✨&lt;</description>
     </item>
     <item>
-      <title>🆕 voyager</title>
+      <title>🔄 voyager</title>
       <link>https://github.com/Nagi-ovo/voyager</link>
       <guid isPermaLink="false">Nagi-ovo/voyager@2026-09-27T12:30:13Z</guid>
       <pubDate>Sun, 27 Sep 2026 12:30:13 GMT</pubDate>
