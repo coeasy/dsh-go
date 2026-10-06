@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 06 Oct 2026 18:30:16 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 06 Oct 2026 22:42:58 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-06T13:19:37Z</guid>
-      <pubDate>Tue, 06 Oct 2026 13:19:37 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-06T18:30:30Z</guid>
+      <pubDate>Tue, 06 Oct 2026 18:30:30 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -37,9 +37,9 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-06T18:18:34Z</guid>
-      <pubDate>Tue, 06 Oct 2026 18:18:34 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://www.producthunt.com/products/ruos&quot; &lt;img src=&quot;ruflo/assets/ruos animated.svg&quot; alt=&quot;ruOS — A desktop that runs itself&quo</description>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-06T21:58:04Z</guid>
+      <pubDate>Tue, 06 Oct 2026 21:58:04 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-06T17:19:06Z</guid>
-      <pubDate>Tue, 06 Oct 2026 17:19:06 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-06T22:40:06Z</guid>
+      <pubDate>Tue, 06 Oct 2026 22:40:06 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -168,6 +168,13 @@
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
     </item>
     <item>
+      <title>🆕 rea</title>
+      <link>https://github.com/morluto/rea</link>
+      <guid isPermaLink="false">morluto/rea@2026-10-06T21:25:19Z</guid>
+      <pubDate>Tue, 06 Oct 2026 21:25:19 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 日本語 · 한국어 · العربية REA: Reverse Engineer Anything One MCP for reverse engineering across binaries, applications, and runtime behavior. See a feature </description>
+    </item>
+    <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
       <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-06T17:40:04Z</guid>
@@ -180,13 +187,6 @@
       <guid isPermaLink="false">Tencent/BrowserSkill@2026-10-06T13:45:15Z</guid>
       <pubDate>Tue, 06 Oct 2026 13:45:15 GMT</pubDate>
       <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill — connect your AI agent to your browser&quot; / &lt;/p &lt;p align</description>
-    </item>
-    <item>
-      <title>🆕 rea</title>
-      <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-06T18:09:38Z</guid>
-      <pubDate>Tue, 06 Oct 2026 18:09:38 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 日本語 · 한국어 · العربية REA: Reverse Engineer Anything One MCP for reverse engineering across binaries, applications, and runtime behavior. See a feature </description>
     </item>
     <item>
       <title>🆕 yao</title>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-06T17:03:38Z</guid>
-      <pubDate>Tue, 06 Oct 2026 17:03:38 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-10-06T21:45:37Z</guid>
+      <pubDate>Tue, 06 Oct 2026 21:45:37 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
