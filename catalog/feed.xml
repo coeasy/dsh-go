@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 06 Oct 2026 13:19:14 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 06 Oct 2026 18:30:16 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-06T06:35:35Z</guid>
-      <pubDate>Tue, 06 Oct 2026 06:35:35 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-06T13:19:37Z</guid>
+      <pubDate>Tue, 06 Oct 2026 13:19:37 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,23 +23,23 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-06T01:30:05Z</guid>
-      <pubDate>Tue, 06 Oct 2026 01:30:05 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-06T18:19:02Z</guid>
+      <pubDate>Tue, 06 Oct 2026 18:19:02 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-10-05T16:08:52Z</guid>
-      <pubDate>Mon, 05 Oct 2026 16:08:52 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-10-06T16:08:37Z</guid>
+      <pubDate>Tue, 06 Oct 2026 16:08:37 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-06T13:12:24Z</guid>
-      <pubDate>Tue, 06 Oct 2026 13:12:24 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://ruos.cognitum.one&quot; &lt;img src=&quot;ruflo/assets/ruos demo.gif&quot; alt=&quot;ruOS — A desktop that runs itself&quot; width=&quot;480&q</description>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-06T18:18:34Z</guid>
+      <pubDate>Tue, 06 Oct 2026 18:18:34 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://www.producthunt.com/products/ruos&quot; &lt;img src=&quot;ruflo/assets/ruos animated.svg&quot; alt=&quot;ruOS — A desktop that runs itself&quo</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-06T10:16:24Z</guid>
-      <pubDate>Tue, 06 Oct 2026 10:16:24 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-06T15:05:25Z</guid>
+      <pubDate>Tue, 06 Oct 2026 15:05:25 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-06T13:17:15Z</guid>
-      <pubDate>Tue, 06 Oct 2026 13:17:15 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-06T17:19:06Z</guid>
+      <pubDate>Tue, 06 Oct 2026 17:19:06 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -170,16 +170,23 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-06T12:41:57Z</guid>
-      <pubDate>Tue, 06 Oct 2026 12:41:57 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-06T17:40:04Z</guid>
+      <pubDate>Tue, 06 Oct 2026 17:40:04 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 与官方桌面客户端的模块化插件生态与 AI 智能体开发工作台。它为深度用户与开发者提供任务自动化看板（Cron 定时调度）、手机与跨设备远程控制、SSH 远程终端与集群运维、Git 提交历史图谱与多</description>
     </item>
     <item>
       <title>🆕 BrowserSkill</title>
       <link>https://github.com/Tencent/BrowserSkill</link>
-      <guid isPermaLink="false">Tencent/BrowserSkill@2026-09-30T04:52:55Z</guid>
-      <pubDate>Wed, 30 Sep 2026 04:52:55 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/BrowserSkill@2026-10-06T13:45:15Z</guid>
+      <pubDate>Tue, 06 Oct 2026 13:45:15 GMT</pubDate>
       <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill — connect your AI agent to your browser&quot; / &lt;/p &lt;p align</description>
+    </item>
+    <item>
+      <title>🆕 rea</title>
+      <link>https://github.com/morluto/rea</link>
+      <guid isPermaLink="false">morluto/rea@2026-10-06T18:09:38Z</guid>
+      <pubDate>Tue, 06 Oct 2026 18:09:38 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 日本語 · 한국어 · العربية REA: Reverse Engineer Anything One MCP for reverse engineering across binaries, applications, and runtime behavior. See a feature </description>
     </item>
     <item>
       <title>🆕 yao</title>
@@ -198,23 +205,16 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-06T04:48:37Z</guid>
-      <pubDate>Tue, 06 Oct 2026 04:48:37 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-10-06T17:03:38Z</guid>
+      <pubDate>Tue, 06 Oct 2026 17:03:38 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
       <title>🆕 webnovel-writer</title>
       <link>https://github.com/lingfengQAQ/webnovel-writer</link>
-      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-10-05T14:32:26Z</guid>
-      <pubDate>Mon, 05 Oct 2026 14:32:26 GMT</pubDate>
-      <description>Webnovel Writer &lt;a href=&quot;https://trendshift.io/repositories/22487&quot; target=&quot; blank&quot; &lt;img src=&quot;https://trendshift.io/api/badge/repositories/22487&quot; alt=&quot;lingfengQ</description>
-    </item>
-    <item>
-      <title>🆕 rea</title>
-      <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-06T12:47:55Z</guid>
-      <pubDate>Tue, 06 Oct 2026 12:47:55 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 日本語 · 한국어 · العربية REA: Reverse Engineer Anything Reverse engineer anything with agents, from app behavior down to native binaries. See a feature you</description>
+      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-10-06T16:11:47Z</guid>
+      <pubDate>Tue, 06 Oct 2026 16:11:47 GMT</pubDate>
+      <description>Webnovel Writer 使用 DeepSeek Harness 写作工作台（v8）？🌐 产品主页 · 📖 新手教程 · 安装指南 本分支保留 Claude Code 版（v6），安装方式与 v8 不同。 &lt;a href=&quot;https://trendshift.io/repositories/22487&quot; target=&quot; blank&quot; &l</description>
     </item>
   </channel>
 </rss>
