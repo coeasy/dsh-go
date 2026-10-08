@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 08 Oct 2026 18:55:47 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 08 Oct 2026 23:28:17 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-08T13:30:21Z</guid>
-      <pubDate>Thu, 08 Oct 2026 13:30:21 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-08T18:56:03Z</guid>
+      <pubDate>Thu, 08 Oct 2026 18:56:03 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -30,22 +30,22 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-10-08T18:35:10Z</guid>
-      <pubDate>Thu, 08 Oct 2026 18:35:10 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-10-08T22:51:16Z</guid>
+      <pubDate>Thu, 08 Oct 2026 22:51:16 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-08T16:39:36Z</guid>
-      <pubDate>Thu, 08 Oct 2026 16:39:36 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-08T23:02:44Z</guid>
+      <pubDate>Thu, 08 Oct 2026 23:02:44 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-08T16:45:27Z</guid>
-      <pubDate>Thu, 08 Oct 2026 16:45:27 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-08T21:13:54Z</guid>
+      <pubDate>Thu, 08 Oct 2026 21:13:54 GMT</pubDate>
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR images publish to ghcr.io/reactive resume</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-08T18:42:35Z</guid>
-      <pubDate>Thu, 08 Oct 2026 18:42:35 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-08T21:34:37Z</guid>
+      <pubDate>Thu, 08 Oct 2026 21:34:37 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -105,6 +105,13 @@
       <description>&lt;div align=&quot;center&quot; &lt;h3 Special thanks to&lt;/h3 &lt;table &lt;tr &lt;td align=&quot;center&quot; valign=&quot;middle&quot; width=&quot;50%&quot; &lt;a href=&quot;https://modelflare.de</description>
     </item>
     <item>
+      <title>🆕 rea</title>
+      <link>https://github.com/morluto/rea</link>
+      <guid isPermaLink="false">morluto/rea@2026-10-08T23:22:26Z</guid>
+      <pubDate>Thu, 08 Oct 2026 23:22:26 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Українська · Polski · Português (Brasil) · العربية · فارسی REA: Reverse E</description>
+    </item>
+    <item>
       <title>🆕 distilly</title>
       <link>https://github.com/titanwings/distilly</link>
       <guid isPermaLink="false">titanwings/distilly@2026-09-22T14:01:08Z</guid>
@@ -117,13 +124,6 @@
       <guid isPermaLink="false">nocobase/nocobase@2026-10-08T10:38:06Z</guid>
       <pubDate>Thu, 08 Oct 2026 10:38:06 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
-    </item>
-    <item>
-      <title>🆕 rea</title>
-      <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-08T18:51:24Z</guid>
-      <pubDate>Thu, 08 Oct 2026 18:51:24 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 日本語 · 한국어 · العربية REA: Reverse Engineer Anything One MCP for reverse engineering across binaries, applications, and runtime behavior. See a feature </description>
     </item>
     <item>
       <title>🆕 voyager</title>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-08T18:39:33Z</guid>
-      <pubDate>Thu, 08 Oct 2026 18:39:33 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-10-08T21:09:53Z</guid>
+      <pubDate>Thu, 08 Oct 2026 21:09:53 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
