@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 09 Oct 2026 18:26:29 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 09 Oct 2026 22:46:04 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-09T13:18:00Z</guid>
-      <pubDate>Fri, 09 Oct 2026 13:18:00 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-09T18:26:44Z</guid>
+      <pubDate>Fri, 09 Oct 2026 18:26:44 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -30,22 +30,29 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-10-09T18:17:29Z</guid>
-      <pubDate>Fri, 09 Oct 2026 18:17:29 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-10-09T22:24:46Z</guid>
+      <pubDate>Fri, 09 Oct 2026 22:24:46 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-09T18:24:01Z</guid>
-      <pubDate>Fri, 09 Oct 2026 18:24:01 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-09T22:22:16Z</guid>
+      <pubDate>Fri, 09 Oct 2026 22:22:16 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
+    </item>
+    <item>
+      <title>🆕 rea</title>
+      <link>https://github.com/morluto/rea</link>
+      <guid isPermaLink="false">morluto/rea@2026-10-09T22:40:58Z</guid>
+      <pubDate>Fri, 09 Oct 2026 22:40:58 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی REA</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-09T15:50:32Z</guid>
-      <pubDate>Fri, 09 Oct 2026 15:50:32 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-09T22:28:57Z</guid>
+      <pubDate>Fri, 09 Oct 2026 22:28:57 GMT</pubDate>
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR images publish to ghcr.io/reactive resume</description>
     </item>
     <item>
@@ -63,13 +70,6 @@
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://rxresu.me&quot; &lt;img src=&quot;apps/web/public/opengraph/banner.jpg&quot; alt=&quot;Reactive Resume&quot; / &lt;/a &lt;h1 Reactive Resume&l</description>
     </item>
     <item>
-      <title>🆕 rea</title>
-      <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-09T18:22:33Z</guid>
-      <pubDate>Fri, 09 Oct 2026 18:22:33 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی REA</description>
-    </item>
-    <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
       <guid isPermaLink="false">volcengine/OpenViking@2026-10-09T16:48:41Z</guid>
@@ -79,8 +79,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-09T17:27:08Z</guid>
-      <pubDate>Fri, 09 Oct 2026 17:27:08 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-09T21:59:32Z</guid>
+      <pubDate>Fri, 09 Oct 2026 21:59:32 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-09T18:18:46Z</guid>
-      <pubDate>Fri, 09 Oct 2026 18:18:46 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-09T22:36:22Z</guid>
+      <pubDate>Fri, 09 Oct 2026 22:36:22 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-09T18:02:06Z</guid>
-      <pubDate>Fri, 09 Oct 2026 18:02:06 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-10-09T22:33:07Z</guid>
+      <pubDate>Fri, 09 Oct 2026 22:33:07 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
