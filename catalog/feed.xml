@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 08 Oct 2026 23:28:17 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 09 Oct 2026 06:23:30 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -23,29 +23,29 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-08T18:18:27Z</guid>
-      <pubDate>Thu, 08 Oct 2026 18:18:27 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-09T05:55:31Z</guid>
+      <pubDate>Fri, 09 Oct 2026 05:55:31 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-10-08T22:51:16Z</guid>
-      <pubDate>Thu, 08 Oct 2026 22:51:16 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-10-09T06:13:23Z</guid>
+      <pubDate>Fri, 09 Oct 2026 06:13:23 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-08T23:02:44Z</guid>
-      <pubDate>Thu, 08 Oct 2026 23:02:44 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-09T05:42:18Z</guid>
+      <pubDate>Fri, 09 Oct 2026 05:42:18 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-08T21:13:54Z</guid>
-      <pubDate>Thu, 08 Oct 2026 21:13:54 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-08T23:59:44Z</guid>
+      <pubDate>Thu, 08 Oct 2026 23:59:44 GMT</pubDate>
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR images publish to ghcr.io/reactive resume</description>
     </item>
     <item>
@@ -65,15 +65,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-08T15:32:03Z</guid>
-      <pubDate>Thu, 08 Oct 2026 15:32:03 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-09T05:05:58Z</guid>
+      <pubDate>Fri, 09 Oct 2026 05:05:58 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-08T21:34:37Z</guid>
-      <pubDate>Thu, 08 Oct 2026 21:34:37 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-09T06:16:57Z</guid>
+      <pubDate>Fri, 09 Oct 2026 06:16:57 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -86,9 +86,16 @@
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-10-08T13:07:11Z</guid>
-      <pubDate>Thu, 08 Oct 2026 13:07:11 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-10-09T05:01:49Z</guid>
+      <pubDate>Fri, 09 Oct 2026 05:01:49 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
+    </item>
+    <item>
+      <title>🆕 rea</title>
+      <link>https://github.com/morluto/rea</link>
+      <guid isPermaLink="false">morluto/rea@2026-10-09T06:18:54Z</guid>
+      <pubDate>Fri, 09 Oct 2026 06:18:54 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی REA</description>
     </item>
     <item>
       <title>🆕 dsh-desktop</title>
@@ -105,13 +112,6 @@
       <description>&lt;div align=&quot;center&quot; &lt;h3 Special thanks to&lt;/h3 &lt;table &lt;tr &lt;td align=&quot;center&quot; valign=&quot;middle&quot; width=&quot;50%&quot; &lt;a href=&quot;https://modelflare.de</description>
     </item>
     <item>
-      <title>🆕 rea</title>
-      <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-08T23:22:26Z</guid>
-      <pubDate>Thu, 08 Oct 2026 23:22:26 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Українська · Polski · Português (Brasil) · العربية · فارسی REA: Reverse E</description>
-    </item>
-    <item>
       <title>🆕 distilly</title>
       <link>https://github.com/titanwings/distilly</link>
       <guid isPermaLink="false">titanwings/distilly@2026-09-22T14:01:08Z</guid>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-08T10:38:06Z</guid>
-      <pubDate>Thu, 08 Oct 2026 10:38:06 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-09T03:32:06Z</guid>
+      <pubDate>Fri, 09 Oct 2026 03:32:06 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -163,8 +163,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-08T14:57:00Z</guid>
-      <pubDate>Thu, 08 Oct 2026 14:57:00 GMT</pubDate>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-09T05:43:51Z</guid>
+      <pubDate>Fri, 09 Oct 2026 05:43:51 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black rounded.svg&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 </description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-08T00:16:49Z</guid>
-      <pubDate>Thu, 08 Oct 2026 00:16:49 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-09T02:53:41Z</guid>
+      <pubDate>Fri, 09 Oct 2026 02:53:41 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 与官方桌面客户端的模块化插件生态与 AI 智能体开发工作台。它为深度用户与开发者提供任务自动化看板（Cron 定时调度）、手机与跨设备远程控制、SSH 远程终端与集群运维、Git 提交历史图谱与多</description>
     </item>
     <item>
