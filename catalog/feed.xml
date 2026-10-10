@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 10 Oct 2026 17:24:51 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 10 Oct 2026 21:52:50 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-10T12:33:10Z</guid>
-      <pubDate>Sat, 10 Oct 2026 12:33:10 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-10T17:25:07Z</guid>
+      <pubDate>Sat, 10 Oct 2026 17:25:07 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-10T13:47:02Z</guid>
-      <pubDate>Sat, 10 Oct 2026 13:47:02 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-10T18:17:10Z</guid>
+      <pubDate>Sat, 10 Oct 2026 18:17:10 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
     </item>
     <item>
@@ -37,15 +37,15 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-10T17:20:24Z</guid>
-      <pubDate>Sat, 10 Oct 2026 17:20:24 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-10T21:48:43Z</guid>
+      <pubDate>Sat, 10 Oct 2026 21:48:43 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-10T17:22:54Z</guid>
-      <pubDate>Sat, 10 Oct 2026 17:22:54 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-10T21:46:03Z</guid>
+      <pubDate>Sat, 10 Oct 2026 21:46:03 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -63,13 +63,6 @@
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/app on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR is now available at ghcr.io/reactive resume/app . Ver</description>
     </item>
     <item>
-      <title>🔄 reactive-resume</title>
-      <link>https://github.com/amruthpillai/reactive-resume</link>
-      <guid isPermaLink="false">amruthpillai/reactive-resume@2026-09-10T10:48:00Z</guid>
-      <pubDate>Thu, 10 Sep 2026 10:48:00 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://rxresu.me&quot; &lt;img src=&quot;apps/web/public/opengraph/banner.jpg&quot; alt=&quot;Reactive Resume&quot; / &lt;/a &lt;h1 Reactive Resume&l</description>
-    </item>
-    <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
       <guid isPermaLink="false">volcengine/OpenViking@2026-10-10T14:46:50Z</guid>
@@ -79,8 +72,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-10T17:21:23Z</guid>
-      <pubDate>Sat, 10 Oct 2026 17:21:23 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-10T21:49:18Z</guid>
+      <pubDate>Sat, 10 Oct 2026 21:49:18 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -121,8 +114,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-10T17:17:46Z</guid>
-      <pubDate>Sat, 10 Oct 2026 17:17:46 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-10T20:51:12Z</guid>
+      <pubDate>Sat, 10 Oct 2026 20:51:12 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -215,6 +208,13 @@
       <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-10-07T12:19:43Z</guid>
       <pubDate>Wed, 07 Oct 2026 12:19:43 GMT</pubDate>
       <description>Webnovel Writer 使用 DeepSeek Harness 写作工作台（v8）？🌐 产品主页 · 📖 新手教程 · 安装指南 本分支保留 Claude Code 版（v6），安装方式与 v8 不同。 &lt;a href=&quot;https://trendshift.io/repositories/22487&quot; target=&quot; blank&quot; &l</description>
+    </item>
+    <item>
+      <title>🆕 dsh-routing-suite</title>
+      <link>https://github.com/yjh051108/dsh-routing-suite</link>
+      <guid isPermaLink="false">yjh051108/dsh-routing-suite@2026-09-18T23:10:58Z</guid>
+      <pubDate>Fri, 18 Sep 2026 23:10:58 GMT</pubDate>
+      <description>dsh routing suite — 注入器 × 思维模式路由 × 分级模式 套装 一个仓库装齐三件套： 运行时注入器 （免重启运行时管理层）+ 思维模式路由预设 （任务感知推理模式，P1 P23 实测）+ 分级任务协议 （脑暴出题 → 规格化计划 → 打卡制 → 组收官 → 终验，含红队门与审计端点）。 中文 English 组件入口（快速跳转） 组件 说明 入口 injector 运行时注入</description>
     </item>
   </channel>
 </rss>
