@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 11 Oct 2026 12:50:41 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 11 Oct 2026 17:44:00 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-11T07:24:45Z</guid>
-      <pubDate>Sun, 11 Oct 2026 07:24:45 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-11T12:50:57Z</guid>
+      <pubDate>Sun, 11 Oct 2026 12:50:57 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -30,8 +30,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-11T12:46:55Z</guid>
-      <pubDate>Sun, 11 Oct 2026 12:46:55 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-11T17:43:09Z</guid>
+      <pubDate>Sun, 11 Oct 2026 17:43:09 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -44,8 +44,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-11T08:00:26Z</guid>
-      <pubDate>Sun, 11 Oct 2026 08:00:26 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-11T17:40:11Z</guid>
+      <pubDate>Sun, 11 Oct 2026 17:40:11 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-11T12:49:22Z</guid>
-      <pubDate>Sun, 11 Oct 2026 12:49:22 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-11T17:37:26Z</guid>
+      <pubDate>Sun, 11 Oct 2026 17:37:26 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -86,8 +86,8 @@
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-10-11T09:07:00Z</guid>
-      <pubDate>Sun, 11 Oct 2026 09:07:00 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-10-11T14:48:57Z</guid>
+      <pubDate>Sun, 11 Oct 2026 14:48:57 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-11T12:32:57Z</guid>
-      <pubDate>Sun, 11 Oct 2026 12:32:57 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-11T17:16:06Z</guid>
+      <pubDate>Sun, 11 Oct 2026 17:16:06 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -142,8 +142,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-10T16:45:42Z</guid>
-      <pubDate>Sat, 10 Oct 2026 16:45:42 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-11T16:57:03Z</guid>
+      <pubDate>Sun, 11 Oct 2026 16:57:03 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -168,6 +168,13 @@
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
     </item>
     <item>
+      <title>🆕 dsh-our-free-model</title>
+      <link>https://github.com/Ebony-Vinyl/dsh-our-free-model</link>
+      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-10-11T15:01:10Z</guid>
+      <pubDate>Sun, 11 Oct 2026 15:01:10 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;icon.svg&quot; alt=&quot;Our Free Model — DeepSeek Harness 免费模型插件&quot; width=&quot;120&quot; dsh our free model 简体中文 English &lt;img alt=&quot;许可证&q</description>
+    </item>
+    <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
       <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-10T15:40:56Z</guid>
@@ -180,13 +187,6 @@
       <guid isPermaLink="false">Tencent/BrowserSkill@2026-10-10T14:41:48Z</guid>
       <pubDate>Sat, 10 Oct 2026 14:41:48 GMT</pubDate>
       <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill — connect your AI agent to your browser&quot; / &lt;/p &lt;p align</description>
-    </item>
-    <item>
-      <title>🆕 dsh-our-free-model</title>
-      <link>https://github.com/Ebony-Vinyl/dsh-our-free-model</link>
-      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-10-11T06:26:18Z</guid>
-      <pubDate>Sun, 11 Oct 2026 06:26:18 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;icon.svg&quot; alt=&quot;Our Free Model — DeepSeek Harness 免费模型插件&quot; width=&quot;120&quot; dsh our free model 简体中文 English &lt;img alt=&quot;许可证&q</description>
     </item>
     <item>
       <title>🆕 yao</title>
