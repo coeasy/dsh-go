@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 11 Oct 2026 17:44:00 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 11 Oct 2026 22:08:29 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-11T12:50:57Z</guid>
-      <pubDate>Sun, 11 Oct 2026 12:50:57 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-11T17:44:19Z</guid>
+      <pubDate>Sun, 11 Oct 2026 17:44:19 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -21,18 +21,18 @@
       <description>DeepSeek Harness English 中文 DeepSeek Harness ( dsh ) is an open source agent harness developed by DeepSeek AI. It is built on an everything is a plugin architecture and powered by Cordis, whose design</description>
     </item>
     <item>
-      <title>🆕 open-design</title>
-      <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-11T12:22:04Z</guid>
-      <pubDate>Sun, 11 Oct 2026 12:22:04 GMT</pubDate>
-      <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
-    </item>
-    <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-11T17:43:09Z</guid>
-      <pubDate>Sun, 11 Oct 2026 17:43:09 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-11T21:59:26Z</guid>
+      <pubDate>Sun, 11 Oct 2026 21:59:26 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
+    </item>
+    <item>
+      <title>🆕 open-design</title>
+      <link>https://github.com/nexu-io/open-design</link>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-11T18:56:30Z</guid>
+      <pubDate>Sun, 11 Oct 2026 18:56:30 GMT</pubDate>
+      <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
     </item>
     <item>
       <title>🆕 archify</title>
@@ -44,8 +44,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-11T17:40:11Z</guid>
-      <pubDate>Sun, 11 Oct 2026 17:40:11 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-11T21:28:42Z</guid>
+      <pubDate>Sun, 11 Oct 2026 21:28:42 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-11T17:37:26Z</guid>
-      <pubDate>Sun, 11 Oct 2026 17:37:26 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-11T22:04:37Z</guid>
+      <pubDate>Sun, 11 Oct 2026 22:04:37 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-11T17:16:06Z</guid>
-      <pubDate>Sun, 11 Oct 2026 17:16:06 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-11T20:53:44Z</guid>
+      <pubDate>Sun, 11 Oct 2026 20:53:44 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
