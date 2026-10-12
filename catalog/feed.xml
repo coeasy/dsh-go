@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 11 Oct 2026 22:08:29 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 12 Oct 2026 06:14:18 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -23,57 +23,50 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-11T21:59:26Z</guid>
-      <pubDate>Sun, 11 Oct 2026 21:59:26 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-12T06:07:56Z</guid>
+      <pubDate>Mon, 12 Oct 2026 06:07:56 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-11T18:56:30Z</guid>
-      <pubDate>Sun, 11 Oct 2026 18:56:30 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-12T05:39:26Z</guid>
+      <pubDate>Mon, 12 Oct 2026 05:39:26 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The First Collaborative Design Agent Workspace&lt;/h1 ✨ Introducing OpenDesign Go . The Go Plan starts at $8 for your first month, with monthly credits for </description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-10-11T04:17:54Z</guid>
-      <pubDate>Sun, 11 Oct 2026 04:17:54 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-10-12T04:54:47Z</guid>
+      <pubDate>Mon, 12 Oct 2026 04:54:47 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-11T21:28:42Z</guid>
-      <pubDate>Sun, 11 Oct 2026 21:28:42 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-12T03:45:38Z</guid>
+      <pubDate>Mon, 12 Oct 2026 03:45:38 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-09T23:41:02Z</guid>
-      <pubDate>Fri, 09 Oct 2026 23:41:02 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-12T06:03:05Z</guid>
+      <pubDate>Mon, 12 Oct 2026 06:03:05 GMT</pubDate>
       <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/reactive resume on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR images publish to ghcr.io/reactive resume</description>
-    </item>
-    <item>
-      <title>🔄 app</title>
-      <link>https://github.com/reactive-resume/app</link>
-      <guid isPermaLink="false">reactive-resume/app@2026-09-11T10:54:59Z</guid>
-      <pubDate>Fri, 11 Sep 2026 10:54:59 GMT</pubDate>
-      <description>[!IMPORTANT] Repository moved: Reactive Resume now lives at reactive resume/app on GitHub. Docker Hub stays at amruthpillai/reactive resume . GHCR is now available at ghcr.io/reactive resume/app . Ver</description>
     </item>
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-11T08:09:14Z</guid>
-      <pubDate>Sun, 11 Oct 2026 08:09:14 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-12T06:05:40Z</guid>
+      <pubDate>Mon, 12 Oct 2026 06:05:40 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-11T22:04:37Z</guid>
-      <pubDate>Sun, 11 Oct 2026 22:04:37 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-12T06:03:37Z</guid>
+      <pubDate>Mon, 12 Oct 2026 06:03:37 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -86,8 +79,8 @@
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-10-11T14:48:57Z</guid>
-      <pubDate>Sun, 11 Oct 2026 14:48:57 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-10-12T05:33:21Z</guid>
+      <pubDate>Mon, 12 Oct 2026 05:33:21 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
     </item>
     <item>
@@ -114,12 +107,12 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-11T20:53:44Z</guid>
-      <pubDate>Sun, 11 Oct 2026 20:53:44 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-12T06:02:54Z</guid>
+      <pubDate>Mon, 12 Oct 2026 06:02:54 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
-      <title>🆕 voyager</title>
+      <title>🔄 voyager</title>
       <link>https://github.com/voyager-crew/voyager</link>
       <guid isPermaLink="false">voyager-crew/voyager@2026-09-29T20:51:01Z</guid>
       <pubDate>Tue, 29 Sep 2026 20:51:01 GMT</pubDate>
@@ -149,15 +142,15 @@
     <item>
       <title>🆕 EverOS</title>
       <link>https://github.com/EverMind-AI/EverOS</link>
-      <guid isPermaLink="false">EverMind-AI/EverOS@2026-10-10T10:38:37Z</guid>
-      <pubDate>Sat, 10 Oct 2026 10:38:37 GMT</pubDate>
+      <guid isPermaLink="false">EverMind-AI/EverOS@2026-10-12T03:38:31Z</guid>
+      <pubDate>Mon, 12 Oct 2026 03:38:31 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
     </item>
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-10T09:28:48Z</guid>
-      <pubDate>Sat, 10 Oct 2026 09:28:48 GMT</pubDate>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-12T03:24:32Z</guid>
+      <pubDate>Mon, 12 Oct 2026 03:24:32 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black rounded.svg&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 </description>
     </item>
     <item>
@@ -175,18 +168,18 @@
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;icon.svg&quot; alt=&quot;Our Free Model — DeepSeek Harness 免费模型插件&quot; width=&quot;120&quot; dsh our free model 简体中文 English &lt;img alt=&quot;许可证&q</description>
     </item>
     <item>
-      <title>🆕 dsh-web</title>
-      <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-10T15:40:56Z</guid>
-      <pubDate>Sat, 10 Oct 2026 15:40:56 GMT</pubDate>
-      <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 与官方桌面客户端的模块化插件生态与 AI 智能体开发工作台。它为深度用户与开发者提供任务自动化看板（Cron 定时调度）、手机与跨设备远程控制、SSH 远程终端与集群运维、Git 提交历史图谱与多</description>
-    </item>
-    <item>
       <title>🆕 BrowserSkill</title>
       <link>https://github.com/Tencent/BrowserSkill</link>
-      <guid isPermaLink="false">Tencent/BrowserSkill@2026-10-10T14:41:48Z</guid>
-      <pubDate>Sat, 10 Oct 2026 14:41:48 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/BrowserSkill@2026-10-12T05:59:25Z</guid>
+      <pubDate>Mon, 12 Oct 2026 05:59:25 GMT</pubDate>
       <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill — connect your AI agent to your browser&quot; / &lt;/p &lt;p align</description>
+    </item>
+    <item>
+      <title>🆕 dsh-web</title>
+      <link>https://github.com/zhu1090093659/dsh-web</link>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-12T02:54:55Z</guid>
+      <pubDate>Mon, 12 Oct 2026 02:54:55 GMT</pubDate>
+      <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI 与官方桌面客户端的模块化插件生态与 AI 智能体开发工作台。它为深度用户与开发者提供任务自动化看板（Cron 定时调度）、手机与跨设备远程控制、SSH 远程终端与集群运维、Git 提交历史图谱与多</description>
     </item>
     <item>
       <title>🆕 yao</title>
@@ -212,9 +205,16 @@
     <item>
       <title>🆕 webnovel-writer</title>
       <link>https://github.com/lingfengQAQ/webnovel-writer</link>
-      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-10-07T12:19:43Z</guid>
-      <pubDate>Wed, 07 Oct 2026 12:19:43 GMT</pubDate>
+      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-10-12T05:19:15Z</guid>
+      <pubDate>Mon, 12 Oct 2026 05:19:15 GMT</pubDate>
       <description>Webnovel Writer 使用 DeepSeek Harness 写作工作台（v8）？🌐 产品主页 · 📖 新手教程 · 安装指南 本分支保留 Claude Code 版（v6），安装方式与 v8 不同。 &lt;a href=&quot;https://trendshift.io/repositories/22487&quot; target=&quot; blank&quot; &l</description>
+    </item>
+    <item>
+      <title>🆕 dsh-routing-suite</title>
+      <link>https://github.com/yjh051108/dsh-routing-suite</link>
+      <guid isPermaLink="false">yjh051108/dsh-routing-suite@2026-09-18T23:10:58Z</guid>
+      <pubDate>Fri, 18 Sep 2026 23:10:58 GMT</pubDate>
+      <description>dsh routing suite — 注入器 × 思维模式路由 × 分级模式 套装 一个仓库装齐三件套： 运行时注入器 （免重启运行时管理层）+ 思维模式路由预设 （任务感知推理模式，P1 P23 实测）+ 分级任务协议 （脑暴出题 → 规格化计划 → 打卡制 → 组收官 → 终验，含红队门与审计端点）。 中文 English 组件入口（快速跳转） 组件 说明 入口 injector 运行时注入</description>
     </item>
   </channel>
 </rss>
