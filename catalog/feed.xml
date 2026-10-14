@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 14 Oct 2026 17:22:32 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 14 Oct 2026 21:49:34 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-14T11:52:49Z</guid>
-      <pubDate>Wed, 14 Oct 2026 11:52:49 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-14T17:22:59Z</guid>
+      <pubDate>Wed, 14 Oct 2026 17:22:59 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,15 +23,15 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-14T17:19:21Z</guid>
-      <pubDate>Wed, 14 Oct 2026 17:19:21 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-14T21:38:42Z</guid>
+      <pubDate>Wed, 14 Oct 2026 21:38:42 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-14T16:22:30Z</guid>
-      <pubDate>Wed, 14 Oct 2026 16:22:30 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-14T18:16:38Z</guid>
+      <pubDate>Wed, 14 Oct 2026 18:16:38 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -65,8 +65,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-14T17:19:04Z</guid>
-      <pubDate>Wed, 14 Oct 2026 17:19:04 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-14T21:48:14Z</guid>
+      <pubDate>Wed, 14 Oct 2026 21:48:14 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -79,8 +79,8 @@
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-10-14T15:41:17Z</guid>
-      <pubDate>Wed, 14 Oct 2026 15:41:17 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-10-14T17:41:43Z</guid>
+      <pubDate>Wed, 14 Oct 2026 17:41:43 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
     </item>
     <item>
@@ -107,8 +107,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-14T17:12:28Z</guid>
-      <pubDate>Wed, 14 Oct 2026 17:12:28 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-14T21:43:14Z</guid>
+      <pubDate>Wed, 14 Oct 2026 21:43:14 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -135,8 +135,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-14T17:03:33Z</guid>
-      <pubDate>Wed, 14 Oct 2026 17:03:33 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-14T17:51:30Z</guid>
+      <pubDate>Wed, 14 Oct 2026 17:51:30 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -156,8 +156,8 @@
     <item>
       <title>🆕 EverOS</title>
       <link>https://github.com/EverMind-AI/EverOS</link>
-      <guid isPermaLink="false">EverMind-AI/EverOS@2026-10-14T13:41:58Z</guid>
-      <pubDate>Wed, 14 Oct 2026 13:41:58 GMT</pubDate>
+      <guid isPermaLink="false">EverMind-AI/EverOS@2026-10-14T18:51:07Z</guid>
+      <pubDate>Wed, 14 Oct 2026 18:51:07 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
     </item>
     <item>
@@ -198,8 +198,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-14T17:20:00Z</guid>
-      <pubDate>Wed, 14 Oct 2026 17:20:00 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-10-14T21:39:21Z</guid>
+      <pubDate>Wed, 14 Oct 2026 21:39:21 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
