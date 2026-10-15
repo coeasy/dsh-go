@@ -5,19 +5,19 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 15 Oct 2026 17:11:14 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 15 Oct 2026 21:32:19 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-15T11:29:50Z</guid>
-      <pubDate>Thu, 15 Oct 2026 11:29:50 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-15T17:11:39Z</guid>
+      <pubDate>Thu, 15 Oct 2026 17:11:39 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-15T17:10:04Z</guid>
-      <pubDate>Thu, 15 Oct 2026 17:10:04 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-15T21:18:12Z</guid>
+      <pubDate>Thu, 15 Oct 2026 21:18:12 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -30,8 +30,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-15T17:07:11Z</guid>
-      <pubDate>Thu, 15 Oct 2026 17:07:11 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-15T18:19:29Z</guid>
+      <pubDate>Thu, 15 Oct 2026 18:19:29 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -58,15 +58,15 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-15T13:48:36Z</guid>
-      <pubDate>Thu, 15 Oct 2026 13:48:36 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-15T17:27:31Z</guid>
+      <pubDate>Thu, 15 Oct 2026 17:27:31 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-15T17:09:05Z</guid>
-      <pubDate>Thu, 15 Oct 2026 17:09:05 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-15T21:06:23Z</guid>
+      <pubDate>Thu, 15 Oct 2026 21:06:23 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -79,8 +79,8 @@
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-10-15T15:54:15Z</guid>
-      <pubDate>Thu, 15 Oct 2026 15:54:15 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-10-15T20:18:38Z</guid>
+      <pubDate>Thu, 15 Oct 2026 20:18:38 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
     </item>
     <item>
@@ -107,8 +107,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-15T17:02:40Z</guid>
-      <pubDate>Thu, 15 Oct 2026 17:02:40 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-15T20:06:59Z</guid>
+      <pubDate>Thu, 15 Oct 2026 20:06:59 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -135,8 +135,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-15T16:44:24Z</guid>
-      <pubDate>Thu, 15 Oct 2026 16:44:24 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-15T17:31:25Z</guid>
+      <pubDate>Thu, 15 Oct 2026 17:31:25 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -198,8 +198,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-15T15:56:42Z</guid>
-      <pubDate>Thu, 15 Oct 2026 15:56:42 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-10-15T21:20:05Z</guid>
+      <pubDate>Thu, 15 Oct 2026 21:20:05 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
