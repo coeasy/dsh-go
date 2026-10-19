@@ -5,19 +5,19 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 19 Oct 2026 18:46:56 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 19 Oct 2026 22:29:59 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-19T13:15:37Z</guid>
-      <pubDate>Mon, 19 Oct 2026 13:15:37 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-19T18:47:20Z</guid>
+      <pubDate>Mon, 19 Oct 2026 18:47:20 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-19T18:33:11Z</guid>
-      <pubDate>Mon, 19 Oct 2026 18:33:11 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-19T22:08:20Z</guid>
+      <pubDate>Mon, 19 Oct 2026 22:08:20 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -44,8 +44,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-19T16:45:02Z</guid>
-      <pubDate>Mon, 19 Oct 2026 16:45:02 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-19T22:02:07Z</guid>
+      <pubDate>Mon, 19 Oct 2026 22:02:07 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -65,8 +65,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-19T18:42:15Z</guid>
-      <pubDate>Mon, 19 Oct 2026 18:42:15 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-19T21:32:35Z</guid>
+      <pubDate>Mon, 19 Oct 2026 21:32:35 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -142,8 +142,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-19T18:27:29Z</guid>
-      <pubDate>Mon, 19 Oct 2026 18:27:29 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-19T20:25:14Z</guid>
+      <pubDate>Mon, 19 Oct 2026 20:25:14 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-19T17:58:08Z</guid>
-      <pubDate>Mon, 19 Oct 2026 17:58:08 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-10-19T21:42:08Z</guid>
+      <pubDate>Mon, 19 Oct 2026 21:42:08 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
     <item>
