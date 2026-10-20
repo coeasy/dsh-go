@@ -5,19 +5,19 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 20 Oct 2026 17:20:31 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 20 Oct 2026 21:44:27 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-20T11:37:39Z</guid>
-      <pubDate>Tue, 20 Oct 2026 11:37:39 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-20T17:20:54Z</guid>
+      <pubDate>Tue, 20 Oct 2026 17:20:54 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-20T17:17:44Z</guid>
-      <pubDate>Tue, 20 Oct 2026 17:17:44 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-20T21:38:46Z</guid>
+      <pubDate>Tue, 20 Oct 2026 21:38:46 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -30,8 +30,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-20T16:41:55Z</guid>
-      <pubDate>Tue, 20 Oct 2026 16:41:55 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-20T18:17:46Z</guid>
+      <pubDate>Tue, 20 Oct 2026 18:17:46 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -44,8 +44,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-20T17:14:37Z</guid>
-      <pubDate>Tue, 20 Oct 2026 17:14:37 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-20T17:26:15Z</guid>
+      <pubDate>Tue, 20 Oct 2026 17:26:15 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -65,8 +65,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-20T15:52:38Z</guid>
-      <pubDate>Tue, 20 Oct 2026 15:52:38 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-20T21:33:18Z</guid>
+      <pubDate>Tue, 20 Oct 2026 21:33:18 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-20T16:14:46Z</guid>
-      <pubDate>Tue, 20 Oct 2026 16:14:46 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-20T17:25:31Z</guid>
+      <pubDate>Tue, 20 Oct 2026 17:25:31 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -142,8 +142,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-20T17:18:00Z</guid>
-      <pubDate>Tue, 20 Oct 2026 17:18:00 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-20T20:33:03Z</guid>
+      <pubDate>Tue, 20 Oct 2026 20:33:03 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -205,15 +205,15 @@
     <item>
       <title>🆕 dsh-market</title>
       <link>https://github.com/dsh-market/dsh-market</link>
-      <guid isPermaLink="false">dsh-market/dsh-market@2026-10-20T17:17:37Z</guid>
-      <pubDate>Tue, 20 Oct 2026 17:17:37 GMT</pubDate>
+      <guid isPermaLink="false">dsh-market/dsh-market@2026-10-20T20:55:03Z</guid>
+      <pubDate>Tue, 20 Oct 2026 20:55:03 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;assets/logo.svg&quot; width=&quot;96&quot; alt=&quot;dsh market logo&quot; &lt;/p dsh market English 中文 The plugin market inside DeepSeek Harness. Open</description>
     </item>
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-20T17:01:01Z</guid>
-      <pubDate>Tue, 20 Oct 2026 17:01:01 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-10-20T21:39:11Z</guid>
+      <pubDate>Tue, 20 Oct 2026 21:39:11 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
   </channel>
