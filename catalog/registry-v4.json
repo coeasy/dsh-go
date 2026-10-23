@@ -1,7 +1,7 @@
 {
   "schema_version": 4,
-  "generated_at": "2026-10-23T11:39:16.538Z",
-  "revision": "443c00b225e0e1b3ac78d001f7be93dcee27e6ed5907c9aeb711e54de9228617",
+  "generated_at": "2026-10-23T17:18:07.880Z",
+  "revision": "e644ba2d2712e0479fe3c13751019393d4c3a0d235560d5fde3a82dfd78e1ad4",
   "packages": [
     {
       "type": "mcp",
@@ -25,8 +25,8 @@
         "description": "Read-only DSH package and ecosystem discovery through the canonical API V2 MCP endpoint.",
         "verified": true,
         "stars": 1,
-        "rank": 1,
-        "updated_at": "2026-10-23T05:08:58Z",
+        "rank": 2,
+        "updated_at": "2026-10-23T11:39:38Z",
         "repo_url": "https://github.com/coeasy/dsh-go",
         "manifest_file": "dsh-package.json",
         "language": "JavaScript",
@@ -169,6 +169,84 @@
           "revoked": false
         }
       ]
+    },
+    {
+      "type": "plugin",
+      "id": "hxlog/dsh-mcp-tools",
+      "publisher_id": "hxlog",
+      "source": {
+        "provider": "github",
+        "repo": "hxlog/dsh-mcp-tools"
+      },
+      "metadata": {
+        "category": "tools",
+        "tags": [
+          "mcp",
+          "mcp-manager",
+          "tools",
+          "settings",
+          "dsh-plugin"
+        ],
+        "repository": "hxlog/dsh-mcp-tools",
+        "homepage": "https://github.com/hxlog/dsh-mcp-tools",
+        "name": "dsh-mcp-tools",
+        "description": "MCP server manager for DeepSeek Harness: add streamable-HTTP or stdio MCP servers in Settings, configure request headers, test connectivity, and toggle each MCP tool so disabled tools never reach the model.",
+        "verified": true,
+        "stars": 3,
+        "rank": 1,
+        "updated_at": "2026-10-23T16:51:14Z",
+        "repo_url": "https://github.com/hxlog/dsh-mcp-tools",
+        "manifest_file": "dsh-package.json",
+        "language": "JavaScript",
+        "license": "MIT"
+      },
+      "releases": [
+        {
+          "version": "1.0.2",
+          "channel": "stable",
+          "commit": "ddfb49acb3cb850b84b9be1a2fe9d85b25430359",
+          "published_at": "2026-10-21T09:56:27.000Z",
+          "dependencies": [],
+          "compatibility": {
+            "os": [
+              "linux",
+              "darwin",
+              "win32"
+            ],
+            "node": ">=22.13.0"
+          },
+          "permissions": [
+            "fs.read",
+            "fs.write",
+            "network"
+          ],
+          "artifact": {
+            "kind": "release-archive",
+            "url": "https://github.com/hxlog/dsh-mcp-tools/releases/download/v1.0.2/dsh-mcp-tools-1.0.2.tgz",
+            "digest": "sha256-435d32393e4f73d04b7b77a76b7bae3770169805c44111278c47f5727bfbb219",
+            "format": "tgz",
+            "strip_components": 1,
+            "integrity": "sha256-435d32393e4f73d04b7b77a76b7bae3770169805c44111278c47f5727bfbb219",
+            "release_tag": "v1.0.2",
+            "package_path": null
+          },
+          "security": {},
+          "entrypoints": {
+            "bundle": "cordis.patch.yml"
+          },
+          "runtime": {
+            "type": "plugin"
+          },
+          "capabilities": [
+            "connectivity-test",
+            "mcp.server-management",
+            "mcp.tool-toggle",
+            "settings.panel"
+          ],
+          "yanked": false,
+          "revoked": false
+        }
+      ]
     }
   ],
   "publishers": [
@@ -178,17 +256,24 @@
       "repository_ownership": "unverified",
       "verified": false,
       "identity": null
+    },
+    {
+      "id": "hxlog",
+      "display_name": "hxlog",
+      "repository_ownership": "unverified",
+      "verified": false,
+      "identity": null
     }
   ],
   "advisories": [],
   "metadata": {
     "source": "dsh-go-sync-v4",
-    "package_count": 2,
-    "release_count": 2,
-    "discovery_count": 22435,
+    "package_count": 3,
+    "release_count": 3,
+    "discovery_count": 22481,
     "explicit_source_count": 1,
-    "candidate_count": 22436,
-    "quarantined_count": 22226,
+    "candidate_count": 22482,
+    "quarantined_count": 22271,
     "rejected_count": 208
   }
 }

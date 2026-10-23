@@ -5,33 +5,40 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 23 Oct 2026 11:39:16 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 23 Oct 2026 17:18:07 GMT</lastBuildDate>
+    <item>
+      <title>🆕 dsh-mcp-tools</title>
+      <link>https://github.com/hxlog/dsh-mcp-tools</link>
+      <guid isPermaLink="false">hxlog/dsh-mcp-tools@2026-10-23T16:51:14Z</guid>
+      <pubDate>Fri, 23 Oct 2026 16:51:14 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;https://cdn.jsdelivr.net/gh/hxlog/dsh mcp tools@main/docs/logo.png&quot; width=&quot;72&quot; height=&quot;72&quot; alt=&quot;dsh mcp tools&quot; / &lt</description>
+    </item>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-23T05:08:58Z</guid>
-      <pubDate>Fri, 23 Oct 2026 05:08:58 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-23T11:39:38Z</guid>
+      <pubDate>Fri, 23 Oct 2026 11:39:38 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-23T11:32:54Z</guid>
-      <pubDate>Fri, 23 Oct 2026 11:32:54 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-23T17:15:46Z</guid>
+      <pubDate>Fri, 23 Oct 2026 17:15:46 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
       <title>🆕 deepseek-harness</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
-      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-10-17T08:16:09Z</guid>
-      <pubDate>Sat, 17 Oct 2026 08:16:09 GMT</pubDate>
+      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-10-23T15:25:40Z</guid>
+      <pubDate>Fri, 23 Oct 2026 15:25:40 GMT</pubDate>
       <description>DeepSeek Harness English 中文 DeepSeek Harness ( dsh ) is an open source agent harness developed by DeepSeek AI. It is built on an everything is a plugin architecture and powered by Cordis, whose design</description>
     </item>
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-23T08:31:41Z</guid>
-      <pubDate>Fri, 23 Oct 2026 08:31:41 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-23T14:52:29Z</guid>
+      <pubDate>Fri, 23 Oct 2026 14:52:29 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -44,8 +51,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-23T11:37:22Z</guid>
-      <pubDate>Fri, 23 Oct 2026 11:37:22 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-23T16:49:46Z</guid>
+      <pubDate>Fri, 23 Oct 2026 16:49:46 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -58,8 +65,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-23T10:56:45Z</guid>
-      <pubDate>Fri, 23 Oct 2026 10:56:45 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-23T17:11:16Z</guid>
+      <pubDate>Fri, 23 Oct 2026 17:11:16 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -72,15 +79,15 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-23T11:22:02Z</guid>
-      <pubDate>Fri, 23 Oct 2026 11:22:02 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-23T16:53:24Z</guid>
+      <pubDate>Fri, 23 Oct 2026 16:53:24 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-10-23T06:57:03Z</guid>
-      <pubDate>Fri, 23 Oct 2026 06:57:03 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-10-23T14:45:23Z</guid>
+      <pubDate>Fri, 23 Oct 2026 14:45:23 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
     </item>
     <item>
@@ -93,8 +100,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-10-23T11:13:16Z</guid>
-      <pubDate>Fri, 23 Oct 2026 11:13:16 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-10-23T17:12:22Z</guid>
+      <pubDate>Fri, 23 Oct 2026 17:12:22 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -114,8 +121,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-23T11:34:15Z</guid>
-      <pubDate>Fri, 23 Oct 2026 11:34:15 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-23T16:30:56Z</guid>
+      <pubDate>Fri, 23 Oct 2026 16:30:56 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -128,8 +135,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-23T00:02:05Z</guid>
-      <pubDate>Fri, 23 Oct 2026 00:02:05 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-23T17:17:04Z</guid>
+      <pubDate>Fri, 23 Oct 2026 17:17:04 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -163,15 +170,15 @@
     <item>
       <title>🆕 MemOS</title>
       <link>https://github.com/MemTensor/MemOS</link>
-      <guid isPermaLink="false">MemTensor/MemOS@2026-10-23T08:51:57Z</guid>
-      <pubDate>Fri, 23 Oct 2026 08:51:57 GMT</pubDate>
+      <guid isPermaLink="false">MemTensor/MemOS@2026-10-23T12:02:17Z</guid>
+      <pubDate>Fri, 23 Oct 2026 12:02:17 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
     </item>
     <item>
       <title>🆕 BrowserSkill</title>
       <link>https://github.com/Tencent/BrowserSkill</link>
-      <guid isPermaLink="false">Tencent/BrowserSkill@2026-10-23T09:26:59Z</guid>
-      <pubDate>Fri, 23 Oct 2026 09:26:59 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/BrowserSkill@2026-10-23T16:59:28Z</guid>
+      <pubDate>Fri, 23 Oct 2026 16:59:28 GMT</pubDate>
       <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill — connect your AI agent to your browser&quot; / &lt;/p &lt;p align</description>
     </item>
     <item>
@@ -191,8 +198,8 @@
     <item>
       <title>🆕 dsh-market</title>
       <link>https://github.com/dsh-market/dsh-market</link>
-      <guid isPermaLink="false">dsh-market/dsh-market@2026-10-23T08:25:31Z</guid>
-      <pubDate>Fri, 23 Oct 2026 08:25:31 GMT</pubDate>
+      <guid isPermaLink="false">dsh-market/dsh-market@2026-10-23T17:08:22Z</guid>
+      <pubDate>Fri, 23 Oct 2026 17:08:22 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;assets/logo.svg&quot; width=&quot;96&quot; alt=&quot;dsh market logo&quot; &lt;/p dsh market English 中文 The plugin market inside DeepSeek Harness. On d</description>
     </item>
     <item>
@@ -205,16 +212,9 @@
     <item>
       <title>🆕 honcho</title>
       <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-23T01:18:02Z</guid>
-      <pubDate>Fri, 23 Oct 2026 01:18:02 GMT</pubDate>
+      <guid isPermaLink="false">plastic-labs/honcho@2026-10-23T17:12:47Z</guid>
+      <pubDate>Fri, 23 Oct 2026 17:12:47 GMT</pubDate>
       <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
-    </item>
-    <item>
-      <title>🆕 webnovel-writer</title>
-      <link>https://github.com/lingfengQAQ/webnovel-writer</link>
-      <guid isPermaLink="false">lingfengQAQ/webnovel-writer@2026-10-22T10:00:20Z</guid>
-      <pubDate>Thu, 22 Oct 2026 10:00:20 GMT</pubDate>
-      <description>Webnovel Writer 使用 DeepSeek Harness 写作工作台（v8）？🌐 产品主页 · 📖 新手教程 · 安装指南 本分支保留 Claude Code 版（v6），安装方式与 v8 不同。 &lt;a href=&quot;https://trendshift.io/repositories/22487&quot; target=&quot; blank&quot; &l</description>
     </item>
   </channel>
 </rss>
