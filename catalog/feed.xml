@@ -5,26 +5,26 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 24 Oct 2026 04:51:41 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 24 Oct 2026 11:00:56 GMT</lastBuildDate>
     <item>
       <title>🆕 dsh-mcp-tools</title>
       <link>https://github.com/hxlog/dsh-mcp-tools</link>
-      <guid isPermaLink="false">hxlog/dsh-mcp-tools@2026-10-23T19:49:44Z</guid>
-      <pubDate>Fri, 23 Oct 2026 19:49:44 GMT</pubDate>
+      <guid isPermaLink="false">hxlog/dsh-mcp-tools@2026-10-24T00:30:23Z</guid>
+      <pubDate>Sat, 24 Oct 2026 00:30:23 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;https://cdn.jsdelivr.net/gh/hxlog/dsh mcp tools@main/docs/logo.png&quot; width=&quot;72&quot; height=&quot;72&quot; alt=&quot;dsh mcp tools&quot; / &lt</description>
     </item>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-23T17:18:30Z</guid>
-      <pubDate>Fri, 23 Oct 2026 17:18:30 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-24T04:52:00Z</guid>
+      <pubDate>Sat, 24 Oct 2026 04:52:00 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-24T04:46:49Z</guid>
-      <pubDate>Sat, 24 Oct 2026 04:46:49 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-24T10:57:49Z</guid>
+      <pubDate>Sat, 24 Oct 2026 10:57:49 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -51,8 +51,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-24T04:34:22Z</guid>
-      <pubDate>Sat, 24 Oct 2026 04:34:22 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-24T06:34:19Z</guid>
+      <pubDate>Sat, 24 Oct 2026 06:34:19 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -65,29 +65,29 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-23T17:11:16Z</guid>
-      <pubDate>Fri, 23 Oct 2026 17:11:16 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-24T08:36:31Z</guid>
+      <pubDate>Sat, 24 Oct 2026 08:36:31 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 dsh-our-free-model</title>
       <link>https://github.com/Ebony-Vinyl/dsh-our-free-model</link>
-      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-10-24T01:51:50Z</guid>
-      <pubDate>Sat, 24 Oct 2026 01:51:50 GMT</pubDate>
+      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-10-24T06:03:04Z</guid>
+      <pubDate>Sat, 24 Oct 2026 06:03:04 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;icon.svg&quot; alt=&quot;Our Free Model — DeepSeek Harness 免费模型插件&quot; width=&quot;120&quot; dsh our free model 简体中文 English &lt;img alt=&quot;许可证&q</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-24T01:02:22Z</guid>
-      <pubDate>Sat, 24 Oct 2026 01:02:22 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-24T10:29:11Z</guid>
+      <pubDate>Sat, 24 Oct 2026 10:29:11 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-10-23T14:45:23Z</guid>
-      <pubDate>Fri, 23 Oct 2026 14:45:23 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-10-24T08:55:01Z</guid>
+      <pubDate>Sat, 24 Oct 2026 08:55:01 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
     </item>
     <item>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-24T04:45:50Z</guid>
-      <pubDate>Sat, 24 Oct 2026 04:45:50 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-24T10:43:18Z</guid>
+      <pubDate>Sat, 24 Oct 2026 10:43:18 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -184,15 +184,15 @@
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-24T04:07:46Z</guid>
-      <pubDate>Sat, 24 Oct 2026 04:07:46 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-24T10:05:07Z</guid>
+      <pubDate>Sat, 24 Oct 2026 10:05:07 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI、DeepSeek 网页版与官方桌面客户端（DeepSeek Desktop）的模块化插件生态与 AI 智能体开发工作台。全面支持 DeepSeek V3 与 DeepSeek R1 等前沿推理模型</description>
     </item>
     <item>
       <title>🆕 skill</title>
       <link>https://github.com/anbeime/skill</link>
-      <guid isPermaLink="false">anbeime/skill@2026-10-23T07:05:06Z</guid>
-      <pubDate>Fri, 23 Oct 2026 07:05:06 GMT</pubDate>
+      <guid isPermaLink="false">anbeime/skill@2026-10-24T06:56:24Z</guid>
+      <pubDate>Sat, 24 Oct 2026 06:56:24 GMT</pubDate>
       <description>🎯 技能商店 Skill Store 收录最全、更新最快的AI Agent技能库，涵盖 文档处理、内容创作、编程开发、机器学习、自动化工作流 等多个领域的精选技能包。 🎁 知易多模型知识管家 · 免费试用预约 — 20+ 模型自由切换、技能市场、四色卡片知识库，留邮箱锁定免费试用名额，每周再收一份知易AI周刊。 👉 立即预约 · ⭐ 知易开源版 📊 统计数据 官方技能 : 182 个（来自</description>
     </item>
     <item>
