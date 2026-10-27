@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 27 Oct 2026 05:23:51 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 27 Oct 2026 12:12:55 GMT</lastBuildDate>
     <item>
       <title>🆕 dsh-mcp-tools</title>
       <link>https://github.com/hxlog/dsh-mcp-tools</link>
@@ -16,15 +16,15 @@
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-10-26T18:45:14Z</guid>
-      <pubDate>Mon, 26 Oct 2026 18:45:14 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-10-27T05:24:14Z</guid>
+      <pubDate>Tue, 27 Oct 2026 05:24:14 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-27T05:16:26Z</guid>
-      <pubDate>Tue, 27 Oct 2026 05:16:26 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-10-27T10:57:29Z</guid>
+      <pubDate>Tue, 27 Oct 2026 10:57:29 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-27T05:04:13Z</guid>
-      <pubDate>Tue, 27 Oct 2026 05:04:13 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-10-27T11:28:02Z</guid>
+      <pubDate>Tue, 27 Oct 2026 11:28:02 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -51,8 +51,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-27T00:39:20Z</guid>
-      <pubDate>Tue, 27 Oct 2026 00:39:20 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-10-27T09:49:18Z</guid>
+      <pubDate>Tue, 27 Oct 2026 09:49:18 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -65,29 +65,29 @@
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-27T01:47:12Z</guid>
-      <pubDate>Tue, 27 Oct 2026 01:47:12 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-27T11:32:32Z</guid>
+      <pubDate>Tue, 27 Oct 2026 11:32:32 GMT</pubDate>
       <description>[!IMPORTANT] Reactive Resume now lives at reactive resume/reactive resume on GitHub. GHCR images publish to ghcr.io/reactive resume/reactive resume . Docker Hub stays at amruthpillai/reactive resume .</description>
     </item>
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-27T05:07:29Z</guid>
-      <pubDate>Tue, 27 Oct 2026 05:07:29 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-10-27T11:47:52Z</guid>
+      <pubDate>Tue, 27 Oct 2026 11:47:52 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-27T04:59:09Z</guid>
-      <pubDate>Tue, 27 Oct 2026 04:59:09 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-27T11:02:57Z</guid>
+      <pubDate>Tue, 27 Oct 2026 11:02:57 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-10-27T03:25:45Z</guid>
-      <pubDate>Tue, 27 Oct 2026 03:25:45 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-10-27T06:30:27Z</guid>
+      <pubDate>Tue, 27 Oct 2026 06:30:27 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
     </item>
     <item>
@@ -100,8 +100,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-10-27T00:47:51Z</guid>
-      <pubDate>Tue, 27 Oct 2026 00:47:51 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-10-27T06:38:11Z</guid>
+      <pubDate>Tue, 27 Oct 2026 06:38:11 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-10-27T04:58:48Z</guid>
-      <pubDate>Tue, 27 Oct 2026 04:58:48 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-10-27T11:49:19Z</guid>
+      <pubDate>Tue, 27 Oct 2026 11:49:19 GMT</pubDate>
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
@@ -156,8 +156,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-27T03:47:26Z</guid>
-      <pubDate>Tue, 27 Oct 2026 03:47:26 GMT</pubDate>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-10-27T10:16:51Z</guid>
+      <pubDate>Tue, 27 Oct 2026 10:16:51 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black rounded.svg&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 </description>
     </item>
     <item>
@@ -170,8 +170,8 @@
     <item>
       <title>🆕 MemOS</title>
       <link>https://github.com/MemTensor/MemOS</link>
-      <guid isPermaLink="false">MemTensor/MemOS@2026-10-27T02:47:29Z</guid>
-      <pubDate>Tue, 27 Oct 2026 02:47:29 GMT</pubDate>
+      <guid isPermaLink="false">MemTensor/MemOS@2026-10-27T08:01:39Z</guid>
+      <pubDate>Tue, 27 Oct 2026 08:01:39 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
     </item>
     <item>
@@ -184,29 +184,29 @@
     <item>
       <title>🆕 BrowserSkill</title>
       <link>https://github.com/Tencent/BrowserSkill</link>
-      <guid isPermaLink="false">Tencent/BrowserSkill@2026-10-27T04:31:42Z</guid>
-      <pubDate>Tue, 27 Oct 2026 04:31:42 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/BrowserSkill@2026-10-27T11:41:38Z</guid>
+      <pubDate>Tue, 27 Oct 2026 11:41:38 GMT</pubDate>
       <description>BrowserSkill &lt;p align=&quot;center&quot; &lt;img src=&quot;docs/assets/browserskill readme banner.png&quot; alt=&quot;BrowserSkill — connect your AI agent to your browser&quot; / &lt;/p &lt;p align</description>
     </item>
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-27T04:33:18Z</guid>
-      <pubDate>Tue, 27 Oct 2026 04:33:18 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-27T07:03:44Z</guid>
+      <pubDate>Tue, 27 Oct 2026 07:03:44 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI、DeepSeek 网页版与官方桌面客户端（DeepSeek Desktop）的模块化插件生态与 AI 智能体开发工作台。全面支持 DeepSeek V3 与 DeepSeek R1 等前沿推理模型</description>
     </item>
     <item>
       <title>🆕 dsh-market</title>
       <link>https://github.com/dsh-market/dsh-market</link>
-      <guid isPermaLink="false">dsh-market/dsh-market@2026-10-27T03:39:29Z</guid>
-      <pubDate>Tue, 27 Oct 2026 03:39:29 GMT</pubDate>
+      <guid isPermaLink="false">dsh-market/dsh-market@2026-10-27T09:51:21Z</guid>
+      <pubDate>Tue, 27 Oct 2026 09:51:21 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;assets/logo.svg&quot; width=&quot;96&quot; alt=&quot;dsh market logo&quot; &lt;/p dsh market English 中文 The plugin market inside DeepSeek Harness. On d</description>
     </item>
     <item>
       <title>🆕 skill</title>
       <link>https://github.com/anbeime/skill</link>
-      <guid isPermaLink="false">anbeime/skill@2026-10-26T07:30:01Z</guid>
-      <pubDate>Mon, 26 Oct 2026 07:30:01 GMT</pubDate>
+      <guid isPermaLink="false">anbeime/skill@2026-10-27T07:25:36Z</guid>
+      <pubDate>Tue, 27 Oct 2026 07:25:36 GMT</pubDate>
       <description>🎯 技能商店 Skill Store 收录最全、更新最快的AI Agent技能库，涵盖 文档处理、内容创作、编程开发、机器学习、自动化工作流 等多个领域的精选技能包。 🎁 知易多模型知识管家 · 免费试用预约 — 20+ 模型自由切换、技能市场、四色卡片知识库，留邮箱锁定免费试用名额，每周再收一份知易AI周刊。 👉 立即预约 · ⭐ 知易开源版 📊 统计数据 官方技能 : 182 个（来自</description>
     </item>
     <item>
