@@ -156,24 +156,24 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 4.6k | TypeScript | 2026-10-23 | The first vision plugin for DeepSeek Harne… |
 | 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 4.7k | TypeScript | 2026-10-28 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 939 | Kotlin | 2026-10-28 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
-| 4 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.4k | JavaScript | 2026-10-28 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
-| 5 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 3.8k | TypeScript | 2026-10-28 | The best DeepSeek Harness plugin for conte… |
-| 6 | [dsh-meme](https://github.com/yyh-001/dsh-meme) | 426 | JavaScript | 2026-10-28 | DeepSeek Harness 表情包插件：输入框一键发图、文字 token 斗图… |
-| 7 | [dsh-fish-memory](https://github.com/Yuuyuko-uu/dsh-fish-memory) | 352 | JavaScript | 2026-10-28 | 🐋 DSH 鱼的记忆：给会话一份会淡忘的长期记忆，每条都带时间。名字里的「鱼」来自… |
-| 8 | [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | 518 | Python | 2026-10-28 | 白箱AGI架构探索：元认知（自我认知循环）、持续学习（知识飞轮）、世界模型（条件空间… |
-| 9 | [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy) | 771 | TypeScript | 2026-10-28 | Connect locally signed-in WorkBuddy models… |
-| 10 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.3k | TypeScript | 2026-10-28 | DeepSeek Harness Tauri 桌面版 \| Only 8mb ins… |
-| 11 | [dsh-plugin-hub](https://github.com/dshplugin/dsh-plugin-hub) | 384 | TypeScript | 2026-10-28 | DeepSeek Harness 社区内置插件市场（dsh-plugin）— 搜索插… |
-| 12 | [dsh-skills-manager](https://github.com/MichengAI/dsh-skills-manager) | 385 | JavaScript | 2026-10-28 | DSH Skills Manager — 在 DeepSeek Harness 中统… |
-| 13 | [dsh-blender-plugin](https://github.com/sixtysevenlf/dsh-blender-plugin) | 1.4k | Python | 2026-10-28 | DSH × Blender 直连实时插件 v2.6.1：15 个模型工具让 AI 驱… |
-| 14 | [dsh-pet](https://github.com/PC2005-cloud/dsh-pet) | 4.7k | TypeScript | 2026-10-28 | DSH 桌面宠物：一行命令装好即用的透明动画小桌宠，支持多开、大小位置随心配置；还内… |
-| 15 | [dsh-xdpool](https://github.com/XDTrees/dsh-xdpool) | 319 | TypeScript | 2026-10-28 | 把你能白嫖的模型额度接进 DSH 同一个池：WorkBuddy 多账号自动容错、十三… |
-| 16 | [dsh-genui](https://github.com/omdsh-dev/dsh-genui) | 809 | TypeScript | 2026-10-28 | GenUI for DeepSeek Harness: interactive UI… |
-| 17 | [DSH-X](https://github.com/yyh-001/DSH-X) | 766 | JavaScript | 2026-10-28 | DeepSeek Harness 桌面启动器：启动项与多实例，版本、插件、整合包、M… |
-| 18 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-10-28 | DSH Plugin Radar — open-source ecosystem r… |
-| 19 | [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | 664 | TypeScript | 2026-10-28 | DeepSeek Harness 的 Android App 与安全远程访问插件，支… |
-| 20 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 564 | JavaScript | 2026-10-28 | Cost tracking for DeepSeek Harness: sessio… |
+| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-10-28 | DSH Plugin Radar — open-source ecosystem r… |
+| 4 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 940 | Kotlin | 2026-10-28 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
+| 5 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.3k | TypeScript | 2026-10-28 | DeepSeek Harness Tauri 桌面版 \| Only 8mb ins… |
+| 6 | [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | 485 | JavaScript | 2026-10-28 | DeepSeek Harness Desktop App: a local AI d… |
+| 7 | [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy) | 773 | TypeScript | 2026-10-28 | Connect locally signed-in WorkBuddy models… |
+| 8 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.4k | JavaScript | 2026-10-28 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
+| 9 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 3.8k | TypeScript | 2026-10-28 | The best DeepSeek Harness plugin for conte… |
+| 10 | [dsh-meme](https://github.com/yyh-001/dsh-meme) | 427 | JavaScript | 2026-10-28 | DeepSeek Harness 表情包插件：输入框一键发图、文字 token 斗图… |
+| 11 | [dsh-fish-memory](https://github.com/Yuuyuko-uu/dsh-fish-memory) | 353 | JavaScript | 2026-10-28 | 🐋 DSH 鱼的记忆：给会话一份会淡忘的长期记忆，每条都带时间。名字里的「鱼」来自… |
+| 12 | [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | 518 | Python | 2026-10-28 | 白箱AGI架构探索：元认知（自我认知循环）、持续学习（知识飞轮）、世界模型（条件空间… |
+| 13 | [dsh-plugin-hub](https://github.com/dshplugin/dsh-plugin-hub) | 385 | TypeScript | 2026-10-28 | DeepSeek Harness 社区内置插件市场（dsh-plugin）— 搜索插… |
+| 14 | [dsh-skills-manager](https://github.com/MichengAI/dsh-skills-manager) | 386 | JavaScript | 2026-10-28 | DSH Skills Manager — 在 DeepSeek Harness 中统… |
+| 15 | [dsh-blender-plugin](https://github.com/sixtysevenlf/dsh-blender-plugin) | 1.4k | Python | 2026-10-28 | DSH × Blender 直连实时插件 v2.6.1：15 个模型工具让 AI 驱… |
+| 16 | [dsh-pet](https://github.com/PC2005-cloud/dsh-pet) | 4.7k | TypeScript | 2026-10-28 | DSH 桌面宠物：一行命令装好即用的透明动画小桌宠，支持多开、大小位置随心配置；还内… |
+| 17 | [dsh-xdpool](https://github.com/XDTrees/dsh-xdpool) | 319 | TypeScript | 2026-10-28 | 把你能白嫖的模型额度接进 DSH 同一个池：WorkBuddy 多账号自动容错、十三… |
+| 18 | [dsh-genui](https://github.com/omdsh-dev/dsh-genui) | 811 | TypeScript | 2026-10-28 | GenUI for DeepSeek Harness: interactive UI… |
+| 19 | [DSH-X](https://github.com/yyh-001/DSH-X) | 766 | JavaScript | 2026-10-28 | DeepSeek Harness 桌面启动器：启动项与多实例，版本、插件、整合包、M… |
+| 20 | [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | 664 | TypeScript | 2026-10-28 | DeepSeek Harness 的 Android App 与安全远程访问插件，支… |
 
 更新时间：2026-10-28
 <!-- HOT-PLUGINS:END -->
