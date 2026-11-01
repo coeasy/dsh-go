@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 31 Oct 2026 21:46:56 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 01 Nov 2026 06:25:21 GMT</lastBuildDate>
     <item>
       <title>🆕 dsh-mcp-tools</title>
       <link>https://github.com/hxlog/dsh-mcp-tools</link>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-10-31T21:40:27Z</guid>
-      <pubDate>Sat, 31 Oct 2026 21:40:27 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-01T06:10:14Z</guid>
+      <pubDate>Sun, 01 Nov 2026 06:10:14 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-10-31T18:16:57Z</guid>
-      <pubDate>Sat, 31 Oct 2026 18:16:57 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-01T01:09:11Z</guid>
+      <pubDate>Sun, 01 Nov 2026 01:09:11 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -51,30 +51,37 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-10-31T21:27:13Z</guid>
-      <pubDate>Sat, 31 Oct 2026 21:27:13 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-11-01T06:20:12Z</guid>
+      <pubDate>Sun, 01 Nov 2026 06:20:12 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
       <title>🆕 dsh-our-free-model</title>
       <link>https://github.com/Ebony-Vinyl/dsh-our-free-model</link>
-      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-10-31T13:24:11Z</guid>
-      <pubDate>Sat, 31 Oct 2026 13:24:11 GMT</pubDate>
+      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-11-01T04:38:23Z</guid>
+      <pubDate>Sun, 01 Nov 2026 04:38:23 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;icon.svg&quot; alt=&quot;Our Free Model — DeepSeek Harness 免费模型插件&quot; width=&quot;120&quot; dsh our free model 简体中文 English &lt;img alt=&quot;许可证&q</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-10-31T20:27:37Z</guid>
-      <pubDate>Sat, 31 Oct 2026 20:27:37 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-01T06:04:25Z</guid>
+      <pubDate>Sun, 01 Nov 2026 06:04:25 GMT</pubDate>
       <description>[!IMPORTANT] Reactive Resume now lives at reactive resume/reactive resume on GitHub. GHCR images publish to ghcr.io/reactive resume/reactive resume . Docker Hub stays at amruthpillai/reactive resume .</description>
     </item>
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-10-31T18:51:06Z</guid>
-      <pubDate>Sat, 31 Oct 2026 18:51:06 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-01T04:54:14Z</guid>
+      <pubDate>Sun, 01 Nov 2026 04:54:14 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
+    </item>
+    <item>
+      <title>🆕 next-ai-draw-io</title>
+      <link>https://github.com/DayuanJiang/next-ai-draw-io</link>
+      <guid isPermaLink="false">DayuanJiang/next-ai-draw-io@2026-11-01T05:00:47Z</guid>
+      <pubDate>Sun, 01 Nov 2026 05:00:47 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; Next AI Draw.io Draw and edit draw.io diagrams by chatting with an AI. English 中文 日本語 Live Demo · Docs · Gallery · Desktop App · MCP Server &lt;/div https://github.com</description>
     </item>
     <item>
       <title>🆕 WeKnora</title>
@@ -86,8 +93,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-10-31T21:27:15Z</guid>
-      <pubDate>Sat, 31 Oct 2026 21:27:15 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-01T05:51:13Z</guid>
+      <pubDate>Sun, 01 Nov 2026 05:51:13 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -135,8 +142,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-31T20:26:05Z</guid>
-      <pubDate>Sat, 31 Oct 2026 20:26:05 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-10-31T23:24:53Z</guid>
+      <pubDate>Sat, 31 Oct 2026 23:24:53 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -177,15 +184,15 @@
     <item>
       <title>🆕 dsh-market</title>
       <link>https://github.com/dsh-market/dsh-market</link>
-      <guid isPermaLink="false">dsh-market/dsh-market@2026-10-31T19:00:31Z</guid>
-      <pubDate>Sat, 31 Oct 2026 19:00:31 GMT</pubDate>
+      <guid isPermaLink="false">dsh-market/dsh-market@2026-11-01T02:45:38Z</guid>
+      <pubDate>Sun, 01 Nov 2026 02:45:38 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;assets/logo.svg&quot; width=&quot;96&quot; alt=&quot;dsh market logo&quot; &lt;/p dsh market English 中文 The plugin market inside DeepSeek Harness. On d</description>
     </item>
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-10-31T11:27:32Z</guid>
-      <pubDate>Sat, 31 Oct 2026 11:27:32 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-11-01T03:18:41Z</guid>
+      <pubDate>Sun, 01 Nov 2026 03:18:41 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI、DeepSeek 网页版与官方桌面客户端（DeepSeek Desktop）的模块化插件生态与 AI 智能体开发工作台。全面支持 DeepSeek V3 与 DeepSeek R1 等前沿推理模型</description>
     </item>
     <item>
@@ -208,13 +215,6 @@
       <guid isPermaLink="false">YaoApp/yao@2026-10-19T03:30:30Z</guid>
       <pubDate>Mon, 19 Oct 2026 03:30:30 GMT</pubDate>
       <description>Yao Agents ✨ All your agents and workspaces in one place, on every device you own. Track tasks on a board, accessible from desktop, mobile, browser, or API. Self hosted. 🏠 Homepage: https://yaoagents</description>
-    </item>
-    <item>
-      <title>🆕 honcho</title>
-      <link>https://github.com/plastic-labs/honcho</link>
-      <guid isPermaLink="false">plastic-labs/honcho@2026-10-31T01:05:40Z</guid>
-      <pubDate>Sat, 31 Oct 2026 01:05:40 GMT</pubDate>
-      <description>&lt;! markdownlint disable MD033 &lt;div align=&quot;center&quot; &lt;a href=&quot;https://app.honcho.dev&quot; target=&quot; blank&quot; &lt;img src=&quot;assets/honcho.svg&quot; alt=&quot;Honcho&quo</description>
     </item>
   </channel>
 </rss>
