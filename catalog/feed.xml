@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 02 Nov 2026 15:53:17 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 02 Nov 2026 21:49:22 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-02T06:30:40Z</guid>
-      <pubDate>Mon, 02 Nov 2026 06:30:40 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-02T15:53:49Z</guid>
+      <pubDate>Mon, 02 Nov 2026 15:53:49 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-02T15:39:48Z</guid>
-      <pubDate>Mon, 02 Nov 2026 15:39:48 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-02T19:32:05Z</guid>
+      <pubDate>Mon, 02 Nov 2026 19:32:05 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -37,15 +37,15 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-11-02T05:06:45Z</guid>
-      <pubDate>Mon, 02 Nov 2026 05:06:45 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-02T18:17:09Z</guid>
+      <pubDate>Mon, 02 Nov 2026 18:17:09 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-11-02T15:01:28Z</guid>
-      <pubDate>Mon, 02 Nov 2026 15:01:28 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-11-02T16:05:04Z</guid>
+      <pubDate>Mon, 02 Nov 2026 16:05:04 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
@@ -65,8 +65,8 @@
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-02T15:49:02Z</guid>
-      <pubDate>Mon, 02 Nov 2026 15:49:02 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-02T21:40:41Z</guid>
+      <pubDate>Mon, 02 Nov 2026 21:40:41 GMT</pubDate>
       <description>[!IMPORTANT] Reactive Resume now lives at reactive resume/reactive resume on GitHub. GHCR images publish to ghcr.io/reactive resume/reactive resume . Docker Hub stays at amruthpillai/reactive resume .</description>
     </item>
     <item>
@@ -79,8 +79,8 @@
     <item>
       <title>🆕 next-ai-draw-io</title>
       <link>https://github.com/DayuanJiang/next-ai-draw-io</link>
-      <guid isPermaLink="false">DayuanJiang/next-ai-draw-io@2026-11-02T11:18:28Z</guid>
-      <pubDate>Mon, 02 Nov 2026 11:18:28 GMT</pubDate>
+      <guid isPermaLink="false">DayuanJiang/next-ai-draw-io@2026-11-02T18:57:00Z</guid>
+      <pubDate>Mon, 02 Nov 2026 18:57:00 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; Next AI Draw.io Draw and edit draw.io diagrams by chatting with an AI. English 中文 日本語 Live Demo · Docs · Gallery · Desktop App · MCP Server &lt;/div https://github.com</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-02T15:16:58Z</guid>
-      <pubDate>Mon, 02 Nov 2026 15:16:58 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-02T17:29:32Z</guid>
+      <pubDate>Mon, 02 Nov 2026 17:29:32 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -142,8 +142,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-01T23:23:06Z</guid>
-      <pubDate>Sun, 01 Nov 2026 23:23:06 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-02T20:31:51Z</guid>
+      <pubDate>Mon, 02 Nov 2026 20:31:51 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -170,8 +170,8 @@
     <item>
       <title>🆕 EverOS</title>
       <link>https://github.com/EverMind-AI/EverOS</link>
-      <guid isPermaLink="false">EverMind-AI/EverOS@2026-11-02T14:15:09Z</guid>
-      <pubDate>Mon, 02 Nov 2026 14:15:09 GMT</pubDate>
+      <guid isPermaLink="false">EverMind-AI/EverOS@2026-11-02T17:48:42Z</guid>
+      <pubDate>Mon, 02 Nov 2026 17:48:42 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
     </item>
     <item>
@@ -184,15 +184,15 @@
     <item>
       <title>🆕 dsh-market</title>
       <link>https://github.com/dsh-market/dsh-market</link>
-      <guid isPermaLink="false">dsh-market/dsh-market@2026-11-01T18:59:47Z</guid>
-      <pubDate>Sun, 01 Nov 2026 18:59:47 GMT</pubDate>
+      <guid isPermaLink="false">dsh-market/dsh-market@2026-11-02T18:55:12Z</guid>
+      <pubDate>Mon, 02 Nov 2026 18:55:12 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;assets/logo.svg&quot; width=&quot;96&quot; alt=&quot;dsh market logo&quot; &lt;/p dsh market English 中文 The plugin market inside DeepSeek Harness. On d</description>
     </item>
     <item>
       <title>🆕 dsh-web</title>
       <link>https://github.com/zhu1090093659/dsh-web</link>
-      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-11-02T09:52:07Z</guid>
-      <pubDate>Mon, 02 Nov 2026 09:52:07 GMT</pubDate>
+      <guid isPermaLink="false">zhu1090093659/dsh-web@2026-11-02T16:02:35Z</guid>
+      <pubDate>Mon, 02 Nov 2026 16:02:35 GMT</pubDate>
       <description>dsh web · DeepSeek Harness (DSH) Web GUI 插件与主题全家桶 中文 English dsh web 是面向 DeepSeek Harness（DSH）Web GUI、DeepSeek 网页版与官方桌面客户端（DeepSeek Desktop）的模块化插件生态与 AI 智能体开发工作台。全面支持 DeepSeek V3 与 DeepSeek R1 等前沿推理模型</description>
     </item>
     <item>
