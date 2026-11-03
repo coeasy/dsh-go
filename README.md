@@ -156,26 +156,26 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 4.7k | TypeScript | 2026-10-23 | The first vision plugin for DeepSeek Harne… |
 | 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 4.8k | TypeScript | 2026-10-30 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-02 | DSH Plugin Radar — open-source ecosystem r… |
-| 4 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.4k | JavaScript | 2026-11-02 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
-| 5 | [dsh-plugin-hub](https://github.com/dshplugin/dsh-plugin-hub) | 425 | TypeScript | 2026-11-02 | DSH Plugin 插件市场 - DeepSeek Harness Plugin … |
-| 6 | [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy) | 1k | TypeScript | 2026-11-02 | Connect locally signed-in WorkBuddy models… |
-| 7 | [dsh-qqbot](https://github.com/tencent-connect/dsh-qqbot) | 506 | TypeScript | 2026-11-02 | 让 QQ Bot 接入 DeepSeek Harness（dsh）的官方插件 |
-| 8 | [dsh-dream-skin](https://github.com/RevolutionLA/dsh-dream-skin) | 301 | JavaScript | 2026-11-02 | DeepSeek Harness 换肤 / 壁纸 / 主题包插件 (dsh-plug… |
-| 9 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 4k | TypeScript | 2026-11-02 | The best DeepSeek Harness plugin for conte… |
-| 10 | [dsh-im](https://github.com/xmanrui/dsh-im) | 3.1k | JavaScript | 2026-11-02 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
-| 11 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 999 | Kotlin | 2026-11-02 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
-| 12 | [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | 728 | TypeScript | 2026-11-02 | DeepSeek Harness 的安全移动访问插件与 Android App，支持… |
-| 13 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 1.2k | JavaScript | 2026-11-02 | Eyes for text-only DeepSeek Harness agents… |
-| 14 | [dsh-video-storyboard](https://github.com/SAOS-3624/dsh-video-storyboard) | 383 | JavaScript | 2026-11-02 | Scene-aware storyboard for DeepSeek Harnes… |
-| 15 | [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | 849 | TypeScript | 2026-11-02 | Composable, view-based context for DeepSee… |
-| 16 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.4k | TypeScript | 2026-11-02 | DSH Tauri 桌面版 \| Better DSH desktop, zero … |
-| 17 | [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | 579 | Python | 2026-11-02 | 白箱AGI架构探索：元认知（自我认知循环）、持续学习（知识飞轮）、世界模型（条件空间… |
-| 18 | [dsh-commandcode-provider](https://github.com/Mars-Sea/dsh-commandcode-provider) | 449 | TypeScript | 2026-11-02 | Command Code provider plugin for DeepSeek … |
-| 19 | [dsh-univer-office](https://github.com/dream-num/dsh-univer-office) | 657 | TypeScript | 2026-11-02 | Give DeepSeek Harness a real office enviro… |
-| 20 | [dsh-blender-plugin](https://github.com/sixtysevenlf/dsh-blender-plugin) | 1.6k | Python | 2026-11-02 | DSH × Blender 直连实时插件 v2.6.1：15 个模型工具让 AI 驱… |
+| 3 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.4k | JavaScript | 2026-11-03 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
+| 4 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 999 | Kotlin | 2026-11-03 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
+| 5 | [dsh-meow-memory](https://github.com/Phant0Meow/dsh-meow-memory) | 351 | TypeScript | 2026-11-03 | Cross-session memory plugin for DeepSeek H… |
+| 6 | [dsh-mobile](https://github.com/Clarklevis1995/dsh-mobile) | 714 | HTML | 2026-11-03 | DeepSeek Harness Mobile 是一个面向 DeepSeek Har… |
+| 7 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-02 | DSH Plugin Radar — open-source ecosystem r… |
+| 8 | [dsh-plugin-hub](https://github.com/dshplugin/dsh-plugin-hub) | 425 | TypeScript | 2026-11-02 | DSH Plugin 插件市场 - DeepSeek Harness Plugin … |
+| 9 | [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy) | 1k | TypeScript | 2026-11-02 | Connect locally signed-in WorkBuddy models… |
+| 10 | [dsh-qqbot](https://github.com/tencent-connect/dsh-qqbot) | 506 | TypeScript | 2026-11-02 | 让 QQ Bot 接入 DeepSeek Harness（dsh）的官方插件 |
+| 11 | [dsh-dream-skin](https://github.com/RevolutionLA/dsh-dream-skin) | 301 | JavaScript | 2026-11-02 | DeepSeek Harness 换肤 / 壁纸 / 主题包插件 (dsh-plug… |
+| 12 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 4k | TypeScript | 2026-11-02 | The best DeepSeek Harness plugin for conte… |
+| 13 | [dsh-im](https://github.com/xmanrui/dsh-im) | 3.1k | JavaScript | 2026-11-02 | 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信… |
+| 14 | [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | 728 | TypeScript | 2026-11-02 | DeepSeek Harness 的安全移动访问插件与 Android App，支持… |
+| 15 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 1.2k | JavaScript | 2026-11-02 | Eyes for text-only DeepSeek Harness agents… |
+| 16 | [dsh-video-storyboard](https://github.com/SAOS-3624/dsh-video-storyboard) | 383 | JavaScript | 2026-11-02 | Scene-aware storyboard for DeepSeek Harnes… |
+| 17 | [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | 849 | TypeScript | 2026-11-02 | Composable, view-based context for DeepSee… |
+| 18 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.4k | TypeScript | 2026-11-02 | DSH Tauri 桌面版 \| Better DSH desktop, zero … |
+| 19 | [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | 579 | Python | 2026-11-02 | 白箱AGI架构探索：元认知（自我认知循环）、持续学习（知识飞轮）、世界模型（条件空间… |
+| 20 | [dsh-commandcode-provider](https://github.com/Mars-Sea/dsh-commandcode-provider) | 449 | TypeScript | 2026-11-02 | Command Code provider plugin for DeepSeek … |
 
-更新时间：2026-11-02
+更新时间：2026-11-03
 <!-- HOT-PLUGINS:END -->
 
 ## 同步与部署
