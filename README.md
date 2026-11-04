@@ -155,25 +155,25 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 | # | 插件 | ★ Stars | 语言 | 最近更新 | 简介 |
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 4.7k | TypeScript | 2026-10-23 | The first vision plugin for DeepSeek Harne… |
-| 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 4.9k | TypeScript | 2026-10-30 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy) | 1.1k | TypeScript | 2026-11-04 | Connect locally signed-in WorkBuddy models… |
-| 4 | [dsh-Mimir-Academic-research](https://github.com/1692775560/dsh-Mimir-Academic-research) | 555 | TypeScript | 2026-11-04 | Mimir — 一站式科研工作台插件：LaTeX 论文边写边编译、arXiv 文献管… |
-| 5 | [dsh-model-router](https://github.com/Alice-Marx/dsh-model-router) | 705 | JavaScript | 2026-11-04 | Model Router and GALGame plugin for DeepSe… |
-| 6 | [dsh-skin-market](https://github.com/kingOfSoySauce/dsh-skin-market) | 302 | TypeScript | 2026-11-04 | DSH皮肤市场Skin Market 已收录五百+皮肤、桌宠、开屏动画等；有便捷的社… |
-| 7 | [dsh-plugin-shop](https://github.com/LivXue/dsh-plugin-shop) | 660 | TypeScript | 2026-11-04 | The most comprehensive DeepSeek Harness pl… |
-| 8 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-04 | DSH Plugin Radar — open-source ecosystem r… |
-| 9 | [dsh-fish-memory](https://github.com/Yuuyuko-uu/dsh-fish-memory) | 466 | JavaScript | 2026-11-04 | 🐋 DSH 鱼的记忆：给会话一份会淡忘的长期记忆，每条都带时间。名字里的「鱼」来自… |
-| 10 | [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | 592 | Python | 2026-11-04 | 白箱AGI架构探索：元认知（自我认知循环）、持续学习（知识飞轮）、世界模型（条件空间… |
-| 11 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.5k | TypeScript | 2026-11-04 | DSH Tauri 桌面版 \| Better DSH desktop, zero … |
-| 12 | [dsh-mobile](https://github.com/Clarklevis1995/dsh-mobile) | 720 | Kotlin | 2026-11-04 | DeepSeek Harness Mobile 是一个面向 DeepSeek Har… |
-| 13 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.5k | JavaScript | 2026-11-04 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
-| 14 | [dsh-video-storyboard](https://github.com/SAOS-3624/dsh-video-storyboard) | 422 | JavaScript | 2026-11-04 | Scene-aware storyboard for DeepSeek Harnes… |
-| 15 | [dsh-dream-skin](https://github.com/RevolutionLA/dsh-dream-skin) | 300 | JavaScript | 2026-11-04 | DeepSeek Harness 换肤 / 壁纸 / 主题包插件 (dsh-plug… |
-| 16 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 617 | JavaScript | 2026-11-04 | Cost tracking for DeepSeek Harness: sessio… |
-| 17 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 4.1k | TypeScript | 2026-11-04 | The best DeepSeek Harness plugin for conte… |
-| 18 | [dsh-commandcode-provider](https://github.com/Mars-Sea/dsh-commandcode-provider) | 454 | TypeScript | 2026-11-04 | Command Code provider plugin for DeepSeek … |
-| 19 | [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | 866 | TypeScript | 2026-11-04 | Composable, view-based context for DeepSee… |
-| 20 | [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | 488 | JavaScript | 2026-11-03 | DeepSeek Harness Desktop App: a local AI d… |
+| 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 4.9k | TypeScript | 2026-11-04 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
+| 3 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.5k | JavaScript | 2026-11-04 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
+| 4 | [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | 878 | TypeScript | 2026-11-04 | Composable, view-based context for DeepSee… |
+| 5 | [dsh-codex-subscription](https://github.com/WSL043/dsh-codex-subscription) | 362 | JavaScript | 2026-11-04 | Use your ChatGPT Plus / Pro (Codex) subscr… |
+| 6 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 1k | Kotlin | 2026-11-04 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
+| 7 | [dsh-model-router](https://github.com/Alice-Marx/dsh-model-router) | 716 | JavaScript | 2026-11-04 | Model Router and GALGame plugin for DeepSe… |
+| 8 | [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | 596 | Python | 2026-11-04 | 白箱AGI架构探索：元认知（自我认知循环）、持续学习（知识飞轮）、世界模型（条件空间… |
+| 9 | [dsh-purge](https://github.com/kingcharleslzy-ai/dsh-purge) | 4.4k | JavaScript | 2026-11-04 | dsh-purge Community · DeepSeek Harness 社区维… |
+| 10 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-04 | DSH Plugin Radar — open-source ecosystem r… |
+| 11 | [dsh-blender-plugin](https://github.com/sixtysevenlf/dsh-blender-plugin) | 1.6k | Python | 2026-11-04 | DSH × Blender 直连实时插件 v2.6.1：15 个模型工具让 AI 驱… |
+| 12 | [dsh-computer-use-win](https://github.com/Yu-tao-Li/dsh-computer-use-win) | 493 | JavaScript | 2026-11-04 | DeepSeek Harness的Windows电脑操控插件 / Windows c… |
+| 13 | [dsh-mobile](https://github.com/Clarklevis1995/dsh-mobile) | 722 | Kotlin | 2026-11-04 | DeepSeek Harness Mobile 是一个面向 DeepSeek Har… |
+| 14 | [dsh-handbook](https://github.com/Electricitysheep/dsh-handbook) | 939 | HTML | 2026-11-04 | DeepSeek Harness (dsh) 从 0 到 1 深度手册：安装/插件开… |
+| 15 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 618 | JavaScript | 2026-11-04 | Cost tracking for DeepSeek Harness: sessio… |
+| 16 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 4.1k | TypeScript | 2026-11-04 | The best DeepSeek Harness plugin for conte… |
+| 17 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.5k | TypeScript | 2026-11-04 | DSH Tauri 桌面版 \| Better DSH desktop, zero … |
+| 18 | [deepseek-harness-desktop](https://github.com/ningbainb/deepseek-harness-desktop) | 893 | JavaScript | 2026-11-04 | Open-source Windows desktop client and GUI… |
+| 19 | [dsh-Mimir-Academic-research](https://github.com/1692775560/dsh-Mimir-Academic-research) | 556 | TypeScript | 2026-11-04 | Mimir — 一站式科研工作台插件：LaTeX 论文边写边编译、arXiv 文献管… |
+| 20 | [dsh-see-now](https://github.com/SAOS-3624/dsh-see-now) | 325 | JavaScript | 2026-11-04 | 让 AI 实时看见你的屏幕：按变化量筛选帧、多帧拼进一张图，静止画面几乎不花 tok… |
 
 更新时间：2026-11-04
 <!-- HOT-PLUGINS:END -->
