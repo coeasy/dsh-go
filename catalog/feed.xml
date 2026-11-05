@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 05 Nov 2026 14:41:26 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 05 Nov 2026 20:07:58 GMT</lastBuildDate>
     <item>
       <title>🆕 dsh-mcp-tools</title>
       <link>https://github.com/hxlog/dsh-mcp-tools</link>
@@ -30,15 +30,15 @@
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-05T07:08:16Z</guid>
-      <pubDate>Thu, 05 Nov 2026 07:08:16 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-05T14:42:05Z</guid>
+      <pubDate>Thu, 05 Nov 2026 14:42:05 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-05T10:41:15Z</guid>
-      <pubDate>Thu, 05 Nov 2026 10:41:15 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-05T20:01:08Z</guid>
+      <pubDate>Thu, 05 Nov 2026 20:01:08 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -51,22 +51,22 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-11-05T12:59:13Z</guid>
-      <pubDate>Thu, 05 Nov 2026 12:59:13 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-05T18:15:21Z</guid>
+      <pubDate>Thu, 05 Nov 2026 18:15:21 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-11-05T14:39:15Z</guid>
-      <pubDate>Thu, 05 Nov 2026 14:39:15 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-11-05T15:58:31Z</guid>
+      <pubDate>Thu, 05 Nov 2026 15:58:31 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-11-05T04:50:54Z</guid>
-      <pubDate>Thu, 05 Nov 2026 04:50:54 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-11-05T16:43:11Z</guid>
+      <pubDate>Thu, 05 Nov 2026 16:43:11 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -86,8 +86,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-05T13:50:49Z</guid>
-      <pubDate>Thu, 05 Nov 2026 13:50:49 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-05T15:45:20Z</guid>
+      <pubDate>Thu, 05 Nov 2026 15:45:20 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-05T10:50:53Z</guid>
-      <pubDate>Thu, 05 Nov 2026 10:50:53 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-05T16:21:33Z</guid>
+      <pubDate>Thu, 05 Nov 2026 16:21:33 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -177,15 +177,15 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-04T23:25:09Z</guid>
-      <pubDate>Wed, 04 Nov 2026 23:25:09 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-05T18:37:53Z</guid>
+      <pubDate>Thu, 05 Nov 2026 18:37:53 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
       <title>🆕 dsh-purge</title>
       <link>https://github.com/HunYiSage/dsh-purge</link>
-      <guid isPermaLink="false">HunYiSage/dsh-purge@2026-11-05T07:13:31Z</guid>
-      <pubDate>Thu, 05 Nov 2026 07:13:31 GMT</pubDate>
+      <guid isPermaLink="false">HunYiSage/dsh-purge@2026-11-05T17:05:21Z</guid>
+      <pubDate>Thu, 05 Nov 2026 17:05:21 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/banner.svg&quot; alt=&quot;dsh purge&quot; width=&quot;720&quot; &lt;/p &lt;h1 align=&quot;center&quot; ⚔️ DeepSeek Harness cybersecurity red team</description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 EverOS</title>
       <link>https://github.com/EverMind-AI/EverOS</link>
-      <guid isPermaLink="false">EverMind-AI/EverOS@2026-11-05T13:51:30Z</guid>
-      <pubDate>Thu, 05 Nov 2026 13:51:30 GMT</pubDate>
+      <guid isPermaLink="false">EverMind-AI/EverOS@2026-11-05T15:50:37Z</guid>
+      <pubDate>Thu, 05 Nov 2026 15:50:37 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
     </item>
     <item>
