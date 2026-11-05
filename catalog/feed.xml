@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 05 Nov 2026 20:07:58 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 05 Nov 2026 23:44:18 GMT</lastBuildDate>
     <item>
       <title>🆕 dsh-mcp-tools</title>
       <link>https://github.com/hxlog/dsh-mcp-tools</link>
@@ -30,15 +30,15 @@
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-05T14:42:05Z</guid>
-      <pubDate>Thu, 05 Nov 2026 14:42:05 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-05T20:08:18Z</guid>
+      <pubDate>Thu, 05 Nov 2026 20:08:18 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-05T20:01:08Z</guid>
-      <pubDate>Thu, 05 Nov 2026 20:01:08 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-05T20:30:39Z</guid>
+      <pubDate>Thu, 05 Nov 2026 20:30:39 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -65,8 +65,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-11-05T16:43:11Z</guid>
-      <pubDate>Thu, 05 Nov 2026 16:43:11 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-11-05T23:41:19Z</guid>
+      <pubDate>Thu, 05 Nov 2026 23:41:19 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -79,8 +79,8 @@
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-05T04:33:23Z</guid>
-      <pubDate>Thu, 05 Nov 2026 04:33:23 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-05T21:30:51Z</guid>
+      <pubDate>Thu, 05 Nov 2026 21:30:51 GMT</pubDate>
       <description>[!IMPORTANT] Reactive Resume now lives at reactive resume/reactive resume on GitHub. GHCR images publish to ghcr.io/reactive resume/reactive resume . Docker Hub stays at amruthpillai/reactive resume .</description>
     </item>
     <item>
@@ -100,8 +100,8 @@
     <item>
       <title>🆕 next-ai-draw-io</title>
       <link>https://github.com/DayuanJiang/next-ai-draw-io</link>
-      <guid isPermaLink="false">DayuanJiang/next-ai-draw-io@2026-11-05T09:52:07Z</guid>
-      <pubDate>Thu, 05 Nov 2026 09:52:07 GMT</pubDate>
+      <guid isPermaLink="false">DayuanJiang/next-ai-draw-io@2026-11-05T20:18:42Z</guid>
+      <pubDate>Thu, 05 Nov 2026 20:18:42 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; Next AI Draw.io Draw and edit draw.io diagrams by chatting with an AI. English 中文 日本語 Live Demo · Docs · Gallery · Desktop App · MCP Server &lt;/div https://github.com</description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-05T18:37:53Z</guid>
-      <pubDate>Thu, 05 Nov 2026 18:37:53 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-05T23:37:02Z</guid>
+      <pubDate>Thu, 05 Nov 2026 23:37:02 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
