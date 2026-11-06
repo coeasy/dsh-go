@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 06 Nov 2026 19:33:37 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 06 Nov 2026 23:17:57 GMT</lastBuildDate>
     <item>
       <title>🆕 dsh-mcp-tools</title>
       <link>https://github.com/hxlog/dsh-mcp-tools</link>
@@ -30,15 +30,15 @@
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-06T14:17:58Z</guid>
-      <pubDate>Fri, 06 Nov 2026 14:17:58 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-06T19:34:07Z</guid>
+      <pubDate>Fri, 06 Nov 2026 19:34:07 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-06T19:22:18Z</guid>
-      <pubDate>Fri, 06 Nov 2026 19:22:18 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-06T23:15:17Z</guid>
+      <pubDate>Fri, 06 Nov 2026 23:15:17 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -65,8 +65,8 @@
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-11-06T18:31:29Z</guid>
-      <pubDate>Fri, 06 Nov 2026 18:31:29 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-11-06T22:11:17Z</guid>
+      <pubDate>Fri, 06 Nov 2026 22:11:17 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -79,9 +79,9 @@
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-06T18:23:36Z</guid>
-      <pubDate>Fri, 06 Nov 2026 18:23:36 GMT</pubDate>
-      <description>[!IMPORTANT] Reactive Resume now lives at reactive resume/reactive resume on GitHub. GHCR images publish to ghcr.io/reactive resume/reactive resume . Docker Hub stays at amruthpillai/reactive resume .</description>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-06T23:15:50Z</guid>
+      <pubDate>Fri, 06 Nov 2026 23:15:50 GMT</pubDate>
+      <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://rxresu.me&quot; &lt;img src=&quot;apps/web/public/opengraph/banner.jpg&quot; alt=&quot;Reactive Resume&quot; / &lt;/a &lt;h1 Reactive Resume&l</description>
     </item>
     <item>
       <title>🆕 OpenViking</title>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-06T18:05:52Z</guid>
-      <pubDate>Fri, 06 Nov 2026 18:05:52 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-06T20:27:01Z</guid>
+      <pubDate>Fri, 06 Nov 2026 20:27:01 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -212,8 +212,8 @@
     <item>
       <title>🆕 dsh-Go</title>
       <link>https://github.com/ccch1mneyyy/dsh-Go</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-06T19:11:58Z</guid>
-      <pubDate>Fri, 06 Nov 2026 19:11:58 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-06T21:48:04Z</guid>
+      <pubDate>Fri, 06 Nov 2026 21:48:04 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
     </item>
   </channel>
