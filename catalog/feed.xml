@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 06 Nov 2026 07:07:48 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 06 Nov 2026 14:17:30 GMT</lastBuildDate>
     <item>
       <title>🆕 dsh-mcp-tools</title>
       <link>https://github.com/hxlog/dsh-mcp-tools</link>
@@ -30,15 +30,15 @@
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-05T23:44:37Z</guid>
-      <pubDate>Thu, 05 Nov 2026 23:44:37 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-06T07:08:17Z</guid>
+      <pubDate>Fri, 06 Nov 2026 07:08:17 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-06T06:56:12Z</guid>
-      <pubDate>Fri, 06 Nov 2026 06:56:12 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-06T14:11:22Z</guid>
+      <pubDate>Fri, 06 Nov 2026 14:11:22 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -51,22 +51,22 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-11-06T06:45:38Z</guid>
-      <pubDate>Fri, 06 Nov 2026 06:45:38 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-06T10:18:14Z</guid>
+      <pubDate>Fri, 06 Nov 2026 10:18:14 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-11-06T06:49:24Z</guid>
-      <pubDate>Fri, 06 Nov 2026 06:49:24 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-11-06T12:28:24Z</guid>
+      <pubDate>Fri, 06 Nov 2026 12:28:24 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
       <title>🆕 ruflo</title>
       <link>https://github.com/ruvnet/ruflo</link>
-      <guid isPermaLink="false">ruvnet/ruflo@2026-11-06T05:02:09Z</guid>
-      <pubDate>Fri, 06 Nov 2026 05:02:09 GMT</pubDate>
+      <guid isPermaLink="false">ruvnet/ruflo@2026-11-06T14:13:34Z</guid>
+      <pubDate>Fri, 06 Nov 2026 14:13:34 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://cognitum.one/agentic engineering&quot; &lt;img src=&quot;ruflo/assets/ruflo neon flicker.gif&quot; alt=&quot;Ruflo animated neon sign&quot; wi</description>
     </item>
     <item>
@@ -79,15 +79,15 @@
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-05T21:30:51Z</guid>
-      <pubDate>Thu, 05 Nov 2026 21:30:51 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-06T11:44:39Z</guid>
+      <pubDate>Fri, 06 Nov 2026 11:44:39 GMT</pubDate>
       <description>[!IMPORTANT] Reactive Resume now lives at reactive resume/reactive resume on GitHub. GHCR images publish to ghcr.io/reactive resume/reactive resume . Docker Hub stays at amruthpillai/reactive resume .</description>
     </item>
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-06T06:59:52Z</guid>
-      <pubDate>Fri, 06 Nov 2026 06:59:52 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-06T11:06:58Z</guid>
+      <pubDate>Fri, 06 Nov 2026 11:06:58 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-06T06:50:13Z</guid>
-      <pubDate>Fri, 06 Nov 2026 06:50:13 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-06T13:19:21Z</guid>
+      <pubDate>Fri, 06 Nov 2026 13:19:21 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -149,8 +149,8 @@
     <item>
       <title>🆕 AiToEarn</title>
       <link>https://github.com/yikart/AiToEarn</link>
-      <guid isPermaLink="false">yikart/AiToEarn@2026-11-06T06:21:03Z</guid>
-      <pubDate>Fri, 06 Nov 2026 06:21:03 GMT</pubDate>
+      <guid isPermaLink="false">yikart/AiToEarn@2026-11-06T12:59:05Z</guid>
+      <pubDate>Fri, 06 Nov 2026 12:59:05 GMT</pubDate>
       <description>&lt;a href=&quot;https://docs.aitoearn.ai/zh/home&quot; &lt;img src=&quot;presentation/aitoearn logo.png&quot; alt=&quot;AiToEarn&quot; width=&quot;360&quot; &lt;/a OPC（一人公司）的 AI 内容营销智能体 简体中文 · Englis</description>
     </item>
     <item>
@@ -191,9 +191,9 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-11-04T03:59:48Z</guid>
-      <pubDate>Wed, 04 Nov 2026 03:59:48 GMT</pubDate>
-      <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black rounded.svg&quot; width=&quot;64&quot; alt=&quot;DSH Desktop logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 </description>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-11-06T14:03:40Z</guid>
+      <pubDate>Fri, 06 Nov 2026 14:03:40 GMT</pubDate>
+      <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black rounded.svg&quot; width=&quot;64&quot; alt=&quot;DSH Desktop Logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 </description>
     </item>
     <item>
       <title>🆕 dsh-purge</title>
@@ -205,16 +205,16 @@
     <item>
       <title>🆕 EverOS</title>
       <link>https://github.com/EverMind-AI/EverOS</link>
-      <guid isPermaLink="false">EverMind-AI/EverOS@2026-11-06T06:52:21Z</guid>
-      <pubDate>Fri, 06 Nov 2026 06:52:21 GMT</pubDate>
+      <guid isPermaLink="false">EverMind-AI/EverOS@2026-11-06T08:46:28Z</guid>
+      <pubDate>Fri, 06 Nov 2026 08:46:28 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
     </item>
     <item>
-      <title>🆕 MemOS</title>
-      <link>https://github.com/MemTensor/MemOS</link>
-      <guid isPermaLink="false">MemTensor/MemOS@2026-11-04T06:42:18Z</guid>
-      <pubDate>Wed, 04 Nov 2026 06:42:18 GMT</pubDate>
-      <description>&lt;div align=&quot;center&quot; &lt;h1 align=&quot;center&quot; &lt;a href=&quot;https://memos.openmem.net/&quot; &lt;img src=&quot;https://statics.memtensor.com.cn/logo/memos color m.png&quot; alt=&</description>
+      <title>🆕 dsh-Go</title>
+      <link>https://github.com/ccch1mneyyy/dsh-Go</link>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-06T14:12:46Z</guid>
+      <pubDate>Fri, 06 Nov 2026 14:12:46 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
     </item>
   </channel>
 </rss>
