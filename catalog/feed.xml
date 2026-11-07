@@ -5,20 +5,20 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 07 Nov 2026 13:01:31 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 07 Nov 2026 17:48:59 GMT</lastBuildDate>
+    <item>
+      <title>🆕 DSH Go Marketplace</title>
+      <link>https://github.com/coeasy/dsh-go</link>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-07T13:02:05Z</guid>
+      <pubDate>Sat, 07 Nov 2026 13:02:05 GMT</pubDate>
+      <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
+    </item>
     <item>
       <title>🆕 dsh-mcp-tools</title>
       <link>https://github.com/hxlog/dsh-mcp-tools</link>
       <guid isPermaLink="false">hxlog/dsh-mcp-tools@2026-11-03T11:55:59Z</guid>
       <pubDate>Tue, 03 Nov 2026 11:55:59 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;https://cdn.jsdelivr.net/gh/hxlog/dsh mcp tools@main/docs/logo.png&quot; width=&quot;72&quot; height=&quot;72&quot; alt=&quot;dsh mcp tools&quot; / &lt</description>
-    </item>
-    <item>
-      <title>🆕 DSH Go Marketplace</title>
-      <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-07T06:18:30Z</guid>
-      <pubDate>Sat, 07 Nov 2026 06:18:30 GMT</pubDate>
-      <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
       <title>🆕 认知引擎 Cognition Engine</title>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-07T12:23:00Z</guid>
-      <pubDate>Sat, 07 Nov 2026 12:23:00 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-07T17:47:17Z</guid>
+      <pubDate>Sat, 07 Nov 2026 17:47:17 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-11-07T12:18:40Z</guid>
-      <pubDate>Sat, 07 Nov 2026 12:18:40 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-11-07T17:34:22Z</guid>
+      <pubDate>Sat, 07 Nov 2026 17:34:22 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 dsh-our-free-model</title>
       <link>https://github.com/Ebony-Vinyl/dsh-our-free-model</link>
-      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-11-05T06:24:03Z</guid>
-      <pubDate>Thu, 05 Nov 2026 06:24:03 GMT</pubDate>
+      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-11-07T16:54:28Z</guid>
+      <pubDate>Sat, 07 Nov 2026 16:54:28 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;icon.svg&quot; alt=&quot;Our Free Model — DeepSeek Harness 免费模型插件&quot; width=&quot;120&quot; dsh our free model 简体中文 English &lt;img alt=&quot;许可证&q</description>
     </item>
     <item>
@@ -86,8 +86,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-07T12:58:53Z</guid>
-      <pubDate>Sat, 07 Nov 2026 12:58:53 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-07T14:00:58Z</guid>
+      <pubDate>Sat, 07 Nov 2026 14:00:58 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-07T12:50:54Z</guid>
-      <pubDate>Sat, 07 Nov 2026 12:50:54 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-07T17:21:12Z</guid>
+      <pubDate>Sat, 07 Nov 2026 17:21:12 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -170,8 +170,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-07T09:16:03Z</guid>
-      <pubDate>Sat, 07 Nov 2026 09:16:03 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-07T17:30:14Z</guid>
+      <pubDate>Sat, 07 Nov 2026 17:30:14 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -203,18 +203,18 @@
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/banner.svg&quot; alt=&quot;dsh purge&quot; width=&quot;720&quot; &lt;/p &lt;h1 align=&quot;center&quot; ⚔️ DeepSeek Harness cybersecurity red team</description>
     </item>
     <item>
+      <title>🆕 dsh-Go</title>
+      <link>https://github.com/ccch1mneyyy/dsh-Go</link>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-07T17:46:21Z</guid>
+      <pubDate>Sat, 07 Nov 2026 17:46:21 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
+    </item>
+    <item>
       <title>🆕 EverOS</title>
       <link>https://github.com/EverMind-AI/EverOS</link>
       <guid isPermaLink="false">EverMind-AI/EverOS@2026-11-07T02:32:56Z</guid>
       <pubDate>Sat, 07 Nov 2026 02:32:56 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
-    </item>
-    <item>
-      <title>🆕 dsh-Go</title>
-      <link>https://github.com/ccch1mneyyy/dsh-Go</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-07T12:55:43Z</guid>
-      <pubDate>Sat, 07 Nov 2026 12:55:43 GMT</pubDate>
-      <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
     </item>
   </channel>
 </rss>
