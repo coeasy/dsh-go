@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 08 Nov 2026 13:25:28 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 08 Nov 2026 18:00:08 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-08T07:23:18Z</guid>
-      <pubDate>Sun, 08 Nov 2026 07:23:18 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-08T13:25:54Z</guid>
+      <pubDate>Sun, 08 Nov 2026 13:25:54 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,9 +23,9 @@
     <item>
       <title>🆕 认知引擎 Cognition Engine</title>
       <link>https://github.com/1720198650/dsh-cognition-engine</link>
-      <guid isPermaLink="false">1720198650/dsh-cognition-engine@2026-11-05T14:26:16Z</guid>
-      <pubDate>Thu, 05 Nov 2026 14:26:16 GMT</pubDate>
-      <description>dsh cognition engine 让 AI 记得住，而且知道自己什么时候记错了。 关掉对话框，AI 就失忆了。你上周定的规矩、踩过的坑、说过的「别用那个接口」——下一次全部归零，还得重新交代一遍。 这个插件给它装两样东西： 🧠 记忆 ——记住事实，并且分清「现在为真」和「曾经为真」 📌 准则本 ——把记忆蒸馏成一页工作准则， 每轮对话都摆到它面前 ，不靠它自己想起来 同类插件让 AI </description>
+      <guid isPermaLink="false">1720198650/dsh-cognition-engine@2026-11-08T16:46:42Z</guid>
+      <pubDate>Sun, 08 Nov 2026 16:46:42 GMT</pubDate>
+      <description>dsh cognition engine 本项目由 AI 编写，人只提需求。 代码、测试、文档、调研、发版脚本，全部由 DeepSeek V4.1 Flash（1017） 在「许愿式编程」模式下逐轮生成、 自测、修复并交付；人做的事只有一件—— 提出想法，以及在报告造假时当场戳穿 。 下文的「我们」指这个协作体，不是某个坐在电脑前敲代码的人。 让 AI 记得住，而且知道自己什么时候记错了。 关掉对</description>
     </item>
     <item>
       <title>🆕 dsh-skills-tools</title>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-08T13:24:05Z</guid>
-      <pubDate>Sun, 08 Nov 2026 13:24:05 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-08T17:57:05Z</guid>
+      <pubDate>Sun, 08 Nov 2026 17:57:05 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-11-08T12:47:14Z</guid>
-      <pubDate>Sun, 08 Nov 2026 12:47:14 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-11-08T17:06:37Z</guid>
+      <pubDate>Sun, 08 Nov 2026 17:06:37 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
@@ -86,8 +86,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-08T12:13:00Z</guid>
-      <pubDate>Sun, 08 Nov 2026 12:13:00 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-08T15:20:24Z</guid>
+      <pubDate>Sun, 08 Nov 2026 15:20:24 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-08T11:54:51Z</guid>
-      <pubDate>Sun, 08 Nov 2026 11:54:51 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-08T16:31:20Z</guid>
+      <pubDate>Sun, 08 Nov 2026 16:31:20 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -170,8 +170,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-08T01:16:44Z</guid>
-      <pubDate>Sun, 08 Nov 2026 01:16:44 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-08T17:53:56Z</guid>
+      <pubDate>Sun, 08 Nov 2026 17:53:56 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 dsh-Go</title>
       <link>https://github.com/ccch1mneyyy/dsh-Go</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-08T13:18:50Z</guid>
-      <pubDate>Sun, 08 Nov 2026 13:18:50 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-08T17:49:53Z</guid>
+      <pubDate>Sun, 08 Nov 2026 17:49:53 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
     </item>
     <item>
