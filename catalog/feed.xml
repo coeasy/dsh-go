@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 09 Nov 2026 06:54:21 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 09 Nov 2026 16:19:24 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-08T22:17:44Z</guid>
-      <pubDate>Sun, 08 Nov 2026 22:17:44 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-09T06:54:47Z</guid>
+      <pubDate>Mon, 09 Nov 2026 06:54:47 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 认知引擎 Cognition Engine</title>
       <link>https://github.com/1720198650/dsh-cognition-engine</link>
-      <guid isPermaLink="false">1720198650/dsh-cognition-engine@2026-11-08T16:46:42Z</guid>
-      <pubDate>Sun, 08 Nov 2026 16:46:42 GMT</pubDate>
+      <guid isPermaLink="false">1720198650/dsh-cognition-engine@2026-11-09T14:28:28Z</guid>
+      <pubDate>Mon, 09 Nov 2026 14:28:28 GMT</pubDate>
       <description>dsh cognition engine 本项目由 AI 编写，人只提需求。 代码、测试、文档、调研、发版脚本，全部由 DeepSeek V4.1 Flash（1017） 在「许愿式编程」模式下逐轮生成、 自测、修复并交付；人做的事只有一件—— 提出想法，以及在报告造假时当场戳穿 。 下文的「我们」指这个协作体，不是某个坐在电脑前敲代码的人。 让 AI 记得住，而且知道自己什么时候记错了。 关掉对</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-09T05:38:49Z</guid>
-      <pubDate>Mon, 09 Nov 2026 05:38:49 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-09T15:33:19Z</guid>
+      <pubDate>Mon, 09 Nov 2026 15:33:19 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -51,15 +51,15 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-11-09T06:32:47Z</guid>
-      <pubDate>Mon, 09 Nov 2026 06:32:47 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-09T12:37:50Z</guid>
+      <pubDate>Mon, 09 Nov 2026 12:37:50 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-11-09T06:12:22Z</guid>
-      <pubDate>Mon, 09 Nov 2026 06:12:22 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-11-09T16:00:00Z</guid>
+      <pubDate>Mon, 09 Nov 2026 16:00:00 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 Mole</title>
       <link>https://github.com/tw93/Mole</link>
-      <guid isPermaLink="false">tw93/Mole@2026-11-09T04:27:43Z</guid>
-      <pubDate>Mon, 09 Nov 2026 04:27:43 GMT</pubDate>
+      <guid isPermaLink="false">tw93/Mole@2026-11-09T15:44:40Z</guid>
+      <pubDate>Mon, 09 Nov 2026 15:44:40 GMT</pubDate>
       <description>&lt;p align=&quot;right&quot; &lt;b macOS&lt;/b · &lt;a href=&quot;https://github.com/tw93/Mole/tree/windows readme&quot; Windows&lt;/a · &lt;a href=&quot;https://github.com/tw93/Mole/tree/linux readm</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-09T06:13:59Z</guid>
-      <pubDate>Mon, 09 Nov 2026 06:13:59 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-09T16:05:36Z</guid>
+      <pubDate>Mon, 09 Nov 2026 16:05:36 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -107,8 +107,8 @@
     <item>
       <title>🆕 WeKnora</title>
       <link>https://github.com/Tencent/WeKnora</link>
-      <guid isPermaLink="false">Tencent/WeKnora@2026-11-09T06:41:25Z</guid>
-      <pubDate>Mon, 09 Nov 2026 06:41:25 GMT</pubDate>
+      <guid isPermaLink="false">Tencent/WeKnora@2026-11-09T15:19:50Z</guid>
+      <pubDate>Mon, 09 Nov 2026 15:19:50 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://weknora.weixin.qq.com&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;./docs/images/readme/hero en dark</description>
     </item>
     <item>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 DeepSeek-Reasonix</title>
       <link>https://github.com/esengine/DeepSeek-Reasonix</link>
-      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-09T06:47:20Z</guid>
-      <pubDate>Mon, 09 Nov 2026 06:47:20 GMT</pubDate>
+      <guid isPermaLink="false">esengine/DeepSeek-Reasonix@2026-11-09T14:46:52Z</guid>
+      <pubDate>Mon, 09 Nov 2026 14:46:52 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/logo ghost wave effect.svg&quot; alt=&quot;Reasonix&quot; width=&quot;360&quot;/ &lt;/p &lt;p align=&quot;center&quot; &lt;strong English&lt;/stro</description>
     </item>
     <item>
@@ -149,8 +149,8 @@
     <item>
       <title>🆕 AiToEarn</title>
       <link>https://github.com/yikart/AiToEarn</link>
-      <guid isPermaLink="false">yikart/AiToEarn@2026-11-06T12:59:05Z</guid>
-      <pubDate>Fri, 06 Nov 2026 12:59:05 GMT</pubDate>
+      <guid isPermaLink="false">yikart/AiToEarn@2026-11-09T09:08:45Z</guid>
+      <pubDate>Mon, 09 Nov 2026 09:08:45 GMT</pubDate>
       <description>&lt;a href=&quot;https://docs.aitoearn.ai/zh/home&quot; &lt;img src=&quot;presentation/aitoearn logo.png&quot; alt=&quot;AiToEarn&quot; width=&quot;360&quot; &lt;/a OPC（一人公司）的 AI 内容营销智能体 简体中文 · Englis</description>
     </item>
     <item>
@@ -198,15 +198,15 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
-      <guid isPermaLink="false">dataelement/dsh-desktop@2026-11-06T15:02:09Z</guid>
-      <pubDate>Fri, 06 Nov 2026 15:02:09 GMT</pubDate>
+      <guid isPermaLink="false">dataelement/dsh-desktop@2026-11-09T13:30:22Z</guid>
+      <pubDate>Mon, 09 Nov 2026 13:30:22 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black rounded.svg&quot; width=&quot;64&quot; alt=&quot;DSH Desktop Logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 </description>
     </item>
     <item>
       <title>🆕 dsh-Go</title>
       <link>https://github.com/ccch1mneyyy/dsh-Go</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-09T05:20:22Z</guid>
-      <pubDate>Mon, 09 Nov 2026 05:20:22 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-09T15:26:28Z</guid>
+      <pubDate>Mon, 09 Nov 2026 15:26:28 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
     </item>
     <item>
