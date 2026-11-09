@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 09 Nov 2026 16:19:24 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 09 Nov 2026 22:32:34 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-09T06:54:47Z</guid>
-      <pubDate>Mon, 09 Nov 2026 06:54:47 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-09T16:19:53Z</guid>
+      <pubDate>Mon, 09 Nov 2026 16:19:53 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-09T15:33:19Z</guid>
-      <pubDate>Mon, 09 Nov 2026 15:33:19 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-09T22:22:39Z</guid>
+      <pubDate>Mon, 09 Nov 2026 22:22:39 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -51,8 +51,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-11-09T12:37:50Z</guid>
-      <pubDate>Mon, 09 Nov 2026 12:37:50 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-09T18:15:41Z</guid>
+      <pubDate>Mon, 09 Nov 2026 18:15:41 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 Mole</title>
       <link>https://github.com/tw93/Mole</link>
-      <guid isPermaLink="false">tw93/Mole@2026-11-09T15:44:40Z</guid>
-      <pubDate>Mon, 09 Nov 2026 15:44:40 GMT</pubDate>
+      <guid isPermaLink="false">tw93/Mole@2026-11-09T16:22:10Z</guid>
+      <pubDate>Mon, 09 Nov 2026 16:22:10 GMT</pubDate>
       <description>&lt;p align=&quot;right&quot; &lt;b macOS&lt;/b · &lt;a href=&quot;https://github.com/tw93/Mole/tree/windows readme&quot; Windows&lt;/a · &lt;a href=&quot;https://github.com/tw93/Mole/tree/linux readm</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-09T16:05:36Z</guid>
-      <pubDate>Mon, 09 Nov 2026 16:05:36 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-09T19:10:50Z</guid>
+      <pubDate>Mon, 09 Nov 2026 19:10:50 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 next-ai-draw-io</title>
       <link>https://github.com/DayuanJiang/next-ai-draw-io</link>
-      <guid isPermaLink="false">DayuanJiang/next-ai-draw-io@2026-11-09T04:41:18Z</guid>
-      <pubDate>Mon, 09 Nov 2026 04:41:18 GMT</pubDate>
+      <guid isPermaLink="false">DayuanJiang/next-ai-draw-io@2026-11-09T18:08:51Z</guid>
+      <pubDate>Mon, 09 Nov 2026 18:08:51 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; Next AI Draw.io Draw and edit draw.io diagrams by chatting with an AI. English 中文 日本語 Live Demo · Docs · Gallery · Desktop App · MCP Server &lt;/div https://github.com</description>
     </item>
     <item>
@@ -205,8 +205,8 @@
     <item>
       <title>🆕 dsh-Go</title>
       <link>https://github.com/ccch1mneyyy/dsh-Go</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-09T15:26:28Z</guid>
-      <pubDate>Mon, 09 Nov 2026 15:26:28 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-09T21:32:53Z</guid>
+      <pubDate>Mon, 09 Nov 2026 21:32:53 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
     </item>
     <item>
