@@ -1,25 +1,15 @@
 {
   "last_sync": {
-    "at": "2026-11-10T01:42:19.067Z",
-    "mode": "incremental",
-    "duration_ms": 22856,
-    "scanned": 402,
-    "included": 211,
-    "skipped": 44,
+    "at": "2026-11-10T07:38:22.781Z",
+    "mode": "full",
+    "duration_ms": 654307,
+    "scanned": 7489,
+    "included": 4706,
+    "skipped": 887,
     "data_changed": true,
     "errors": []
   },
   "history": [
-    {
-      "at": "2026-11-02T21:49:22.282Z",
-      "mode": "incremental",
-      "duration_ms": 77441,
-      "scanned": 1315,
-      "included": 1000,
-      "skipped": 51,
-      "data_changed": true,
-      "errors": []
-    },
     {
       "at": "2026-11-03T01:05:27.649Z",
       "mode": "incremental",
@@ -307,6 +297,16 @@
       "scanned": 402,
       "included": 211,
       "skipped": 44,
+      "data_changed": true,
+      "errors": []
+    },
+    {
+      "at": "2026-11-10T07:38:22.781Z",
+      "mode": "full",
+      "duration_ms": 654307,
+      "scanned": 7489,
+      "included": 4706,
+      "skipped": 887,
       "data_changed": true,
       "errors": []
     }
