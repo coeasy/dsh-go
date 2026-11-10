@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 10 Nov 2026 19:53:26 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 10 Nov 2026 23:32:34 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-10T14:56:35Z</guid>
-      <pubDate>Tue, 10 Nov 2026 14:56:35 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-10T19:53:50Z</guid>
+      <pubDate>Tue, 10 Nov 2026 19:53:50 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-10T19:40:16Z</guid>
-      <pubDate>Tue, 10 Nov 2026 19:40:16 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-10T23:24:30Z</guid>
+      <pubDate>Tue, 10 Nov 2026 23:24:30 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -58,8 +58,8 @@
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-11-10T13:27:15Z</guid>
-      <pubDate>Tue, 10 Nov 2026 13:27:15 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-11-10T22:08:54Z</guid>
+      <pubDate>Tue, 10 Nov 2026 22:08:54 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-10T19:30:52Z</guid>
-      <pubDate>Tue, 10 Nov 2026 19:30:52 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-10T20:16:45Z</guid>
+      <pubDate>Tue, 10 Nov 2026 20:16:45 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -114,8 +114,8 @@
     <item>
       <title>🆕 next-ai-draw-io</title>
       <link>https://github.com/DayuanJiang/next-ai-draw-io</link>
-      <guid isPermaLink="false">DayuanJiang/next-ai-draw-io@2026-11-10T11:10:16Z</guid>
-      <pubDate>Tue, 10 Nov 2026 11:10:16 GMT</pubDate>
+      <guid isPermaLink="false">DayuanJiang/next-ai-draw-io@2026-11-10T20:28:35Z</guid>
+      <pubDate>Tue, 10 Nov 2026 20:28:35 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; Next AI Draw.io Draw and edit draw.io diagrams by chatting with an AI. English 中文 日本語 Live Demo · Docs · Gallery · Desktop App · MCP Server &lt;/div https://github.com</description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-10T18:54:10Z</guid>
-      <pubDate>Tue, 10 Nov 2026 18:54:10 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-10T23:21:45Z</guid>
+      <pubDate>Tue, 10 Nov 2026 23:21:45 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
