@@ -156,7 +156,7 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 4.9k | TypeScript | 2026-11-07 | The first vision plugin for DeepSeek Harne… |
 | 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 5.1k | TypeScript | 2026-11-11 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-11 | DSH Plugin Radar — open-source ecosystem r… |
+| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-12 | DSH Plugin Radar — open-source ecosystem r… |
 | 4 | [dsh-media-desk](https://github.com/woniuniuniu/dsh-media-desk) | 1.1k | JavaScript | 2026-11-11 | DeepSeek Harness 自媒体工作台插件：一句话记灵感，一键生成脚本、封面… |
 | 5 | [dsh-aurabot-qq](https://github.com/aureth-labs/dsh-aurabot-qq) | 586 | JavaScript | 2026-11-11 | 让 DeepSeek Harness 里的 AI 以「大肥鱼」住进 QQ：会聊天、发… |
 | 6 | [dsh-context](https://github.com/bowenliang123/dsh-context) | 4.9k | TypeScript | 2026-11-11 | The best DeepSeek Harness plugin for conte… |
@@ -175,7 +175,7 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 | 19 | [dsh-windows-mcp](https://github.com/helloHub1212/dsh-windows-mcp) | 702 | JavaScript | 2026-11-11 | Windows desktop automation for DeepSeek Ha… |
 | 20 | [dsh-skin-market](https://github.com/kingOfSoySauce/dsh-skin-market) | 328 | TypeScript | 2026-11-11 | DSH皮肤市场Skin Market 已收录五百+皮肤、桌宠、开屏动画等；有便捷的社… |
 
-更新时间：2026-11-11
+更新时间：2026-11-12
 <!-- HOT-PLUGINS:END -->
 
 ## 同步与部署
