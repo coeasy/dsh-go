@@ -154,28 +154,28 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 
 | # | 插件 | ★ Stars | 语言 | 最近更新 | 简介 |
 |---|------|---------|------|----------|------|
-| 1 | [modlens](https://github.com/liustack/modlens) | 4.9k | TypeScript | 2026-11-07 | The first vision plugin for DeepSeek Harne… |
-| 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 5.1k | TypeScript | 2026-11-13 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | 671 | Python | 2026-11-13 | 白箱AGI架构探索：元认知（自我认知循环）、持续学习（知识飞轮）、世界模型（条件空间… |
-| 4 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.6k | JavaScript | 2026-11-13 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
-| 5 | [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | 492 | JavaScript | 2026-11-13 | DeepSeek Harness Desktop App: a local AI d… |
-| 6 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-13 | DSH Plugin Radar — open-source ecosystem r… |
-| 7 | [dsh-see-now](https://github.com/SAOS-3624/dsh-see-now) | 626 | JavaScript | 2026-11-13 | 让 AI 实时看见你的屏幕：按变化量筛选帧、多帧拼进一张图，静止画面几乎不花 tok… |
-| 8 | [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | 995 | TypeScript | 2026-11-13 | Composable, view-based context for DeepSee… |
-| 9 | [dsh-plugin-shop](https://github.com/LivXue/dsh-plugin-shop) | 664 | TypeScript | 2026-11-13 | The most comprehensive DeepSeek Harness pl… |
-| 10 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.6k | TypeScript | 2026-11-13 | DSH Tauri 桌面版 \| Better DSH desktop, zero … |
-| 11 | [dsh-agent-compare](https://github.com/lijiaqi-AI-Product-Manager/dsh-agent-compare) | 374 | TypeScript | 2026-11-13 | 同一需求，2–4 版真跑。在 DSH Desktop / Web 主对话中比较回答、… |
-| 12 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 1.3k | JavaScript | 2026-11-13 | Eyes for text-only DeepSeek Harness agents… |
-| 13 | [DSH-X](https://github.com/yyh-001/DSH-X) | 782 | JavaScript | 2026-11-13 | DeepSeek Harness 启动器：启动项与多实例，版本、插件、整合包、MCP… |
-| 14 | [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy) | 1.6k | TypeScript | 2026-11-13 | Connect locally signed-in WorkBuddy models… |
-| 15 | [dsh_desktop](https://github.com/myYangyunfan/dsh_desktop) | 751 | JavaScript | 2026-11-13 | DeepSeek Harness (dsh) Windows desktop cli… |
-| 16 | [dsh-claude-style](https://github.com/Nwflower/dsh-claude-style) | 596 | TypeScript | 2026-11-13 | Claude Code Desktop theme for DeepSeek Har… |
-| 17 | [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | 851 | TypeScript | 2026-11-13 | DeepSeek Harness 的安全移动访问插件与 Android App，支持… |
-| 18 | [dsh-model-router](https://github.com/Alice-Marx/dsh-model-router) | 962 | JavaScript | 2026-11-13 | Model Router and Bot plugin for DeepSeek H… |
-| 19 | [dsh-ads](https://github.com/Nagi-ovo/dsh-ads) | 721 | TypeScript | 2026-11-13 | 把 DSH 变成 2005 年门户网站｜Parody ads, fake games… |
-| 20 | [dsh-visualize](https://github.com/Nagi-ovo/dsh-visualize) | 344 | TypeScript | 2026-11-13 | 在 DSH 对话中生成交互式可视化｜Render model-generated i… |
+| 1 | [modlens](https://github.com/liustack/modlens) | 5k | TypeScript | 2026-11-07 | The first vision plugin for DeepSeek Harne… |
+| 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 5.1k | TypeScript | 2026-11-14 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
+| 3 | [dsh-claude-style](https://github.com/Nwflower/dsh-claude-style) | 596 | TypeScript | 2026-11-14 | Claude Code Desktop theme for DeepSeek Har… |
+| 4 | [dsh-skin-market](https://github.com/kingOfSoySauce/dsh-skin-market) | 329 | TypeScript | 2026-11-14 | 浏览、搜索、安装并管理 DSH 皮肤 |
+| 5 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.6k | TypeScript | 2026-11-14 | DSH Tauri 桌面版 \| Better DSH desktop, zero … |
+| 6 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-14 | DSH Plugin Radar — open-source ecosystem r… |
+| 7 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 691 | JavaScript | 2026-11-14 | Cost tracking for DeepSeek Harness: sessio… |
+| 8 | [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | 673 | Python | 2026-11-14 | 白箱AGI架构探索：元认知（自我认知循环）、持续学习（知识飞轮）、世界模型（条件空间… |
+| 9 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.6k | JavaScript | 2026-11-14 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
+| 10 | [dsh-aurabot-qq](https://github.com/aureth-labs/dsh-aurabot-qq) | 623 | JavaScript | 2026-11-14 | 让 DeepSeek Harness 里的 AI 以「大肥鱼」住进 QQ：会聊天、发… |
+| 11 | [deepseek-harness-mobile](https://github.com/sorsama/deepseek-harness-mobile) | 307 | Kotlin | 2026-11-14 | Android companion for DeepSeek Harness \| … |
+| 12 | [dsh-drawai](https://github.com/fourzkw/dsh-drawai) | 612 | JavaScript | 2026-11-14 | DSH 右侧栏里的可编辑画布 —— 加上让模型直接改图的两个工具 |
+| 13 | [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | 1.1k | Kotlin | 2026-11-14 | dsh 安卓壳 APK——WebView UI + 内嵌 Termux 运行时快照（… |
+| 14 | [dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager) | 355 | JavaScript | 2026-11-14 | DSH Archive Manager — 在 DeepSeek Harness 中… |
+| 15 | [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | 854 | TypeScript | 2026-11-14 | DeepSeek Harness 的安全移动访问插件与 Android App，支持… |
+| 16 | [dsh-mobile](https://github.com/Clarklevis1995/dsh-mobile) | 780 | Kotlin | 2026-11-14 | DeepSeek Harness Mobile 是一个面向 DeepSeek Har… |
+| 17 | [dsh-meme](https://github.com/yyh-001/dsh-meme) | 566 | JavaScript | 2026-11-14 | DeepSeek Harness 表情包插件：输入框一键发图、文字 token 斗图… |
+| 18 | [dsh-skills-manager](https://github.com/MichengAI/dsh-skills-manager) | 565 | JavaScript | 2026-11-14 | DSH Skills Manager — 在 DeepSeek Harness 中统… |
+| 19 | [dsh-codex-subscription](https://github.com/WSL043/dsh-codex-subscription) | 468 | JavaScript | 2026-11-14 | Use your ChatGPT Plus / Pro (Codex) subscr… |
+| 20 | [dsh-model-router](https://github.com/Alice-Marx/dsh-model-router) | 962 | JavaScript | 2026-11-14 | Model Router and Bot plugin for DeepSeek H… |
 
-更新时间：2026-11-13
+更新时间：2026-11-14
 <!-- HOT-PLUGINS:END -->
 
 ## 同步与部署
