@@ -155,25 +155,25 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 | # | 插件 | ★ Stars | 语言 | 最近更新 | 简介 |
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 5k | TypeScript | 2026-11-15 | The first vision plugin for DeepSeek Harne… |
-| 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 5.2k | TypeScript | 2026-11-14 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | 1k | TypeScript | 2026-11-15 | Composable, view-based context for DeepSee… |
-| 4 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-15 | DSH Plugin Radar — open-source ecosystem r… |
-| 5 | [dsh-config-manager](https://github.com/xiajiajun516/dsh-config-manager) | 348 | TypeScript | 2026-11-15 | DeepSeek Harness (DSH) backup & restore pl… |
-| 6 | [dsh-xdpool](https://github.com/XDTrees/dsh-xdpool) | 531 | TypeScript | 2026-11-15 | 把你能白嫖的模型额度接进 DSH 同一个池：WorkBuddy 多账号自动容错、十四… |
-| 7 | [dsh-opencode-go](https://github.com/Duskriver/dsh-opencode-go) | 319 | TypeScript | 2026-11-15 | opencode-go订阅用户最佳DSH插件 |
-| 8 | [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | 862 | TypeScript | 2026-11-15 | DeepSeek Harness 的安全移动访问插件与 Android App，支持… |
-| 9 | [dsh-aurabot-qq](https://github.com/aureth-labs/dsh-aurabot-qq) | 646 | JavaScript | 2026-11-15 | 让 DeepSeek Harness 里的 AI 以「大肥鱼」住进 QQ：会聊天、发… |
-| 10 | [dsh-codex-subscription](https://github.com/WSL043/dsh-codex-subscription) | 484 | JavaScript | 2026-11-15 | Use your ChatGPT Plus / Pro (Codex) subscr… |
-| 11 | [dsh-media-desk](https://github.com/woniuniuniu/dsh-media-desk) | 1.4k | JavaScript | 2026-11-15 | DeepSeek Harness 自媒体工作台插件：一句话记灵感，一键生成脚本、封面… |
-| 12 | [dsh-skin-market](https://github.com/kingOfSoySauce/dsh-skin-market) | 331 | TypeScript | 2026-11-15 | 浏览、搜索、安装并管理 DSH 皮肤 |
-| 13 | [dsh-free-search](https://github.com/DDDMUC/dsh-free-search) | 1.2k | JavaScript | 2026-11-15 | 为DeepSeek Harness提供的免费网络搜索服务商：即使没有API密钥也可使… |
-| 14 | [dsh-computer-use-win](https://github.com/Yu-tao-Li/dsh-computer-use-win) | 751 | JavaScript | 2026-11-15 | DeepSeek Harness的Windows电脑操控插件 / Windows c… |
-| 15 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.6k | JavaScript | 2026-11-15 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
-| 16 | [dsh-agent-compare](https://github.com/lijiaqi-AI-Product-Manager/dsh-agent-compare) | 425 | TypeScript | 2026-11-15 | 同一需求，2–4 版真跑。在 DSH Desktop / Web 主对话中比较回答、… |
-| 17 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 1.3k | JavaScript | 2026-11-15 | Eyes for text-only DeepSeek Harness agents… |
-| 18 | [dsh-skills-manager](https://github.com/MichengAI/dsh-skills-manager) | 572 | JavaScript | 2026-11-15 | DSH Skills Manager — 在 DeepSeek Harness 中统… |
-| 19 | [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | 689 | Python | 2026-11-15 | 白箱AGI架构探索：元认知（自我认知循环）、持续学习（知识飞轮）、世界模型（条件空间… |
-| 20 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 701 | JavaScript | 2026-11-15 | Cost tracking for DeepSeek Harness: sessio… |
+| 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 5.2k | TypeScript | 2026-11-15 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
+| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-15 | DSH Plugin Radar — open-source ecosystem r… |
+| 4 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.6k | TypeScript | 2026-11-15 | DSH Tauri 桌面版 \| Better DSH desktop, zero … |
+| 5 | [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | 1k | TypeScript | 2026-11-15 | Composable, view-based context for DeepSee… |
+| 6 | [dsh-aurabot-qq](https://github.com/aureth-labs/dsh-aurabot-qq) | 646 | JavaScript | 2026-11-15 | 让 DeepSeek Harness 里的 AI 以「大肥鱼」住进 QQ：会聊天、发… |
+| 7 | [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | 493 | JavaScript | 2026-11-15 | DeepSeek Harness Desktop App: a local AI d… |
+| 8 | [dsh-skin-market](https://github.com/kingOfSoySauce/dsh-skin-market) | 331 | TypeScript | 2026-11-15 | 浏览、搜索、安装并管理 DSH 皮肤 |
+| 9 | [deepseek-harness-mobile](https://github.com/sorsama/deepseek-harness-mobile) | 317 | Kotlin | 2026-11-15 | Android companion for DeepSeek Harness \| … |
+| 10 | [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | 1.6k | JavaScript | 2026-11-15 | 基于DSH的Agent酒馆。类酒馆文字游戏Agent。兼容SillyTavern生态… |
+| 11 | [dsh-config-manager](https://github.com/xiajiajun516/dsh-config-manager) | 348 | TypeScript | 2026-11-15 | DeepSeek Harness (DSH) backup & restore pl… |
+| 12 | [dsh-xdpool](https://github.com/XDTrees/dsh-xdpool) | 531 | TypeScript | 2026-11-15 | 把你能白嫖的模型额度接进 DSH 同一个池：WorkBuddy 多账号自动容错、十四… |
+| 13 | [dsh-opencode-go](https://github.com/Duskriver/dsh-opencode-go) | 319 | TypeScript | 2026-11-15 | opencode-go订阅用户最佳DSH插件 |
+| 14 | [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | 861 | TypeScript | 2026-11-15 | DeepSeek Harness 的安全移动访问插件与 Android App，支持… |
+| 15 | [dsh-codex-subscription](https://github.com/WSL043/dsh-codex-subscription) | 485 | JavaScript | 2026-11-15 | Use your ChatGPT Plus / Pro (Codex) subscr… |
+| 16 | [dsh-media-desk](https://github.com/woniuniuniu/dsh-media-desk) | 1.4k | JavaScript | 2026-11-15 | DeepSeek Harness 自媒体工作台插件：一句话记灵感，一键生成脚本、封面… |
+| 17 | [dsh-free-search](https://github.com/DDDMUC/dsh-free-search) | 1.2k | JavaScript | 2026-11-15 | 为DeepSeek Harness提供的免费网络搜索服务商：即使没有API密钥也可使… |
+| 18 | [dsh-computer-use-win](https://github.com/Yu-tao-Li/dsh-computer-use-win) | 752 | JavaScript | 2026-11-15 | DeepSeek Harness的Windows电脑操控插件 / Windows c… |
+| 19 | [dsh-agent-compare](https://github.com/lijiaqi-AI-Product-Manager/dsh-agent-compare) | 425 | TypeScript | 2026-11-15 | 同一需求，2–4 版真跑。在 DSH Desktop / Web 主对话中比较回答、… |
+| 20 | [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | 1.3k | JavaScript | 2026-11-15 | Eyes for text-only DeepSeek Harness agents… |
 
 更新时间：2026-11-15
 <!-- HOT-PLUGINS:END -->
