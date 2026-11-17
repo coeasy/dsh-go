@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 17 Nov 2026 16:01:51 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 17 Nov 2026 21:06:57 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-17T08:13:47Z</guid>
-      <pubDate>Tue, 17 Nov 2026 08:13:47 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-17T16:02:29Z</guid>
+      <pubDate>Tue, 17 Nov 2026 16:02:29 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -23,8 +23,8 @@
     <item>
       <title>🆕 认知引擎 Cognition Engine</title>
       <link>https://github.com/1720198650/dsh-cognition-engine</link>
-      <guid isPermaLink="false">1720198650/dsh-cognition-engine@2026-11-17T15:56:07Z</guid>
-      <pubDate>Tue, 17 Nov 2026 15:56:07 GMT</pubDate>
+      <guid isPermaLink="false">1720198650/dsh-cognition-engine@2026-11-17T16:22:18Z</guid>
+      <pubDate>Tue, 17 Nov 2026 16:22:18 GMT</pubDate>
       <description>dsh cognition engine 本项目由 AI 编写，人只提需求。 代码、测试、文档、调研、发版脚本，全部由 DeepSeek V4.1 Flash（1017） 在「许愿式编程」模式下逐轮生成、 自测、修复并交付；人做的事只有一件—— 提出想法，以及在报告造假时当场戳穿 。 下文的「我们」指这个协作体，不是某个坐在电脑前敲代码的人。 让 AI 记得住，而且知道自己什么时候记错了。 关掉对</description>
     </item>
     <item>
@@ -37,15 +37,15 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-17T14:43:03Z</guid>
-      <pubDate>Tue, 17 Nov 2026 14:43:03 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-17T20:08:46Z</guid>
+      <pubDate>Tue, 17 Nov 2026 20:08:46 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
       <title>🆕 deepseek-harness</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
-      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-11-13T07:56:25Z</guid>
-      <pubDate>Fri, 13 Nov 2026 07:56:25 GMT</pubDate>
+      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-11-17T17:55:09Z</guid>
+      <pubDate>Tue, 17 Nov 2026 17:55:09 GMT</pubDate>
       <description>DeepSeek Harness English 中文 DeepSeek Harness ( dsh ) is an open source agent harness developed by DeepSeek AI. It is built on an everything is a plugin architecture and powered by Cordis, whose design</description>
     </item>
     <item>
@@ -72,8 +72,8 @@
     <item>
       <title>🆕 dsh-our-free-model</title>
       <link>https://github.com/Ebony-Vinyl/dsh-our-free-model</link>
-      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-11-17T11:19:14Z</guid>
-      <pubDate>Tue, 17 Nov 2026 11:19:14 GMT</pubDate>
+      <guid isPermaLink="false">Ebony-Vinyl/dsh-our-free-model@2026-11-17T16:55:24Z</guid>
+      <pubDate>Tue, 17 Nov 2026 16:55:24 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;img src=&quot;icon.svg&quot; alt=&quot;Our Free Model — DeepSeek Harness 免费模型插件&quot; width=&quot;120&quot; dsh our free model 简体中文 English &lt;img alt=&quot;许可证&q</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-17T14:09:21Z</guid>
-      <pubDate>Tue, 17 Nov 2026 14:09:21 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-17T17:03:26Z</guid>
+      <pubDate>Tue, 17 Nov 2026 17:03:26 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -163,8 +163,8 @@
     <item>
       <title>🆕 dsh-Go</title>
       <link>https://github.com/ccch1mneyyy/dsh-Go</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-17T15:51:29Z</guid>
-      <pubDate>Tue, 17 Nov 2026 15:51:29 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-17T20:49:02Z</guid>
+      <pubDate>Tue, 17 Nov 2026 20:49:02 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-16T23:24:44Z</guid>
-      <pubDate>Mon, 16 Nov 2026 23:24:44 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-17T20:18:57Z</guid>
+      <pubDate>Tue, 17 Nov 2026 20:18:57 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
