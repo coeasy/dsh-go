@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 18 Nov 2026 15:42:03 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 18 Nov 2026 20:44:26 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-18T07:51:45Z</guid>
-      <pubDate>Wed, 18 Nov 2026 07:51:45 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-18T15:42:36Z</guid>
+      <pubDate>Wed, 18 Nov 2026 15:42:36 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-18T15:38:16Z</guid>
-      <pubDate>Wed, 18 Nov 2026 15:38:16 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-18T20:38:25Z</guid>
+      <pubDate>Wed, 18 Nov 2026 20:38:25 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -51,8 +51,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-11-18T11:42:44Z</guid>
-      <pubDate>Wed, 18 Nov 2026 11:42:44 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-18T18:38:38Z</guid>
+      <pubDate>Wed, 18 Nov 2026 18:38:38 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -79,8 +79,8 @@
     <item>
       <title>🆕 Mole</title>
       <link>https://github.com/tw93/Mole</link>
-      <guid isPermaLink="false">tw93/Mole@2026-11-18T15:12:08Z</guid>
-      <pubDate>Wed, 18 Nov 2026 15:12:08 GMT</pubDate>
+      <guid isPermaLink="false">tw93/Mole@2026-11-18T15:55:49Z</guid>
+      <pubDate>Wed, 18 Nov 2026 15:55:49 GMT</pubDate>
       <description>&lt;p align=&quot;right&quot; &lt;b macOS&lt;/b · &lt;a href=&quot;https://github.com/tw93/Mole/tree/windows readme&quot; Windows&lt;/a · &lt;a href=&quot;https://github.com/tw93/Mole/tree/linux readm</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-18T15:16:50Z</guid>
-      <pubDate>Wed, 18 Nov 2026 15:16:50 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-18T17:42:25Z</guid>
+      <pubDate>Wed, 18 Nov 2026 17:42:25 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-11-18T06:55:48Z</guid>
-      <pubDate>Wed, 18 Nov 2026 06:55:48 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-11-18T18:48:02Z</guid>
+      <pubDate>Wed, 18 Nov 2026 18:48:02 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -177,8 +177,8 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-17T23:24:36Z</guid>
-      <pubDate>Tue, 17 Nov 2026 23:24:36 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-18T20:24:43Z</guid>
+      <pubDate>Wed, 18 Nov 2026 20:24:43 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
@@ -212,8 +212,8 @@
     <item>
       <title>🆕 EverOS</title>
       <link>https://github.com/EverMind-AI/EverOS</link>
-      <guid isPermaLink="false">EverMind-AI/EverOS@2026-11-18T13:13:22Z</guid>
-      <pubDate>Wed, 18 Nov 2026 13:13:22 GMT</pubDate>
+      <guid isPermaLink="false">EverMind-AI/EverOS@2026-11-18T16:33:22Z</guid>
+      <pubDate>Wed, 18 Nov 2026 16:33:22 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; id=&quot;readme top&quot; &lt;p align=&quot;center&quot; &lt;a href=&quot;https://x.com/evermind&quot; &lt;img src=&quot;https://img.shields.io/badge/EverMind 000000?l</description>
     </item>
   </channel>
