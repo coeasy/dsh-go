@@ -156,7 +156,7 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 5k | TypeScript | 2026-11-15 | The first vision plugin for DeepSeek Harne… |
 | 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 5.2k | TypeScript | 2026-11-18 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-18 | DSH Plugin Radar — open-source ecosystem r… |
+| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-19 | DSH Plugin Radar — open-source ecosystem r… |
 | 4 | [dsh-skin-market](https://github.com/kingOfSoySauce/dsh-skin-market) | 333 | TypeScript | 2026-11-18 | 浏览、搜索、安装并管理 DSH 皮肤 |
 | 5 | [dsh-remote](https://github.com/flymysql/dsh-remote) | 323 | JavaScript | 2026-11-18 | SSH remote workspaces for DeepSeek Harness… |
 | 6 | [deepseek-harness-mobile](https://github.com/sorsama/deepseek-harness-mobile) | 340 | Kotlin | 2026-11-18 | Android companion for DeepSeek Harness \| … |
@@ -175,7 +175,7 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 | 19 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 720 | JavaScript | 2026-11-18 | Cost tracking for DeepSeek Harness: sessio… |
 | 20 | [dsh-game-studio](https://github.com/ZSeven-W/dsh-game-studio) | 585 | JavaScript | 2026-11-18 | Describe a small game in one sentence, pla… |
 
-更新时间：2026-11-18
+更新时间：2026-11-19
 <!-- HOT-PLUGINS:END -->
 
 ## 同步与部署
