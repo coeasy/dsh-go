@@ -1,7 +1,7 @@
 {
   "schema_version": 4,
-  "generated_at": "2026-11-19T07:46:31.240Z",
-  "revision": "59162864ea846b116326882310623b4bcaf3a7b2c562f382284974d0a4737de0",
+  "generated_at": "2026-11-19T15:45:43.722Z",
+  "revision": "d7c8e0464e82ef35632b5c83ebdac0afa08de2b5b84affcb8900a428e7687b7c",
   "packages": [
     {
       "type": "mcp",
@@ -24,9 +24,9 @@
         "name": "DSH Go Marketplace",
         "description": "Read-only DSH package and ecosystem discovery through the canonical API V2 MCP endpoint.",
         "verified": true,
-        "stars": 25,
+        "stars": 26,
         "rank": 1,
-        "updated_at": "2026-11-19T00:32:07Z",
+        "updated_at": "2026-11-19T07:46:59Z",
         "repo_url": "https://github.com/coeasy/dsh-go",
         "manifest_file": "dsh-package.json",
         "language": "JavaScript",
@@ -185,10 +185,10 @@
     "source": "dsh-go-sync-v4",
     "package_count": 2,
     "release_count": 2,
-    "discovery_count": 29622,
+    "discovery_count": 29695,
     "explicit_source_count": 1,
-    "candidate_count": 29623,
-    "quarantined_count": 29339,
-    "rejected_count": 282
+    "candidate_count": 29696,
+    "quarantined_count": 29411,
+    "rejected_count": 283
   }
 }
