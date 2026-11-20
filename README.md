@@ -175,7 +175,7 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 | 19 | [dsh-univer-office](https://github.com/dream-num/dsh-univer-office) | 740 | TypeScript | 2026-11-19 | Give DeepSeek Harness a real office enviro… |
 | 20 | [dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale) | 3.1k | TypeScript | 2026-11-19 | Whale Girl skin series for DeepSeek Harnes… |
 
-更新时间：2026-11-19
+更新时间：2026-11-20
 <!-- HOT-PLUGINS:END -->
 
 ## 同步与部署
