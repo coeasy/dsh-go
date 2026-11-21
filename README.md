@@ -156,7 +156,7 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 |---|------|---------|------|----------|------|
 | 1 | [modlens](https://github.com/liustack/modlens) | 5k | TypeScript | 2026-11-15 | The first vision plugin for DeepSeek Harne… |
 | 2 | [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | 5.3k | TypeScript | 2026-11-19 | 开放的侧边栏底座，支持三方拓展注册新侧边栏页面。内置文件渲染编辑/终端/侧边对话/G… |
-| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-20 | DSH Plugin Radar — open-source ecosystem r… |
+| 3 | [dsh-plugin-radar](https://github.com/AdamPlatin123/dsh-plugin-radar) | 1.5k | Python | 2026-11-21 | DSH Plugin Radar — open-source ecosystem r… |
 | 4 | [dsh-remote](https://github.com/flymysql/dsh-remote) | 338 | JavaScript | 2026-11-20 | SSH remote workspaces for DeepSeek Harness… |
 | 5 | [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | 3.7k | TypeScript | 2026-11-20 | DSH Tauri 桌面版 \| Better DSH desktop, zero … |
 | 6 | [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy) | 1.9k | TypeScript | 2026-11-20 | Connect locally signed-in WorkBuddy models… |
@@ -175,7 +175,7 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 | 19 | [dsh-bloom-theme](https://github.com/webkubor/dsh-bloom-theme) | 307 | JavaScript | 2026-11-20 | DSH 主题插件：Bloom 莫兰迪中国风配色，OKLCH 调色、明暗双主题、顶栏一… |
 | 20 | [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | 737 | JavaScript | 2026-11-20 | Cost tracking for DeepSeek Harness: sessio… |
 
-更新时间：2026-11-20
+更新时间：2026-11-21
 <!-- HOT-PLUGINS:END -->
 
 ## 同步与部署
