@@ -5,12 +5,12 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 21 Nov 2026 23:29:47 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 22 Nov 2026 07:09:51 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-21T19:30:43Z</guid>
-      <pubDate>Sat, 21 Nov 2026 19:30:43 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-21T23:30:07Z</guid>
+      <pubDate>Sat, 21 Nov 2026 23:30:07 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
@@ -37,29 +37,29 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-21T23:25:58Z</guid>
-      <pubDate>Sat, 21 Nov 2026 23:25:58 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-22T05:40:00Z</guid>
+      <pubDate>Sun, 22 Nov 2026 05:40:00 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
       <title>🆕 deepseek-harness</title>
       <link>https://github.com/deepseek-ai/deepseek-harness</link>
-      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-11-18T12:48:10Z</guid>
-      <pubDate>Wed, 18 Nov 2026 12:48:10 GMT</pubDate>
+      <guid isPermaLink="false">deepseek-ai/deepseek-harness@2026-11-22T03:18:55Z</guid>
+      <pubDate>Sun, 22 Nov 2026 03:18:55 GMT</pubDate>
       <description>DeepSeek Harness English 中文 DeepSeek Harness ( dsh ) is an open source agent harness developed by DeepSeek AI. It is built on an everything is a plugin architecture and powered by Cordis, whose design</description>
     </item>
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-11-21T18:04:14Z</guid>
-      <pubDate>Sat, 21 Nov 2026 18:04:14 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-22T04:19:58Z</guid>
+      <pubDate>Sun, 22 Nov 2026 04:19:58 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
       <title>🆕 archify</title>
       <link>https://github.com/tt-a1i/archify</link>
-      <guid isPermaLink="false">tt-a1i/archify@2026-11-21T15:34:09Z</guid>
-      <pubDate>Sat, 21 Nov 2026 15:34:09 GMT</pubDate>
+      <guid isPermaLink="false">tt-a1i/archify@2026-11-22T07:00:03Z</guid>
+      <pubDate>Sun, 22 Nov 2026 07:00:03 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;docs/assets/archify lockup dark.svg&quot; / &lt;img src=&quot;docs/assets/archify lock</description>
     </item>
     <item>
@@ -79,8 +79,8 @@
     <item>
       <title>🆕 Mole</title>
       <link>https://github.com/tw93/Mole</link>
-      <guid isPermaLink="false">tw93/Mole@2026-11-21T14:53:25Z</guid>
-      <pubDate>Sat, 21 Nov 2026 14:53:25 GMT</pubDate>
+      <guid isPermaLink="false">tw93/Mole@2026-11-22T06:48:27Z</guid>
+      <pubDate>Sun, 22 Nov 2026 06:48:27 GMT</pubDate>
       <description>&lt;p align=&quot;right&quot; &lt;b macOS&lt;/b · &lt;a href=&quot;https://github.com/tw93/Mole/tree/windows readme&quot; Windows&lt;/a · &lt;a href=&quot;https://github.com/tw93/Mole/tree/linux readm</description>
     </item>
     <item>
@@ -93,8 +93,8 @@
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-21T16:30:47Z</guid>
-      <pubDate>Sat, 21 Nov 2026 16:30:47 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-22T04:28:21Z</guid>
+      <pubDate>Sun, 22 Nov 2026 04:28:21 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -121,8 +121,8 @@
     <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/anywhere-labs/dsh-desktop</link>
-      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-11-20T07:23:51Z</guid>
-      <pubDate>Fri, 20 Nov 2026 07:23:51 GMT</pubDate>
+      <guid isPermaLink="false">anywhere-labs/dsh-desktop@2026-11-22T04:45:19Z</guid>
+      <pubDate>Sun, 22 Nov 2026 04:45:19 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;a href=&quot;https://dshdesktop.cn&quot; &lt;img src=&quot;assets/desktop hero zh.png&quot; alt=&quot;DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端&quot; width=&quot;10</description>
     </item>
     <item>
@@ -135,15 +135,15 @@
     <item>
       <title>🆕 huashu-design</title>
       <link>https://github.com/alchaincyf/huashu-design</link>
-      <guid isPermaLink="false">alchaincyf/huashu-design@2026-11-21T09:57:59Z</guid>
-      <pubDate>Sat, 21 Nov 2026 09:57:59 GMT</pubDate>
+      <guid isPermaLink="false">alchaincyf/huashu-design@2026-11-22T06:56:02Z</guid>
+      <pubDate>Sun, 22 Nov 2026 06:56:02 GMT</pubDate>
       <description>&lt;sub 🌐 &lt;b 中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/sub &lt;div align=&quot;center&quot; Huashu Design 「打字。回车。一份能交付的设计。」 &quot;Type. Hit enter. A finished design lands i</description>
     </item>
     <item>
       <title>🆕 dsh-Go</title>
       <link>https://github.com/ccch1mneyyy/dsh-Go</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-21T22:59:30Z</guid>
-      <pubDate>Sat, 21 Nov 2026 22:59:30 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-22T07:01:47Z</guid>
+      <pubDate>Sun, 22 Nov 2026 07:01:47 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
     </item>
     <item>
@@ -189,18 +189,18 @@
       <description>English 简体中文 日本語 Français Español Português Português (BR) Bahasa Indonesia Tiếng Việt Deutsch https://github.com/user attachments/assets/3b89d965 f60f 48e0 8110 24186c2911d2 &lt;p align=&quot;center&</description>
     </item>
     <item>
-      <title>🔄 dsh-purge</title>
-      <link>https://github.com/HunYiSage/dsh-purge</link>
-      <guid isPermaLink="false">HunYiSage/dsh-purge@2026-11-07T08:35:05Z</guid>
-      <pubDate>Sat, 07 Nov 2026 08:35:05 GMT</pubDate>
-      <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/banner.svg&quot; alt=&quot;dsh purge&quot; width=&quot;720&quot; &lt;/p &lt;h1 align=&quot;center&quot; ⚔️ DeepSeek Harness cybersecurity red team</description>
-    </item>
-    <item>
       <title>🆕 dsh-desktop</title>
       <link>https://github.com/dataelement/dsh-desktop</link>
       <guid isPermaLink="false">dataelement/dsh-desktop@2026-11-20T15:22:23Z</guid>
       <pubDate>Fri, 20 Nov 2026 15:22:23 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;img src=&quot;docs/images/readme logo black rounded.svg&quot; width=&quot;64&quot; alt=&quot;DSH Desktop Logo&quot; valign=&quot;middle&quot; / DSH Desktop &lt;/h1 </description>
+    </item>
+    <item>
+      <title>🔄 dsh-purge</title>
+      <link>https://github.com/HunYiSage/dsh-purge</link>
+      <guid isPermaLink="false">HunYiSage/dsh-purge@2026-11-07T08:35:05Z</guid>
+      <pubDate>Sat, 07 Nov 2026 08:35:05 GMT</pubDate>
+      <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/banner.svg&quot; alt=&quot;dsh purge&quot; width=&quot;720&quot; &lt;/p &lt;h1 align=&quot;center&quot; ⚔️ DeepSeek Harness cybersecurity red team</description>
     </item>
     <item>
       <title>🔄 dsh-purge</title>
@@ -212,8 +212,8 @@
     <item>
       <title>🆕 openmotion</title>
       <link>https://github.com/nexu-io/openmotion</link>
-      <guid isPermaLink="false">nexu-io/openmotion@2026-11-21T17:44:05Z</guid>
-      <pubDate>Sat, 21 Nov 2026 17:44:05 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/openmotion@2026-11-22T06:37:34Z</guid>
+      <pubDate>Sun, 22 Nov 2026 06:37:34 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/readme/openmotion logo.svg&quot; width=&quot;420&quot; alt=&quot;OpenMotion&quot; &lt;/p &lt;p align=&quot;center&quot; &lt;strong The open source</description>
     </item>
   </channel>
