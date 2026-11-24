@@ -175,7 +175,7 @@ Marketplace 是人类发现平面，不拥有安装权限。当前站点支持 E
 | 19 | [dsh-model-router](https://github.com/Alice-Marx/dsh-model-router) | 1k | JavaScript | 2026-11-23 | Model Router and Bot plugin for DeepSeek H… |
 | 20 | [dsh-skills-manager](https://github.com/MichengAI/dsh-skills-manager) | 609 | JavaScript | 2026-11-23 | DSH Skills Manager — 在 DeepSeek Harness 中统… |
 
-更新时间：2026-11-23
+更新时间：2026-11-24
 <!-- HOT-PLUGINS:END -->
 
 ## 同步与部署
