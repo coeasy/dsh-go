@@ -5,16 +5,16 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 26 Nov 2026 16:56:14 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 26 Nov 2026 21:44:51 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
-      <guid isPermaLink="false">coeasy/dsh-go@2026-11-26T15:53:28Z</guid>
-      <pubDate>Thu, 26 Nov 2026 15:53:28 GMT</pubDate>
+      <guid isPermaLink="false">coeasy/dsh-go@2026-11-26T16:56:45Z</guid>
+      <pubDate>Thu, 26 Nov 2026 16:56:45 GMT</pubDate>
       <description>DSH Go DSH Go 是面向 DeepSeek Harness 生态的 原生包管理器 + Registry/Distribution 基础设施 + Marketplace 。当前架构以 Package Protocol V2、Manifest V2、Registry V4、Resolver V2、Runtime State V4、API V2 为唯一权威，不保留旧接口兼容层。 API 权威入</description>
     </item>
     <item>
-      <title>🆕 认知引擎 Cognition Engine</title>
+      <title>🔄 认知引擎 Cognition Engine</title>
       <link>https://github.com/1720198650/dsh-cognition-engine</link>
       <guid isPermaLink="false">1720198650/dsh-cognition-engine@2026-11-19T13:34:02Z</guid>
       <pubDate>Thu, 19 Nov 2026 13:34:02 GMT</pubDate>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-26T16:53:49Z</guid>
-      <pubDate>Thu, 26 Nov 2026 16:53:49 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-26T21:31:07Z</guid>
+      <pubDate>Thu, 26 Nov 2026 21:31:07 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -51,8 +51,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-11-26T12:05:36Z</guid>
-      <pubDate>Thu, 26 Nov 2026 12:05:36 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-26T18:05:14Z</guid>
+      <pubDate>Thu, 26 Nov 2026 18:05:14 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -86,22 +86,22 @@
     <item>
       <title>🆕 last30days-skill</title>
       <link>https://github.com/mvanhorn/last30days-skill</link>
-      <guid isPermaLink="false">mvanhorn/last30days-skill@2026-11-26T16:10:45Z</guid>
-      <pubDate>Thu, 26 Nov 2026 16:10:45 GMT</pubDate>
-      <description>/last30days English Français Deutsch Español Português (Brasil) 日本語 简体中文 العربية فارسی Türkçe &lt;p align=&quot;center&quot; &lt;img src=&quot;media/pr assets/last30days ad.gif&quot; width=&quot;720&q</description>
+      <guid isPermaLink="false">mvanhorn/last30days-skill@2026-11-26T21:28:08Z</guid>
+      <pubDate>Thu, 26 Nov 2026 21:28:08 GMT</pubDate>
+      <description>/last30days English Français Deutsch Español Português (Brasil) 日本語 简体中文 العربية فارسی Türkçe Tiếng Việt Русский &lt;p align=&quot;center&quot; &lt;img src=&quot;media/pr assets/last30days ad.gif&quot</description>
     </item>
     <item>
       <title>🆕 reactive-resume</title>
       <link>https://github.com/reactive-resume/reactive-resume</link>
-      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-20T03:14:03Z</guid>
-      <pubDate>Fri, 20 Nov 2026 03:14:03 GMT</pubDate>
+      <guid isPermaLink="false">reactive-resume/reactive-resume@2026-11-26T19:19:30Z</guid>
+      <pubDate>Thu, 26 Nov 2026 19:19:30 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://rxresu.me&quot; &lt;img src=&quot;apps/web/public/opengraph/banner.jpg&quot; alt=&quot;Reactive Resume&quot; / &lt;/a &lt;h1 Reactive Resume&l</description>
     </item>
     <item>
       <title>🆕 OpenViking</title>
       <link>https://github.com/volcengine/OpenViking</link>
-      <guid isPermaLink="false">volcengine/OpenViking@2026-11-26T16:34:10Z</guid>
-      <pubDate>Thu, 26 Nov 2026 16:34:10 GMT</pubDate>
+      <guid isPermaLink="false">volcengine/OpenViking@2026-11-26T17:43:31Z</guid>
+      <pubDate>Thu, 26 Nov 2026 17:43:31 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; &lt;a href=&quot;https://openviking.ai/&quot; target=&quot; blank&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark)&quot; srcset=&quot;https://raw.</description>
     </item>
     <item>
@@ -142,8 +142,8 @@
     <item>
       <title>🆕 dsh-Go</title>
       <link>https://github.com/ccch1mneyyy/dsh-Go</link>
-      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-26T13:46:20Z</guid>
-      <pubDate>Thu, 26 Nov 2026 13:46:20 GMT</pubDate>
+      <guid isPermaLink="false">ccch1mneyyy/dsh-Go@2026-11-26T18:56:46Z</guid>
+      <pubDate>Thu, 26 Nov 2026 18:56:46 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;b 简体中文&lt;/b · &lt;a href=&quot;README.en.md&quot; English&lt;/a &lt;/p &lt;p align=&quot;center&quot; &lt;picture &lt;source media=&quot;(prefers color scheme: dark</description>
     </item>
     <item>
@@ -184,15 +184,15 @@
     <item>
       <title>🆕 awesome-dsh-plugin</title>
       <link>https://github.com/awesome-dsh-plugin/awesome-dsh-plugin</link>
-      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-26T16:36:09Z</guid>
-      <pubDate>Thu, 26 Nov 2026 16:36:09 GMT</pubDate>
+      <guid isPermaLink="false">awesome-dsh-plugin/awesome-dsh-plugin@2026-11-26T19:54:41Z</guid>
+      <pubDate>Thu, 26 Nov 2026 19:54:41 GMT</pubDate>
       <description>Awesome DeepSeek Harness (DSH) Plugin English 中文 A curated list of plugins for DeepSeek Harness ( dsh ). DeepSeek Harness is DeepSeek&apos;s open source agent harness — a runnable coding agent (Web an</description>
     </item>
     <item>
       <title>🆕 nocobase</title>
       <link>https://github.com/nocobase/nocobase</link>
-      <guid isPermaLink="false">nocobase/nocobase@2026-11-26T16:54:00Z</guid>
-      <pubDate>Thu, 26 Nov 2026 16:54:00 GMT</pubDate>
+      <guid isPermaLink="false">nocobase/nocobase@2026-11-26T20:33:45Z</guid>
+      <pubDate>Thu, 26 Nov 2026 20:33:45 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; &lt;picture &lt;img src=&quot;https://github.com/user attachments/assets/37038107 f934 47c7 872c 0f577f38bfc4&quot; width=&quot;340&quot; alt=&quot;NocoBase&quot; &lt;/</description>
     </item>
     <item>
