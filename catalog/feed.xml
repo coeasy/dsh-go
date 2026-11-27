@@ -5,7 +5,7 @@
     <link>https://dsh-go.pages.dev</link>
     <description>DeepSeek Harness 插件市场 - 新增与更新插件</description>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 26 Nov 2026 21:44:51 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 27 Nov 2026 01:49:13 GMT</lastBuildDate>
     <item>
       <title>🆕 DSH Go Marketplace</title>
       <link>https://github.com/coeasy/dsh-go</link>
@@ -37,8 +37,8 @@
     <item>
       <title>🆕 rea</title>
       <link>https://github.com/morluto/rea</link>
-      <guid isPermaLink="false">morluto/rea@2026-11-26T21:31:07Z</guid>
-      <pubDate>Thu, 26 Nov 2026 21:31:07 GMT</pubDate>
+      <guid isPermaLink="false">morluto/rea@2026-11-27T01:48:54Z</guid>
+      <pubDate>Fri, 27 Nov 2026 01:48:54 GMT</pubDate>
       <description>&lt;div align=&quot;center&quot; English · 简体中文 · 繁體中文 · 日本語 · 한국어 · Türkçe · Русский · Tiếng Việt · ไทย · Deutsch · Español · Français · Українська · Polski · Português (Brasil) · العربية · فارسی · B</description>
     </item>
     <item>
@@ -51,8 +51,8 @@
     <item>
       <title>🆕 open-design</title>
       <link>https://github.com/nexu-io/open-design</link>
-      <guid isPermaLink="false">nexu-io/open-design@2026-11-26T18:05:14Z</guid>
-      <pubDate>Thu, 26 Nov 2026 18:05:14 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/open-design@2026-11-27T01:09:25Z</guid>
+      <pubDate>Fri, 27 Nov 2026 01:09:25 GMT</pubDate>
       <description>&lt;h1 align=&quot;center&quot; OpenDesign: The 1st Collaborative AI Design Agent Workspace&lt;/h1 ✨ Celebrating 100K GitHub stars with OpenDesign Go — Go credits are doubled: $8 for your first month,</description>
     </item>
     <item>
@@ -212,8 +212,8 @@
     <item>
       <title>🆕 openmotion</title>
       <link>https://github.com/nexu-io/openmotion</link>
-      <guid isPermaLink="false">nexu-io/openmotion@2026-11-26T15:45:20Z</guid>
-      <pubDate>Thu, 26 Nov 2026 15:45:20 GMT</pubDate>
+      <guid isPermaLink="false">nexu-io/openmotion@2026-11-27T00:38:50Z</guid>
+      <pubDate>Fri, 27 Nov 2026 00:38:50 GMT</pubDate>
       <description>&lt;p align=&quot;center&quot; &lt;img src=&quot;docs/readme/openmotion logo.svg&quot; width=&quot;420&quot; alt=&quot;OpenMotion&quot; &lt;/p &lt;p align=&quot;center&quot; &lt;strong The open source</description>
     </item>
   </channel>
