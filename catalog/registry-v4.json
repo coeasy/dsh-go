@@ -1,7 +1,7 @@
 {
   "schema_version": 4,
-  "generated_at": "2026-11-28T15:33:33.110Z",
-  "revision": "2b58af18e182f01d1351222425a8e52b6594a6df5327e2f1e2fcbba0ab9368bf",
+  "generated_at": "2026-11-28T20:20:49.332Z",
+  "revision": "5ce7308b6de192783dac34b12a90f7204421bca97691db0dac21d831024e9c30",
   "packages": [
     {
       "type": "mcp",
@@ -26,7 +26,7 @@
         "verified": true,
         "stars": 28,
         "rank": 1,
-        "updated_at": "2026-11-28T08:09:07Z",
+        "updated_at": "2026-11-28T15:34:11Z",
         "repo_url": "https://github.com/coeasy/dsh-go",
         "manifest_file": "dsh-package.json",
         "language": "JavaScript",
@@ -185,10 +185,10 @@
     "source": "dsh-go-sync-v4",
     "package_count": 2,
     "release_count": 2,
-    "discovery_count": 32202,
+    "discovery_count": 32236,
     "explicit_source_count": 1,
-    "candidate_count": 32203,
-    "quarantined_count": 31891,
+    "candidate_count": 32237,
+    "quarantined_count": 31925,
     "rejected_count": 310
   }
 }
